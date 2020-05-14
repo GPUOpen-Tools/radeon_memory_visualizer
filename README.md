@@ -7,7 +7,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 1. Install the latest AMD Video/display driver with RMV support. Be sure to run DDU before installing the driver to ensure a clean install. **The current driver with RMV support can be found here: https://www.amd.com/en/support/kb/release-notes/rn-rad-win-20-4-1-radeon-memory-visualizer**
 2. Unzip the download file. The directory contains the following:
  * Radeon Developer Service (RDS)
- * RadeonDeveloperServiceCLI (RDS headless)
+ * Radeon Developer Service CLI (RDS headless)
  * Radeon Developer Panel (RDP)
  * Radeon Memory Visualizer (RMV)
 3. To gather a memory trace from a game, run the Radeon Developer Panel.
@@ -34,6 +34,6 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 
 ## Supported OS's and API's
 
-### Windows10 only
+### Windows 10 only
 * DirectX®12
 * Vulkan®
