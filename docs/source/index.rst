@@ -6,7 +6,8 @@ developers to optimize memory usage for DirectX12©, Vulkan© applications for
 AMD GCN and RDNA hardware.
 
 This document describes how the Radeon Memory Visualizer can be used to
-examine a memory trace file.
+examine a memory trace file. To learn how to generate an RMV trace, please
+see https://radeon-developer-panel.readthedocs.io/latest/.
 
 Supported graphics APIs, RDNA and GCN hardware, and operating systems
 ---------------------------------------------------------------------
