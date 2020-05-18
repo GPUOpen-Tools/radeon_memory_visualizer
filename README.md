@@ -34,6 +34,6 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 
 ## Supported OS's and API's
 
-### Windows 10 only
+### Windows 10 only (Version 1903 or higher recommended)
 * DirectX12
 * Vulkan
