@@ -7,7 +7,7 @@ AMD GCN and RDNA hardware.
 
 This document describes how the Radeon Memory Visualizer can be used to
 examine a memory trace file. To learn how to generate an RMV trace, please
-see https://radeon-developer-panel.readthedocs.io/latest/.
+see https://radeon-developer-panel.readthedocs.io/en/latest/.
 
 Supported graphics APIs, RDNA and GCN hardware, and operating systems
 ---------------------------------------------------------------------
