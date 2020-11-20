@@ -3,7 +3,7 @@ The Radeon™ Memory Visualizer (RMV)
 
 The Radeon Memory Visualizer is a memory optimization tool that can be used by
 developers to optimize memory usage for DirectX12©, Vulkan© applications for
-AMD GCN and RDNA hardware.
+AMD GCN and RDNA™ hardware.
 
 This document describes how the Radeon Memory Visualizer can be used to
 examine a memory trace file. To learn how to generate an RMV trace, please
