@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SettingsPane</class>
+ <widget class="QWidget" name="settings_pane_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>759</width>
+    <height>1402</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="root_widget_layout_">
+   <item>
+    <widget class="QScrollArea" name="main_scroll_area_">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="main_content_">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>735</width>
+        <height>1045</height>
+       </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="vertical_layout_" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="ScaledLabel" name="check_for_updates_on_startup_title_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Automatic updates</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="automatic_updates_wrapper_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_3_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="RMVColoredCheckbox" name="check_for_updates_on_startup_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Check for updates on startup.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_2_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_5_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>30</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="unit_label_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Time units</string>
+         </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
+         <property name="indent">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="unit_description_label_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>In timeline and tables, show units of time in:</string>
+         </property>
+         <property name="indent">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_6_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>2</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontal_layout_1_">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="ArrowIconComboBox" name="units_combo_push_button_" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text" stdset="0">
+            <string>Clocks</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontal_spacer_3_">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_2_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>30</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_3_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>30</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="memory_leak_title_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Memory leak finder resources</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="heap_uniqueness_wrapper_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_4_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="RMVColoredCheckbox" name="heap_uniqueness_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>When calculating resource uniqueness, include Heap ID.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_5_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>534</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="allocation_uniqueness_wrapper_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_5_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="RMVColoredCheckbox" name="allocation_uniqueness_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>When calculating resource uniqueness, include Allocation ID.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_6_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>534</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="offset_uniqueness_wrapper_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_6_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="RMVColoredCheckbox" name="offset_uniqueness_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>When calculating resource uniqueness, include Allocation Offset.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_7_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>534</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ArrowIconComboBox</class>
+   <extends>QWidget</extends>
+   <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVColoredCheckbox</class>
+   <extends>QCheckBox</extends>
+   <header>views/custom_widgets/rmv_colored_checkbox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

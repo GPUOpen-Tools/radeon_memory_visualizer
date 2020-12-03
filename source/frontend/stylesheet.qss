@@ -1,0 +1,343 @@
+/**
+* RMV stylesheet
+*
+* Centralized location for styling of widgets in RMV
+*/
+
+/*************************************/
+/* Global
+/*************************************/
+
+QWidget#main_content_
+{
+    background-color: white;
+}
+
+QTableView::item:selected
+{
+    border: none;
+    color: white;
+    background-color: #0078d7;
+}
+
+QSplitter::handle
+{
+    background: gray;
+    height: 1px;
+}
+
+FileLoadingWidget
+{
+    background-color: rgb(255, 255, 255);
+    color: gray;
+}
+
+RecentTraceMiniWidget
+{
+    font-size: 9.75pt;
+}
+
+ScaledTableView, ScaledTreeView
+{
+    font-size: 9pt;
+}
+
+ScaledHeaderView
+{
+    font: bold 9pt;
+}
+
+ScaledTabWidget
+{
+    font:  bold 8pt;
+}
+
+ScaledTabWidget > QTabBar::tab
+{
+    padding: 0.5em 1em 0.5em 1em;
+}
+
+ScaledTabWidget > QTabBar::tab:!first
+{
+    margin-left: -1px;
+}
+
+ScaledTabWidget > QTabBar::tab:selected
+{
+    background-color: white;
+    border: 1px solid #C4C4C3;
+    border-bottom: 1px solid white;
+}
+
+ScaledTabWidget > QTabBar::tab:!selected
+{
+    background-color: rgb(236, 236, 236);
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: 1px solid #C4C4C3;
+}
+
+ScaledTabWidget > QTabBar::tab:!selected:hover {
+    background-color: rgb(237, 246, 255)
+}
+
+ScaledLabel, ScaledPushButton, QLabel, QPushButton
+{
+    font-size: 9.75pt;
+}
+
+ColoredLegendGraphicsView
+{
+    font-size: 8pt;
+}
+
+ArrowIconComboBox
+{
+    background: white;
+    border: none;
+    font-size: 9.75pt;
+    text-align:left;
+}
+
+TextSearchWidget
+{
+   font-size: 9.75pt;
+   border: 1px solid gray;
+   background: white;
+}
+
+QFrame#warning_widget_
+{
+    background-color: #f0e5ad;
+}
+
+/*************************************/
+/* RMV-Specific styles
+/*************************************/
+
+RMVColoredCheckbox
+{
+    font-size: 9.75pt;
+    qproperty-button_text_ratio: 1.2;
+}
+
+/*************************************/
+/* MainWindow
+/*************************************/
+
+MainWindow QWidget#snapshot_label_
+{
+    background-color: rgb(240, 240, 240);
+}
+
+MainWindow QWidget#snapshot_combo_box_
+{
+    background-color: rgb(240, 240, 240);
+}
+
+MainWindow QWidget#bottom_spacer_label_
+{
+    background-color: rgb(240, 240, 240);
+}
+
+MainWindow QTabWidget::pane
+{
+    border : 0px  solid #444;
+    background: solid white;
+}
+
+MainWindow #main_tab_widget_ > QTabWidget::pane
+{
+    border-top: 0px solid #444;
+    border-bottom: 0px solid #444;
+}
+
+MainWindow #main_tab_widget_ > QTabBar
+{
+    font: bold 10.5pt;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab
+{
+    background: rgb(51,51,51);
+    color: #666;
+    bottom: 1px;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:top
+{
+    margin: 0px 0px 0 0;
+    padding: 4px 8px;
+    border-bottom: 4px solid transparent;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:selected
+{
+    color: white;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:top:hover
+{
+    border-bottom: 4px solid rgb(135,20,16);
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:top:selected
+{
+    border-bottom: 4px solid rgb(224,30,55);
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:!selected:hover
+{
+    color: #999;
+}
+
+/*************************************/
+/* Welcome Pane
+/*************************************/
+
+WelcomePane QLabel, ScaledLabel
+{
+    font-size: 11.75pt;
+}
+
+/*************************************/
+/* About Pane
+/*************************************/
+
+AboutPane QPushButton
+{
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+AboutPane QPushButton:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+AboutPane QLabel, ScaledLabel
+{
+    font-size: 8.75pt;
+}
+
+AboutPane ScaledLabel#label_app_title_
+{
+    font-size: 11.75pt;
+}
+
+AboutPane ScaledLabel#label_related_actions_
+{
+    font-size: 11.75pt;
+}
+
+/*************************************/
+/* Snapshot start Pane
+/*************************************/
+
+SnapshotStartPane ScaledLabel#title_text_
+{
+    font-size: 14pt;
+}
+
+SnapshotStartPane ScaledLabel#instruction_title_
+{
+    font-size: 14pt;
+}
+
+/*************************************/
+/* Heap overview Pane
+/*************************************/
+
+HeapOverviewHeapLayout ScaledLabel#title_label_
+{
+    font-size: 11pt;
+}
+
+/*************************************/
+/* Resource details Pane
+/*************************************/
+
+ResourceDetailsPane ScaledLabel#label_title_
+{
+    font-size: 11.75pt;
+}
+
+/*************************************/
+/* Compare start Pane
+/*************************************/
+
+CompareStartPane ScaledLabel#title_text_
+{
+    font-size: 14pt;
+}
+
+CompareStartPane ScaledLabel#instruction_title_
+{
+    font-size: 14pt;
+}
+
+/*************************************/
+/* Snapshot delta Pane
+/*************************************/
+
+SnapshotDeltaPane ScaledLabel#base_snapshot_label_
+{
+    font-size: 12pt;
+}
+
+SnapshotDeltaPane ScaledLabel#diff_snapshot_label_
+{
+    font-size: 12pt;
+}
+
+/*************************************/
+/* Memory leak finder Pane
+/*************************************/
+
+MemoryLeakFinderPane ScaledLabel#base_snapshot_label_
+{
+    font-size: 12pt;
+}
+
+MemoryLeakFinderPane ScaledLabel#diff_snapshot_label_
+{
+    font-size: 12pt;
+}
+
+/*************************************/
+/* Zoom icons
+/*************************************/
+
+QPushButton#zoom_to_selection_button_
+{
+    background-color: white;
+    border: none;
+}
+
+QPushButton#zoom_reset_button_
+{
+    background-color: white;
+    border: none;
+}
+
+QPushButton#zoom_in_button_
+{
+    background-color: white;
+    border: none;
+}
+
+QPushButton#zoom_out_button_
+{
+    background-color: white;
+    border: none;
+}
+
+/*************************************/
+/* Device Configuration Pane
+/*************************************/
+
+DeviceConfigurationPane QLabel#label_amd_logo_
+{
+    image: url(:/Resources/assets/amd_logo.svg);
+}

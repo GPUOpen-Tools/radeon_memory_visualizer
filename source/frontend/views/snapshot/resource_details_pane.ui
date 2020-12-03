@@ -1,0 +1,1471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ResourceDetailsPane</class>
+ <widget class="QWidget" name="resource_details_pane_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>2420</width>
+    <height>1315</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="root_widget_layout_">
+   <item>
+    <widget class="QScrollArea" name="main_scroll_area_">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="main_content_">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>2402</width>
+        <height>1297</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="vertical_layout_" stretch="0">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QStackedWidget" name="resource_valid_switch_">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="QWidget" name="resource_valid_">
+          <layout class="QVBoxLayout" name="resource_page_layout_" stretch="0,0,1,0,0,0,0,1,0">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QWidget" name="title_layout_" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="ScaledLabel" name="label_title_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Resource details</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontal_spacer_">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>10</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <spacer name="resource_title_spacer_">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>10</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QWidget" name="resource_layout_widget_" native="true">
+             <layout class="QHBoxLayout" name="resource_layout_" stretch="1,1,1,1,1,1">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QWidget" name="summary_widget_" native="true">
+                <layout class="QVBoxLayout" name="summary_layout_" stretch="0,1">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QGridLayout" name="summary_grid_layout_">
+                   <property name="horizontalSpacing">
+                    <number>20</number>
+                   </property>
+                   <item row="6" column="0">
+                    <widget class="ScaledLabel" name="label_preferred_heap_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Preferred heap</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="ScaledLabel" name="content_resource_address_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>8</pointsize>
+                       <weight>75</weight>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="10" column="1">
+                    <widget class="ScaledLabel" name="content_bind_time_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="ScaledLabel" name="summary_title_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>8</pointsize>
+                       <weight>75</weight>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Summary</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="1">
+                    <widget class="ScaledLabel" name="content_type_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="ScaledLabel" name="label_base_address_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Parent allocation base address</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="8" column="1">
+                    <widget class="ScaledLabel" name="content_unmapped_percentage_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="0">
+                    <widget class="ScaledLabel" name="label_size_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Size in bytes</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="ScaledPushButton" name="content_base_address_">
+                     <property name="font">
+                      <font>
+                       <pointsize>8</pointsize>
+                       <weight>75</weight>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="ScaledLabel" name="label_offset_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Offset within allocation</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="11" column="0">
+                    <widget class="ScaledLabel" name="label_commit_type_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Commit type</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="1">
+                    <widget class="ScaledLabel" name="content_size_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="10" column="0">
+                    <widget class="ScaledLabel" name="label_bind_time_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Bind time</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="9" column="1">
+                    <widget class="ScaledLabel" name="content_create_time_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="6" column="1">
+                    <widget class="ScaledLabel" name="content_preferred_heap_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="12" column="1">
+                    <widget class="ScaledLabel" name="content_owner_type_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="9" column="0">
+                    <widget class="ScaledLabel" name="label_create_time_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Creation time</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="7" column="1">
+                    <widget class="ScaledLabel" name="content_fully_mapped_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="ScaledLabel" name="content_offset_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="ScaledLabel" name="label_type_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Resource type</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="8" column="0">
+                    <widget class="ScaledLabel" name="label_unmapped_percentage_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Unmapped percentage</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="7" column="0">
+                    <widget class="ScaledLabel" name="label_fully_mapped_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Fully mapped in preferred</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="11" column="1">
+                    <widget class="ScaledLabel" name="content_commit_type_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="12" column="0">
+                    <widget class="ScaledLabel" name="label_owner_type_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Owner type</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="ScaledLabel" name="label_resource_address_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Resource virtual address</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="13" column="0">
+                    <widget class="ScaledLabel" name="label_flags_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Flags</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="13" column="1">
+                    <widget class="ScaledLabel" name="content_flags_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>-</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <spacer name="summary_spacer_bottom_">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>10</width>
+                     <height>5</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontal_spacer_3_">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QStackedWidget" name="resource_properties_valid_switch_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="resource_properties_empty_">
+                 <layout class="QVBoxLayout" name="resource_properties_empty_layout_">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label_1_">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="pixmap">
+                     <pixmap resource="resources.qrc">:/Resources/assets/stop_128x128.png</pixmap>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="ScaledLabel" name="label_2_">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>12</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>No additional resource properties.</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="vertical_spacer_properties_">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="resource_properties_valid_">
+                 <layout class="QVBoxLayout" name="resource_properties_valid_layout_">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="ScaledLabel" name="properties_title_">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>8</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Properties</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="ScaledTableView" name="resource_properties_table_view_">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="frameShape">
+                     <enum>QFrame::NoFrame</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Plain</enum>
+                    </property>
+                    <property name="sizeAdjustPolicy">
+                     <enum>QAbstractScrollArea::AdjustToContents</enum>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontal_spacer_titles_">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>10</width>
+                  <height>10</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QWidget" name="residency_widget_" native="true">
+                <layout class="QVBoxLayout" name="residency_layout_" stretch="0,0,0,1">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="ScaledLabel" name="residency_title_">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>8</pointsize>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Physical residency</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="warning_widget_">
+                   <property name="frameShape">
+                    <enum>QFrame::Box</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Plain</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="warning_layout_">
+                    <property name="spacing">
+                     <number>4</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="ScaledLabel" name="warning_icon_">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>40</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="pixmap">
+                       <pixmap resource="resources.qrc">:/Resources/assets/third_party/ionicons/warning.svg</pixmap>
+                      </property>
+                      <property name="scaledContents">
+                       <bool>true</bool>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignLeading</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ScaledLabel" name="warning_message_">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>&lt;b&gt;WARNING!&lt;/b&gt;&lt;br&gt;Not all of this resource is currently contained within its preferred heap.</string>
+                      </property>
+                      <property name="textFormat">
+                       <enum>Qt::RichText</enum>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignLeading</set>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QWidget" name="donut_widget_" native="true">
+                   <layout class="QHBoxLayout" name="donut_layout_">
+                    <property name="spacing">
+                     <number>20</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>8</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="RMVScaledDonutWidget" name="residency_donut_" native="true">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>200</width>
+                        <height>200</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QWidget" name="legends_widget_" native="true">
+                      <layout class="QVBoxLayout" name="legends_layout_">
+                       <property name="leftMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="topMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="rightMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="bottomMargin">
+                        <number>0</number>
+                       </property>
+                       <item>
+                        <widget class="ColoredLegendGraphicsView" name="legends_view_local_">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="ColoredLegendGraphicsView" name="legends_view_invisible_">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="ColoredLegendGraphicsView" name="legends_view_system_">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="ColoredLegendGraphicsView" name="legends_view_unmapped_">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="residency_spacer_">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>10</width>
+                     <height>5</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontal_spacer_2_">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <spacer name="vertical_spacer_1_">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>10</width>
+               <height>5</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QWidget" name="timeline_layout_" native="true">
+             <layout class="QHBoxLayout" name="horizontal_layout_3_">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="ScaledLabel" name="timeline_title_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>History</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontal_spacer_1_">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>10</width>
+                  <height>10</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="RMVResourceTimeline" name="resource_timeline_" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>20</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="vertical_spacer_2_">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>10</width>
+               <height>5</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="RMVClickableTableView" name="resource_timeline_table_view_">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>200</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Plain</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="vertical_spacer_end_">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>10</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="resource_invalid_">
+          <layout class="QVBoxLayout" name="vertical_layout_invalid_">
+           <item>
+            <spacer name="vertical_spacer_invalid_top_">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="ScaledLabel" name="label_hand_stop_">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="pixmap">
+              <pixmap resource="resources.qrc">:/Resources/assets/stop_128x128.png</pixmap>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="ScaledLabel" name="label_warning_message_1_">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="palette">
+              <palette>
+               <active>
+                <colorrole role="WindowText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Text">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="ButtonText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="PlaceholderText">
+                 <brush brushstyle="NoBrush">
+                  <color alpha="128">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </active>
+               <inactive>
+                <colorrole role="WindowText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Text">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="ButtonText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="PlaceholderText">
+                 <brush brushstyle="NoBrush">
+                  <color alpha="128">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </inactive>
+               <disabled>
+                <colorrole role="WindowText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>120</red>
+                   <green>120</green>
+                   <blue>120</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Text">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>120</red>
+                   <green>120</green>
+                   <blue>120</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="ButtonText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>120</red>
+                   <green>120</green>
+                   <blue>120</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="PlaceholderText">
+                 <brush brushstyle="NoBrush">
+                  <color alpha="128">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </disabled>
+              </palette>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>No resource is currently selected</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="ScaledLabel" name="label_warning_message_2_">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="palette">
+              <palette>
+               <active>
+                <colorrole role="WindowText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Text">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="ButtonText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="PlaceholderText">
+                 <brush brushstyle="NoBrush">
+                  <color alpha="128">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </active>
+               <inactive>
+                <colorrole role="WindowText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Text">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="ButtonText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="PlaceholderText">
+                 <brush brushstyle="NoBrush">
+                  <color alpha="128">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </inactive>
+               <disabled>
+                <colorrole role="WindowText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>120</red>
+                   <green>120</green>
+                   <blue>120</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Text">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>120</red>
+                   <green>120</green>
+                   <blue>120</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="ButtonText">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>120</red>
+                   <green>120</green>
+                   <blue>120</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="PlaceholderText">
+                 <brush brushstyle="NoBrush">
+                  <color alpha="128">
+                   <red>151</red>
+                   <green>151</green>
+                   <blue>151</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </disabled>
+              </palette>
+             </property>
+             <property name="text">
+              <string>Select a resource from the Resource overview or Allocation explorer by double-clicking the left mouse button on a resource</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="vertical_spacer_invalid_bottom_">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ColoredLegendGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>qt_common/custom_widgets/colored_legend_graphics_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledTableView</class>
+   <extends>QTableView</extends>
+   <header>qt_common/custom_widgets/scaled_table_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledPushButton</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/scaled_push_button.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVResourceTimeline</class>
+   <extends>QWidget</extends>
+   <header>views/custom_widgets/rmv_resource_timeline.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVScaledDonutWidget</class>
+   <extends>QWidget</extends>
+   <header>views/custom_widgets/rmv_scaled_donut_widget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RMVClickableTableView</class>
+   <extends>ScaledTableView</extends>
+   <header>views/custom_widgets/rmv_clickable_table_view.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

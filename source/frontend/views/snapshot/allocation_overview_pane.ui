@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>allocation_overview_pane</class>
+ <widget class="QWidget" name="allocation_overview_pane_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1428</width>
+    <height>651</height>
+   </rect>
+  </property>
+  <layout class="QGridLayout" name="grid_layout_">
+   <item row="0" column="0">
+    <widget class="QScrollArea" name="main_scroll_area_">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="main_content_">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1408</width>
+        <height>631</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="vertical_layout_">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>5</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontal_layout_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="ArrowIconComboBox" name="preferred_heap_combo_box_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="color_combo_box_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_1_">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="sort_combo_box_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Sort</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="sort_direction_combo_box_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>SortDir</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_2_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="RMVColoredCheckbox" name="normalize_allocations_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Normalize allocations</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="RMVColoredCheckbox" name="aliased_resource_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Show aliasing</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="ScaledLabel" name="allocation_height_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Allocation height</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="allocation_height_slider_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimum">
+             <number>50</number>
+            </property>
+            <property name="maximum">
+             <number>400</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
+             <bool>false</bool>
+            </property>
+            <property name="invertedControls">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="TextSearchWidget" name="search_box_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="label_2_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Double-click an allocation to view its details.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QGraphicsView" name="allocation_list_view_">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="ColoredLegendGraphicsView" name="legends_view_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ArrowIconComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ColoredLegendGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>qt_common/custom_widgets/colored_legend_graphics_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TextSearchWidget</class>
+   <extends>QLineEdit</extends>
+   <header>qt_common/custom_widgets/text_search_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVColoredCheckbox</class>
+   <extends>QCheckBox</extends>
+   <header>views/custom_widgets/rmv_colored_checkbox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,59 @@
+cmake_minimum_required(VERSION 3.5.1)
+project(RmvParser)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+include_directories(AFTER ../parser)
+
+IF(UNIX)
+    # Remove warnings for Linux in backend
+    add_compile_options(-std=c++11 -D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-sign-compare -Wno-uninitialized)
+ENDIF(UNIX)
+
+# List of all source files. It may be possible to have the build process call cmake to update the makefiles
+# only when this file has changed (ie source files have been added or removed)
+
+set( SOURCES
+    "rmt_address_helper.cpp"
+    "rmt_address_helper.h"
+    "rmt_assert.cpp"
+    "rmt_assert.h"
+    "rmt_error.h"
+    "rmt_file_format.h"
+    "rmt_file_format.cpp"
+    "rmt_format.h"
+    "rmt_parser.cpp"
+    "rmt_parser.h"
+    "rmt_platform.cpp"
+    "rmt_platform.h"
+    "rmt_print.cpp"
+    "rmt_print.h"
+    "rmt_profile.h"
+    "rmt_token_heap.cpp"
+    "rmt_token_heap.h"
+    "rmt_types.h"
+    "rmt_util.h"
+)
+
+set( LINUX_SOURCES
+    "linux/safe_crt.cpp"
+    "linux/safe_crt.h"
+)
+
+# specify output library name
+IF(WIN32)
+    add_library(${PROJECT_NAME} ${SOURCES})
+ELSEIF(UNIX)
+    add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
+ENDIF(WIN32)
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+IF(WIN32)
+# Create Visual Studio filters so that the source files in the project match the directory structure
+foreach(source IN LISTS SOURCES)
+    get_filename_component(source_path "${source}" PATH)
+    string(REPLACE "/" "\\" source_path_msvc "${source_path}")
+    source_group("${source_path_msvc}" FILES "${source}")
+endforeach()
+ENDIF(WIN32)
+

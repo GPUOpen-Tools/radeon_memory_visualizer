@@ -38,3 +38,70 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 ### Windows® 10 only (version 1903 or higher recommended)
 * DirectX12
 * Vulkan
+
+## Build instructions
+
+### Download Source code
+
+Clone the project radeon_memory_visualizer from github.com
+
+git clone https://github.com/GPUOpen-Tools/radeon_memory_visualizer.git
+
+### Building on Windows ###
+As a preliminary step, make sure that you have the following installed on your system:
+* CMake 3.11 or above.
+* Python 3.7 or above.
+* Qt® 5 or above (5.12.6 is the default and recommended).
+* Visual Studio® 2015 or above (2017 is the default).
+
+Qt should be installed to the default location (C:\Qt\Qt5.12.6). The Qt 5.12.6 install package can be found at https://download.qt.io/archive/qt/5.12/5.12.6/.
+Make sure to select msvc2017 64-bit (under Qt 5.12.6 option) during Qt installation. Note that the expected installation will produce a C:\Qt\Qt5.12.6\5.12.6 folder.
+A reboot is required after Qt is installed.
+Cmake can be downloaded from (https://cmake.org/download/).
+Python (V3.x) can be downloaded from (https://www.python.org/).
+
+Run the python pre_build.py script in the build folder from a command prompt. If no command line options are provided, the defaults will be used (Qt 5.12.6 and Visual Studio 2017)
+
+Some useful options of the pre_build.py script:
+* --vs <Visual Studio version>: generate the solution files for a specific Visual Studio version. For example, to target Visual Studio 2019, add --vs 2019 to the command.
+* --qt <path>: full path to the folder from where you would like the Qt binaries to be retrieved. By default, CMake would try to auto-detect Qt on the system.
+
+Once the script has finished, in the case of Visual Studio 2017, a sub-folder called 'vs2017' will be created containing the necessary build files.
+Go into the 'vs2017' folder (build/win/vs2017) and double click on the RMV.sln file and build the 64-bit Debug and Release builds.
+The Release and Debug builds of RMV will be available in the build/release and build/debug folders.
+
+## Support ##
+For support, please visit the RMV repository github page: https://github.com/GPUOpen-Tools/radeon_memory_visualizer
+
+## License ##
+Radeon Memory Visualizer is licensed under the MIT license. See the License.txt file for complete license information.
+
+## Copyright information ##
+Please see NOTICES.txt for third party license information.
+
+## DISCLAIMER ##
+The information contained herein is for informational purposes only, and is subject to change without notice. While every
+precaution has been taken in the preparation of this document, it may contain technical inaccuracies, omissions and typographical
+errors, and AMD is under no obligation to update or otherwise correct this information. Advanced Micro Devices, Inc. makes no
+representations or warranties with respect to the accuracy or completeness of the contents of this document, and assumes no
+liability of any kind, including the implied warranties of noninfringement, merchantability or fitness for particular purposes, with
+respect to the operation or use of AMD hardware, software or other products described herein. No license, including implied or
+arising by estoppel, to any intellectual property rights is granted by this document. Terms and limitations applicable to the purchase
+or use of AMD’s products are as set forth in a signed agreement between the parties or in AMD's Standard Terms and Conditions
+of Sale.
+
+AMD, the AMD Arrow logo, Radeon, Ryzen, RDNA and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in
+this publication are for identification purposes only and may be trademarks of their respective companies.
+
+Visual Studio, DirectX and Windows are registered trademarks of Microsoft Corporation in the US and other jurisdictions.
+
+Vulkan and the Vulkan logo are registered trademarks of the Khronos Group Inc.
+
+Python is a registered trademark of the PSF. The Python logos (in several variants) are use trademarks of the PSF as well.
+
+CMake is a registered trademark of Kitware, Inc.
+
+Qt and the Qt logo are registered trademarks of the Qt Company Ltd and/or its subsidiaries worldwide.
+
+
+© 2020 Advanced Micro Devices, Inc. All rights reserved.

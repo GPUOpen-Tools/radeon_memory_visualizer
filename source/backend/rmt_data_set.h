@@ -1,0 +1,250 @@
+//=============================================================================
+/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
+/// \author AMD Game Engineering Group
+/// \brief Structures and functions for working with a data set.
+//=============================================================================
+
+#ifndef RMV_BACKEND_RMT_DATA_SET_H_
+#define RMV_BACKEND_RMT_DATA_SET_H_
+
+#include <rmt_types.h>
+#include <rmt_error.h>
+#include "rmt_adapter_info.h"
+#include "rmt_configuration.h"
+#include "rmt_segment_info.h"
+#include "rmt_process_start_info.h"
+#include "rmt_process_map.h"
+#include "rmt_data_profile.h"
+#include "rmt_data_timeline.h"
+#include "rmt_virtual_allocation_list.h"
+#include "rmt_physical_allocation_list.h"
+#include <rmt_token_heap.h>
+#include <rmt_file_format.h>
+#include <rmt_parser.h>
+
+#ifdef __cpluplus
+extern "C" {
+#endif  // #ifdef __cplusplus
+
+typedef struct RmtDataSnapshot    RmtDataSnapshot;
+typedef struct RmtResource        RmtResource;
+typedef struct RmtResourceHistory RmtResourceHistory;
+
+/// Callback function prototype for allocating memory.
+typedef void* (*RmtDataSetAllocationFunc)(size_t size_in_bytes, size_t alignment);
+
+/// Callback function prototype for freeing memory.
+typedef void (*RmtDataSetFreeFunc)(void* buffer);
+
+/// A structure encapsulating a single snapshot point.
+typedef struct RmtSnapshotPoint
+{
+    char             name[RMT_MAXIMUM_NAME_LENGTH];  ///< The name of the snapshot.
+    uint64_t         timestamp;                      ///< The point at which the snapshot was taken.
+    uint64_t         file_offset;                    ///< The file offset for snapshot management.
+    RmtDataSnapshot* cached_snapshot;                ///< A pointer to a <c><i>RmtDataSnapshot</i></c> that has been created for this snapshot point.
+    int32_t          virtual_allocations;
+    int32_t          resource_count;
+    uint64_t         total_virtual_memory;
+    uint64_t         bound_virtual_memory;
+    uint64_t         unbound_virtual_memory;
+    uint64_t         committed_memory[kRmtHeapTypeCount];
+} RmtSnapshotPoint;
+
+/// A structure encapsulating a single RMT dataset.
+typedef struct RmtDataSet
+{
+    char   file_path[RMT_MAXIMUM_FILE_PATH];            ///< The file path to the file being worked with.
+    char   temporary_file_path[RMT_MAXIMUM_FILE_PATH];  ///< The file path to the safe temporary file being worked with.
+    void*  file_handle;                                 ///< The handle to the RMT file (operates on the temporary).
+    size_t file_size_in_bytes;                          ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
+    bool   read_only;                                   ///< Whether the dataset is loaded as read-only
+
+    RmtDataSetAllocationFunc allocate_func;  ///< Allocate memory function pointer.
+    RmtDataSetFreeFunc       free_func;      ///< Free memory function pointer.
+
+    RmtParser       streams[RMT_MAXIMUM_STREAMS];  ///< An <c><i>RmtParser</i></c> structure for each stream in the file.
+    int32_t         stream_count;                  ///< The number of RMT streams in the file.
+    RmtStreamMerger stream_merger;                 ///< Token heap.
+
+    RmtAdapterInfo adapter_info;  ///< The adapter info.
+
+    RmtSegmentInfo segment_info[RMT_MAXIMUM_SEGMENTS];  ///< An array of segment information.
+    int32_t        segment_info_count;                  ///< The number of segments.
+
+    RmtProcessStartInfo process_start_info[RMT_MAXIMUM_PROCESS_COUNT];  ///< An array of process start information.
+    int32_t             process_start_info_count;  ///< The number of <c><i>RmtProcessStartInfo</i></c> structures in <c><i>processStartInfo</i></c>.
+    RmtProcessMap       process_map;               ///< A map of processes seen in the RMT file.
+
+    RmtSnapshotPoint snapshots[RMT_MAXIMUM_SNAPSHOT_POINTS];  ///< An array of all snapshots in the data set.
+    int32_t          snapshot_count;                          ///< The number of snapshots used.
+
+    RmtDataProfile data_profile;  ///< The data profile which is populated in the 1st pass of the parser.
+
+    uint64_t maximum_timestamp;  ///< The maximum timestamp seen in this data set.
+    uint32_t cpu_frequency;      ///< The CPU frequency (in clock ticks per second) of the machine where the RMT data was captured.
+    uint64_t target_process_id;  ///< The target process ID that was traced.
+
+    RmtVirtualAllocationList  virtual_allocation_list;   ///< Temporary virtual allocation list.
+    RmtPhysicalAllocationList physical_allocation_list;  ///< Temporary physical allocation list.
+
+    ResourceIdMapAllocator* p_resource_id_map_allocator;  ///< Allocator buffer/struct used to do lookup of unique resource ID.
+
+} RmtDataSet;
+
+/// Initialize the RMT data set from a file path.
+///
+/// In order to avoid accidental corruption of the file being opened. The RMT backend
+/// will make a temporary copy of the file with which to work. Modifications are done
+/// to this copy, and then calls to <c><i>rmtDataSetDestroy</i></c> will commit those
+/// edits back to the original by way of a file rename.
+///
+/// The reason for this implementation choice is because changes to the file system
+/// metadata are atomic, where as changes to the contents of the file are not. This
+/// means if a crash of the application (or wider system) where to happen during a
+/// change to the file, then the RMV file may be rendered corrupted and unusable. If
+/// we instead copy the file on load, and work in the temporary copy, and then, using
+/// only metadata edits (i.e.: rename and delete), place that back where the orignial
+/// file was. Then even if the system were to crash, the integrity of the original
+/// RMV file is always preserved.
+///
+/// @param [in]  path                                       A pointer to a string containing the path to the RMT file that we would like to load to initialize the data set.
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure that will contain the data set.
+///
+/// @retval
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set);
+
+/// Destroy the data set.
+///
+/// @param [in]  data_set                       A pointer to a <c><i>RmtDataSet</i></c> structure that will contain the data set.
+///
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set);
+
+/// Generate a timeline from the data set.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure to used to generate the timeline.
+/// @param [in]  timeline_type                              The type of timeline to generate.
+/// @param [out] out_timeline                               The address of a <c><i>RmtDataTimeline</i></c> structure to populate.
+///
+/// @retval
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// @retval
+/// RMT_ERROR_OUT_OF_MEMORY                     The operation failed due as memory could not be allocated to create the timeline.
+RmtErrorCode RmtDataSetGenerateTimeline(RmtDataSet* data_set, RmtDataTimelineType timeline_type, RmtDataTimeline* out_timeline);
+
+/// Genereate a snapshot from a data set at a specific time.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure to used to generate the timeline.
+/// @param [in]  timestamp                                  The timestamp to generate the snapshot for.
+/// @param [in]  name                                       The name of the snapshot.
+/// @param [out] out_snapshot                               The address of a <c><i>RmtDataSnapshot</i></c> structure to populate.
+///
+/// @retval
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// @retval
+/// RMT_ERROR_OUT_OF_MEMORY                     The operation failed due as memory could not be allocated to create the snapshot.
+RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* snapshot_point, RmtDataSnapshot* out_snapshot);
+
+/// Find a segment from a physical address.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  physical_address                           The physical address to find the parent segment for.
+/// @param [out] out_segment_info                           The address of a pointer to a <c><i>RmtSegmentInfo</i></c> structure. This will be set to <c><i>NULL</i></c> if the segment wasn't found.
+///
+/// @retval
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// @retval
+/// RMT_ERROR_NO_ALLOCATION_FOUND               The operation failed due to <c><i>physicalAddress</i></c> not being present in the segment info.
+RmtErrorCode RmtDataSetGetSegmentForPhysicalAddress(const RmtDataSet* data_set, RmtGpuAddress physical_address, const RmtSegmentInfo** out_segment_info);
+
+/// Get the time corresponding to the given number of cpu clock cycles
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  clk                                        The number of clock cycles
+/// @param [out] out_cpu_timestamp                          The time, in nanoseconds, corresponding to the number of clock cycles
+///
+/// @returns
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// @retval
+/// RMT_ERROR_TIMESTAMP_OUT_OF_BOUNDS           The operation failed due to the CPU clock being invalid.
+RmtErrorCode RmtDataSetGetCpuClockTimestamp(const RmtDataSet* data_set, uint64_t clk, double* out_cpu_timestamp);
+
+/// Get whether the CPU clock timestamp is valid
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+///
+/// @returns
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// @retval
+/// RMT_ERROR_TIMESTAMP_OUT_OF_BOUNDS           The operation failed due to the CPU clock being invalid.
+RmtErrorCode RmtDataSetGetCpuClockTimestampValid(const RmtDataSet* data_set);
+
+/// Add a new snapshot to the file.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  name                                       The name of the snapshot.
+/// @param [in]  timestamp                                  The time at which the snapshot was created.
+/// @param [out] out_snapshot_point                         The address of a pointer to a <c><i>RmtSnapshotPoint</i></c> structure.
+///
+/// @returns
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+RmtErrorCode RmtDataSetAddSnapshot(RmtDataSet* data_set, const char* name, uint64_t timestamp, RmtSnapshotPoint** out_snapshot_point);
+
+/// Remove a new snapshot to the file.
+///
+/// Using this function may change the order of snapshot points in <c><i>data_set</i></c>. If you
+/// have code that is relying on this order by use of index, then you should make sure you update
+/// those indices after a call to this function.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  snapshot_index                             The index of the snapshot to delete.
+///
+/// @returns
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index);
+
+/// Rename an existing snapshot in the file.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  snapshot_index                             The index of the snapshot to rename.
+/// @param [in]  name                                       The name of the snapshot.
+///
+/// @returns
+/// RMT_OK                                      The operation completed successfully.
+/// @retval
+/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, const char* name);
+
+/// Get the index in level-0 of a series for a specified timestamp.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  timestamp                                  The timestamp to convert.
+///
+/// @returns
+/// The series index.
+int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t timestamp);
+
+#ifdef __cpluplus
+}
+#endif  // #ifdef __cplusplus
+#endif  // #ifndef RMV_BACKEND_RMT_DATA_SET_H_

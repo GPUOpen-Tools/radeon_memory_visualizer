@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="main_window_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>894</width>
+    <height>639</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="main_content_">
+   <layout class="QHBoxLayout" name="horizontal_layout_5_">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="TabWidget" name="main_tab_widget_">
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="navigation_tab_">
+       <attribute name="title">
+        <string>NAVIGATION</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="start_tab_">
+       <attribute name="title">
+        <string>START</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontal_layout_" stretch="1,5">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="NavigationListWidget" name="start_list_">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>Welcome</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Recent traces</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>About</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="start_stack_"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="timeline_tab_">
+       <attribute name="title">
+        <string>TIMELINE</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontal_layout_6_">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="NavigationListWidget" name="timeline_list_">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>Snapshot generation</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Device configuration</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="timeline_stack_"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="snapshot_tab_">
+       <attribute name="title">
+        <string>SNAPSHOT</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontal_layout_3_" stretch="1">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QStackedWidget" name="snapshot_start_stack_">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="SnapshotStartPane" name="snapshot_page_1_"/>
+          <widget class="QWidget" name="snapshot_page_2_">
+           <layout class="QHBoxLayout" name="horizontal_layout_1_">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QVBoxLayout" name="vertical_layout_">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="NavigationListWidget" name="snapshot_list_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Heap overview</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Resource overview</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Allocation overview</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Resource list</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Allocation explorer</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Resource details</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="ScaledLabel" name="snapshot_label_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="lineWidth">
+                 <number>1</number>
+                </property>
+                <property name="text">
+                 <string>You are currently viewing:</string>
+                </property>
+                <property name="indent">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="ArrowIconComboBox" name="snapshot_combo_box_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Snapshot</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="ScaledLabel" name="bottom_spacer_label_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string></string>
+                </property>
+                <property name="indent">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QStackedWidget" name="snapshot_stack_"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="compare_tab_">
+       <attribute name="title">
+        <string>COMPARE</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontal_layout_2_">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QStackedWidget" name="compare_start_stack_">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="CompareStartPane" name="compare_page_1_"/>
+          <widget class="QWidget" name="compare_page_2_">
+           <layout class="QHBoxLayout" name="horizontal_layout_4_" stretch="1,5">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="NavigationListWidget" name="compare_list_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>Snapshot delta</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Memory leak finder</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QStackedWidget" name="compare_stack_"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="spacer_tab_">
+       <attribute name="title">
+        <string>SPACER</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="settings_tab_">
+       <attribute name="title">
+        <string>SETTINGS</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontal_layout_7_" stretch="1,5">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="NavigationListWidget" name="settings_list_">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>General</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Themes and colors</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Keyboard shortcuts</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="settings_stack_"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="ScaledMenuBar" name="menu_bar_">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>894</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>ArrowIconComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NavigationListWidget</class>
+   <extends>QListWidget</extends>
+   <header>qt_common/custom_widgets/navigation_list_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledMenuBar</class>
+   <extends>QMenuBar</extends>
+   <header>qt_common/custom_widgets/scaled_menu_bar.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TabWidget</class>
+   <extends>QTabWidget</extends>
+   <header>qt_common/custom_widgets/tab_widget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SnapshotStartPane</class>
+   <extends>QWidget</extends>
+   <header>views/snapshot/snapshot_start_pane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CompareStartPane</class>
+   <extends>QWidget</extends>
+   <header>views/compare/compare_start_pane.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

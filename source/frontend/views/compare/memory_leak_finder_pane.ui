@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MemoryLeakFinderPane</class>
+ <widget class="QWidget" name="memory_leak_finder_pane_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1375</width>
+    <height>1109</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="root_widget_layout_">
+   <item>
+    <widget class="QScrollArea" name="main_scroll_area_">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="main_content_">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1355</width>
+        <height>1089</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="vertical_layout_" stretch="0,0,0,0,0,0,1,0">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget_4_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_4_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="ScaledLabel" name="base_snapshot_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Snapshot X</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ScaledLabel" name="vs_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>   vs.   </string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ScaledLabel" name="diff_snapshot_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Snapshot Y</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_4_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="label_4_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Identify which resources are present or absent across snapshots.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_" native="true">
+         <layout class="QGridLayout" name="grid_layout_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="5">
+           <spacer name="horizontal_spacer_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="2">
+           <widget class="ScaledLabel" name="both_allocations_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>test 2</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="ScaledLabel" name="diff_allocations_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>test 3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="RMVColoredCheckbox" name="both_allocations_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Resources common to both snapshots</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="RMVColoredCheckbox" name="diff_allocations_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="ScaledLabel" name="base_allocations_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>test 1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="RMVColoredCheckbox" name="base_allocations_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <spacer name="horizontal_spacer_5_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="3">
+           <spacer name="horizontal_spacer_6_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_2_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_2_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_2_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="ArrowIconComboBox" name="preferred_heap_combo_box_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="resource_usage_combo_box_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ScaledLabel" name="label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Filter by size:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="DoubleSliderWidget" name="size_slider_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_2_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>260</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="TextSearchWidget" name="search_box_"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="RMVClickableTableView" name="resource_table_view_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_3_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>5</height>
+          </size>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::MinimumExpanding</enum>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_3_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_3_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="ScaledLabel" name="label_3_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Total resources:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ScaledLabel" name="total_resources_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>{0}</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ScaledLabel" name="label_5_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Total size:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ScaledLabel" name="total_size_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>{0}</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_3_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ArrowIconComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TextSearchWidget</class>
+   <extends>QLineEdit</extends>
+   <header>qt_common/custom_widgets/text_search_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DoubleSliderWidget</class>
+   <extends>QSlider</extends>
+   <header>qt_common/custom_widgets/double_slider_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVColoredCheckbox</class>
+   <extends>QCheckBox</extends>
+   <header>views/custom_widgets/rmv_colored_checkbox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVClickableTableView</class>
+   <extends>ScaledTableView</extends>
+   <header>views/custom_widgets/rmv_clickable_table_view.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

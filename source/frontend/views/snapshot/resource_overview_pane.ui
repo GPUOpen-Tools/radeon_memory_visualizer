@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ResourceOverviewPane</class>
+ <widget class="QWidget" name="Resource_overview_pane_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1318</width>
+    <height>981</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="root_widget_layout_">
+   <item>
+    <widget class="QScrollArea" name="main_scroll_area_">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="main_content_">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1298</width>
+        <height>961</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="vertical_layout_" stretch="0,0,0,0,1,0,0,0,0">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget_2_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontal_layout_2_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="ArrowIconComboBox" name="preferred_heap_combo_box_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="actual_heap_combo_box_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="resource_usage_combo_box_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_1_">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="color_combo_box_">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>1334</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="Line" name="line_2_">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="slicing_button_one_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="slicing_button_two_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ArrowIconComboBox" name="slicing_button_three_">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="label_2_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Double-click a resource to view its details.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_2_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QGridLayout" name="grid_layout_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="horizontalSpacing">
+           <number>20</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="ScaledLabel" name="total_available_size_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Total available size</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="ScaledLabel" name="total_available_size_value_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>{0}</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="ScaledLabel" name="total_allocated_and_used_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Total allocated and bound</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="ScaledLabel" name="total_allocated_and_used_value_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>{0}</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="ScaledLabel" name="total_allocated_and_unused_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Total allocated and unbound</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="ScaledLabel" name="total_allocated_and_unused_value_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>{0}</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="ScaledLabel" name="allocations_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Allocations</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="ScaledLabel" name="allocations_value_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>{0}</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="ScaledLabel" name="resources_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Resources</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="ScaledLabel" name="resources_value_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>{0}</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="5">
+           <spacer name="horizontal_spacer_2_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="6">
+           <widget class="ScaledLabel" name="filter_by_size_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Filter by size:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="7">
+           <widget class="DoubleSliderWidget" name="size_slider_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="RMVTreeMapView" name="tree_map_view_"/>
+       </item>
+       <item>
+        <widget class="ColoredLegendGraphicsView" name="legends_view_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="resource_details_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QVBoxLayout" name="vertical_layout_2_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="ScaledLabel" name="resource_name_label_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Select a resource</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGraphicsView" name="resource_details_view_"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_4_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="ScaledLabel" name="resource_name_label_minimized_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_4_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>1300</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="RMVColoredCheckbox" name="resource_details_checkbox_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Resource details</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ArrowIconComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ColoredLegendGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>qt_common/custom_widgets/colored_legend_graphics_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DoubleSliderWidget</class>
+   <extends>QSlider</extends>
+   <header>qt_common/custom_widgets/double_slider_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVTreeMapView</class>
+   <extends>QGraphicsView</extends>
+   <header>views/custom_widgets/rmv_tree_map_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RMVColoredCheckbox</class>
+   <extends>QCheckBox</extends>
+   <header>views/custom_widgets/rmv_colored_checkbox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,1088 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>KeyboardShortcutsPane</class>
+ <widget class="QWidget" name="keyboard_shortcuts_pane_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>662</width>
+    <height>765</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="vertical_layout_2_">
+   <item>
+    <widget class="QScrollArea" name="main_scroll_area_">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="main_content_">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>625</width>
+        <height>1178</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="vertical_layout_">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget_3_" native="true">
+         <layout class="QHBoxLayout" name="horizontal_layout_">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="navigation_wrapper_" native="true">
+            <layout class="QVBoxLayout" name="vertical_layout_3_">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="ScaledLabel" name="label_global_navigation_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Global navigation</string>
+               </property>
+               <property name="indent">
+                <number>0</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="global_navigation_layout_" native="true">
+               <layout class="QGridLayout" name="grid_layout_">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <item row="0" column="0">
+                 <widget class="ScaledLabel" name="label_back_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="ScaledLabel" name="content_back_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + Left arrow or Backspace</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="ScaledLabel" name="label_forward_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Forward</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="ScaledLabel" name="content_forward_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + Right arrow</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="ScaledLabel" name="label_timeline_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Snapshot generation pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="ScaledLabel" name="content_timeline_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + F</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="ScaledLabel" name="label_device_configuration_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Device configuration pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="ScaledLabel" name="content_device_configuration_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + G</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="ScaledLabel" name="label_heap_overview_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Heap overview pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="ScaledLabel" name="content_heap_overview_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + Q</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="ScaledLabel" name="label_resource_overview_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Resource overview pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1">
+                 <widget class="ScaledLabel" name="content_resource_overview_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + W</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="0">
+                 <widget class="ScaledLabel" name="label_allocation_overview_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Allocation overview pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <widget class="ScaledLabel" name="content_allocation_overview_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + E</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0">
+                 <widget class="ScaledLabel" name="label_resource_list_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Resource list pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="1">
+                 <widget class="ScaledLabel" name="content_resource_list_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + R</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0">
+                 <widget class="ScaledLabel" name="label_allocation_explorer_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Allocation explorer pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="1">
+                 <widget class="ScaledLabel" name="content_allocation_explorer_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + T</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="9" column="0">
+                 <widget class="ScaledLabel" name="label_resource_details_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Resource details pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="9" column="1">
+                 <widget class="ScaledLabel" name="content_resource_details_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + Y</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="0">
+                 <widget class="ScaledLabel" name="label_snapshot_delta_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Snapshot delta pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="1">
+                 <widget class="ScaledLabel" name="content_snapshot_delta_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + A</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="0">
+                 <widget class="ScaledLabel" name="label_memory_leak_finder_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Memory leak finder pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="1">
+                 <widget class="ScaledLabel" name="content_memory_leak_finder_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + S</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="0">
+                 <widget class="ScaledLabel" name="label_Welcome_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Welcome pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="1">
+                 <widget class="ScaledLabel" name="content_welcome_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + Z</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="13" column="0">
+                 <widget class="ScaledLabel" name="label_recent_traces_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Recent traces pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="13" column="1">
+                 <widget class="ScaledLabel" name="content_recent_traces_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + X</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="14" column="0">
+                 <widget class="ScaledLabel" name="label_keyboard_shortcuts_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Keyboard shortcuts pane</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="14" column="1">
+                 <widget class="ScaledLabel" name="content_keyboard_shortcuts_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Alt + C</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="vertical_spacer_1_">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="ScaledLabel" name="label_timeline_controls_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Timeline controls</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="timeline_controls_layout_" native="true">
+               <layout class="QGridLayout" name="grid_layout_1_">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <item row="0" column="0">
+                 <widget class="ScaledLabel" name="label_left_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Scroll left</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="ScaledLabel" name="content_left_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Left arrow</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="ScaledLabel" name="label_right_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Scroll right</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="ScaledLabel" name="content_right_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Right arrow</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="ScaledLabel" name="label_scroll_left_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Scroll left (fast)</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="ScaledLabel" name="content_scroll_left_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Ctrl + Left arrow</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="ScaledLabel" name="label_scroll_right_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Scroll right (fast)</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="ScaledLabel" name="content_scroll_right_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Ctrl + Right arrow</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="ScaledLabel" name="label_zoom_in_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Zoom in</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="ScaledLabel" name="content_zoom_in_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>A</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="ScaledLabel" name="label_zoom_out_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Zoom out</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1">
+                 <widget class="ScaledLabel" name="content_zoom_out_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Z</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="0">
+                 <widget class="ScaledLabel" name="label_zoom_selection_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Zoom to selection</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <widget class="ScaledLabel" name="content_zoom_selection_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Ctrl + Z</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0">
+                 <widget class="ScaledLabel" name="label_zoom_reset_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Zoom reset</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="1">
+                 <widget class="ScaledLabel" name="content_zoom_reset_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>H</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0">
+                 <widget class="ScaledLabel" name="label_zoom_in_10x_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Zoom in 10x</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="1">
+                 <widget class="ScaledLabel" name="content_zoom_in_10x_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>S</string>
+                  </property>
+                  <property name="indent">
+                   <number>0</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="9" column="0">
+                 <widget class="ScaledLabel" name="label_zoom_out_10x_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Zoom out 10x</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="9" column="1">
+                 <widget class="ScaledLabel" name="content_zoom_out_10x_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>X</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="0">
+                 <widget class="ScaledLabel" name="label_drag_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Drag</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="1">
+                 <widget class="ScaledLabel" name="content_drag_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Space + Left mouse button</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="0">
+                 <widget class="ScaledLabel" name="label_zoom_in_out_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Zoom in/out</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="1">
+                 <widget class="ScaledLabel" name="content_zoom_in_out_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Ctrl + Mousewheel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="0">
+                 <widget class="ScaledLabel" name="label_rename_snapshot_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Rename a snapshot</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="1">
+                 <widget class="ScaledLabel" name="content_rename_snapshot_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>F2 (select entry in table first)</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="vertical_spacer_2_">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="ScaledLabel" name="label_global_hotkeys_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Global hotkeys</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="global_hotkeys_layout_" native="true">
+               <layout class="QGridLayout" name="grid_layout_2_">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <item row="0" column="0">
+                 <widget class="ScaledLabel" name="label_open_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Open trace</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="ScaledLabel" name="content_open_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Ctrl + O</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="ScaledLabel" name="label_close_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Close trace</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="ScaledLabel" name="content_close_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Ctrl + F4</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="ScaledLabel" name="label_cycle_time_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Cycle time units</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="ScaledLabel" name="content_cycle_time_">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Ctrl + T</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="vertical_spacer_end_">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontal_spacer_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
