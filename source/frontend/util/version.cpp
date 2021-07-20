@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Version number info for RMV
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Version number info for RMV
 //=============================================================================
 
 #include "util/version.h"

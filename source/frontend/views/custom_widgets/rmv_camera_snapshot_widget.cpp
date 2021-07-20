@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of memory block widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a camera snapshot widget.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_camera_snapshot_widget.h"
@@ -12,8 +12,8 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "models/trace_manager.h"
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
+#include "managers/trace_manager.h"
 
 RMVCameraSnapshotWidget::RMVCameraSnapshotWidget(const RMVCameraSnapshotWidgetConfig& config)
     : config_(config)
@@ -132,7 +132,7 @@ void RMVCameraSnapshotWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
     {
         setCursor(Qt::PointingHandCursor);
 
-        render_color_ = config_.base_color.dark(125);
+        render_color_ = config_.base_color.darker(125);
     }
 
     update();
@@ -156,7 +156,7 @@ void RMVCameraSnapshotWidget::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
     if (config_.interactive)
     {
-        if (TraceManager::Get().DataSetValid())
+        if (rmv::TraceManager::Get().DataSetValid())
         {
             emit Navigate();
         }

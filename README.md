@@ -51,23 +51,30 @@ git clone https://github.com/GPUOpen-Tools/radeon_memory_visualizer.git
 As a preliminary step, make sure that you have the following installed on your system:
 * CMake 3.11 or above.
 * Python 3.7 or above.
-* Qt® 5 or above (5.12.6 is the default and recommended).
-* Visual Studio® 2015 or above (2017 is the default).
+* Qt® 5 or above (5.15.2 is the default and recommended).
+* Visual Studio® 2015 or above (2019 is the default).
 
-Qt should be installed to the default location (C:\Qt\Qt5.12.6). The Qt 5.12.6 install package can be found at https://download.qt.io/archive/qt/5.12/5.12.6/.
-Make sure to select msvc2017 64-bit (under Qt 5.12.6 option) during Qt installation. Note that the expected installation will produce a C:\Qt\Qt5.12.6\5.12.6 folder.
+Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page here: https://www.qt.io/blog/qt-5.15.2-released
+As an alternative, the Qt 5.12.6 offline installer can be used here: https://download.qt.io/archive/qt/5.12/5.12.6/
+Qt should be installed to the default location (C:\Qt\Qt5.xx.x).
+Be sure to select msvc2017/msvc2019 64-bit during Qt installation, depending on the compiler you decide to use.
 A reboot is required after Qt is installed.
-Cmake can be downloaded from (https://cmake.org/download/).
-Python (V3.x) can be downloaded from (https://www.python.org/).
 
-Run the python pre_build.py script in the build folder from a command prompt. If no command line options are provided, the defaults will be used (Qt 5.12.6 and Visual Studio 2017)
+Cmake can be downloaded from (https://cmake.org/download/).
+Python (V3.x) can be downloaded from (https://www.python.org/). To build the documentation from Visual Studio, the Sphinx Python Document Generator is needed.
+This can be installed once Python is installed, as follows:
+* Open a command prompt and navigate to the scripts folder in the python install folder. Then type these 2 commands:
+* pip install -U sphinx
+* pip install sphinx_rtd_theme
+
+Run the python pre_build.py script in the build folder from a command prompt. If no command line options are provided, the defaults will be used (Qt 5.15.2 and Visual Studio 2019)
 
 Some useful options of the pre_build.py script:
-* --vs <Visual Studio version>: generate the solution files for a specific Visual Studio version. For example, to target Visual Studio 2019, add --vs 2019 to the command.
+* --vs <Visual Studio version>: generate the solution files for a specific Visual Studio version. For example, to target Visual Studio 2017, add --vs 2017 to the command.
 * --qt <path>: full path to the folder from where you would like the Qt binaries to be retrieved. By default, CMake would try to auto-detect Qt on the system.
 
-Once the script has finished, in the case of Visual Studio 2017, a sub-folder called 'vs2017' will be created containing the necessary build files.
-Go into the 'vs2017' folder (build/win/vs2017) and double click on the RMV.sln file and build the 64-bit Debug and Release builds.
+Once the script has finished, in the case of Visual Studio 2019, a sub-folder called 'vs2019' will be created containing the necessary build files.
+Go into the 'vs2019' folder (build/win/vs2019) and double click on the RMV.sln file and build the 64-bit Debug and Release builds.
 The Release and Debug builds of RMV will be available in the build/release and build/debug folders.
 
 ## Support ##

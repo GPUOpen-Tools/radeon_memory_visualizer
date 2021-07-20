@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model implementation for Memory Leak Finder pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the Memory Leak Finder model.
 //=============================================================================
 
 #include "models/compare/memory_leak_finder_model.h"
@@ -18,10 +18,11 @@
 #include "rmt_resource_list.h"
 #include "rmt_util.h"
 
+#include "managers/snapshot_manager.h"
+#include "managers/trace_manager.h"
 #include "models/proxy_models/memory_leak_finder_proxy_model.h"
 #include "models/resource_item_model.h"
-#include "models/snapshot_manager.h"
-#include "models/trace_manager.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 static const QString kStatsText = "%1 resources, %2";
@@ -78,14 +79,14 @@ namespace rmv
 
     void MemoryLeakFinderModel::Update(SnapshotCompareId compare_filter)
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return;
         }
 
-        const RmtDataSnapshot* base_snapshot = trace_manager.GetComparedSnapshot(kSnapshotCompareBase);
-        const RmtDataSnapshot* diff_snapshot = trace_manager.GetComparedSnapshot(kSnapshotCompareDiff);
+        const SnapshotManager& snapshot_manager = SnapshotManager::Get();
+        const RmtDataSnapshot* base_snapshot    = snapshot_manager.GetCompareSnapshot(kSnapshotCompareBase);
+        const RmtDataSnapshot* diff_snapshot    = snapshot_manager.GetCompareSnapshot(kSnapshotCompareDiff);
 
         if (base_snapshot == nullptr || diff_snapshot == nullptr)
         {
@@ -109,7 +110,7 @@ namespace rmv
         SetModelData(kMemoryLeakFinderDiffSnapshot, diff_snapshot_name);
 
         // Set up the lists to contain worst-case scenario.
-        // Uses unordered set/map for fast insert/delete
+        // Uses unordered set/map for fast insert/delete.
         std::unordered_map<RmtResourceIdentifier, const RmtResource*> resources_in_base_only;
         std::unordered_set<const RmtResource*>                        resources_in_diff_only;
         std::unordered_set<const RmtResource*>                        resources_in_both;
@@ -135,13 +136,13 @@ namespace rmv
             auto iter = resources_in_base_only.find(current_resource->identifier);
             if (iter != resources_in_base_only.end())
             {
-                // found, so add to both and remove from base
+                // Found, so add to both and remove from base.
                 resources_in_both.insert(current_resource);
                 resources_in_base_only.erase(iter);
             }
             else
             {
-                // not found, just add to the diff list
+                // Not found, just add to the diff list.
                 resources_in_diff_only.insert(current_resource);
             }
         }
@@ -213,7 +214,7 @@ namespace rmv
                     resource_sizes.push_back(table_model_->data(model_index, Qt::UserRole).toULongLong());
                 }
             }
-            TraceManager::Get().BuildResourceSizeThresholds(resource_sizes, resource_thresholds_);
+            rmv_util::BuildResourceSizeThresholds(resource_sizes, resource_thresholds_);
         }
     }
 
@@ -278,30 +279,25 @@ namespace rmv
         return proxy_model_;
     }
 
-    RmtSnapshotPoint* MemoryLeakFinderModel::LoadSnapshot(const QModelIndex& index)
+    RmtSnapshotPoint* MemoryLeakFinderModel::FindSnapshot(const QModelIndex& index) const
     {
-        const int           compare_id    = GetResourceProxyModel()->GetData(index.row(), kResourceColumnCompareId);
-        RmtDataSnapshot*    snapshot      = nullptr;
-        const TraceManager& trace_manager = TraceManager::Get();
+        const int              compare_id       = GetResourceProxyModel()->GetData(index.row(), kResourceColumnCompareId);
+        RmtDataSnapshot*       snapshot         = nullptr;
+        const SnapshotManager& snapshot_manager = SnapshotManager::Get();
 
         // Use base snapshot if open or common to both.
         if ((compare_id & kSnapshotCompareIdOpen) != 0 || (compare_id & kSnapshotCompareIdCommon) != 0)
         {
-            snapshot = trace_manager.GetComparedSnapshot(kSnapshotCompareBase);
+            snapshot = snapshot_manager.GetCompareSnapshot(kSnapshotCompareBase);
         }
         else
         {
-            snapshot = trace_manager.GetComparedSnapshot(kSnapshotCompareDiff);
+            snapshot = snapshot_manager.GetCompareSnapshot(kSnapshotCompareDiff);
         }
 
-        // Open the snapshot if not already opened as a single snapshot.
-        const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
-        if (snapshot != open_snapshot)
-        {
-            RmtSnapshotPoint* snapshot_point = snapshot->snapshot_point;
-            SnapshotManager::Get().SetSelectedSnapshotPoint(snapshot_point);
-            return snapshot_point;
-        }
-        return nullptr;
+        // Set up the single snapshot point for loading (if necessary).
+        RmtSnapshotPoint* snapshot_point = snapshot->snapshot_point;
+        SnapshotManager::Get().SetSelectedSnapshotPoint(snapshot_point);
+        return snapshot_point;
     }
 }  // namespace rmv

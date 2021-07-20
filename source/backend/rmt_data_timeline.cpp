@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief Implementation of the data timeline functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the data timeline functions.
 //=============================================================================
 
 #include "rmt_data_timeline.h"
@@ -26,11 +27,11 @@ static void PerformFree(RmtDataSet* data_set, void* pointer)
 
 RmtErrorCode RmtDataTimelineDestroy(RmtDataTimeline* timeline)
 {
-    RMT_RETURN_ON_ERROR(timeline, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(timeline->data_set, RMT_ERROR_MALFORMED_DATA);
+    RMT_RETURN_ON_ERROR(timeline, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(timeline->data_set, kRmtErrorMalformedData);
 
     PerformFree(timeline->data_set, timeline->series_memory_buffer);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // input structure to the histogram job.
@@ -110,16 +111,16 @@ RmtErrorCode RmtDataTimelineCreateHistogram(const RmtDataTimeline*    timeline,
     RMT_ASSERT_MESSAGE(out_timeline_histogram, "Parameter outTimelineHistogram is NULL.");
 
     // Handle generating error codes in release builds.
-    RMT_RETURN_ON_ERROR(timeline, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(job_queue, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(bucket_width_in_rmt_cycles > 0, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR(out_timeline_histogram, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(timeline, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(bucket_width_in_rmt_cycles > 0, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR(out_timeline_histogram, kRmtErrorInvalidPointer);
 
     // This check is added to see that the time intervals provided by the input timestamp arguments
     // need to be larger than the time intervals provided by bucket arguments..
     const int64_t cycle_delta = (end_timestamp - start_timestamp) - (bucket_count * bucket_width_in_rmt_cycles);
     RMT_ASSERT_MESSAGE(cycle_delta >= 0, "The time delta is not correct.");
-    RMT_RETURN_ON_ERROR(cycle_delta >= 0, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(cycle_delta >= 0, kRmtErrorInvalidSize);
 
     // Fill out the initial fields of the data set.
     out_timeline_histogram->timeline               = timeline;
@@ -131,7 +132,7 @@ RmtErrorCode RmtDataTimelineCreateHistogram(const RmtDataTimeline*    timeline,
     const int32_t size_in_bytes                = timeline->series_count * out_timeline_histogram->bucket_count * sizeof(uint64_t);
     out_timeline_histogram->bucket_data        = (uint64_t*)malloc(size_in_bytes);
     RMT_ASSERT_MESSAGE(out_timeline_histogram->bucket_data, "Failed to allocate timeline histogram.");
-    RMT_RETURN_ON_ERROR(out_timeline_histogram->bucket_data, RMT_ERROR_OUT_OF_MEMORY);
+    RMT_RETURN_ON_ERROR(out_timeline_histogram->bucket_data, kRmtErrorOutOfMemory);
     memset(out_timeline_histogram->bucket_data, 0, size_in_bytes);
 
     // Setup the inputs to our job in the scratch memory.
@@ -148,19 +149,19 @@ RmtErrorCode RmtDataTimelineCreateHistogram(const RmtDataTimeline*    timeline,
     // NOTE: This can be done as one per bucket (or range of buckets).
     RmtJobHandle       job_handle = 0;
     const RmtErrorCode error_code = RmtJobQueueAddMultiple(job_queue, CreateHistogramJob, input_parameters, 0, bucket_count, &job_handle);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // Wait for job to complete.
     RmtJobQueueWaitForCompletion(job_queue, job_handle);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // destroy the histogram.
 RmtErrorCode RmtDataTimelineHistogramDestroy(RmtDataTimelineHistogram* timeline_histogram)
 {
-    RMT_RETURN_ON_ERROR(timeline_histogram, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(timeline_histogram, kRmtErrorInvalidPointer);
 
     free(timeline_histogram->bucket_data);
 
@@ -169,7 +170,7 @@ RmtErrorCode RmtDataTimelineHistogramDestroy(RmtDataTimelineHistogram* timeline_
     timeline_histogram->bucket_width_in_cycles = 0;
     timeline_histogram->bucket_count           = 0;
     timeline_histogram->bucket_group_count     = 0;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // get index from a bucket address.

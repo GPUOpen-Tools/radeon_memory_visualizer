@@ -160,9 +160,9 @@
           <property name="currentIndex">
            <number>1</number>
           </property>
-          <widget class="SnapshotStartPane" name="snapshot_page_1_"/>
-          <widget class="QWidget" name="snapshot_page_2_">
-           <layout class="QHBoxLayout" name="horizontal_layout_1_">
+           <widget class="SnapshotStartPane" name="snapshot_page_1_"/>
+           <widget class="QWidget" name="snapshot_page_2_">
+            <layout class="QHBoxLayout" name="horizontal_layout_1_">
             <property name="spacing">
              <number>0</number>
             </property>
@@ -313,8 +313,9 @@
           <property name="currentIndex">
            <number>1</number>
           </property>
-          <widget class="CompareStartPane" name="compare_page_1_"/>
-          <widget class="QWidget" name="compare_page_2_">
+          <widget class="CompareStartPane" name="compare_snapshots_not_loaded_"/>
+          <widget class="CompareStartPane" name="compare_snapshots_empty_"/>
+          <widget class="QWidget" name="compare_snapshots_ok_">             
            <layout class="QHBoxLayout" name="horizontal_layout_4_" stretch="1,5">
             <property name="spacing">
              <number>0</number>
@@ -447,6 +448,11 @@
    <class>ScaledLabel</class>
    <extends>QLabel</extends>
    <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledPushButton</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/scaled_push_button.h</header>
   </customwidget>
   <customwidget>
    <class>ScaledMenuBar</class>

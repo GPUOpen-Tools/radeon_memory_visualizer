@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Definition of types used throughout the RMT code.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of types used throughout the RMT code.
 //=============================================================================
 
 #ifndef RMV_PARSER_RMT_TYPES_H_
@@ -9,7 +10,7 @@
 
 #include <stdint.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -77,7 +78,7 @@ typedef uint64_t RmtGpuAddress;
 /// A typedef for a process ID.
 typedef uint64_t RmtProcessId;
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_PARSER_RMT_TYPES_H_

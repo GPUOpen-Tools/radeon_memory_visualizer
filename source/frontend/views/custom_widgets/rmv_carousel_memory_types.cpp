@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV's carousel memory types widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the carousel memory types widget.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_carousel_memory_types.h"
@@ -35,8 +35,8 @@ void RMVCarouselMemoryTypes::paint(QPainter* painter, const QStyleOptionGraphics
     Q_UNUSED(item);
     Q_UNUSED(widget);
 
-    QString   title_string;
-    HeapData* heap;
+    QString        title_string;
+    rmv::HeapData* heap;
     if (physical_heap_)
     {
         title_string = "Committed virtual memory";
@@ -84,7 +84,7 @@ void RMVCarouselMemoryTypes::paint(QPainter* painter, const QStyleOptionGraphics
                                       true);
 }
 
-void RMVCarouselMemoryTypes::SetData(const RMVCarouselData& data)
+void RMVCarouselMemoryTypes::SetData(const rmv::RMVCarouselData& data)
 {
     data_ = data.memory_types_data;
     update();

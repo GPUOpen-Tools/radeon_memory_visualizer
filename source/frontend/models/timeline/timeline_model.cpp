@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model implementation for Timeline pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the Timeline model.
 //=============================================================================
 
 #include "models/timeline/timeline_model.h"
@@ -16,11 +16,10 @@
 #include "rmt_print.h"
 #include "rmt_util.h"
 
+#include "managers/trace_manager.h"
+#include "models/colorizer.h"
 #include "models/resource_sorter.h"
-#include "models/trace_manager.h"
 #include "settings/rmv_settings.h"
-#include "views/colorizer.h"
-#include "views/main_window.h"
 #include "util/log_file_writer.h"
 #include "util/string_util.h"
 #include "util/time_util.h"
@@ -31,11 +30,46 @@
 
 namespace rmv
 {
+    /// @brief Worker class definition to do the processing of the timeline generation
+    /// on a separate thread.
+    class TimelineWorker : public rmv::BackgroundTask
+    {
+    public:
+        /// @brief Constructor.
+        ///
+        /// @param [in] model         The model containing the timeline data to work with.
+        /// @param [in] timeline_type The type of timeline being generated.
+        explicit TimelineWorker(rmv::TimelineModel* model, RmtDataTimelineType timeline_type)
+            : BackgroundTask()
+            , model_(model)
+            , timeline_type_(timeline_type)
+        {
+        }
+
+        /// @brief Destructor.
+        ~TimelineWorker()
+        {
+        }
+
+        /// @brief Worker thread function.
+        virtual void ThreadFunc()
+        {
+            model_->GenerateTimeline(timeline_type_);
+        }
+
+    private:
+        rmv::TimelineModel* model_;          ///< Pointer to the model data.
+        RmtDataTimelineType timeline_type_;  ///< The timeline type.
+    };
+
+    // Thread count for the job queue.
+    static const int32_t kThreadCount = 8;
+
     // The number of buckets used for the timeline graph. This tan be visualized as taking
     // the whole timeline display and slicing it vertically into this number of buckets.
     static const int32_t kNumBuckets = 500;
 
-    // The maximum number of lines of info to show in the timeline tooltip
+    // The maximum number of lines of info to show in the timeline tooltip.
     static const int kMaxTooltipLines = 6;
 
     TimelineModel::TimelineModel()
@@ -47,11 +81,14 @@ namespace rmv
         , histogram_{}
         , timeline_type_(kRmtDataTimelineTypeResourceUsageVirtualSize)
     {
+        const RmtErrorCode error_code = RmtJobQueueInitialize(&job_queue_, kThreadCount);
+        RMT_ASSERT(error_code == kRmtOk);
     }
 
     TimelineModel::~TimelineModel()
     {
         delete table_model_;
+        RmtJobQueueShutdown(&job_queue_);
     }
 
     void TimelineModel::ResetModelValues()
@@ -69,15 +106,15 @@ namespace rmv
 
         if (trace_manager.DataSetValid())
         {
-            // recreate the timeline for the data set.
+            // Recreate the timeline for the data set.
             RmtDataSet*      data_set   = trace_manager.GetDataSet();
             RmtDataTimeline* timeline   = trace_manager.GetTimeline();
             RmtErrorCode     error_code = RmtDataTimelineDestroy(timeline);
             RMT_UNUSED(error_code);
-            RMT_ASSERT_MESSAGE(error_code == RMT_OK, "Error destroying old timeline");
+            RMT_ASSERT_MESSAGE(error_code == kRmtOk, "Error destroying old timeline");
             error_code = RmtDataSetGenerateTimeline(data_set, timeline_type, timeline);
             RMT_UNUSED(error_code);
-            RMT_ASSERT_MESSAGE(error_code == RMT_OK, "Error generating new timeline type");
+            RMT_ASSERT_MESSAGE(error_code == kRmtOk, "Error generating new timeline type");
         }
     }
 
@@ -137,7 +174,7 @@ namespace rmv
         // Generate the snapshot name. Name will be "Snapshot N" where N is
         // snapshot_num. Use the number of snapshots so far as a start value
         // for snapshot_num. If this snapshot exists already, increment snapshot_num
-        // and repeat until the snapshot name is unique
+        // and repeat until the snapshot name is unique.
         RmtDataSet*              data_set      = trace_manager.GetDataSet();
         int                      snapshot_num  = data_set->snapshot_count;
         static const char* const kSnapshotName = "Snapshot ";
@@ -242,9 +279,9 @@ namespace rmv
         double bucket_step = duration / (double)kNumBuckets;
 
         const RmtErrorCode error_code =
-            RmtDataTimelineCreateHistogram(timeline, MainWindow::GetJobQueue(), kNumBuckets, bucket_step, min_visible_, max_visible_, &histogram_);
+            RmtDataTimelineCreateHistogram(timeline, &job_queue_, kNumBuckets, bucket_step, min_visible_, max_visible_, &histogram_);
 
-        RMT_ASSERT(error_code == RMT_OK);
+        RMT_ASSERT(error_code == kRmtOk);
         RMT_UNUSED(error_code);
     }
 
@@ -277,11 +314,11 @@ namespace rmv
         return value_string;
     }
 
-    void TimelineModel::GetResourceTooltipInfo(int bucket_index, bool display_as_memory, QList<TooltipInfo>& tooltip_info_list)
+    void TimelineModel::GetResourceTooltipInfo(int bucket_index, bool display_as_memory, QString& text_string, QString& color_string)
     {
         ResourceSorter sorter;
 
-        // build an array of resource type to count
+        // Build an array of resource type to count.
         for (int i = 0; i < GetNumBucketGroups(); i++)
         {
             if (i == kRmtResourceUsageTypeUnknown)
@@ -293,67 +330,70 @@ namespace rmv
 
         sorter.Sort();
 
-        // take the top n values and show them
+        // Take the top n values and show them.
         size_t  count = std::min<size_t>(kMaxTooltipLines - 1, sorter.GetNumResources());
         int64_t value = 0;
 
-        TooltipInfo tooltip_info;
         for (size_t i = 0; i < count; i++)
         {
-            value             = sorter.GetResourceValue(i);
-            int type          = sorter.GetResourceType(i);
-            tooltip_info.text = QString("%1: %2")
-                                    .arg(rmv::string_util::GetResourceUsageString(static_cast<RmtResourceUsageType>(type)))
-                                    .arg(GetValueString(value, display_as_memory));
-            tooltip_info.color = Colorizer::GetResourceUsageColor(static_cast<RmtResourceUsageType>(type));
-            tooltip_info_list.push_back(tooltip_info);
+            value    = sorter.GetResourceValue(i);
+            int type = sorter.GetResourceType(i);
+            text_string += QString("%1: %2\n")
+                               .arg(rmv::string_util::GetResourceUsageString(static_cast<RmtResourceUsageType>(type)))
+                               .arg(GetValueString(value, display_as_memory));
+            color_string += QString("#%1\n").arg(QString::number(Colorizer::GetResourceUsageColor(static_cast<RmtResourceUsageType>(type)).rgb(), 16));
         }
 
-        // total up the rest and show them as "Other"
-        value              = sorter.GetRemainder(kMaxTooltipLines - 1);
-        tooltip_info.text  = QString("Other: %1").arg(GetValueString(value, display_as_memory));
-        tooltip_info.color = Colorizer::GetResourceUsageColor(kRmtResourceUsageTypeFree);
-        tooltip_info_list.push_back(tooltip_info);
+        // Total up the rest and show them as "Other".
+        value = sorter.GetRemainder(kMaxTooltipLines - 1);
+        text_string += QString("Other: %1").arg(GetValueString(value, display_as_memory));
+        color_string += QString("#%1").arg(QString::number(Colorizer::GetResourceUsageColor(kRmtResourceUsageTypeFree).rgb(), 16));
     }
 
-    bool TimelineModel::GetTimelineTooltipInfo(qreal x_pos, QList<TooltipInfo>& tooltip_info_list)
+    bool TimelineModel::GetTimelineTooltipInfo(qreal x_pos, QString& text_string, QString& color_string)
     {
         int bucket_index = x_pos * kNumBuckets;
 
         switch (timeline_type_)
         {
         case kRmtDataTimelineTypeResourceUsageCount:
-            // number of each type of resource
-            GetResourceTooltipInfo(bucket_index, false, tooltip_info_list);
+            // Number of each type of resource.
+            GetResourceTooltipInfo(bucket_index, false, text_string, color_string);
             break;
 
         case kRmtDataTimelineTypeResourceUsageVirtualSize:
-            // memory for each type of resource
-            GetResourceTooltipInfo(bucket_index, true, tooltip_info_list);
+            // Memory for each type of resource.
+            GetResourceTooltipInfo(bucket_index, true, text_string, color_string);
             break;
 
         case kRmtDataTimelineTypeVirtualMemory:
-            // calculate memory in each heap
+            // Calculate memory in each heap.
             for (int i = 0; i < GetNumBucketGroups(); i++)
             {
-                int64_t     value = RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
-                TooltipInfo tooltip_info;
-                tooltip_info.text =
+                int64_t value = RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
+                if (i > 0)
+                {
+                    text_string += QString("\n");
+                    color_string += QString("\n");
+                }
+                text_string +=
                     QString("%1: %2").arg(RmtGetHeapTypeNameFromHeapType(RmtHeapType(i))).arg(rmv::string_util::LocalizedValueMemory(value, false, false));
-                tooltip_info.color = Colorizer::GetHeapColor(static_cast<RmtHeapType>(i));
-                tooltip_info_list.push_back(tooltip_info);
+                color_string += QString("#%1").arg(QString::number(Colorizer::GetHeapColor(static_cast<RmtHeapType>(i)).rgb(), 16));
             }
             break;
 
         case kRmtDataTimelineTypeCommitted:
             for (int i = 0; i < GetNumBucketGroups(); i++)
             {
-                int64_t     value = RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
-                TooltipInfo tooltip_info;
-                tooltip_info.text =
+                int64_t value = RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
+                if (i > 0)
+                {
+                    text_string += QString("\n");
+                    color_string += QString("\n");
+                }
+                text_string +=
                     QString("%1: %2").arg(RmtGetHeapTypeNameFromHeapType(RmtHeapType(i))).arg(rmv::string_util::LocalizedValueMemory(value, false, false));
-                tooltip_info.color = Colorizer::GetHeapColor(static_cast<RmtHeapType>(i));
-                tooltip_info_list.push_back(tooltip_info);
+                color_string += QString("#%1").arg(QString::number(Colorizer::GetHeapColor(static_cast<RmtHeapType>(i)).rgb(), 16));
             }
             break;
 
@@ -373,7 +413,7 @@ namespace rmv
 
             // The heights in the bucket consist of the memory allocated for each process.
             // Since the timeline view is a stacked graph, the heights of the previous buckets
-            // need to be taken into account and used as an offset for the current bucket
+            // need to be taken into account and used as an offset for the current bucket.
             out_y_pos             = 0.0;
             qreal histogram_value = 0.0;
             for (int i = 0; i <= bucket_group_index; i++)
@@ -383,7 +423,7 @@ namespace rmv
                 out_y_pos += histogram_value;
             }
 
-            // height is just the data for this particular sub-bucket
+            // Height is just the data for this particular sub-bucket.
             out_height = histogram_value;
 
             return true;
@@ -409,7 +449,7 @@ namespace rmv
         if (trace_manager.DataSetValid())
         {
             const RmtDataSet* data_set = trace_manager.GetDataSet();
-            if (RmtDataSetGetCpuClockTimestampValid(data_set) == RMT_OK)
+            if (RmtDataSetGetCpuClockTimestampValid(data_set) == kRmtOk)
             {
                 valid = true;
             }
@@ -432,6 +472,11 @@ namespace rmv
         }
 
         return 0;
+    }
+
+    BackgroundTask* TimelineModel::CreateWorkerThread(RmtDataTimelineType timeline_type)
+    {
+        return new TimelineWorker(this, timeline_type);
     }
 
 }  // namespace rmv

@@ -1,9 +1,12 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for the snapshot table view. Emit a signal whenever
-/// the table selection is changed so external objects can respond to it.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the snapshot table view.
+///
+/// Emit a signal whenever the table selection is changed so external objects
+/// can respond to it.
+///
 //=============================================================================
 
 #include "views/custom_widgets/rmv_snapshot_table_view.h"

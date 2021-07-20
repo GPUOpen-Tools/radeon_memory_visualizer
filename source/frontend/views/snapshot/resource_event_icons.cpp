@@ -1,11 +1,13 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Implementation of the resource event icons.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the resource event icons.
 //=============================================================================
 
 #include "views/snapshot/resource_event_icons.h"
+
+#include <QPainterPath>
 
 #include "qt_common/utils/scaling_manager.h"
 

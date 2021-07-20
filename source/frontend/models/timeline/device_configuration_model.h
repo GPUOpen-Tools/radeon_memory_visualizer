@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model header for the Device configuration pane
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Device configuration model.
 //=============================================================================
 
 #ifndef RMV_MODELS_TIMELINE_DEVICE_CONFIGURATION_MODEL_H_
@@ -12,8 +12,9 @@
 
 namespace rmv
 {
-    /// An enum of widgets used by the UI and model. Used to map UI widgets to their
-    /// corresponding model data.
+    /// @brief An enum of widgets used by the UI and model.
+    ///
+    /// Used to map UI widgets to their corresponding model data.
     enum DeviceConfigurationWidgets
     {
         kDeviceConfigurationDeviceName,
@@ -28,20 +29,20 @@ namespace rmv
         kDeviceConfigurationNumWidgets
     };
 
-    /// Container class that holds model data for a given pane.
+    /// @brief Container class that holds model data for the device configuration pane.
     class DeviceConfigurationModel : public ModelViewMapper
     {
     public:
-        /// Constructor.
+        /// @brief Constructor.
         explicit DeviceConfigurationModel();
 
-        /// Destructor.
+        /// @brief Destructor.
         virtual ~DeviceConfigurationModel();
 
-        /// Initialize blank data for the model.
+        /// @brief Initialize blank data for the model.
         void ResetModelValues();
 
-        /// Update the model with data from the back end.
+        /// @brief Update the model with data from the back end.
         void Update();
     };
 

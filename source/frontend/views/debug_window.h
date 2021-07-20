@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for RMV debug window.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the debug window.
 //=============================================================================
 
 #ifndef RMV_VIEWS_DEBUG_WINDOW_H_
@@ -12,38 +12,43 @@
 
 #include <QDialog>
 
-/// Support for RMV debug window.
+/// @brief Support for the debug window.
 class DebugWindow : public QDialog
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
+    /// @brief Constructor.
     explicit DebugWindow();
 
-    /// Destructor.
+    /// @brief Destructor.
     ~DebugWindow();
 
-    /// Send a message to the debug window. Supports multiple arguments.
-    /// \param format The string containing format for each argument.
+    /// @brief Send a message to the debug window. Supports multiple arguments.
+    ///
+    /// @param [in] format The string containing format for each argument.
     static void DbgMsg(const char* format, ...);
 
 signals:
-    /// Signal that gets emitted when the debug window has new text to add.
+    /// @brief Signal that gets emitted when the debug window has new text to add.
+    ///
     /// This will be picked up by the slot below.
-    /// \param string The new line of text to add.
+    ///
+    /// @param [in] string The new line of text to add.
     void EmitSetText(const QString& string);
 
 private slots:
-    /// Add a new line of text to the debug window.
-    /// \param string The new line of text to add.
+    /// @brief Add a new line of text to the debug window.
+    ///
+    /// @param [in] string The new line of text to add.
     void SetText(const QString& string);
 
 private:
-    /// Helper function which to automatically scroll to the bottom on new line.
+    /// @brief Helper function which to automatically scroll to the bottom on new line.
     void ScrollToBottom();
 
-    /// Register the Debug Window such that it is accessible.
+    /// @brief Register the Debug Window such that it is accessible.
+    ///
     /// This is only to be called once, when initializing MainWindow.
     void RegisterDbgWindow();
 

@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Implementation of functions operating on a resource history structure.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of functions operating on a resource history structure.
 //=============================================================================
 
 #include <rmt_resource_history.h>
@@ -15,11 +16,11 @@ RmtErrorCode RmtResourceHistoryAddEvent(RmtResourceHistory*         resource_his
                                         bool                        compact)
 {
     RMT_ASSERT(resource_history);
-    RMT_RETURN_ON_ERROR(resource_history, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(resource_history, kRmtErrorInvalidPointer);
 
     if (resource_history->event_count >= RMT_MAXIMUM_RESOURCE_HISTORY_EVENTS)
     {
-        return RMT_ERROR_OUT_OF_MEMORY;
+        return kRmtErrorOutOfMemory;
     }
 
     // if the events need compacting, ignore this event if it's indentical to the previous event
@@ -47,14 +48,14 @@ RmtErrorCode RmtResourceHistoryAddEvent(RmtResourceHistory*         resource_his
         resource_history->event_count++;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // destroy resource history
 RmtErrorCode RmtResourceHistoryDestroy(RmtResourceHistory* resource_history)
 {
     RMT_ASSERT(resource_history);
-    RMT_RETURN_ON_ERROR(resource_history, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(resource_history, kRmtErrorInvalidPointer);
 
-    return RMT_OK;
+    return kRmtOk;
 }

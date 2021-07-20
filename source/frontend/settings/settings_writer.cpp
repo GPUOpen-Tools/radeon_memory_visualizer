@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV XML settings writer.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the XML settings writer.
 //=============================================================================
 
 #include "settings/settings_writer.h"
@@ -46,9 +46,9 @@ namespace rmv
 
     void SettingsWriter::WriteSettings()
     {
-        RMVSettingsMap& settings = settings_->Settings();
+        const RMVSettingsMap& settings = settings_->Settings();
 
-        for (RMVSettingsMap::iterator i = settings.begin(); i != settings.end(); ++i)
+        for (RMVSettingsMap::const_iterator i = settings.begin(); i != settings.end(); ++i)
         {
             writer_.writeStartElement("Setting");
             WriteSetting(i.value());

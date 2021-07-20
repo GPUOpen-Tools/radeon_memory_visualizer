@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of the Memory leak finder pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the Memory leak finder pane.
 //=============================================================================
 
 #include "views/compare/memory_leak_finder_pane.h"
@@ -12,21 +12,17 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "rmt_data_set.h"
-#include "rmt_data_snapshot.h"
-#include "rmt_util.h"
-
+#include "managers/message_manager.h"
+#include "managers/trace_manager.h"
 #include "models/compare/memory_leak_finder_model.h"
-#include "models/message_manager.h"
 #include "models/proxy_models/memory_leak_finder_proxy_model.h"
 #include "models/resource_item_model.h"
-#include "models/trace_manager.h"
 #include "settings/rmv_settings.h"
 #include "views/custom_widgets/rmv_colored_checkbox.h"
 #include "util/rmv_util.h"
 
 MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
-    : BasePane(parent)
+    : ComparePane(parent)
     , ui_(new Ui::MemoryLeakFinderPane)
 {
     ui_->setupUi(this);
@@ -45,7 +41,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     model_->InitializeModel(ui_->base_snapshot_label_, rmv::kMemoryLeakFinderBaseSnapshot, "text");
     model_->InitializeModel(ui_->diff_snapshot_label_, rmv::kMemoryLeakFinderDiffSnapshot, "text");
 
-    model_->InitializeTableModel(ui_->resource_table_view_, 0, kResourceColumnCount, kSnapshotCompareIdCommon);
+    model_->InitializeTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount, rmv::kSnapshotCompareIdCommon);
 
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->preferred_heap_combo_box_, rmv::text::kPreferredHeap);
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->resource_usage_combo_box_, rmv::text::kResourceUsage);
@@ -59,16 +55,17 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     connect(resource_usage_combo_box_model_, &rmv::ResourceUsageComboBoxModel::FilterChanged, this, &MemoryLeakFinderPane::ResourceChanged);
 
     compare_id_delegate_ = new RMVCompareIdDelegate();
-    ui_->resource_table_view_->setItemDelegateForColumn(kResourceColumnCompareId, compare_id_delegate_);
+    ui_->resource_table_view_->setItemDelegateForColumn(rmv::kResourceColumnCompareId, compare_id_delegate_);
 
-    // set the row height according to the compare ID column delegate.
+    // Set the row height according to the compare ID column delegate.
     ui_->resource_table_view_->verticalHeader()->setDefaultSectionSize(compare_id_delegate_->DefaultSizeHint().height());
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->search_box_, ui_->size_slider_);
 
-    ui_->base_allocations_checkbox_->Initialize(false, RMVSettings::Get().GetColorSnapshotViewed(), Qt::black);
-    ui_->both_allocations_checkbox_->Initialize(true, RMVSettings::Get().GetColorSnapshotViewed(), RMVSettings::Get().GetColorSnapshotCompared(), true);
-    ui_->diff_allocations_checkbox_->Initialize(false, RMVSettings::Get().GetColorSnapshotCompared(), Qt::black);
+    ui_->base_allocations_checkbox_->Initialize(false, rmv::RMVSettings::Get().GetColorSnapshotViewed(), Qt::black);
+    ui_->both_allocations_checkbox_->Initialize(
+        true, rmv::RMVSettings::Get().GetColorSnapshotViewed(), rmv::RMVSettings::Get().GetColorSnapshotCompared(), true);
+    ui_->diff_allocations_checkbox_->Initialize(false, rmv::RMVSettings::Get().GetColorSnapshotCompared(), Qt::black);
 
     CompareFilterChanged();
 
@@ -78,9 +75,9 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     connect(ui_->both_allocations_checkbox_, &RMVColoredCheckbox::Clicked, this, &MemoryLeakFinderPane::CompareFilterChanged);
     connect(ui_->base_allocations_checkbox_, &RMVColoredCheckbox::Clicked, this, &MemoryLeakFinderPane::CompareFilterChanged);
     connect(ui_->diff_allocations_checkbox_, &RMVColoredCheckbox::Clicked, this, &MemoryLeakFinderPane::CompareFilterChanged);
-    connect(&MessageManager::Get(), &MessageManager::UpdateHashes, this, &MemoryLeakFinderPane::UpdateHashes);
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::HashesChanged, this, &MemoryLeakFinderPane::UpdateHashes);
 
-    // set up a connection between the timeline being sorted and making sure the selected event is visible
+    // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetResourceProxyModel(), &rmv::MemoryLeakFinderProxyModel::layoutChanged, this, &MemoryLeakFinderPane::ScrollToSelectedResource);
 
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MemoryLeakFinderPane::OnScaleFactorChanged);
@@ -107,7 +104,7 @@ void MemoryLeakFinderPane::showEvent(QShowEvent* event)
 
 void MemoryLeakFinderPane::OnScaleFactorChanged()
 {
-    // Get the height of the delegate to update the checkmark geometry and table row height;
+    // Get the height of the delegate to update the checkmark geometry and table row height.
     const int checkmark_icon_height = compare_id_delegate_->DefaultSizeHint().height();
 
     // Update checkmark geometry in the CompareIdDelegate.
@@ -123,26 +120,26 @@ void MemoryLeakFinderPane::Refresh()
     Update(true);
 }
 
-SnapshotCompareId MemoryLeakFinderPane::GetCompareIdFilter() const
+rmv::SnapshotCompareId MemoryLeakFinderPane::GetCompareIdFilter() const
 {
     uint32_t filter = 0;
 
     if (ui_->base_allocations_checkbox_->isChecked())
     {
-        filter |= kSnapshotCompareIdOpen;
+        filter |= rmv::kSnapshotCompareIdOpen;
     }
 
     if (ui_->both_allocations_checkbox_->isChecked())
     {
-        filter |= kSnapshotCompareIdCommon;
+        filter |= rmv::kSnapshotCompareIdCommon;
     }
 
     if (ui_->diff_allocations_checkbox_->isChecked())
     {
-        filter |= kSnapshotCompareIdCompared;
+        filter |= rmv::kSnapshotCompareIdCompared;
     }
 
-    return (SnapshotCompareId)filter;
+    return (rmv::SnapshotCompareId)filter;
 }
 
 void MemoryLeakFinderPane::Update(bool reset_filters)
@@ -154,15 +151,15 @@ void MemoryLeakFinderPane::Update(bool reset_filters)
         ui_->diff_allocations_checkbox_->setChecked(false);
     }
 
-    // Prior to doing a table update, disable sorting since Qt is super slow about it
+    // Prior to doing a table update, disable sorting since Qt is super slow about it.
     ui_->resource_table_view_->setSortingEnabled(false);
 
-    const SnapshotCompareId compare_filter = GetCompareIdFilter();
+    const rmv::SnapshotCompareId compare_filter = GetCompareIdFilter();
     model_->Update(compare_filter);
 
     ui_->resource_table_view_->setSortingEnabled(true);
 
-    ui_->resource_table_view_->sortByColumn(kResourceColumnName, Qt::DescendingOrder);
+    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnName, Qt::DescendingOrder);
 
     SetMaximumResourceTableHeight();
 }
@@ -202,14 +199,14 @@ void MemoryLeakFinderPane::FilterBySizeSliderChanged(int min_value, int max_valu
 
 void MemoryLeakFinderPane::CompareFilterChanged()
 {
-    SnapshotCompareId filter = GetCompareIdFilter();
+    rmv::SnapshotCompareId filter = GetCompareIdFilter();
     model_->Update(filter);
     SetMaximumResourceTableHeight();
 }
 
 void MemoryLeakFinderPane::HeapChanged(bool checked)
 {
-    // rebuild the table depending on what the state of the combo box items is
+    // Rebuild the table depending on what the state of the combo box items is.
     RMT_UNUSED(checked);
 
     QString filter_string = preferred_heap_combo_box_model_->GetFilterString(ui_->preferred_heap_combo_box_);
@@ -219,7 +216,7 @@ void MemoryLeakFinderPane::HeapChanged(bool checked)
 
 void MemoryLeakFinderPane::ResourceChanged(bool checked)
 {
-    // rebuild the table depending on what the state of the combo box items is
+    // Rebuild the table depending on what the state of the combo box items is.
     RMT_UNUSED(checked);
 
     QString filter_string = resource_usage_combo_box_model_->GetFilterString(ui_->resource_usage_combo_box_);
@@ -229,7 +226,7 @@ void MemoryLeakFinderPane::ResourceChanged(bool checked)
 
 void MemoryLeakFinderPane::UpdateHashes()
 {
-    if (TraceManager::Get().GetComparedSnapshot(kSnapshotCompareDiff) != nullptr)
+    if (rmv::SnapshotManager::Get().GetCompareSnapshot(rmv::kSnapshotCompareDiff) != nullptr)
     {
         Update(false);
     }
@@ -239,16 +236,12 @@ void MemoryLeakFinderPane::TableDoubleClicked(const QModelIndex& index)
 {
     if (index.isValid() == true)
     {
-        const RmtResourceIdentifier resource_identifier = model_->GetResourceProxyModel()->GetData(index.row(), kResourceColumnGlobalId);
-        RmtSnapshotPoint*           snapshot_point      = model_->LoadSnapshot(index);
+        const RmtResourceIdentifier resource_identifier = model_->GetResourceProxyModel()->GetData(index.row(), rmv::kResourceColumnGlobalId);
+        RmtSnapshotPoint*           snapshot_point      = model_->FindSnapshot(index);
         if (snapshot_point)
         {
-            emit MessageManager::Get().OpenSnapshot(snapshot_point);
+            emit rmv::SnapshotManager::Get().SnapshotOpened(resource_identifier);
         }
-
-        emit MessageManager::Get().ResourceSelected(resource_identifier);
-
-        emit MessageManager::Get().NavigateToPane(rmv::kPaneSnapshotResourceDetails);
     }
 }
 

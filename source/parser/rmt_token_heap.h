@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  A priority queue data structure for RmtToken structures.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  A priority queue data structure for RmtToken structures.
 //=============================================================================
 
 #ifndef RMV_PARSER_RMT_TOKEN_HEAP_H_
@@ -12,7 +13,7 @@
 #include "rmt_format.h"
 #include "rmt_util.h"
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -81,11 +82,11 @@ typedef struct RmtStreamMerger
 /// @param [in]     stream_parser_count      The number of stream parsers.
 ///
 /// @retval
-/// RMT_OK                                   The operation completed successfully.
+/// kRmtOk                                   The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                The operation failed because <c><i>token_heap</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                  The operation failed because <c><i>token_heap</i></c> was <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_INVALID_SIZE                   The operation failed because <c><i>stream_parser_count</i></c> was an invalid size.
+/// kRmtErrorInvalidSize                     The operation failed because <c><i>stream_parser_count</i></c> was an invalid size.
 RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* stream_parsers, int32_t stream_parser_count);
 
 /// Clear the heap.
@@ -93,9 +94,9 @@ RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* s
 /// @param [in]     token_heap               An RmtStreamMerger structure defining the stream merger.
 ///
 /// @retval
-/// RMT_OK                                   The operation completed successfully.
+/// kRmtOk                                   The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                The operation failed because <c><i>token_heap</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                  The operation failed because <c><i>token_heap</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap);
 
 /// Return true if the heap is empty.
@@ -111,12 +112,12 @@ bool RmtStreamMergerIsEmpty(const RmtStreamMerger* token_heap);
 /// @param [out]    out_token                An RmtToken structure receiving the token.
 ///
 /// @retval
-/// RMT_OK                                   The operation completed successfully.
+/// kRmtOk                                   The operation completed successfully.
 /// @retval
-/// RMT_ERROR_OUT_OF_MEMORY                  The operation failed because <c><i>token_heap</i></c> is empty.
+/// kRmtErrorOutOfMemory                     The operation failed because <c><i>token_heap</i></c> is empty.
 RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_token);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_PARSER_RMT_TOKEN_HEAP_H_

@@ -1,16 +1,14 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for the Allocation List pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Resource List pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_SNAPSHOT_RESOURCE_LIST_PANE_H_
 #define RMV_VIEWS_SNAPSHOT_RESOURCE_LIST_PANE_H_
 
 #include "ui_resource_list_pane.h"
-
-#include "rmt_resource_list.h"
 
 #include "models/heap_combo_box_model.h"
 #include "models/resource_usage_combo_box_model.h"
@@ -19,96 +17,109 @@
 #include "views/base_pane.h"
 #include "views/custom_widgets/rmv_carousel.h"
 
-/// Class declaration.
+/// @brief Class declaration.
 class ResourceListPane : public BasePane
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The widget's parent.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit ResourceListPane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~ResourceListPane();
 
-    /// Overridden show event. Fired when this pane is opened.
-    /// \param event the show event object.
+    /// @brief Overridden show event. Fired when this pane is opened.
+    ///
+    /// @param [in] event The show event object.
     virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
 
-    /// Overridden hide event. Fired when this pane is closed.
-    /// \param event the hide event object.
+    /// @brief Overridden hide event. Fired when this pane is closed.
+    ///
+    /// @param [in] event The hide event object.
     virtual void hideEvent(QHideEvent* event) Q_DECL_OVERRIDE;
 
-    /// Overridden window resize event.
-    /// \param event the resize event object.
+    /// @brief Overridden window resize event.
+    ///
+    /// @param [in] event The resize event object.
     virtual void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
-    /// Clean up.
+    /// @brief Clean up.
     virtual void OnTraceClose() Q_DECL_OVERRIDE;
 
-    /// Reset UI state.
+    /// @brief Reset UI state.
     virtual void Reset() Q_DECL_OVERRIDE;
 
-    /// Open a snapshot.
-    /// \param snapshot The snapshot to open.
+    /// @brief Open a snapshot.
+    ///
+    /// @param [in] snapshot The snapshot to open.
     virtual void OpenSnapshot(RmtDataSnapshot* snapshot) Q_DECL_OVERRIDE;
 
 private slots:
-    /// Handle what happens when user changes the filter.
+    /// @brief Handle what happens when user changes the filter.
     void SearchBoxChanged();
 
-    /// Slot to handle what happens when the 'filter by size' slider changes.
-    /// \param min_value Minimum value of slider span.
-    /// \param max_value Maximum value of slider span.
+    /// @brief Slot to handle what happens when the 'filter by size' slider changes.
+    ///
+    /// @param [in] min_value Minimum value of slider span.
+    /// @param [in] max_value Maximum value of slider span.
     void FilterBySizeSliderChanged(int min_value, int max_value);
 
-    /// Handle what happens when a checkbox in the heap dropdown is checked or unchecked.
-    /// \param checked Whether the checkbox is checked or unchecked.
+    /// @brief Handle what happens when a checkbox in the heap dropdown is checked or unchecked.
+    ///
+    /// @param [in] checked Whether the checkbox is checked or unchecked.
     void HeapChanged(bool checked);
 
-    /// Handle what happens when a checkbox in the resource dropdown is checked or unchecked.
-    /// \param checked Whether the checkbox is checked or unchecked.
+    /// @brief Handle what happens when a checkbox in the resource dropdown is checked or unchecked.
+    ///
+    /// @param [in] checked Whether the checkbox is checked or unchecked.
     void ResourceChanged(bool checked);
 
-    /// Resize child UI widgets when the DPI scale factor changes.
+    /// @brief Resize child UI widgets when the DPI scale factor changes.
     void OnScaleFactorChanged();
 
-    /// Handle what happens when an item in the resource table is clicked on.
-    /// \param index the model index of the item clicked on.
+    /// @brief Handle what happens when an item in the resource table is clicked on.
+    ///
+    /// @param [in] index the model index of the item clicked on.
     void TableClicked(const QModelIndex& index);
 
-    /// Handle what happens when an item in the resource table is double-clicked on.
-    /// \param index the model index of the item clicked on.
+    /// @brief Handle what happens when an item in the resource table is double-clicked on.
+    ///
+    /// @param [in] index the model index of the item clicked on.
     void TableDoubleClicked(const QModelIndex& index);
 
-    /// Select a resource on this pane. This is usually called when selecting a resource.
-    /// on a different pane to make sure the resource selection is propagated to all
-    /// interested panes.
-    /// \param resource_identifier the resource identifier of the resource to select.
+    /// @brief Select a resource on this pane.
+    ///
+    /// This is usually called when selecting a resource on a different pane to make sure the
+    /// resource selection is propagated to all interested panes.
+    ///
+    /// @param [in] resource_identifier the resource identifier of the resource to select.
     void SelectResource(RmtResourceIdentifier resource_identifier);
 
-    /// Slot to handle what happens after the resource list table is sorted.
+    /// @brief Slot to handle what happens after the resource list table is sorted.
+    ///
     /// Make sure the selected item (if there is one) is visible.
     void ScrollToSelectedResource();
 
 private:
-    /// Refresh what's visible on the UI.
+    /// @brief Refresh what's visible on the UI.
     void Refresh();
 
-    /// Resize relevant items.
+    /// @brief Resize relevant items.
     void ResizeItems();
 
-    /// Populate the resource list table.
+    /// @brief Populate the resource list table.
     void PopulateResourceTable();
 
-    /// Update the carousel.
+    /// @brief Update the carousel.
     void UpdateCarousel();
 
-    /// Select the selected resource in the table and scroll to it if the resource is valid.
+    /// @brief Select the selected resource in the table and scroll to it if the resource is valid.
     void SelectResourceInTable();
 
-    /// Helper function to set the maximum height of the table so it only contains rows with valid data.
+    /// @brief Helper function to set the maximum height of the table so it only contains rows with valid data.
     inline void SetMaximumResourceTableHeight()
     {
         ui_->resource_table_view_->setMaximumHeight(rmv::widget_util::GetTableHeight(ui_->resource_table_view_, model_->GetResourceProxyModel()->rowCount()));
@@ -118,7 +129,7 @@ private:
     rmv::ResourceListModel*          model_;                           ///< Container class for the widget models.
     rmv::HeapComboBoxModel*          preferred_heap_combo_box_model_;  ///< The preferred heap combo box model.
     rmv::ResourceUsageComboBoxModel* resource_usage_combo_box_model_;  ///< The resource usage model.
-    RMVCarousel*                     carousel_;                        ///< the carousel on the top.
+    RMVCarousel*                     carousel_;                        ///< The carousel on the top.
     bool                             model_valid_;                     ///< Is the model data valid.
     RmtResourceIdentifier            selected_resource_identifier_;    ///< Identifier of the selected resource.
 };

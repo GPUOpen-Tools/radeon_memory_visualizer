@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for the Compare start pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Compare start pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_COMPARE_COMPARE_START_PANE_H_
@@ -15,40 +15,45 @@
 #include "views/base_pane.h"
 #include "views/custom_widgets/rmv_camera_snapshot_widget.h"
 
-/// Class declaration.
+/// @brief Class declaration.
 class CompareStartPane : public BasePane
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The widget's parent.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit CompareStartPane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~CompareStartPane();
 
-    /// Overridden window resize event.
-    /// \param event the resize event object.
+    /// @brief Overridden window resize event.
+    ///
+    /// @param [in] event the resize event object.
     virtual void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
-    /// Reset UI state.
+    /// @brief Reset UI state.
     virtual void Reset() Q_DECL_OVERRIDE;
 
-    /// Update UI coloring.
+    /// @brief Update UI coloring.
     virtual void ChangeColoring() Q_DECL_OVERRIDE;
 
-    /// Open a snapshot.
-    /// \param snapshot snapshot to open.
+    /// @brief Open a snapshot.
+    ///
+    /// @param [in] snapshot The snapshot to open.
     virtual void OpenSnapshot(RmtDataSnapshot* snapshot) Q_DECL_OVERRIDE;
 
+    /// @brief Set the text for the pane describing an empty comparison.
+    void SetEmptyTitleText();
+
 private slots:
-    /// Callback for when the DPI Scale changes.
+    /// @brief Callback for when the DPI Scale changes.
     void OnScaleFactorChanged();
 
 private:
-    /// Repositions the right circle and then.
-    /// resizes the GraphicsView to fit the whole scene.
+    /// @brief Repositions the right circle and resizes the GraphicsView to fit the whole scene.
     void UpdateCirclePositions();
 
     Ui::CompareStartPane* ui_;  ///< Pointer to the Qt UI design.

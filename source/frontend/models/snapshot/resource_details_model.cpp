@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for the Resource details model
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the Resource details model.
 //=============================================================================
 
 #include "models/snapshot/resource_details_model.h"
@@ -18,14 +18,43 @@
 #include "rmt_util.h"
 #include "rmt_virtual_allocation_list.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
+#include "models/colorizer.h"
 #include "settings/rmv_settings.h"
 #include "util/string_util.h"
 #include "util/time_util.h"
-#include "views/colorizer.h"
 
 namespace rmv
 {
+    /// @brief Worker class definition to do the processing of the resource history data
+    /// on a separate thread.
+    class ResourceWorker : public rmv::BackgroundTask
+    {
+    public:
+        /// @brief Constructor.
+        ResourceWorker(rmv::ResourceDetailsModel* model, RmtResourceIdentifier resource_identifier)
+            : BackgroundTask()
+            , model_(model)
+            , resource_identifier_(resource_identifier)
+        {
+        }
+
+        /// @brief Destructor.
+        ~ResourceWorker()
+        {
+        }
+
+        /// @brief Worker thread function.
+        virtual void ThreadFunc()
+        {
+            model_->GenerateResourceHistory(resource_identifier_);
+        }
+
+    private:
+        rmv::ResourceDetailsModel* model_;                ///< Pointer to the model data.
+        RmtResourceIdentifier      resource_identifier_;  ///< The selected resource identifier.
+    };
+
     ResourceDetailsModel::ResourceDetailsModel()
         : ModelViewMapper(kResourceDetailsNumWidgets)
         , timeline_model_(nullptr)
@@ -83,15 +112,14 @@ namespace rmv
 
     bool ResourceDetailsModel::GetResourceFromResourceId(RmtResourceIdentifier resource_identifier, const RmtResource** resource) const
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (trace_manager.DataSetValid())
+        if (TraceManager::Get().DataSetValid())
         {
-            const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
+            const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
             const RmtDataSnapshot* snapshot      = open_snapshot;
             if (snapshot != nullptr)
             {
                 const RmtErrorCode error_code = RmtResourceListGetResourceByResourceId(&snapshot->resource_list, resource_identifier, resource);
-                if (error_code == RMT_OK)
+                if (error_code == kRmtOk)
                 {
                     return true;
                 }
@@ -150,13 +178,12 @@ namespace rmv
             SetModelData(kResourceDetailsType, rmv::string_util::GetResourceUsageString(RmtResourceGetUsageType(resource)));
             SetModelData(kResourceDetailsHeap, RmtResourceGetHeapTypeName(resource));
 
-            const TraceManager& trace_manager = TraceManager::Get();
-            if (trace_manager.DataSetValid())
+            if (TraceManager::Get().DataSetValid())
             {
-                const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
+                const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
                 SetModelData(kResourceDetailsFullyMapped, QString(RmtResourceIsCompletelyInPreferredHeap(open_snapshot, resource) ? "Yes" : "No"));
 
-                // calculate histogram.
+                // Calculate histogram.
                 uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
                 RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
                 double unmapped_percentage = ((double)memory_segment_histogram[kRmtResourceBackingStorageUnmapped] / (double)resource->size_in_bytes) * 100;
@@ -177,10 +204,9 @@ namespace rmv
     {
         uint64_t snapshot_timestamp = 0;
 
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (trace_manager.DataSetValid())
+        if (TraceManager::Get().DataSetValid())
         {
-            const RmtDataSnapshot* snapshot = trace_manager.GetOpenSnapshot();
+            const RmtDataSnapshot* snapshot = SnapshotManager::Get().GetOpenSnapshot();
             if (snapshot != nullptr)
             {
                 snapshot_timestamp = snapshot->timestamp;
@@ -190,7 +216,7 @@ namespace rmv
         int32_t event_count = resource_history_.event_count;
         timeline_model_->SetRowCount(event_count + 1);
 
-        // find the index of the snapshot timestamp
+        // Find the index of the snapshot timestamp.
         int32_t event_index = 0;
         for (int32_t table_row = 0; table_row < event_count + 1; table_row++)
         {
@@ -292,10 +318,9 @@ namespace rmv
 
     void ResourceDetailsModel::GenerateResourceHistory(RmtResourceIdentifier resource_identifier)
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (trace_manager.DataSetValid())
+        if (TraceManager::Get().DataSetValid())
         {
-            RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
+            RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
             resource_history_.event_count  = -1;
             const RmtResource* resource    = nullptr;
             GetResourceFromResourceId(resource_identifier, &resource);
@@ -315,7 +340,7 @@ namespace rmv
         logical_position += start_timestamp;
         icon_size *= duration;
 
-        // go through the list and decide what's been clicked on
+        // Go through the list and decide what's been clicked on.
         highlighted_row_ = 0;
 
         for (int32_t count = 0; count < timeline_model_->rowCount(); count++)
@@ -324,7 +349,7 @@ namespace rmv
             uint64_t max_time = min_time + icon_size;
             if (logical_position > min_time && logical_position < max_time)
             {
-                // map from proxy model
+                // Map from proxy model.
                 QModelIndex index       = timeline_model_->index(highlighted_row_, 0, QModelIndex());
                 QModelIndex proxy_index = timeline_proxy_model_->mapFromSource(index);
                 return proxy_index.row();
@@ -338,11 +363,10 @@ namespace rmv
 
     bool ResourceDetailsModel::GetEventData(int index, int width, ResourceEvent& out_event_data) const
     {
-        uint64_t            snapshot_timestamp = UINT64_MAX;
-        const TraceManager& trace_manager      = TraceManager::Get();
-        if (trace_manager.DataSetValid())
+        uint64_t snapshot_timestamp = UINT64_MAX;
+        if (TraceManager::Get().DataSetValid())
         {
-            const RmtDataSnapshot* snapshot = trace_manager.GetOpenSnapshot();
+            const RmtDataSnapshot* snapshot = SnapshotManager::Get().GetOpenSnapshot();
             if (snapshot != nullptr)
             {
                 snapshot_timestamp = snapshot->timestamp;
@@ -361,7 +385,7 @@ namespace rmv
 
         if (highlighted_row_ != -1 && index >= highlighted_row_)
         {
-            // if there's a highlighted row, defer the drawing of it to last
+            // If there's a highlighted row, defer the drawing of it to last.
             if (index < event_count - 1)
             {
                 index++;
@@ -409,8 +433,7 @@ namespace rmv
             return false;
         }
 
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return false;
         }
@@ -421,10 +444,10 @@ namespace rmv
             return false;
         }
 
-        // calculate histogram to get residency per heap.
+        // Calculate histogram to get residency per heap.
         uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
 
-        const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
+        const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
         RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
 
         value = 0;
@@ -456,8 +479,7 @@ namespace rmv
 
     bool ResourceDetailsModel::GetUnmappedResidencyData(RmtResourceIdentifier resource_identifier, int& value, QString& name, QColor& color) const
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return false;
         }
@@ -469,10 +491,10 @@ namespace rmv
             return false;
         }
 
-        // calculate histogram to get residency per heap.
+        // Calculate histogram to get residency per heap.
         uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
 
-        const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
+        const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
         RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
 
         value = 0;
@@ -493,11 +515,24 @@ namespace rmv
         const RmtResource* resource = nullptr;
         if (GetResourceFromResourceId(resource_identifier, &resource) == true)
         {
-            const TraceManager& trace_manager = TraceManager::Get();
-            if (trace_manager.DataSetValid())
+            if (TraceManager::Get().DataSetValid())
             {
-                const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
-                return RmtPageTableIsEntireResourcePhysicallyMapped(&open_snapshot->page_table, resource);
+                const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
+                if (resource->bound_allocation != nullptr)
+                {
+                    // If preferred heap is unspecified, then don't care if the memory is mapped or not.
+                    RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
+                    if (preferred_heap == kRmtHeapTypeNone)
+                    {
+                        return true;
+                    }
+                }
+                bool all_mapped = RmtPageTableIsEntireResourcePhysicallyMapped(&open_snapshot->page_table, resource);
+                if (all_mapped)
+                {
+                    // If it's all physically mapped, make sure it's all in the preferred heap.
+                    return RmtResourceIsCompletelyInPreferredHeap(open_snapshot, resource);
+                }
             }
         }
         return false;
@@ -507,4 +542,10 @@ namespace rmv
     {
         return timeline_proxy_model_;
     }
+
+    BackgroundTask* ResourceDetailsModel::CreateWorkerThread(RmtResourceIdentifier resource_identifier)
+    {
+        return new ResourceWorker(this, resource_identifier);
+    }
+
 }  // namespace rmv

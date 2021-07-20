@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Functions working on a snapshot.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Functions working on a snapshot.
 //=============================================================================
 
 #include "rmt_data_snapshot.h"
@@ -86,14 +87,14 @@ RmtErrorCode RmtDataSnapshotDumpJsonToFile(const RmtDataSnapshot* snapshot, cons
     errno_t error_no = fopen_s(&file, filename, "wb");
     if ((file == nullptr) || error_no != 0)
     {
-        return RMT_ERROR_FILE_NOT_OPEN;
+        return kRmtErrorFileNotOpen;
     }
 
     DumpAllocationList(file, &snapshot->virtual_allocation_list);
 
     fflush(file);
     fclose(file);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // do the first pass over the RMT data, figure out the resource-based events, and
@@ -110,7 +111,7 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
         // grab the next token from the heap.
         RmtToken     current_token;
         RmtErrorCode error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
-        RMT_ASSERT(error_code == RMT_OK);
+        RMT_ASSERT(error_code == kRmtOk);
 
         // interested in tokens that directly reference resources.
         switch (current_token.type)
@@ -275,7 +276,7 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
         }
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Helper functo call the correct free function.
@@ -294,34 +295,34 @@ RmtErrorCode RmtDataSnapshotGenerateResourceHistory(RmtDataSnapshot* snapshot, c
     RMT_ASSERT(snapshot);
     RMT_ASSERT(resource);
     RMT_ASSERT(out_resource_history);
-    RMT_RETURN_ON_ERROR(snapshot, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(resource, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_resource_history, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(snapshot, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(resource, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_resource_history, kRmtErrorInvalidPointer);
 
     // stash the pointer to the resource and the underlaying VA.
     out_resource_history->resource        = resource;
     out_resource_history->base_allocation = resource->bound_allocation;
     out_resource_history->event_count     = 0;
 
-    RmtErrorCode error_code = RMT_OK;
+    RmtErrorCode error_code = kRmtOk;
 
     error_code = ProcessTokensIntoResourceHistory(snapshot->data_set, resource, out_resource_history);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtDataSnapshotDestroy(RmtDataSnapshot* snapshot)
 {
-    RMT_RETURN_ON_ERROR(snapshot, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(snapshot->data_set, RMT_ERROR_MALFORMED_DATA);
+    RMT_RETURN_ON_ERROR(snapshot, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(snapshot->data_set, kRmtErrorMalformedData);
 
     // free the memory allocated for the snapshot.
     PerformFree(snapshot->data_set, snapshot->virtual_allocation_buffer);
     PerformFree(snapshot->data_set, snapshot->resource_list_buffer);
     PerformFree(snapshot->data_set, snapshot->region_stack_buffer);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 uint64_t RmtDataSnapshotGetLargestResourceSize(const RmtDataSnapshot* snapshot)
@@ -337,6 +338,30 @@ uint64_t RmtDataSnapshotGetLargestResourceSize(const RmtDataSnapshot* snapshot)
     }
 
     return latest_resource_size_in_bytes;
+}
+
+uint64_t RmtDataSnapshotGetLargestUnboundResourceSize(const RmtDataSnapshot* snapshot)
+{
+    RMT_RETURN_ON_ERROR(snapshot, 0);
+
+    uint64_t latest_unbound_resource_size_in_bytes = 0;
+
+    int32_t allocation_count = snapshot->virtual_allocation_list.allocation_count;
+    for (int32_t current_virtual_allocation_index = 0; current_virtual_allocation_index < allocation_count; ++current_virtual_allocation_index)
+    {
+        const RmtVirtualAllocation* current_virtual_allocation = &snapshot->virtual_allocation_list.allocation_details[current_virtual_allocation_index];
+
+        int32_t unbound_region_count = current_virtual_allocation->unbound_memory_region_count;
+        for (int32_t unbound_region_index = 0; unbound_region_index < unbound_region_count; ++unbound_region_index)
+        {
+            uint64_t size = current_virtual_allocation->unbound_memory_regions[unbound_region_index].size;
+            if (size > latest_unbound_resource_size_in_bytes)
+            {
+                latest_unbound_resource_size_in_bytes = size;
+            }
+        }
+    }
+    return latest_unbound_resource_size_in_bytes;
 }
 
 /// Get the smallest resource size (in bytes) seen in a snapshot.
@@ -362,8 +387,11 @@ uint64_t RmtDataSnapshotGetSmallestResourceSize(const RmtDataSnapshot* snapshot)
 
 RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, RmtHeapType heap_type, RmtSegmentStatus* out_segment_status)
 {
-    RMT_RETURN_ON_ERROR(snapshot, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_segment_status, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(snapshot, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_segment_status, kRmtErrorInvalidPointer);
+
+    RMT_ASSERT(heap_type != kRmtHeapTypeUnknown);
+    RMT_ASSERT(heap_type != kRmtHeapTypeNone);
 
     out_segment_status->heap_type = heap_type;
 
@@ -401,7 +429,7 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
     uint64_t min_virtual_allocation_size      = UINT64_MAX;
     uint64_t total_virtual_memory_requested   = 0;
     uint64_t total_physical_mapped_by_process = snapshot->page_table.mapped_per_heap[heap_type];
-    ;
+
     uint64_t allocation_count = 0;
 
     // set the resource committed memory values.
@@ -423,9 +451,14 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
             max_virtual_allocation_size = RMT_MAXIMUM(max_virtual_allocation_size, size_in_bytes);
             min_virtual_allocation_size = RMT_MINIMUM(min_virtual_allocation_size, size_in_bytes);
             allocation_count++;
+
+            // Get the size of the resources in the allocation.
+            uint64_t memory_region_size = RmtVirtualAllocationGetTotalResourceMemoryInBytes(snapshot, current_virtual_allocation);
+            out_segment_status->total_bound_virtual_memory += memory_region_size;
+            RMT_ASSERT(size_in_bytes >= memory_region_size);
         }
 
-        // walk each resource in the allocation and work out what heap each resource is in.
+        // Walk each resource in the allocation and work out what heap each resource is in.
         for (int32_t current_resource_index = 0; current_resource_index < current_virtual_allocation->resource_count; ++current_resource_index)
         {
             const RmtResource* current_resource = current_virtual_allocation->resources[current_resource_index];
@@ -435,15 +468,10 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
                 continue;
             }
 
-            // process the resource
+            // Process the resource.
             const RmtResourceUsageType current_resource_usage = RmtResourceGetUsageType(current_resource);
 
-            if (current_virtual_allocation->heap_preferences[0] == heap_type)
-            {
-                out_segment_status->total_bound_virtual_memory += current_resource->size_in_bytes;
-            }
-
-            // caculate the histogram of where each resource has its memory committed.
+            // Calculate the histogram of where each resource has its memory committed.
             uint64_t resource_histogram[kRmtResourceBackingStorageCount] = {0};
             RmtResourceGetBackingStorageHistogram(snapshot, current_resource, resource_histogram);
             out_segment_status->physical_bytes_per_resource_usage[current_resource_usage] += resource_histogram[heap_type];
@@ -456,8 +484,9 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
     }
 
     // fill out the structure fields.
-    out_segment_status->total_virtual_memory_requested           = total_virtual_memory_requested;
-    out_segment_status->total_physical_mapped_by_process         = total_physical_mapped_by_process;
+    out_segment_status->total_virtual_memory_requested   = total_virtual_memory_requested;
+    out_segment_status->total_physical_mapped_by_process = total_physical_mapped_by_process;
+
     out_segment_status->total_physical_mapped_by_other_processes = 0;
     out_segment_status->max_allocation_size                      = max_virtual_allocation_size;
     out_segment_status->min_allocation_size                      = min_virtual_allocation_size;
@@ -470,7 +499,7 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
         out_segment_status->mean_allocation_size = 0;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // calculate the seg. status.

@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Allocation list.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Structures and functions for working with a resource list.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_RESOURCE_LIST_H_
@@ -156,7 +157,7 @@ RmtErrorCode RmtResourceGetBackingStorageHistogram(const RmtDataSnapshot* snapsh
 /// @param [in] resource                            A pointer to a <c><i>RmtResource</i></c> structure.
 ///
 /// @returns
-/// THe number of resources that alias this one.
+/// The number of resources that alias this one.
 int32_t RmtResourceGetAliasCount(const RmtResource* resource);
 
 /// A structure for fast searching by resource ID.
@@ -204,11 +205,11 @@ size_t RmtResourceListGetBufferSize(int32_t maximum_concurrent_resources);
 /// @param [in] maximum_concurrent_resources        The maximum number of resources that can be in flight at once.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>resource_list</i></c> or <c><i>buffer</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>resource_list</i></c> or <c><i>buffer</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_INVALID_SIZE          The operation failed because <c><i>buffer_size</i></c> is invalid.
+/// kRmtErrorInvalidSize            The operation failed because <c><i>buffer_size</i></c> is invalid.
 RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_list,
                                        void*                           buffer,
                                        size_t                          buffer_size,
@@ -221,9 +222,9 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
 /// @param [in] resource_create                     A pointer to a <c><i>RmtTokenResourceCreate</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>resource_list</i></c> or <c><i>resource_create</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>resource_list</i></c> or <c><i>resource_create</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, const RmtTokenResourceCreate* resource_create);
 
 /// Add a resource bind to the list.
@@ -232,13 +233,13 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
 /// @param [in] resource_bind                       A pointer to a <c><i>RmtTokenResourceBind</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed because <c><i>resource_list</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>resource_list</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_RESOURCE_FOUND         The operation failed because the resource in <c><i>resource_bind</i></c> can't be found.
+/// kRmtErrorNoResourceFound            The operation failed because the resource in <c><i>resource_bind</i></c> can't be found.
 /// @retval
-/// RMT_ERROR_RESOURCE_ALREADY_BOUND    The operation failed because the resource in <c><i>resource_bind</i></c> is already bound.
+/// kRmtErrorResourceAlreadyBound       The operation failed because the resource in <c><i>resource_bind</i></c> is already bound.
 RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, const RmtTokenResourceBind* resource_bind);
 
 /// Add a resource destroy to the list.
@@ -247,11 +248,11 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
 /// @param [in] resource_destroy                    A pointer to a <c><i>RmtTokenResourceDestroy</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed because <c><i>resource_list</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>resource_list</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_RESOURCE_FOUND         The operation failed because the resource in <c><i>resource_destroy</i></c> can't be found.
+/// kRmtErrorNoResourceFound            The operation failed because the resource in <c><i>resource_destroy</i></c> can't be found.
 RmtErrorCode RmtResourceListAddResourceDestroy(RmtResourceList* resource_list, const RmtTokenResourceDestroy* resource_destroy);
 
 /// Find resource in the resource list from resource ID.
@@ -261,11 +262,11 @@ RmtErrorCode RmtResourceListAddResourceDestroy(RmtResourceList* resource_list, c
 /// @param [out] out_resource                       A pointer to a pointer to a <c><i>RmtResource</i></c> structure to receive the resource.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed because <c><i>resource_list</i></c> or <c><i>out_resource</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>resource_list</i></c> or <c><i>out_resource</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_RESOURCE_FOUND         The operation failed because the resource can't be found.
+/// kRmtErrorNoResourceFound            The operation failed because the resource can't be found.
 RmtErrorCode RmtResourceListGetResourceByResourceId(const RmtResourceList* resource_list,
                                                     RmtResourceIdentifier  resource_identifier,
                                                     const RmtResource**    out_resource);

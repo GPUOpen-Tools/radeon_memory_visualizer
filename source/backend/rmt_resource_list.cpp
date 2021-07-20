@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Implementation of the resource list functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the resource list functions.
 //=============================================================================
 
 #include "rmt_resource_list.h"
@@ -145,8 +146,8 @@ bool RmtResourceOverlapsVirtualAddressRange(const RmtResource* resource, RmtGpuA
 
 RmtErrorCode RmtResourceGetBackingStorageHistogram(const RmtDataSnapshot* snapshot, const RmtResource* resource, uint64_t* out_bytes_per_backing_storage_type)
 {
-    RMT_RETURN_ON_ERROR(resource, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_bytes_per_backing_storage_type, RMT_ERROR_INVALID_POINTER)
+    RMT_RETURN_ON_ERROR(resource, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_bytes_per_backing_storage_type, kRmtErrorInvalidPointer)
 
     const uint64_t size_of_minimum_page = RmtGetPageSize(kRmtPageSize4Kb);
 
@@ -166,7 +167,7 @@ RmtErrorCode RmtResourceGetBackingStorageHistogram(const RmtDataSnapshot* snapsh
         RmtGpuAddress      physical_address = 0;
         const RmtErrorCode error_code = RmtPageTableGetPhysicalAddressForVirtualAddress(&snapshot->page_table, current_virtual_address, &physical_address);
 
-        if (error_code == RMT_OK)
+        if (error_code == kRmtOk)
         {
             // remove bytes from unmapped count.
             if (size <= out_bytes_per_backing_storage_type[kRmtResourceBackingStorageUnmapped])
@@ -191,7 +192,7 @@ RmtErrorCode RmtResourceGetBackingStorageHistogram(const RmtDataSnapshot* snapsh
         current_virtual_address += size;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 bool RmtResourceIsCompletelyInPreferredHeap(const RmtDataSnapshot* snapshot, const RmtResource* resource)
@@ -213,7 +214,7 @@ bool RmtResourceIsCompletelyInPreferredHeap(const RmtDataSnapshot* snapshot, con
         // get the physical address
         RmtGpuAddress      physical_address = 0;
         const RmtErrorCode error_code = RmtPageTableGetPhysicalAddressForVirtualAddress(&snapshot->page_table, current_virtual_address, &physical_address);
-        if (error_code != RMT_OK)
+        if (error_code != kRmtOk)
         {
             return false;
         }
@@ -478,7 +479,7 @@ static RmtErrorCode AddResourceToTree(RmtResourceList* resource_list, RmtResourc
     const size_t pool_count = resource_list->resource_id_node_pool.allocated;
     resource_list->root     = InsertNode(resource_list, resource_list->root, resource_identifier, resource);
     RMT_ASSERT(resource_list->resource_id_node_pool.allocated == pool_count + 1);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // destroy a resource from the acceleration structure.
@@ -487,7 +488,7 @@ static RmtErrorCode RemoveResourceFromTree(RmtResourceList* resource_list, RmtRe
     const size_t pool_count = resource_list->resource_id_node_pool.allocated;
     resource_list->root     = DeleteNode(resource_list, resource_list->root, resource_identifer);
     RMT_ASSERT(resource_list->resource_id_node_pool.allocated == pool_count - 1);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // destroy a resource
@@ -495,7 +496,7 @@ static RmtErrorCode DestroyResource(RmtResourceList* resource_list, RmtResource*
 {
     if (resource_list->resource_count == 0)
     {
-        return RMT_OK;
+        return kRmtOk;
     }
 
     resource_list->resource_usage_count[RmtResourceGetUsageType(resource)]--;
@@ -518,7 +519,7 @@ static RmtErrorCode DestroyResource(RmtResourceList* resource_list, RmtResource*
     RmtResource* tail_resource = &resource_list->resources[resource_list->resource_count - 1];
 
     const RmtErrorCode error_code = RemoveResourceFromTree(resource_list, hashed_identifier);
-    RMT_ASSERT(error_code == RMT_OK);
+    RMT_ASSERT(error_code == kRmtOk);
 
     // copy the tail into the target.
     if (tail_resource != resource)
@@ -528,7 +529,7 @@ static RmtErrorCode DestroyResource(RmtResourceList* resource_list, RmtResource*
     }
 
     resource_list->resource_count--;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 size_t RmtResourceListGetBufferSize(int32_t maximum_concurrent_resources)
@@ -543,10 +544,10 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
                                        int32_t                         maximum_concurrent_resources)
 {
     RMT_ASSERT(resource_list);
-    RMT_RETURN_ON_ERROR(resource_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(buffer, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(buffer_size, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR(RmtResourceListGetBufferSize(maximum_concurrent_resources) <= buffer_size, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(resource_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(buffer, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(buffer_size, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR(RmtResourceListGetBufferSize(maximum_concurrent_resources) <= buffer_size, kRmtErrorInvalidSize);
 
     // initialize the resource storage
     resource_list->resources                    = (RmtResource*)buffer;
@@ -560,22 +561,22 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
     const size_t       resource_id_nodes_size = maximum_concurrent_resources * sizeof(RmtResourceIdNode);
     const RmtErrorCode error_code =
         RmtPoolInitialize(&resource_list->resource_id_node_pool, resource_list->resource_id_nodes, resource_id_nodes_size, sizeof(RmtResourceIdNode));
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     resource_list->root = NULL;
 
     memset(resource_list->resource_usage_count, 0, sizeof(resource_list->resource_usage_count));
     memset(resource_list->resource_usage_size, 0, sizeof(resource_list->resource_usage_size));
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, const RmtTokenResourceCreate* resource_create)
 {
     RMT_ASSERT(resource_list);
     RMT_ASSERT(resource_create);
-    RMT_RETURN_ON_ERROR(resource_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(resource_create, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(resource_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(resource_create, kRmtErrorInvalidPointer);
 
     // Resource ID should be a thing.
     RMT_ASSERT(resource_create->resource_identifier);
@@ -601,7 +602,7 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
 
     // Make sure we can allocate this resource.
     RMT_ASSERT(resource_list->resource_count + 1 <= resource_list->maximum_concurrent_resources);
-    RMT_RETURN_ON_ERROR((resource_list->resource_count + 1) <= resource_list->maximum_concurrent_resources, RMT_ERROR_OUT_OF_MEMORY);
+    RMT_RETURN_ON_ERROR((resource_list->resource_count + 1) <= resource_list->maximum_concurrent_resources, kRmtErrorOutOfMemory);
 
     // fill out the stuff we know.
     RmtResource* new_resource   = &resource_list->resources[resource_list->resource_count++];
@@ -693,7 +694,7 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
     AddResourceToTree(resource_list, hashed_identifier, new_resource);
 
     resource_list->resource_usage_count[RmtResourceGetUsageType(new_resource)]++;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // calculate commit type for the resource.
@@ -735,12 +736,12 @@ static void UpdateCommitType(RmtResourceList* resource_list, RmtResource* resour
 RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, const RmtTokenResourceBind* resource_bind)
 {
     RMT_ASSERT(resource_list);
-    RMT_RETURN_ON_ERROR(resource_list, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(resource_list, kRmtErrorInvalidPointer);
 
     const uint64_t handle = GenerateResourceHandle(resource_bind->resource_identifier);
 
     RmtResource* resource = FindResourceById(resource_list, handle);
-    RMT_RETURN_ON_ERROR(resource, RMT_ERROR_NO_RESOURCE_FOUND);
+    RMT_RETURN_ON_ERROR(resource, kRmtErrorNoResourceFound);
 
     // NOTE: We have multiple binds per resource for command buffer allocators,
     // This is because they grow in size to accomodate the allocators needs. GPU events
@@ -751,15 +752,15 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
         switch (resource->resource_type)
         {
         case kRmtResourceTypeCommandAllocator:
-            return RMT_ERROR_RESOURCE_ALREADY_BOUND;
+            return kRmtErrorResourceAlreadyBound;
 
         case kRmtResourceTypeGpuEvent:
-            return RMT_OK;
+            return kRmtOk;
 
         default:
             // Should never reach this point, handle it just in case.
             RMT_ASSERT(false);
-            return RMT_OK;
+            return kRmtOk;
         }
     }
 
@@ -773,17 +774,17 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
         RmtVirtualAllocationListGetAllocationForAddress(resource_list->virtual_allocation_list, resource_bind->virtual_address, &resource->bound_allocation);
 
     // look for externally shared resources.
-    if ((error_code == RMT_ERROR_NO_ALLOCATION_FOUND) && (resource->resource_type == kRmtResourceTypeImage) &&
+    if ((error_code == kRmtErrorNoAllocationFound) && (resource->resource_type == kRmtResourceTypeImage) &&
         ((resource->image.create_flags & kRmtImageCreationFlagShareable) == kRmtImageCreationFlagShareable))
     {
         // It is expected that we won't see a virtual allocate token for some shareable resources, as that memory is owned outside
         // the target process.  This error code will result in a dummy allocation being added to the list, so future resource calls
         // looking for it will be able to "find" the allocation.
-        return RMT_ERROR_SHARED_ALLOCATION_NOT_FOUND;
+        return kRmtErrorSharedAllocationNotFound;
     }
 
     // only external shared can fail to find the allocation.
-    RMT_ASSERT(error_code == RMT_OK);
+    RMT_ASSERT(error_code == kRmtOk);
 
     // Count the resources on each allocation. We fill in pointers later
     // when we do the fix up pass in snapshot generation.
@@ -805,17 +806,17 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
     // track the bytes bound
     resource_list->resource_usage_size[RmtResourceGetUsageType(resource)] += resource->size_in_bytes;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtResourceListAddResourceDestroy(RmtResourceList* resource_list, const RmtTokenResourceDestroy* resource_destroy)
 {
     RMT_ASSERT(resource_list);
-    RMT_RETURN_ON_ERROR(resource_list, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(resource_list, kRmtErrorInvalidPointer);
 
     const uint64_t handle   = GenerateResourceHandle(resource_destroy->resource_identifier);
     RmtResource*   resource = FindResourceById(resource_list, handle);
-    RMT_RETURN_ON_ERROR(resource, RMT_ERROR_NO_RESOURCE_FOUND);
+    RMT_RETURN_ON_ERROR(resource, kRmtErrorNoResourceFound);
 
     // remove the resource from the parent allocation.
     if (resource->bound_allocation != nullptr)
@@ -830,9 +831,9 @@ RmtErrorCode RmtResourceListAddResourceDestroy(RmtResourceList* resource_list, c
 
     // call destroy on it.
     const RmtErrorCode error_code = DestroyResource(resource_list, resource);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtResourceListGetResourceByResourceId(const RmtResourceList* resource_list,
@@ -841,13 +842,13 @@ RmtErrorCode RmtResourceListGetResourceByResourceId(const RmtResourceList* resou
 {
     RMT_ASSERT(resource_list);
     RMT_ASSERT(out_resource);
-    RMT_RETURN_ON_ERROR(resource_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_resource, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(resource_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_resource, kRmtErrorInvalidPointer);
 
     const uint64_t handle = GenerateResourceHandle(resource_identifier);
 
     RmtResource* resource = FindResourceById(resource_list, handle);
-    RMT_RETURN_ON_ERROR(resource, RMT_ERROR_NO_RESOURCE_FOUND);
+    RMT_RETURN_ON_ERROR(resource, kRmtErrorNoResourceFound);
     *out_resource = resource;
-    return RMT_OK;
+    return kRmtOk;
 }

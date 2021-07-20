@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for the carousel item widget base class.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the carousel item widget base class.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_carousel_item.h"
@@ -129,38 +129,38 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
         painter->drawText(x_pos, y_pos - title_font_size, bar_title);
     }
 
-    // The length of the bar that contains data
+    // The length of the bar that contains data.
     uint32_t filled_bar_length = max != 0 ? (value * bar_length) / max : bar_length;
     filled_bar_length          = std::min<uint32_t>(filled_bar_length, bar_length);
 
-    // make sure bar is within bounds
+    // Make sure bar is within bounds.
     if (filled_bar_length > bar_length)
     {
         filled_bar_length = bar_length;
     }
 
-    // take into account scale. The bar is scaled by 0.5 in delta mode since values
-    // go positive or negative
+    // Take into account scale. The bar is scaled by 0.5 in delta mode since values
+    // go positive or negative.
     filled_bar_length *= bar_scale;
 
-    // make sure at least 1 pixel row is drawn
+    // Make sure at least 1 pixel row is drawn.
     if (filled_bar_length < 1.0)
     {
         filled_bar_length = 1.0;
     }
 
-    // move the origin if the bar is negative
+    // Move the origin if the bar is negative.
     if (negative)
     {
         origin -= filled_bar_length;
     }
 
-    // paint the bar background in white
+    // Paint the bar background in white.
     painter->setPen(Qt::NoPen);
     painter->setBrush(Qt::white);
     painter->drawRect(x_pos, y_pos, bar_length, bar_width);
 
-    // paint the bar
+    // Paint the bar.
     if (max != 0)
     {
         painter->setBrush(fill_color);

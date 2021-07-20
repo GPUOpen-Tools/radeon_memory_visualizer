@@ -1,15 +1,18 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Implementation of functions for working with a data set.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of functions for working with a data set.
 //=============================================================================
+
+#include <string.h>  // for memcpy()
+#include <stdlib.h>  // for malloc() / free()
+#include <time.h>
 
 #include "rmt_data_set.h"
 #include "rmt_data_timeline.h"
 #include <rmt_util.h>
 #include <rmt_assert.h>
-#include <string.h>  // for memcpy()
-#include <stdlib.h>  // for malloc() / free()
 #include "rmt_linear_buffer.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_resource_history.h"
@@ -17,17 +20,12 @@
 #include <rmt_print.h>
 #include <rmt_address_helper.h>
 
-// Define this on to print the tokens to console.
-
 #ifndef _WIN32
 #include "linux/safe_crt.h"
 #include <stddef.h>  // for offsetof macro.
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#ifdef PRINT_TOKENS
-#include <windows.h>
-#endif  // #ifdef PRINT_TOKENS
 #endif
 
 // this buffer is used by the parsers to read chunks of data into RAM for processing. The larger this
@@ -47,7 +45,7 @@ static RmtErrorCode ParseRmtDataChunk(RmtDataSet* data_set, RmtFileChunkHeader* 
     RmtFileChunkRmtData data_chunk;
     const size_t        read_size = fread(&data_chunk, 1, sizeof(RmtFileChunkRmtData), (FILE*)data_set->file_handle);
     RMT_ASSERT(read_size == sizeof(RmtFileChunkRmtData));
-    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkRmtData), RMT_ERROR_MALFORMED_DATA);
+    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkRmtData), kRmtErrorMalformedData);
 
     const int32_t offset = ftell((FILE*)data_set->file_handle);
     const int32_t size   = file_chunk->size_in_bytes - (sizeof(RmtFileChunkRmtData) + sizeof(RmtFileChunkHeader));
@@ -55,7 +53,7 @@ static RmtErrorCode ParseRmtDataChunk(RmtDataSet* data_set, RmtFileChunkHeader* 
     // ignore 0 sized chunks.
     if (size == 0)
     {
-        return RMT_OK;
+        return kRmtOk;
     }
 
     // create an RMT parser for this stream with a file handle and offset.
@@ -82,7 +80,7 @@ static RmtErrorCode ParseRmtDataChunk(RmtDataSet* data_set, RmtFileChunkHeader* 
     // read for next allocation.
     data_set->stream_count++;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // handle setting up segment info chunks.
@@ -91,13 +89,13 @@ static RmtErrorCode ParseSegmentInfoChunk(RmtDataSet* data_set, RmtFileChunkHead
     RMT_UNUSED(current_file_chunk);
 
     RMT_ASSERT((data_set->segment_info_count + 1) < RMT_MAXIMUM_SEGMENTS);
-    RMT_RETURN_ON_ERROR((data_set->segment_info_count + 1) < RMT_MAXIMUM_SEGMENTS, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR((data_set->segment_info_count + 1) < RMT_MAXIMUM_SEGMENTS, kRmtErrorInvalidSize);
 
     // Read the RmtSegmentInfo from the file.
     RmtFileChunkSegmentInfo segment_info_chunk;
     const size_t            read_size = fread(&segment_info_chunk, 1, sizeof(RmtFileChunkSegmentInfo), (FILE*)data_set->file_handle);
     RMT_ASSERT(read_size == sizeof(RmtFileChunkSegmentInfo));
-    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkSegmentInfo), RMT_ERROR_MALFORMED_DATA);
+    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkSegmentInfo), kRmtErrorMalformedData);
 
     // Fill out the segment info.
     RmtSegmentInfo* next_segment_info = &data_set->segment_info[data_set->segment_info_count++];
@@ -105,7 +103,7 @@ static RmtErrorCode ParseSegmentInfoChunk(RmtDataSet* data_set, RmtFileChunkHead
     next_segment_info->size           = segment_info_chunk.size_in_bytes;
     next_segment_info->heap_type      = (RmtHeapType)segment_info_chunk.heap_type;
     next_segment_info->index          = segment_info_chunk.memory_index;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // handle setting up process start info.
@@ -114,12 +112,12 @@ static RmtErrorCode ParseProcessStartInfo(RmtDataSet* data_set, RmtFileChunkHead
     RMT_UNUSED(current_file_chunk);
 
     RMT_ASSERT((data_set->process_start_info_count + 1) < RMT_MAXIMUM_PROCESS_COUNT);
-    RMT_RETURN_ON_ERROR((data_set->process_start_info_count + 1) < RMT_MAXIMUM_PROCESS_COUNT, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR((data_set->process_start_info_count + 1) < RMT_MAXIMUM_PROCESS_COUNT, kRmtErrorInvalidSize);
 
     RmtProcessStartInfo* next_process_start_info       = &data_set->process_start_info[data_set->process_start_info_count++];
     next_process_start_info->process_id                = 0;
     next_process_start_info->physical_memory_allocated = 0;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // handle reading in any static adapter info.
@@ -130,7 +128,7 @@ static RmtErrorCode ParseAdapterInfoChunk(RmtDataSet* data_set, RmtFileChunkHead
     RmtFileChunkAdapterInfo adapter_info_chunk;
     const size_t            read_size = fread(&adapter_info_chunk, 1, sizeof(RmtFileChunkAdapterInfo), (FILE*)data_set->file_handle);
     RMT_ASSERT(read_size == sizeof(RmtFileChunkAdapterInfo));
-    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkAdapterInfo), RMT_ERROR_MALFORMED_DATA);
+    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkAdapterInfo), kRmtErrorMalformedData);
 
     // these should always match.
     RMT_STATIC_ASSERT(sizeof(adapter_info_chunk.name) == sizeof(data_set->adapter_info.name));
@@ -148,7 +146,7 @@ static RmtErrorCode ParseAdapterInfoChunk(RmtDataSet* data_set, RmtFileChunkHead
     data_set->adapter_info.memory_bandwidth            = adapter_info_chunk.memory_bandwidth;
     data_set->adapter_info.minimum_memory_clock        = adapter_info_chunk.minimum_memory_clock;
     data_set->adapter_info.maximum_memory_clock        = adapter_info_chunk.maximum_memory_clock;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // handle reading a snapshot.
@@ -161,19 +159,19 @@ static RmtErrorCode ParseSnapshotInfoChunk(RmtDataSet* data_set, RmtFileChunkHea
     const size_t file_offset = ftell((FILE*)data_set->file_handle);
     size_t       read_size   = fread(&snapshot_info_chunk, 1, sizeof(RmtFileChunkSnapshotInfo), (FILE*)data_set->file_handle);
     RMT_ASSERT(read_size == sizeof(RmtFileChunkSnapshotInfo));
-    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkSnapshotInfo), RMT_ERROR_MALFORMED_DATA);
+    RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkSnapshotInfo), kRmtErrorMalformedData);
 
     // Allocate some buffer in the snapshot names.
     const int32_t snapshot_index = data_set->snapshot_count;
     if (snapshot_index >= RMT_MAXIMUM_SNAPSHOT_POINTS)
     {
-        return RMT_ERROR_OUT_OF_MEMORY;
+        return kRmtErrorOutOfMemory;
     }
 
     // ignore snapshots of 0-length name, these are deleted snapshots.
     if (snapshot_info_chunk.name_length_in_bytes == 0)
     {
-        return RMT_OK;
+        return kRmtOk;
     }
 
     // read the name into the snapshot point.
@@ -181,13 +179,13 @@ static RmtErrorCode ParseSnapshotInfoChunk(RmtDataSet* data_set, RmtFileChunkHea
     void*        name_buffer        = (void*)&data_set->snapshots[snapshot_index].name;
     read_size                       = fread(name_buffer, 1, capped_name_length, (FILE*)data_set->file_handle);
     RMT_ASSERT(read_size == capped_name_length);
-    RMT_RETURN_ON_ERROR(read_size == capped_name_length, RMT_ERROR_MALFORMED_DATA);
+    RMT_RETURN_ON_ERROR(read_size == capped_name_length, kRmtErrorMalformedData);
 
     // set the time.
     data_set->snapshots[snapshot_index].timestamp   = snapshot_info_chunk.snapshot_time;
     data_set->snapshots[snapshot_index].file_offset = file_offset;
     data_set->snapshot_count++;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // helper function to parse the chunks of the RMT file into the data set.
@@ -199,17 +197,31 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
 
     RmtFileParser rmt_file_parser;
     RmtErrorCode  error_code = RmtFileParserCreateFromHandle(&rmt_file_parser, (FILE*)data_set->file_handle);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    // Check if file is supported
+    // Check if file is supported.
     error_code = RmtFileParserIsFileSupported(&rmt_file_parser.header);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    // process all the chunks in the rmt file.
+    // Store the time the trace was taken.
+    struct tm      create_time;
+    RmtFileHeader* header = &rmt_file_parser.header;
+    create_time.tm_hour   = header->hour;
+    create_time.tm_min    = header->minute;
+    create_time.tm_sec    = header->second;
+    create_time.tm_wday   = header->day_in_week;
+    create_time.tm_mday   = header->day_in_month;
+    create_time.tm_mon    = header->month;
+    create_time.tm_year   = header->year;
+    create_time.tm_yday   = header->day_in_year;
+    create_time.tm_isdst  = header->is_daylight_savings;
+    data_set->create_time = mktime(&create_time);
+
+    // Process all the chunks in the rmt file.
     RmtFileChunkHeader* current_file_chunk = NULL;
-    while (RmtFileParserParseNextChunk(&rmt_file_parser, &current_file_chunk) == RMT_OK)
+    while (RmtFileParserParseNextChunk(&rmt_file_parser, &current_file_chunk) == kRmtOk)
     {
-        // ensure that the chunk is valid to read.
+        // Ensure that the chunk is valid to read.
         RMT_ASSERT(current_file_chunk);
         if (current_file_chunk == nullptr)
         {
@@ -218,46 +230,46 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
 
         if ((size_t)rmt_file_parser.next_chunk_offset > data_set->file_size_in_bytes)
         {
-            return RMT_ERROR_MALFORMED_DATA;
+            return kRmtErrorMalformedData;
         }
 
         if (((size_t)current_file_chunk->size_in_bytes < sizeof(RmtFileChunkHeader)) ||
             ((size_t)current_file_chunk->size_in_bytes > data_set->file_size_in_bytes))
         {
-            return RMT_ERROR_MALFORMED_DATA;
+            return kRmtErrorMalformedData;
         }
 
-        // depending on the type of chunk, handle pre-processing it.
+        // Depending on the type of chunk, handle pre-processing it.
         switch (current_file_chunk->chunk_identifier.chunk_type)
         {
         case kRmtFileChunkTypeRmtData:
             error_code = ParseRmtDataChunk(data_set, current_file_chunk);
-            RMT_ASSERT(error_code == RMT_OK);
-            RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+            RMT_ASSERT(error_code == kRmtOk);
+            RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
             break;
 
         case kRmtFileChunkTypeSegmentInfo:
             error_code = ParseSegmentInfoChunk(data_set, current_file_chunk);
-            RMT_ASSERT(error_code == RMT_OK);
-            RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+            RMT_ASSERT(error_code == kRmtOk);
+            RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
             break;
 
         case kRmtFileChunkTypeProcessStart:
             error_code = ParseProcessStartInfo(data_set, current_file_chunk);
-            RMT_ASSERT(error_code == RMT_OK);
-            RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+            RMT_ASSERT(error_code == kRmtOk);
+            RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
             break;
 
         case kRmtFileChunkTypeAdapterInfo:
             error_code = ParseAdapterInfoChunk(data_set, current_file_chunk);
-            RMT_ASSERT(error_code == RMT_OK);
-            RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+            RMT_ASSERT(error_code == kRmtOk);
+            RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
             break;
 
         case kRmtFileChunkTypeSnapshotInfo:
             error_code = ParseSnapshotInfoChunk(data_set, current_file_chunk);
-            RMT_ASSERT(error_code == RMT_OK);
-            RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+            RMT_ASSERT(error_code == kRmtOk);
+            RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
             break;
 
         default:
@@ -265,18 +277,18 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
         }
     }
 
-    // initialize the token heap for k-way merging.
+    // Initialize the token heap for k-way merging.
     error_code = RmtStreamMergerInitialize(&data_set->stream_merger, data_set->streams, data_set->stream_count);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    // rebase any snapshot times to be relative to the minimum timestamp.
+    // Rebase any snapshot times to be relative to the minimum timestamp.
     for (int32_t current_snapshot_index = 0; current_snapshot_index < data_set->snapshot_count; ++current_snapshot_index)
     {
         data_set->snapshots[current_snapshot_index].timestamp -= data_set->stream_merger.minimum_start_timestamp;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 static void BuildDataProfileParseUserdata(RmtDataSet* data_set, const RmtToken* current_token)
@@ -377,8 +389,8 @@ static RmtErrorCode BuildDataProfile(RmtDataSet* data_set)
         // grab the next token from the heap.
         RmtToken           current_token;
         const RmtErrorCode error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         data_set->maximum_timestamp = RMT_MAXIMUM(data_set->maximum_timestamp, current_token.common.timestamp);
 
@@ -426,7 +438,7 @@ static RmtErrorCode BuildDataProfile(RmtDataSet* data_set)
     data_set->p_resource_id_map_allocator->allocation_size = size_required - sizeof(ResourceIdMapAllocator);
     data_set->p_resource_id_map_allocator->resource_count  = 0;
     data_set->stream_merger.allocator                      = data_set->p_resource_id_map_allocator;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Helper function call the correct allocation function.
@@ -464,15 +476,15 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
     {
         out_snapshot->virtual_allocation_buffer = PerformAllocation(data_set, virtual_allocation_buffer_size, sizeof(uint32_t));
         RMT_ASSERT(out_snapshot->virtual_allocation_buffer);
-        RMT_RETURN_ON_ERROR(out_snapshot->virtual_allocation_buffer, RMT_ERROR_OUT_OF_MEMORY);
+        RMT_RETURN_ON_ERROR(out_snapshot->virtual_allocation_buffer, kRmtErrorOutOfMemory);
         const RmtErrorCode error_code = RmtVirtualAllocationListInitialize(&out_snapshot->virtual_allocation_list,
                                                                            out_snapshot->virtual_allocation_buffer,
                                                                            virtual_allocation_buffer_size,
                                                                            data_set->data_profile.max_virtual_allocation_count,
                                                                            data_set->data_profile.max_concurrent_resources + 200,
                                                                            data_set->data_profile.total_virtual_allocation_count);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
 
     // create the resource list.
@@ -481,27 +493,27 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
     {
         out_snapshot->resource_list_buffer = PerformAllocation(data_set, resource_list_buffer_size, sizeof(uint32_t));
         RMT_ASSERT(out_snapshot->resource_list_buffer);
-        RMT_RETURN_ON_ERROR(out_snapshot->resource_list_buffer, RMT_ERROR_OUT_OF_MEMORY);
+        RMT_RETURN_ON_ERROR(out_snapshot->resource_list_buffer, kRmtErrorOutOfMemory);
         const RmtErrorCode error_code = RmtResourceListInitialize(&out_snapshot->resource_list,
                                                                   out_snapshot->resource_list_buffer,
                                                                   resource_list_buffer_size,
                                                                   &out_snapshot->virtual_allocation_list,
                                                                   data_set->data_profile.max_concurrent_resources + 200);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
 
     // initialize the region stack
     out_snapshot->region_stack_buffer = NULL;
     out_snapshot->region_stack_count  = 0;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // consume next RMT token for snapshot generation.
 static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* current_token, RmtDataSnapshot* out_snapshot)
 {
-    RmtErrorCode error_code = RMT_OK;
+    RmtErrorCode error_code = kRmtOk;
 
     RMT_UNUSED(data_set);
 
@@ -510,35 +522,30 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     case kRmtTokenTypeVirtualFree:
     {
 #ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf, "%lld - VIRTUAL_FREE - 0x%010llx\n", current_token->common.timestamp, current_token->virtual_free_token.virtual_address);
-        OutputDebugString(buf);
+        RmtPrint("%lld - VIRTUAL_FREE - 0x%010llx", current_token->common.timestamp, current_token->virtual_free_token.virtual_address);
 #endif
 
         error_code = RmtVirtualAllocationListRemoveAllocation(&out_snapshot->virtual_allocation_list, current_token->virtual_free_token.virtual_address);
-        RMT_ASSERT(error_code == RMT_OK);
-        //RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
     case kRmtTokenTypePageTableUpdate:
     {
 #ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf,
-                  "%lld - PAGE_TABLE_UPDATE - [0x%010llx..0x%010llx] => [0x%010llx..0x%010llx] (%lld * %lld) %d %s\n",
-                  current_token->common.timestamp,
-                  current_token->page_table_update_token.virtual_address,
-                  current_token->page_table_update_token.virtual_address +
-                      (current_token->page_table_update_token.size_in_pages * rmtGetPageSize(current_token->page_table_update_token.page_size)),
-                  current_token->page_table_update_token.physical_address,
-                  current_token->page_table_update_token.physical_address +
-                      (current_token->page_table_update_token.size_in_pages * rmtGetPageSize(current_token->page_table_update_token.page_size)),
-                  current_token->page_table_update_token.size_in_pages,
-                  rmtGetPageSize(current_token->page_table_update_token.page_size),
-                  current_token->page_table_update_token.update_type,
-                  current_token->page_table_update_token.is_unmapping ? "UM" : "M");
-        OutputDebugString(buf);
+        RmtPrint("%lld - PAGE_TABLE_UPDATE - [0x%010llx..0x%010llx] => [0x%010llx..0x%010llx] (%lld * %lld) %d %s",
+                 current_token->common.timestamp,
+                 current_token->page_table_update_token.virtual_address,
+                 current_token->page_table_update_token.virtual_address +
+                     (current_token->page_table_update_token.size_in_pages * RmtGetPageSize(current_token->page_table_update_token.page_size)),
+                 current_token->page_table_update_token.physical_address,
+                 current_token->page_table_update_token.physical_address +
+                     (current_token->page_table_update_token.size_in_pages * RmtGetPageSize(current_token->page_table_update_token.page_size)),
+                 current_token->page_table_update_token.size_in_pages,
+                 RmtGetPageSize(current_token->page_table_update_token.page_size),
+                 current_token->page_table_update_token.update_type,
+                 current_token->page_table_update_token.is_unmapping ? "UM" : "M");
 #endif
 
         if (!current_token->page_table_update_token.is_unmapping)
@@ -563,8 +570,8 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                       current_token->page_table_update_token.is_unmapping,
                                                       current_token->page_table_update_token.update_type,
                                                       current_token->common.process_id);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
@@ -575,7 +582,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
             RmtResource* found_resource = NULL;
             error_code                  = RmtResourceListGetResourceByResourceId(
                 &out_snapshot->resource_list, current_token->userdata_token.resource_identifer, (const RmtResource**)&found_resource);
-            if (error_code == RMT_OK)
+            if (error_code == kRmtOk)
             {
                 memcpy(found_resource->name,
                        current_token->userdata_token.payload,
@@ -591,9 +598,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     case kRmtTokenTypeMisc:
     {
 #ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf, "%lld - MISC - %s\n", current_token->common.timestamp, rmtGetMiscTypeNameFromMiscType(current_token->misc_token.type));
-        OutputDebugString(buf);
+        RmtPrint("%lld - MISC - %s", current_token->common.timestamp, RmtGetMiscTypeNameFromMiscType(current_token->misc_token.type));
 #endif
     }
     break;
@@ -605,27 +610,24 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                                   current_token->resource_reference.virtual_address,
                                                                   current_token->resource_reference.residency_update_type,
                                                                   current_token->resource_reference.queue);
-        //RMT_ASSERT(error_code == RMT_OK);
-        //RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        //RMT_ASSERT(error_code == kRmtOk);
+        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
     case kRmtTokenTypeResourceBind:
     {
 #ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf,
-                  "%lld - RESOURCE_BIND - %lld 0x%010llx %lld\n",
-                  current_token->common.timestamp,
-                  current_token->resource_bind_token.resource_identifier,
-                  current_token->resource_bind_token.virtual_address,
-                  current_token->resource_bind_token.size_in_bytes);
-        OutputDebugString(buf);
+        RmtPrint("%lld - RESOURCE_BIND - %lld 0x%010llx %lld",
+                 current_token->common.timestamp,
+                 current_token->resource_bind_token.resource_identifier,
+                 current_token->resource_bind_token.virtual_address,
+                 current_token->resource_bind_token.size_in_bytes);
 #endif
 
         error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
 
-        if (error_code == RMT_ERROR_SHARED_ALLOCATION_NOT_FOUND)
+        if (error_code == kRmtErrorSharedAllocationNotFound)
         {
             // This is not a true error, it just means that we encountered a shareable resource without the matching virtual
             // alloc token.  This is an expected case as that allocation is owned outside the target process, so we'll add
@@ -638,14 +640,14 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                                kDummyHeapPref,
                                                                RmtOwnerType::kRmtOwnerTypeClientDriver);
         }
-        else if (error_code == RMT_ERROR_RESOURCE_ALREADY_BOUND)
+        else if (error_code == kRmtErrorResourceAlreadyBound)
         {
             // duplicate the command allocator resource we have at this resource ID this is because command allocators are
             // bound to multiple chunks of virtual address space simultaneously.
             const RmtResource* matching_resource = NULL;
             error_code                           = RmtResourceListGetResourceByResourceId(
                 &out_snapshot->resource_list, current_token->resource_bind_token.resource_identifier, &matching_resource);
-            if (error_code == RMT_OK)
+            if (error_code == kRmtOk)
             {
                 // form the token.
                 RmtTokenResourceCreate resource_create_token;
@@ -658,18 +660,18 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
                 // Create the resource.
                 error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &resource_create_token);
-                RMT_ASSERT(error_code == RMT_OK);
+                RMT_ASSERT(error_code == kRmtOk);
 
                 if (!(current_token->resource_bind_token.is_system_memory && current_token->resource_bind_token.virtual_address == 0))
                 {
                     error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
-                    RMT_ASSERT(error_code == RMT_OK);
+                    RMT_ASSERT(error_code == kRmtOk);
                 }
             }
         }
 
-        RMT_ASSERT(error_code == RMT_OK);
-        //RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
@@ -693,9 +695,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     case kRmtTokenTypeCpuMap:
     {
 #ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf, "%lld - CPU_MAP - 0x%010llx\n", current_token->common.timestamp, current_token->cpu_map_token.virtual_address);
-        OutputDebugString(buf);
+        RmtPrint("%lld - CPU_MAP - 0x%010llx", current_token->common.timestamp, current_token->cpu_map_token.virtual_address);
 #endif
 
         if (current_token->cpu_map_token.is_unmap)
@@ -709,21 +709,18 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 &out_snapshot->virtual_allocation_list, current_token->common.timestamp, current_token->cpu_map_token.virtual_address);
         }
 
-        RMT_ASSERT(error_code == RMT_OK);
-        //RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
     case kRmtTokenTypeVirtualAllocate:
     {
 #ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf,
-                  "%lld - VIRTUAL_ALLOCATE - 0x%010llx %lld\n",
-                  current_token->common.timestamp,
-                  current_token->virtual_allocate_token.virtual_address,
-                  current_token->virtual_allocate_token.size_in_bytes);
-        OutputDebugString(buf);
+        RmtPrint("%lld - VIRTUAL_ALLOCATE - 0x%010llx %lld",
+                 current_token->common.timestamp,
+                 current_token->virtual_allocate_token.virtual_address,
+                 current_token->virtual_allocate_token.size_in_bytes);
 #endif
 
         error_code = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
@@ -732,8 +729,8 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                            (int32_t)(current_token->virtual_allocate_token.size_in_bytes >> 12),
                                                            current_token->virtual_allocate_token.preference,
                                                            current_token->virtual_allocate_token.owner_type);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
@@ -746,23 +743,22 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                   current_token->common.timestamp,
                   current_token->resource_create_token.resource_identifier,
                   current_token->resource_create_token.resource_type);
-        OutputDebugString(buf);
 #endif
 
         error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &current_token->resource_create_token);
-        RMT_ASSERT(error_code == RMT_OK);
+        RMT_ASSERT(error_code == kRmtOk);
 
 #ifdef PRINT_TOKENS
-        if (error_code != RMT_OK)
+        if (error_code != kRmtOk)
         {
-            OutputDebugString(" - FAILED\n");
+            RmtPrint("%s - FAILED", buf);
         }
         else
         {
-            OutputDebugString("\n");
+            RmtPrint(buf);
         }
 #endif
-        //RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
@@ -774,22 +770,21 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                   "%lld - RESOURCE_DESTROY - %lld",
                   current_token->resource_destroy_token.common.timestamp,
                   current_token->resource_destroy_token.resource_identifier);
-        OutputDebugString(buf);
 #endif
         error_code = RmtResourceListAddResourceDestroy(&out_snapshot->resource_list, &current_token->resource_destroy_token);
-        //RMT_ASSERT(error_code == RMT_OK);
+        //RMT_ASSERT(error_code == kRmtOk);
 
 #ifdef PRINT_TOKENS
-        if (error_code != RMT_OK)
+        if (error_code != kRmtOk)
         {
-            OutputDebugString(" - FAILED\n");
+            RmtPrint("%s - FAILED", buf);
         }
         else
         {
-            OutputDebugString("\n");
+            RmtPrint(buf);
         }
 #endif
-        //RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
@@ -797,7 +792,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         break;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // helper function that mirrors the .bak file to the original.
@@ -861,8 +856,8 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
 {
     RMT_ASSERT(path);
     RMT_ASSERT(data_set);
-    RMT_RETURN_ON_ERROR(path, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(path, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
 
     // copy the path
     const size_t path_length = strlen(path);
@@ -902,7 +897,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         error_no = fopen_s((FILE**)&data_set->file_handle, data_set->file_path, "rb");
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
-            return RMT_ERROR_FILE_NOT_OPEN;
+            return kRmtErrorFileNotOpen;
         }
     }
 
@@ -915,26 +910,26 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     {
         fclose((FILE*)data_set->file_handle);
         data_set->file_handle = NULL;
-        return RMT_ERROR_FILE_NOT_OPEN;
+        return kRmtErrorFileNotOpen;
     }
 
     // check that the file is larger enough at least for the RMT file header.
     if (data_set->file_size_in_bytes < sizeof(RmtFileHeader))
     {
-        return RMT_ERROR_FILE_NOT_OPEN;
+        return kRmtErrorFileNotOpen;
     }
 
     // parse all the chunk headers from the file.
     RmtErrorCode error_code = ParseChunks(data_set);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // construct the data profile for subsequent data parsing.
     error_code = BuildDataProfile(data_set);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // destroy the data set.
@@ -948,7 +943,7 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
     CommitTemporaryFileEdits(data_set, true);
 
     data_set->file_handle = NULL;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // get the number of series from the timeline type
@@ -1110,7 +1105,7 @@ static RmtErrorCode TimelineGeneratorAllocateMemory(RmtDataSet* data_set, RmtDat
     const size_t   series_memory_buffer_size   = buffer_size * out_timeline->series_count;
     out_timeline->series_memory_buffer         = (int32_t*)PerformAllocation(data_set, series_memory_buffer_size, sizeof(uint64_t));
     RMT_ASSERT(out_timeline->series_memory_buffer);
-    RMT_RETURN_ON_ERROR(out_timeline->series_memory_buffer, RMT_ERROR_OUT_OF_MEMORY);
+    RMT_RETURN_ON_ERROR(out_timeline->series_memory_buffer, kRmtErrorOutOfMemory);
 
     // zero the entire buffer.
     memset(out_timeline->series_memory_buffer, 0, series_memory_buffer_size);
@@ -1128,7 +1123,7 @@ static RmtErrorCode TimelineGeneratorAllocateMemory(RmtDataSet* data_set, RmtDat
         current_series_memory_buffer_start_offset += buffer_size;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Load the data into the structures we have allocated.
@@ -1139,21 +1134,21 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     // Allocate temporary snapshot.
     RmtDataSnapshot* temp_snapshot = (RmtDataSnapshot*)PerformAllocation(data_set, sizeof(RmtDataSnapshot), alignof(RmtDataSnapshot));
     RMT_ASSERT(temp_snapshot);
-    RMT_RETURN_ON_ERROR(temp_snapshot, RMT_ERROR_OUT_OF_MEMORY);
+    RMT_RETURN_ON_ERROR(temp_snapshot, kRmtErrorOutOfMemory);
     RmtErrorCode error_code = AllocateMemoryForSnapshot(data_set, temp_snapshot);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // initialize this.
     temp_snapshot->maximum_physical_memory_in_bytes = 0;
 
     // initialize the page table.
     error_code = RmtPageTableInitialize(&temp_snapshot->page_table, data_set->segment_info, data_set->segment_info_count, data_set->target_process_id);
-    RMT_ASSERT(error_code == RMT_OK);
+    RMT_ASSERT(error_code == kRmtOk);
 
     // initialize the process map.
     error_code = RmtProcessMapInitialize(&temp_snapshot->process_map);
-    RMT_ASSERT(error_code == RMT_OK);
+    RMT_ASSERT(error_code == kRmtOk);
 
     // Special case:
     // for timeline type of process, we have to first fill the 0th value of level 0
@@ -1183,13 +1178,13 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
         // grab the next token from the heap.
         RmtToken current_token;
         error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // Update the temporary snapshot with the RMT token.
         error_code = ProcessTokenForSnapshot(data_set, &current_token, temp_snapshot);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // set the timestamp for the current snapshot
         temp_snapshot->timestamp = current_token.common.timestamp;
@@ -1202,7 +1197,7 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     RmtDataSnapshotDestroy(temp_snapshot);
     PerformFree(data_set, temp_snapshot);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // calculate mip-maps for all levels of all series
@@ -1210,7 +1205,7 @@ static RmtErrorCode TimelineGeneratorCalculateSeriesLevels(RmtDataTimeline* out_
 {
     RMT_UNUSED(out_timeline);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // function to generate a timeline.
@@ -1218,8 +1213,8 @@ RmtErrorCode RmtDataSetGenerateTimeline(RmtDataSet* data_set, RmtDataTimelineTyp
 {
     RMT_ASSERT(data_set);
     RMT_ASSERT(out_timeline);
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_timeline, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_timeline, kRmtErrorInvalidPointer);
 
     // points at the parent dataset, which has lots of shared data.
     out_timeline->data_set                    = data_set;
@@ -1228,15 +1223,23 @@ RmtErrorCode RmtDataSetGenerateTimeline(RmtDataSet* data_set, RmtDataTimelineTyp
     out_timeline->maximum_value_in_all_series = 0;  // this will be calculated as we populate the data/generate mipmaps.
 
     // Allocate the memory we care about for the timeline.
-    TimelineGeneratorAllocateMemory(data_set, timeline_type, out_timeline);
+    RmtErrorCode error_code = TimelineGeneratorAllocateMemory(data_set, timeline_type, out_timeline);
+    if (error_code != kRmtOk)
+    {
+        return error_code;
+    }
 
     // Do the parsing for generating a timeline.
-    TimelineGeneratorParseData(data_set, timeline_type, out_timeline);
+    error_code = TimelineGeneratorParseData(data_set, timeline_type, out_timeline);
+    if (error_code != kRmtOk)
+    {
+        return error_code;
+    }
 
     // Generate mip-map data.
     TimelineGeneratorCalculateSeriesLevels(out_timeline);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // a pass to convert solitary heaps in an allocation into buffers.
@@ -1268,7 +1271,7 @@ static RmtErrorCode SnapshotGeneratorConvertHeapsToBuffers(RmtDataSnapshot* snap
         current_resource->resource_type        = kRmtResourceTypeBuffer;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 static int32_t ResourceComparator(const void* a, const void* b)
@@ -1348,7 +1351,7 @@ static RmtErrorCode SnapshotGeneratorAddResourcePointers(RmtDataSnapshot* snapsh
         qsort(current_virtual_allocation->resources, current_virtual_allocation->resource_count, sizeof(RmtResource*), ResourceComparator);
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // add unbound resources to the virtual allocation, there should be one of these for every gap in the VA
@@ -1409,7 +1412,7 @@ static RmtErrorCode SnapshotGeneratorAddUnboundResources(RmtDataSnapshot* snapsh
         }
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // compact virtual allocations, removing dead ones.
@@ -1419,7 +1422,7 @@ static RmtErrorCode SnapshotGeneratorCompactVirtualAllocations(RmtDataSnapshot* 
 
     RmtVirtualAllocationListCompact(&snapshot->virtual_allocation_list, true);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // calculate summary data for snapshot
@@ -1454,10 +1457,11 @@ static RmtErrorCode SnapshotGeneratorCalculateSummary(RmtDataSnapshot* snapshot)
         snapshot->minimum_allocation_timestamp = 0;
     }
 
-    snapshot->minimum_resource_size_in_bytes = RmtDataSnapshotGetSmallestResourceSize(snapshot);
-    snapshot->maximum_resource_size_in_bytes = RmtDataSnapshotGetLargestResourceSize(snapshot);
+    snapshot->minimum_resource_size_in_bytes         = RmtDataSnapshotGetSmallestResourceSize(snapshot);
+    snapshot->maximum_resource_size_in_bytes         = RmtDataSnapshotGetLargestResourceSize(snapshot);
+    snapshot->maximum_unbound_resource_size_in_bytes = RmtDataSnapshotGetLargestUnboundResourceSize(snapshot);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // calculate approximate commit type for each resource.
@@ -1482,7 +1486,7 @@ static RmtErrorCode SnapshotGeneratorCalculateCommitType(RmtDataSnapshot* snapsh
         }
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Allocate the region stack used to calculate the total resource memory in an allocation.
@@ -1508,7 +1512,7 @@ static RmtErrorCode SnapshotGeneratorAllocateRegionStack(RmtDataSnapshot* snapsh
     snapshot->region_stack_buffer =
         (RmtMemoryRegion*)PerformAllocation(snapshot->data_set, sizeof(RmtMemoryRegion) * max_resource_count, sizeof(RmtMemoryRegion));
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 static RmtErrorCode SnapshotGeneratorCalculateSnapshotPointSummary(RmtDataSnapshot* snapshot, RmtSnapshotPoint* out_snapshot_point)
@@ -1523,13 +1527,13 @@ static RmtErrorCode SnapshotGeneratorCalculateSnapshotPointSummary(RmtDataSnapsh
     out_snapshot_point->unbound_virtual_memory = RmtVirtualAllocationListGetUnboundTotalSizeInBytes(snapshot, &snapshot->virtual_allocation_list);
 
     RmtSegmentStatus heap_status[kRmtHeapTypeCount];
-    for (int32_t current_heap_type_index = 0; current_heap_type_index < kRmtHeapTypeCount; ++current_heap_type_index)
+    for (int32_t current_heap_type_index = 0; current_heap_type_index < kRmtHeapTypeNone; ++current_heap_type_index)
     {
         RmtDataSnapshotGetSegmentStatus(snapshot, (RmtHeapType)current_heap_type_index, &heap_status[current_heap_type_index]);
         out_snapshot_point->committed_memory[current_heap_type_index] = heap_status[current_heap_type_index].total_physical_mapped_by_process;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // function to generate a snapshot.
@@ -1537,8 +1541,8 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
 {
     RMT_ASSERT(data_set);
     RMT_ASSERT(out_snapshot);
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_snapshot, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_snapshot, kRmtErrorInvalidPointer);
 
     out_snapshot->snapshot_point = snapshot_point;
 
@@ -1553,7 +1557,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     // initialize the page table.
     error_code = RmtPageTableInitialize(
         &out_snapshot->page_table, out_snapshot->data_set->segment_info, out_snapshot->data_set->segment_info_count, out_snapshot->data_set->target_process_id);
-    RMT_ASSERT(error_code == RMT_OK);
+    RMT_ASSERT(error_code == kRmtOk);
 
     // Reset the RMT stream parsers ready to load the data.
     RmtStreamMergerReset(&data_set->stream_merger);
@@ -1564,8 +1568,8 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
         // grab the next token from the heap.
         RmtToken current_token;
         error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
-        RMT_ASSERT(error_code == RMT_OK);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_ASSERT(error_code == kRmtOk);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // we only want to create the snapshot using events up until a specific moment in time.
         if (current_token.common.timestamp > snapshot_point->timestamp)
@@ -1575,7 +1579,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
 
         // handle the token.
         error_code = ProcessTokenForSnapshot(data_set, &current_token, out_snapshot);
-        RMT_ASSERT(error_code == RMT_OK);
+        RMT_ASSERT(error_code == kRmtOk);
     }
 
     SnapshotGeneratorConvertHeapsToBuffers(out_snapshot);
@@ -1586,7 +1590,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     SnapshotGeneratorCalculateCommitType(out_snapshot);
     SnapshotGeneratorAllocateRegionStack(out_snapshot);
     SnapshotGeneratorCalculateSnapshotPointSummary(out_snapshot, snapshot_point);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // get the segment info for a physical address
@@ -1594,8 +1598,8 @@ RmtErrorCode RmtDataSetGetSegmentForPhysicalAddress(const RmtDataSet* data_set, 
 {
     RMT_ASSERT(data_set);
     RMT_ASSERT(out_segment_info);
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_segment_info, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_segment_info, kRmtErrorInvalidPointer);
 
     for (int32_t current_segment_info_index = 0; current_segment_info_index < data_set->segment_info_count; ++current_segment_info_index)
     {
@@ -1603,11 +1607,11 @@ RmtErrorCode RmtDataSetGetSegmentForPhysicalAddress(const RmtDataSet* data_set, 
         if (current_segment_info->base_address <= physical_address && physical_address <= (current_segment_info->base_address + current_segment_info->size))
         {
             *out_segment_info = current_segment_info;
-            return RMT_OK;
+            return kRmtOk;
         }
     }
 
-    return RMT_ERROR_NO_ALLOCATION_FOUND;
+    return kRmtErrorNoAllocationFound;
 }
 
 // Get the time corresponding to the given number of cpu clock cycles
@@ -1615,34 +1619,34 @@ RmtErrorCode RmtDataSetGetCpuClockTimestamp(const RmtDataSet* data_set, uint64_t
 {
     RMT_ASSERT(data_set);
     RMT_ASSERT(out_cpu_timestamp);
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_cpu_timestamp, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_cpu_timestamp, kRmtErrorInvalidPointer);
 
     const uint64_t cpu_clock_frequency_in_mhz = data_set->cpu_frequency / 1000000;
 
     if (cpu_clock_frequency_in_mhz == 0)
     {
-        return RMT_ERROR_TIMESTAMP_OUT_OF_BOUNDS;
+        return kRmtErrorTimestampOutOfBounds;
     }
 
     *out_cpu_timestamp = clk * 1000.0;
     *out_cpu_timestamp /= cpu_clock_frequency_in_mhz;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Get whether the CPU clock timestamp is valid
 RmtErrorCode RmtDataSetGetCpuClockTimestampValid(const RmtDataSet* data_set)
 {
     RMT_ASSERT(data_set);
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
 
     const uint64_t cpu_clock_frequency_in_mhz = data_set->cpu_frequency / 1000000;
 
     if (cpu_clock_frequency_in_mhz == 0)
     {
-        return RMT_ERROR_TIMESTAMP_OUT_OF_BOUNDS;
+        return kRmtErrorTimestampOutOfBounds;
     }
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // guts of adding a snapshot with file ops.
@@ -1653,7 +1657,7 @@ static RmtErrorCode AddSnapshot(RmtDataSet* data_set, const char* name, uint64_t
     if (snapshot_index >= RMT_MAXIMUM_SNAPSHOT_POINTS)
     {
         *out_snapshot_point = NULL;
-        return RMT_ERROR_OUT_OF_MEMORY;
+        return kRmtErrorOutOfMemory;
     }
 
     const int32_t name_length                     = (int32_t)RMT_MINIMUM(strlen(name), RMT_MAXIMUM_NAME_LENGTH);
@@ -1704,21 +1708,21 @@ static RmtErrorCode AddSnapshot(RmtDataSet* data_set, const char* name, uint64_t
 
     // write the pointer back.
     *out_snapshot_point = &data_set->snapshots[snapshot_index];
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // add a new snapshot to the end of the file.
 RmtErrorCode RmtDataSetAddSnapshot(RmtDataSet* data_set, const char* name, uint64_t timestamp, RmtSnapshotPoint** out_snapshot_point)
 {
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(name, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(name, kRmtErrorInvalidPointer);
 
     const RmtErrorCode error_code = AddSnapshot(data_set, name, timestamp, out_snapshot_point);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     CommitTemporaryFileEdits(data_set, false);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // guts of removing a snapshot without destroying the cached object, lets this code be shared with rename.
@@ -1742,8 +1746,8 @@ static void RemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index)
 // remove a snapshot from the data set.
 RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index)
 {
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(snapshot_index < data_set->snapshot_count, RMT_ERROR_INDEX_OUT_OF_RANGE);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(snapshot_index < data_set->snapshot_count, kRmtErrorIndexOutOfRange);
 
     RmtSnapshotPoint* snapshot_point = &data_set->snapshots[snapshot_index];
     RmtDataSnapshotDestroy(snapshot_point->cached_snapshot);
@@ -1752,23 +1756,23 @@ RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapsh
 
     CommitTemporaryFileEdits(data_set, false);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // rename a snapshot in the data set.
 RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, const char* name)
 {
-    RMT_RETURN_ON_ERROR(data_set, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(name, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(snapshot_index < data_set->snapshot_count, RMT_ERROR_INDEX_OUT_OF_RANGE);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(name, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(snapshot_index < data_set->snapshot_count, kRmtErrorIndexOutOfRange);
 
     const uint64_t timestamp = data_set->snapshots[snapshot_index].timestamp;
 
     // add it to the end.
     RmtSnapshotPoint* snapshot_point = NULL;
     RmtErrorCode      error_code     = AddSnapshot(data_set, name, timestamp, &snapshot_point);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // copy over the summary stuff from the previous one, and the pointer to the cached dataset.
     snapshot_point->cached_snapshot        = data_set->snapshots[snapshot_index].cached_snapshot;
@@ -1787,7 +1791,7 @@ RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapsh
 
     CommitTemporaryFileEdits(data_set, false);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t timestamp)

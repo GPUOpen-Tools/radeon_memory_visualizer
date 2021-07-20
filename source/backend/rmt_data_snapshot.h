@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Structures and functions for working with a snapshot.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Structures and functions for working with a snapshot.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_DATA_SNAPSHOT_H_
@@ -15,7 +16,7 @@
 #include "rmt_configuration.h"
 #include "rmt_process_map.h"
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -77,13 +78,14 @@ typedef struct RmtDataSnapshot
     RmtSnapshotPoint* snapshot_point;  ///< The snapshot point the snapshot was generated from.
 
     // Summary data for the snapshot.
-    RmtGpuAddress minimum_virtual_address;           ///< The minimum virtual address that has been encountered in this snapshot.
-    RmtGpuAddress maximum_virtual_address;           ///< The maximum virtual address that has been encountered in this snapshot.
-    uint64_t      minimum_allocation_timestamp;      ///< The minimum timestamp seen for allocations.
-    uint64_t      maximum_allocation_timestamp;      ///< The maximum timestamp seen for allocations.
-    uint64_t      minimum_resource_size_in_bytes;    ///< The minimum resource size (in bytes) in this snapshot.
-    uint64_t      maximum_resource_size_in_bytes;    ///< The maximum resource size (in bytes) in this snapshot.
-    uint64_t      maximum_physical_memory_in_bytes;  ///< The maximum amount of physical memory (in bytes).
+    RmtGpuAddress minimum_virtual_address;                 ///< The minimum virtual address that has been encountered in this snapshot.
+    RmtGpuAddress maximum_virtual_address;                 ///< The maximum virtual address that has been encountered in this snapshot.
+    uint64_t      minimum_allocation_timestamp;            ///< The minimum timestamp seen for allocations.
+    uint64_t      maximum_allocation_timestamp;            ///< The maximum timestamp seen for allocations.
+    uint64_t      minimum_resource_size_in_bytes;          ///< The minimum resource size (in bytes) in this snapshot.
+    uint64_t      maximum_resource_size_in_bytes;          ///< The maximum resource size (in bytes) in this snapshot.
+    uint64_t      maximum_unbound_resource_size_in_bytes;  ///< The maximum unbound resource size (in bytes) in this snapshot.
+    uint64_t      maximum_physical_memory_in_bytes;        ///< The maximum amount of physical memory (in bytes).
 
     RmtVirtualAllocationList virtual_allocation_list;  ///< A list of all virtual allocations.
     RmtResourceList          resource_list;            ///< A list of all resources.
@@ -103,11 +105,11 @@ typedef struct RmtDataSnapshot
 /// @param [in]  snapshot                       The snapshot to destroy.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>snapshot</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>snapshot</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_MALFORMED_DATA                    The operation failed due to the <c><i>snapshot</i></c> data set being <c><i>NULL</i></c>.
+/// kRmtErrorMalformedData                      The operation failed due to the <c><i>snapshot</i></c> data set being <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSnapshotDestroy(RmtDataSnapshot* snapshot);
 
 /// Debugging function.
@@ -120,9 +122,9 @@ RmtErrorCode RmtSnapshotDumpStateToConsole(const RmtDataSnapshot* snapshot);
 /// @param [out] out_resource_history           Pointer to an <c><i>RmtResourceHistory</i></c> structure to fill.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>snapshot</i></c> , <c><i>resource</i></c> or
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>snapshot</i></c> , <c><i>resource</i></c> or
 ///                                             <c><i>out_resource_history</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSnapshotGenerateResourceHistory(RmtDataSnapshot* snapshot, const RmtResource* resource, RmtResourceHistory* out_resource_history);
 
@@ -133,6 +135,14 @@ RmtErrorCode RmtDataSnapshotGenerateResourceHistory(RmtDataSnapshot* snapshot, c
 /// @returns
 /// The largest resource size seen in a snapshot.
 uint64_t RmtDataSnapshotGetLargestResourceSize(const RmtDataSnapshot* snapshot);
+
+/// Get the largest unbound resource size (in bytes) seen in a snapshot.
+///
+/// @param [in]  snapshot                           The snapshot to retrieve the largest resource size from.
+///
+/// @returns
+/// The largest unbound resource size seen in a snapshot.
+uint64_t RmtDataSnapshotGetLargestUnboundResourceSize(const RmtDataSnapshot* snapshot);
 
 /// Get the smallest resource size (in bytes) seen in a snapshot.
 ///
@@ -149,9 +159,9 @@ uint64_t RmtDataSnapshotGetSmallestResourceSize(const RmtDataSnapshot* snapshot)
 /// @param [out] out_segment_status                 A pointer to a <c><i>RmtSegmentStatus</i></c> structure to fill.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>snapshot</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>snapshot</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, RmtHeapType heap_type, RmtSegmentStatus* out_segment_status);
 
 /// Get the segment that an address is in.
@@ -169,13 +179,13 @@ RmtHeapType RmtDataSnapshotGetSegmentForAddress(const RmtDataSnapshot* snapshot,
 /// @param [in]  filename                                   A pointer to the json file name to use.
 ///
 /// @returns
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_FILE_NOT_OPEN                     The operation failed due to <c><i>filename</i></c> being invalid.
+/// kRmtErrorFileNotOpen                        The operation failed due to <c><i>filename</i></c> being invalid.
 ///
 RmtErrorCode RmtDataSnapshotDumpJsonToFile(const RmtDataSnapshot* snapshot, const char* filename);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_DATA_SNAPSHOT_H_

@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for the Snapshot Delta pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Snapshot Delta pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_COMPARE_SNAPSHOT_DELTA_PANE_H_
@@ -12,15 +12,14 @@
 
 #include "qt_common/custom_widgets/colored_legend_scene.h"
 
-#include "rmt_format.h"
-
 #include "models/compare/snapshot_delta_model.h"
 #include "views/base_pane.h"
+#include "views/compare_pane.h"
 #include "views/custom_widgets/rmv_carousel.h"
 #include "views/custom_widgets/rmv_delta_display.h"
 #include "util/definitions.h"
 
-/// Enum containing indices for the snapshot delta information.
+/// @brief Enum containing indices for the snapshot delta information.
 enum SnapshotDeltaDataType
 {
     kSnapshotDeltaTypeAvailableSize,
@@ -32,61 +31,61 @@ enum SnapshotDeltaDataType
     kSnapshotDeltaTypeCount,
 };
 
-/// Pairs a delta display row with a simple line.
+/// @brief Pairs a delta display row with a simple line.
 struct DeltaDisplayLinePair
 {
     RMVDeltaDisplay* display;  ///< The delta items.
     QFrame*          line;     ///< The separator line.
 };
 
-/// Class declaration.
-class SnapshotDeltaPane : public BasePane
+/// @brief Class declaration.
+class SnapshotDeltaPane : public ComparePane
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The widget's parent.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit SnapshotDeltaPane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~SnapshotDeltaPane();
 
-    /// Overridden show event. Fired when this pane is opened.
-    /// \param event the show event object.
+    /// @brief Overridden show event. Fired when this pane is opened.
+    ///
+    /// @param [in] event the show event object.
     virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
 
-    /// Overridden window resize event.
-    /// \param event the resize event object.
+    /// @brief Overridden window resize event.
+    ///
+    /// @param [in] event The resize event object.
     virtual void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
-    /// Update this pane with any redraw ops that should happen on pane switch.
-    virtual void PaneSwitched() Q_DECL_OVERRIDE;
-
-    /// Reset UI state.
+    /// @brief Reset UI state.
     virtual void Reset() Q_DECL_OVERRIDE;
 
-    /// Update UI coloring.
+    /// @brief Update UI coloring.
     virtual void ChangeColoring() Q_DECL_OVERRIDE;
 
-    /// Refresh what's visible on the UI.
-    void Refresh();
+    /// @brief Update the UI when a new comparison is done.
+    virtual void Refresh() Q_DECL_OVERRIDE;
 
 private slots:
-    /// Switch snapshots.
+    /// @brief Switch snapshots.
     void SwitchSnapshots();
 
-    /// Resize widgets as needed according to the DPI Scale.
+    /// @brief Resize widgets as needed according to the DPI Scale.
     void OnScaleFactorChanged();
 
 private:
-    /// Update the UI.
+    /// @brief Update the UI.
     void UpdateUI();
 
-    /// Resize relevant items.
+    /// @brief Resize relevant items.
     void ResizeItems();
 
-    /// Add the memory delta legends to the required scene.
+    /// @brief Add the memory delta legends to the required scene.
     void AddMemoryDeltaLegends();
 
     Ui::SnapshotDeltaPane* ui_;  ///< Pointer to the Qt UI design.

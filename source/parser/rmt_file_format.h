@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Definition of structures and functions for the RMT file format.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of structures and functions for the RMT file format.
 //=============================================================================
 
 #ifndef RMV_PARSER_RMT_FILE_FORMAT_H_
@@ -173,13 +174,13 @@ typedef struct RmtFileParser
 /// @param [in]         file_handle                 A pointer to a <c><i>FILE</i></c> object.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>fileParser</i></c> or <c><i>fileBuffer</i></c> was NULL.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>fileParser</i></c> or <c><i>fileBuffer</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_INVALID_SIZE          The operation failed because <c><i>fileBufferSize</i></c> was not large enough to contain the RMT file header.
+/// kRmtErrorInvalidSize            The operation failed because <c><i>fileBufferSize</i></c> was not large enough to contain the RMT file header.
 /// @retval
-/// RMT_ERROR_MALFORMED_DATA        The operation failed because the data pointed to by <c><i>fileBuffer</i></c> didn't begin with a valid RMT file header.
+/// kRmtErrorMalformedData          The operation failed because the data pointed to by <c><i>fileBuffer</i></c> didn't begin with a valid RMT file header.
 ///
 RmtErrorCode RmtFileParserCreateFromHandle(RmtFileParser* file_parser, FILE* file_handle);
 
@@ -189,11 +190,11 @@ RmtErrorCode RmtFileParserCreateFromHandle(RmtFileParser* file_parser, FILE* fil
 /// @param [out]        parsed_chunk                A pointer to a <c><i>RmtFileChunkHeader</i></c> structure to populate with the chunk information.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>fileParser</i></c> or <c><i>parsedChunk</i></c> was NULL.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>fileParser</i></c> or <c><i>parsedChunk</i></c> was NULL.
 /// @retval
-/// RMT_END_OF_FILE                 The operation failed because the end of the buffer was reached.
+/// kRmtEndOfFile                   The operation failed because the end of the buffer was reached.
 ///
 RmtErrorCode RmtFileParserParseNextChunk(RmtFileParser* file_parser, RmtFileChunkHeader** parsed_chunk);
 
@@ -202,7 +203,7 @@ RmtErrorCode RmtFileParserParseNextChunk(RmtFileParser* file_parser, RmtFileChun
 ///
 /// @param [in]     header      A pointer to a Chunk header
 /// @retval
-/// RMT_OK                                  The chunk is supported.
+/// kRmtOk                                  The chunk is supported.
 /// @retval
 /// RMT_ERROR_UNSUPPORTED_LOW_SPEC_VERSION  Incompatible version
 /// @retval
@@ -214,7 +215,7 @@ RmtErrorCode RmtFileParserIsChunkSupported(const RmtFileChunkHeader* header);
 ///
 /// @param [in]     header      A pointer to a file header
 /// @retval
-/// RMT_OK                                  The file is compatible.
+/// kRmtOk                                  The file is compatible.
 /// @retval
 /// RMT_ERROR_UNSUPPORTED_LOW_SPEC_VERSION  Incompatible version
 /// @retval

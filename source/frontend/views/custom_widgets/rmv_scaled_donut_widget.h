@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2017-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Header for the donut widget.
+// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the donut widget.
 //=============================================================================
 
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_SCALED_DONUT_WIDGET_H_
@@ -11,75 +11,90 @@
 #include <QWidget>
 #include <QPainter>
 
-/// Support for the donut graphics item widget.
+/// @brief Support for the donut graphics item widget.
 class RMVScaledDonutWidget : public QWidget
 {
 public:
-    /// Constructor.
-    /// \param parent The parent widget.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit RMVScaledDonutWidget(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~RMVScaledDonutWidget();
 
-    /// Implementation of Qt's heightForWidth method.
-    /// \return the width (force proportional aspect ratio).
+    /// @brief Implementation of Qt's heightForWidth method.
+    ///
+    /// @param [in] width The width to calculate the height from.
+    ///
+    /// @return The width (force proportional aspect ratio).
     virtual int heightForWidth(int width) const Q_DECL_OVERRIDE;
 
-    /// Set the number of segments for this control. This is the number of
-    /// unique data elements to be shown in this widget.
-    /// \param num_segments the number of segments needed.
+    /// @brief Set the number of segments for this control.
+    ///
+    /// This is the number of unique data elements to be shown in this widget.
+    ///
+    /// @param [in] num_segments The number of segments needed.
     void SetNumSegments(unsigned int num_segments);
 
-    /// Set the value for the given index for the widget.
-    /// \param index the index whose value is to change.
-    /// \param value the new value to use.
+    /// @brief Set the value for the given index for the widget.
+    ///
+    /// @param [in] index The index whose value is to change.
+    /// @param [in] value The new value to use.
     void SetIndexValue(unsigned int index, qreal value);
 
-    /// Set the fill color for the given index for the widget.
-    /// \param index the index whose color is to change.
-    /// \param fill_color the color to use.
+    /// @brief Set the fill color for the given index for the widget.
+    ///
+    /// @param [in] index      The index whose color is to change.
+    /// @param [in] fill_color The color to use.
     void SetIndexColor(unsigned int index, const QColor& fill_color);
 
-    /// Set the text to be displayed in the pie segment.
-    /// \param index The index whose text is to change.
-    /// \param text The text to be shown.
+    /// @brief Set the text to be displayed in the pie segment.
+    ///
+    /// @param [in] index The index whose text is to change.
+    /// @param [in] text  The text to be shown.
     void SetIndexText(unsigned int index, const QString& text);
 
-    /// Set how wide the donut section should be.
-    /// \param arc_width the width of the donut arc.
+    /// @brief Set how wide the donut section should be.
+    ///
+    /// @param [in] arc_width The width of the donut arc.
     void SetArcWidth(qreal arc_width);
 
-    /// Set the first line of text inside the donut.
-    /// \param text Text to set.
+    /// @brief Set the first line of text inside the donut.
+    ///
+    /// @param [in] text The text to set.
     void SetTextLineOne(const QString& text);
 
-    /// Set the second line of text inside the donut.
-    /// \param text Text to set.
+    /// @brief Set the second line of text inside the donut.
+    ///
+    /// @param [in] text Text to set.
     void SetTextLineTwo(const QString& text);
 
-    /// Set the background color.
-    /// \param color The color to set.
+    /// @brief Set the background color.
+    ///
+    /// @param [in] color The color to set.
     void SetBackgroundColor(const QColor& color);
 
-    /// Adjust the size of the widget and proportionately adjust the font
-    /// and pen point sizes.
+    /// @brief Adjust the size of the widget and proportionately adjust the font and pen point sizes.
     void AdjustSize();
 
 protected:
-    /// Implementation of Qt's paint event for this widget.
-    /// \param event The paint event.
+    /// @brief Implementation of Qt's paint event for this widget.
+    ///
+    /// @param [in] event The paint event.
     virtual void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE;
 
-    /// Capture a resize event.
-    /// \param event The resize event.
+    /// @brief Capture a resize event.
+    ///
+    /// @param [in] event The resize event.
     virtual void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
 private:
-    /// Container class for each slice in the donut.
+    /// @brief Container class for each slice in the donut.
     class SliceData
     {
     public:
+        /// @brief Constructor.
         SliceData()
             : value(0)
             , fill_color(Qt::black)
@@ -87,6 +102,7 @@ private:
         {
         }
 
+        /// @brief Destructor.
         ~SliceData()
         {
         }

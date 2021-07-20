@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Global configuration values for the RMT backend.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Global configuration values for the RMT backend.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_CONFIGURATION_H_

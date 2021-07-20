@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Header for RMV's device configuration pane.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the device configuration pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_TIMELINE_DEVICE_CONFIGURATION_PANE_H_
@@ -15,27 +15,30 @@
 #include "models/timeline/device_configuration_model.h"
 #include "views/base_pane.h"
 
+/// @brief Class declaration.
 class DeviceConfigurationPane : public BasePane
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The widget's parent.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit DeviceConfigurationPane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     ~DeviceConfigurationPane();
 
-    /// Overridden Qt show event. Fired when this pane is opened.
-    /// \param event The show event object.
+    /// @brief Overridden Qt show event. Fired when this pane is opened.
+    ///
+    /// @param [in] event The show event object.
     virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
 
-    /// Reset UI state.
+    /// @brief Reset UI state.
     virtual void Reset() Q_DECL_OVERRIDE;
 
 private:
-    /// Refresh the UI.
+    /// @brief Refresh the UI.
     void Refresh();
 
     Ui::DeviceConfigurationPane*   ui_;     ///< Pointer to the Qt UI design.

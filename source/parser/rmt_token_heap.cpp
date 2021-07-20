@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Implementation of a priority queue data structure.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a priority queue data structure.
 //=============================================================================
 
 #include "rmt_token_heap.h"
@@ -135,7 +136,7 @@ static RmtErrorCode Peek(RmtStreamMerger* token_heap, RmtToken* out_token)
     RMT_ASSERT(out_token);
 
     memcpy(out_token, (const void*)token_heap->tokens[0], sizeof(RmtToken));
-    return RMT_OK;
+    return kRmtOk;
 }
 
 static RmtErrorCode Poll(RmtStreamMerger* token_heap, RmtToken* out_token)
@@ -148,7 +149,7 @@ static RmtErrorCode Poll(RmtStreamMerger* token_heap, RmtToken* out_token)
     // remove the element
     if (token_heap->current_size == 0)
     {
-        return RMT_OK;
+        return kRmtOk;
     }
 
     ElementSwap(&token_heap->tokens[0], &token_heap->tokens[token_heap->current_size - 1]);
@@ -159,7 +160,7 @@ static RmtErrorCode Poll(RmtStreamMerger* token_heap, RmtToken* out_token)
     RMT_ASSERT(validateHeap(token_heap, 0));
 #endif  // #ifdef VALIDATE_HEAP
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 static bool IsFull(const RmtStreamMerger* token_heap)
@@ -172,9 +173,9 @@ static RmtErrorCode Insert(RmtStreamMerger* token_heap, RmtToken* token)
 {
     RMT_ASSERT(token_heap);
     RMT_ASSERT(token);
-    RMT_RETURN_ON_ERROR(token_heap, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(token, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(!IsFull(token_heap), RMT_ERROR_OUT_OF_MEMORY);
+    RMT_RETURN_ON_ERROR(token_heap, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(token, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(!IsFull(token_heap), kRmtErrorOutOfMemory);
 
     token_heap->tokens[token_heap->current_size] = token;
     ElementMoveUp(token_heap, token_heap->current_size);
@@ -183,14 +184,14 @@ static RmtErrorCode Insert(RmtStreamMerger* token_heap, RmtToken* token)
 #ifdef VALIDATE_HEAP
     RMT_ASSERT(validateHeap(token_heap, 0));
 #endif  // #ifdef VALIDATE_HEAP
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* stream_parsers, int32_t stream_parser_count)
 {
-    RMT_RETURN_ON_ERROR(token_heap, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(stream_parser_count, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR(stream_parser_count < RMT_MAXIMUM_STREAMS, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(token_heap, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(stream_parser_count, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR(stream_parser_count < RMT_MAXIMUM_STREAMS, kRmtErrorInvalidSize);
 
     token_heap->parser_count            = stream_parser_count;
     token_heap->current_size            = 0;
@@ -198,12 +199,12 @@ RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* s
     token_heap->minimum_start_timestamp = UINT64_MAX;
 
     RmtStreamMergerReset(token_heap);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap)
 {
-    RMT_RETURN_ON_ERROR(token_heap, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(token_heap, kRmtErrorInvalidPointer);
 
     token_heap->current_size = 0;
 
@@ -211,19 +212,19 @@ RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap)
     {
         // reset each parser.
         RmtErrorCode error_code = RmtParserReset(&token_heap->parsers[current_rmt_stream_index]);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // insert first token of each parser
         RmtToken* current_token = &token_heap->buffer[current_rmt_stream_index];
         error_code              = RmtParserAdvance(&token_heap->parsers[current_rmt_stream_index], current_token, NULL);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // NOTE: Only apply biasing of the KMD tokens in the advance, its unlikely to
         // cause a problem for the first token out of the trap, and avoids the issue
         // of the start time going negative due to the biasing.
 
         error_code = Insert(token_heap, current_token);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // track the minimum timestamp.
         token_heap->minimum_start_timestamp = RMT_MINIMUM(token_heap->minimum_start_timestamp, current_token->common.timestamp);
@@ -235,7 +236,7 @@ RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap)
         token_heap->allocator->resource_count = 0;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 bool RmtStreamMergerIsEmpty(const RmtStreamMerger* token_heap)
@@ -314,13 +315,13 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
 {
     if (RmtStreamMergerIsEmpty(token_heap))
     {
-        return RMT_ERROR_OUT_OF_MEMORY;
+        return kRmtErrorOutOfMemory;
     }
 
     // grab the next token from the heap.
     RmtErrorCode error_code = Poll(token_heap, out_token);
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // rebase against the minimum timestamp seen on all heaps.
     out_token->common.timestamp -= token_heap->minimum_start_timestamp;
@@ -382,16 +383,16 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
     // heap for consideration.
     RmtToken* next_token_from_stream = &token_heap->buffer[out_token->common.stream_index];
     error_code                       = RmtParserAdvance(&token_heap->parsers[out_token->common.stream_index], next_token_from_stream, NULL);
-    if (error_code == RMT_OK)
+    if (error_code == kRmtOk)
     {
         error_code = Insert(token_heap, next_token_from_stream);
-        RMT_ASSERT(error_code == RMT_OK);
+        RMT_ASSERT(error_code == kRmtOk);
     }
 
     // EOF is a valid error code, as that's just a stream ending, anything else is probably bad.
-    if (error_code == RMT_EOF)
+    if (error_code == kRmtEof)
     {
-        return RMT_OK;
+        return kRmtOk;
     }
 
     return error_code;

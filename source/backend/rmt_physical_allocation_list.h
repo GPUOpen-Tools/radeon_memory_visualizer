@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Structures and functions for managing a physical allocation list.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Structures and functions for managing a physical allocation list.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_PHYSICAL_ALLOCATION_LIST_H_
@@ -78,11 +79,11 @@ size_t RmtPhysicalAllocationListGetBufferSize(int32_t maximum_concurrent_allocat
 /// @param [in] maximum_concurrent_allocations          The maximum number of concurrent allocations that can be in flight at any one time.
 ///
 /// @retval
-/// RMT_OK                                  The operation completed successfully.
+/// kRmtOk                                  The operation completed successfully.
 /// @retval
-/// @RMT_ERROR_INVALID_POINTER              The operation failed because <c><i>physicalAllocationList</i></c> or <c><i>buffer</i></c> was <c><i>NULL</i></c>.
+/// @kRmtErrorInvalidPointer                The operation failed because <c><i>physicalAllocationList</i></c> or <c><i>buffer</i></c> was <c><i>NULL</i></c>.
 /// @retval
-/// @RMT_ERROR_INVALID_SIZE                 The operation failed because <c><i>buffer</i></c> was not large enough to contain the number of concurrent allocations specified.
+/// @kRmtErrorInvalidSize                   The operation failed because <c><i>buffer</i></c> was not large enough to contain the number of concurrent allocations specified.
 RmtErrorCode RmtPhysicalAllocationListInitialize(RmtPhysicalAllocationList* physical_allocation_list,
                                                  void*                      buffer,
                                                  size_t                     buffer_size,
@@ -98,9 +99,9 @@ RmtErrorCode RmtPhysicalAllocationListInitialize(RmtPhysicalAllocationList* phys
 /// @param [in] process_id                              The process which allocated this physical memory.
 ///
 /// @retval
-/// RMT_OK                                  The operation completed successfully.
+/// kRmtOk                                  The operation completed successfully.
 /// @retval
-/// @RMT_ERROR_INVALID_POINTER              The operation failed because <c><i>physicalAllocationList</i></c>  was <c><i>NULL</i></c>.
+/// @kRmtErrorInvalidPointer                The operation failed because <c><i>physicalAllocationList</i></c>  was <c><i>NULL</i></c>.
 RmtErrorCode RmtPhysicalAllocationListAddAllocation(RmtPhysicalAllocationList* physical_allocation_list,
                                                     uint64_t                   timestamp,
                                                     RmtGpuAddress              address,
@@ -118,9 +119,9 @@ RmtErrorCode RmtPhysicalAllocationListDiscardAllocation(RmtPhysicalAllocationLis
 /// @param [out] out_allocation                         The address of a pointer which will be filled to point at an <c><i>RmtPhysicalAllocation</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                  The operation completed successfully.
+/// kRmtOk                                  The operation completed successfully.
 /// @retval
-/// @RMT_ERROR_INVALID_POINTER              The operation failed because <c><i>physicalAllocationList</i></c> or <c><i>outAllocation</i></c> was <c><i>NULL</i></c>.
+/// @kRmtErrorInvalidPointer                The operation failed because <c><i>physicalAllocationList</i></c> or <c><i>outAllocation</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtPhysicalAllocationListGetAllocationForAddress(const RmtPhysicalAllocationList* physical_allocation_list,
                                                               RmtGpuAddress                    address,
                                                               const RmtPhysicalAllocation**    out_allocation);
@@ -132,9 +133,9 @@ RmtErrorCode RmtPhysicalAllocationListGetAllocationForAddress(const RmtPhysicalA
 /// @param [out] out_allocation                         The address of a pointer to a <c><i>RmtPhysicalAllocationList</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                  The operation completed successfully.
+/// kRmtOk                                  The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER               The operation failed because <c><i>physicalAllocationList</i></c> or <c><i>outAllocation</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                 The operation failed because <c><i>physicalAllocationList</i></c> or <c><i>outAllocation</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtPhysicalAllocationListGetAllocationAtIndex(const RmtPhysicalAllocationList* physical_allocation_list,
                                                            int32_t                          index,
                                                            const RmtPhysicalAllocation**    out_allocation);

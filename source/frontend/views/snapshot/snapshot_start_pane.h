@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for the Snapshot start pane.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Snapshot start pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_SNAPSHOT_SNAPSHOT_START_PANE_H_
@@ -15,39 +15,45 @@
 #include "views/base_pane.h"
 #include "views/custom_widgets/rmv_camera_snapshot_widget.h"
 
-/// Class declaration
+/// @brief Class declaration.
 class SnapshotStartPane : public BasePane
 {
     Q_OBJECT
 
 public:
-    /// constructor.
-    /// \param parent The widget's parent.
+    /// @brief constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit SnapshotStartPane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~SnapshotStartPane();
 
-    /// Overridden window resize event.
-    /// \param event the resize event object.
+    /// @brief Overridden window resize event.
+    ///
+    /// @param [in] event the resize event object.
     virtual void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
-    /// Reset UI state.
+    /// @brief Reset UI state.
     virtual void Reset() Q_DECL_OVERRIDE;
 
-    /// Update UI coloring.
+    /// @brief Update UI coloring.
     virtual void ChangeColoring() Q_DECL_OVERRIDE;
 
-    /// Open a snapshot.
-    /// \param snapshot Pointer to the snapshot to open.
+    /// @brief Open a snapshot.
+    ///
+    /// @param [in] snapshot Pointer to the snapshot to open.
     virtual void OpenSnapshot(RmtDataSnapshot* snapshot) Q_DECL_OVERRIDE;
 
+    /// @brief Set the text for the pane describing an empty snapshot.
+    void SetEmptyTitleText();
+
 private slots:
-    /// Callback for when the DPI Scale changes.
+    /// @brief Callback for when the DPI Scale changes.
     void OnScaleFactorChanged();
 
 private:
-    /// Resizes the GraphicsView to fit the scene.
+    /// @brief Resizes the GraphicsView to fit the scene.
     void ResizeGraphicsView();
 
     Ui::SnapshotStartPane*   ui_;               ///< Pointer to the Qt UI design.

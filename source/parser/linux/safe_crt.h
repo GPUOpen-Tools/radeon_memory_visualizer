@@ -1,8 +1,8 @@
 //==============================================================================
-/// Copyright (c) 2016-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Linux definition of Windows safe CRT functions
+// Copyright (c) 2016-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Linux definition of Windows safe CRT functions.
 //==============================================================================
 
 #ifndef RMV_PARSER_LINUX_SAFE_CRT_H_

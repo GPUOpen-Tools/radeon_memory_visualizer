@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2017-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Definition of assert.
+// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of assert.
 //=============================================================================
 
 #ifndef RMV_PARSER_RMT_ASSERT_H_

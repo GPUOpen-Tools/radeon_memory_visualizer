@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a heap overview memory bar
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a heap overview memory bar.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_heap_overview_memory_bar.h"
@@ -12,8 +12,6 @@
 
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
-
-#include "rmt_assert.h"
 
 #include "util/constants.h"
 #include "util/string_util.h"
@@ -87,21 +85,21 @@ void RMVHeapOverviewMemoryBar::paintEvent(QPaintEvent* event)
             }
         }
 
-        // calc length of first rectangle and paint it
+        // Calculate length of first rectangle and paint it.
         uint64_t width       = std::max<uint64_t>(1, (size_ * w) / max_size_);
         QRect    memory_rect = QRect(0, 0, width, h);
         painter.fillRect(memory_rect, bar_color);
 
-        // draw the extra bar for other processes
+        // Draw the extra bar for other processes.
         if (extra_size_ > 0)
         {
-            // calc extra rectangle
+            // Calculate extra rectangle.
             uint64_t width_2 = (extra_size_ * w) / max_size_;
             painter.fillRect(width, 0, width_2, h, kGrayOtherProcessColor);
         }
 
-        // draw the amount of memory in this rectangle
-        // if bar is < 50% of the max, display the text string after the bar. Otherwise display it over the bar
+        // Draw the amount of memory in this rectangle.
+        // If bar is < 50% of the max, display the text string after the bar. Otherwise display it over the bar.
         if (((size_ * 100) / max_size_) < 50)
         {
             painter.setPen(Qt::black);

@@ -1,9 +1,9 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a helper class for custom button rendering for the
-/// themes and colors pane.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a helper class for custom button rendering for
+/// the themes and colors pane.
 //=============================================================================
 
 #include <QPen>

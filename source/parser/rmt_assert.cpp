@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2017 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Implementation of assert.
+// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of assert.
 //=============================================================================
 
 #include "rmt_assert.h"

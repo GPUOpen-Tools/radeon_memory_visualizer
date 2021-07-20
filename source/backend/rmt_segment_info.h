@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  The segment information captured for the target process.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  The segment information captured for the target process.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_SEGMENT_INFO_H_
@@ -11,7 +12,7 @@
 #include <rmt_types.h>
 #include <rmt_format.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -24,7 +25,7 @@ typedef struct RmtSegmentInfo
     int32_t       index;         ///< The index of the segment.
 } RmtSegmentInfo;
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_SEGMENT_INFO_H_

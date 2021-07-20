@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2017-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV's snapshot timeline visualization.
+// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the snapshot timeline visualization.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_snapshot_timeline.h"
@@ -23,6 +23,7 @@ static const int kDefaultMarkerWidth = 25;
 
 RMVSnapshotTimeline::RMVSnapshotTimeline(QWidget* parent)
     : TimelineView(parent)
+    , timeline_graph_(nullptr)
 {
 }
 
@@ -42,18 +43,22 @@ void RMVSnapshotTimeline::mousePressEvent(QMouseEvent* event)
 void RMVSnapshotTimeline::mouseMoveEvent(QMouseEvent* event)
 {
     TimelineView::mouseMoveEvent(event);
+    UpdateToolTip(event->pos());
 
     emit UpdateSelectedDuration(selected_end_clock_ - selected_start_clock_);
     emit UpdateHoverClock(last_hovered_clock_);
     emit UpdateZoomButtonsForZoomToSelection(RegionSelected());
+}
 
-#if 0
-    QPoint mouseCoords = mapFromGlobal(QCursor::pos());
-    QPointF sceneCoords = mapToScene(mouseCoords);
-    qDebug() << "mouse: " << mouseCoords;
-    qDebug() << "sceneCoords: " << sceneCoords;
-    qDebug() << "---------";
-#endif
+void RMVSnapshotTimeline::leaveEvent(QEvent* event)
+{
+    Q_UNUSED(event);
+
+    // If the mouse leaves the view, hide the tooltip.
+    if (timeline_graph_ != nullptr)
+    {
+        timeline_tooltip_.HideToolTip();
+    }
 }
 
 RMVSnapshotMarker* RMVSnapshotTimeline::AddSnapshot(RmtSnapshotPoint* snapshot_point)
@@ -80,7 +85,7 @@ RMVSnapshotMarker* RMVSnapshotTimeline::AddSnapshot(RmtSnapshotPoint* snapshot_p
     return dynamic_cast<RMVSnapshotMarker*>(content_object.item);
 }
 
-RMVTimelineGraph* RMVSnapshotTimeline::AddTimelineGraph(rmv::TimelineModel* timeline_model, TimelineColorizer* colorizer)
+RMVTimelineGraph* RMVSnapshotTimeline::AddTimelineGraph(rmv::TimelineModel* timeline_model, rmv::TimelineColorizer* colorizer)
 {
     RMVTimelineGraphConfig config = {};
     config.model_data             = timeline_model;
@@ -88,6 +93,7 @@ RMVTimelineGraph* RMVSnapshotTimeline::AddTimelineGraph(rmv::TimelineModel* time
     config.width                  = 25;
     config.height                 = height() - kDefaultRulerHeight;
 
+    timeline_model_             = timeline_model;
     TimelineItem content_object = {};
     content_object.item         = new RMVTimelineGraph(config);
 
@@ -100,7 +106,9 @@ RMVTimelineGraph* RMVSnapshotTimeline::AddTimelineGraph(rmv::TimelineModel* time
 
     UpdateScene();
 
-    return dynamic_cast<RMVTimelineGraph*>(content_object.item);
+    timeline_graph_ = dynamic_cast<RMVTimelineGraph*>(content_object.item);
+    timeline_tooltip_.CreateToolTip(scene_, true);
+    return timeline_graph_;
 }
 
 void RMVSnapshotTimeline::SelectSnapshot(const RmtSnapshotPoint* snapshot_point)
@@ -139,7 +147,7 @@ void RMVSnapshotTimeline::Clear()
 
 void RMVSnapshotTimeline::ClearSnapshotMarkers()
 {
-    QVector<int32_t> snapshot_markers;  ///< Vector of all objects in the scene added by child implementations
+    QVector<int32_t> snapshot_markers;  // Vector of all objects in the scene added by child implementations.
 
     for (int current_index = 0; current_index < content_.size(); ++current_index)
     {
@@ -176,7 +184,7 @@ void RMVSnapshotTimeline::contextMenuEvent(QContextMenuEvent* event)
         emit GenerateSnapshotAtTime(last_hovered_clock_);
     }
 
-    // swallow the event so we don't pass it out to parent controls.
+    // Swallow the event so we don't pass it out to parent controls.
     event->accept();
 }
 
@@ -186,8 +194,7 @@ void RMVSnapshotTimeline::wheelEvent(QWheelEvent* event)
 
     if (keyboard_modifiers & Qt::ControlModifier)
     {
-        const int delta = event->delta();
-
+        const int delta = event->angleDelta().y();
         if (delta < 0)
         {
             bool zoom = ZoomOutMousePosition();
@@ -198,6 +205,12 @@ void RMVSnapshotTimeline::wheelEvent(QWheelEvent* event)
             bool zoom = ZoomInMousePosition();
             emit UpdateZoomButtonsForZoomIn(zoom);
         }
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+        UpdateToolTip(event->position());
+#else
+        UpdateToolTip(event->pos());
+#endif
     }
     else
     {
@@ -246,7 +259,32 @@ void RMVSnapshotTimeline::UpdateTimeUnits(TimeUnitType time_unit, double time_to
     ruler_config_.time_to_clock_ratio = time_to_clock_ratio;
     UpdateScene();
 
-    // update the time values below the timeline
+    // Update the time values below the timeline.
     emit UpdateSelectedDuration(selected_end_clock_ - selected_start_clock_);
     emit UpdateHoverClock(last_hovered_clock_);
+}
+
+void RMVSnapshotTimeline::UpdateToolTip(const QPointF& mouse_pos)
+{
+    if (timeline_graph_ != nullptr)
+    {
+        const QPointF scene_pos         = mapToScene(mouse_pos.x(), mouse_pos.y());
+        const int     scroll_bar_height = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+        if (timeline_graph_->isUnderMouse())
+        {
+            QString text_string;
+            QString color_string;
+            qreal   x_pos = static_cast<qreal>(mouse_pos.x()) / static_cast<qreal>(width());
+            if (timeline_model_->GetTimelineTooltipInfo(x_pos, text_string, color_string))
+            {
+                timeline_tooltip_.SetText(text_string);
+                timeline_tooltip_.SetColors(color_string);
+                timeline_tooltip_.UpdateToolTip(mouse_pos, scene_pos, width(), height() - scroll_bar_height);
+            }
+        }
+        else
+        {
+            timeline_tooltip_.HideToolTip();
+        }
+    }
 }

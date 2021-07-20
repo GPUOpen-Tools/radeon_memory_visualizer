@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for the Keyboard Shortcuts pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Keyboard Shortcuts pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_SETTINGS_KEYBOARD_SHORTCUTS_PANE_H_
@@ -12,17 +12,18 @@
 
 #include "views/base_pane.h"
 
-/// Class declaration.
+/// @brief Class declaration.
 class KeyboardShortcutsPane : public BasePane
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The widget's parent.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit KeyboardShortcutsPane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~KeyboardShortcutsPane();
 
 private:

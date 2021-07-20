@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for RMV's carousel
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the carousel.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_carousel.h"
@@ -27,10 +27,10 @@ RMVCarousel::RMVCarousel(const RMVCarouselConfig& config)
     item_config.height            = config_.height;
     item_config.data_type         = config_.data_type;
 
-    model_ = new CarouselModel();
+    model_ = new rmv::CarouselModel();
 
-    // add items to the scene. The scene takes ownership of the items
-    // with addItem() so no need to delete these objects
+    // Add items to the scene. The scene takes ownership of the items
+    // with addItem() so no need to delete these objects.
     left_nav_button_ = new RMVCarouselNavButton(item_config.width, item_config.height, true);
     scene_->addItem(left_nav_button_);
 
@@ -40,17 +40,17 @@ RMVCarousel::RMVCarousel(const RMVCarouselConfig& config)
     info_text_ = scene_->addText("");
     info_text_->setPos(0, item_config.height - 20.0);
 
-    // don't show the carousel counter (for now)
+    // Don't show the carousel counter (for now).
     info_text_->hide();
 
-    // add the carousel widgets
+    // Add the carousel widgets.
     CreateCarouselItem<RMVCarouselMemoryFootprint>(item_config);
     CreateCarouselItem<RMVCarouselResourceTypes>(item_config);
     RMVCarouselMemoryTypes* virtual_memory  = CreateCarouselItem<RMVCarouselMemoryTypes>(item_config);
     RMVCarouselMemoryTypes* physical_memory = CreateCarouselItem<RMVCarouselMemoryTypes>(item_config);
     CreateCarouselItem<RMVCarouselAllocationSizes>(item_config);
 
-    // set the heap types required for the heap carousel items
+    // Set the heap types required for the heap carousel items.
     virtual_memory->SetIsPhysicalHeap(false);
     physical_memory->SetIsPhysicalHeap(true);
 
@@ -81,7 +81,7 @@ void RMVCarousel::MoveCarousel(bool left_direction)
 
             carousel_items_[0] = temp;
 
-            // decrease carousel index (1-based)
+            // Decrease carousel index (1-based).
             carousel_index_--;
             if (carousel_index_ < 1)
             {
@@ -99,7 +99,7 @@ void RMVCarousel::MoveCarousel(bool left_direction)
 
             carousel_items_[carousel_size - 1] = temp;
 
-            // increase carousel index (1-based)
+            // Increase carousel index (1-based).
             carousel_index_++;
             if (carousel_index_ > carousel_size)
             {
@@ -165,12 +165,12 @@ void RMVCarousel::Update()
         x_pos += (carousel_items_[i]->boundingRect().width() + free_space_pixel_width);
     }
 
-    // update the carousel info
+    // Update the carousel info.
     QString info_string = QString::number(carousel_index_) + QString("/") + QString::number(carousel_items_.size());
     info_text_->setPlainText(info_string);
 }
 
-QGraphicsScene* RMVCarousel::Scene()
+QGraphicsScene* RMVCarousel::Scene() const
 {
     return scene_;
 }
@@ -183,7 +183,7 @@ void RMVCarousel::ResizeEvent(int width, int height)
     Update();
 }
 
-void RMVCarousel::SetData(const RMVCarouselData& carousel_data)
+void RMVCarousel::SetData(const rmv::RMVCarouselData& carousel_data)
 {
     for (auto it : carousel_items_)
     {
@@ -195,20 +195,20 @@ void RMVCarousel::SetData(const RMVCarouselData& carousel_data)
 
 void RMVCarousel::ClearData()
 {
-    RMVCarouselData empty_data = {};
+    rmv::RMVCarouselData empty_data = {};
     SetData(empty_data);
 }
 
 void RMVCarousel::UpdateModel()
 {
-    RMVCarouselData carousel_data = {};
+    rmv::RMVCarouselData carousel_data = {};
     model_->GetCarouselData(carousel_data);
     SetData(carousel_data);
 }
 
 void RMVCarousel::UpdateModel(RmtDataSnapshot* base_snapshot, RmtDataSnapshot* diff_snapshot)
 {
-    RMVCarouselData carousel_delta_data = {};
+    rmv::RMVCarouselData carousel_delta_data = {};
     model_->CalcGlobalCarouselData(base_snapshot, diff_snapshot, carousel_delta_data);
     SetData(carousel_delta_data);
 }

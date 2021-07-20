@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Implementation for a job system to run work on multiple threads.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a job system to run work on multiple threads.
 //=============================================================================
 
 #include "rmt_job_system.h"
@@ -41,7 +42,7 @@ static uint32_t RMT_THREAD_FUNC JobSystemThreadFunc(void* input_data)
 
         // acquire the mutex.
         const RmtErrorCode error_code = RmtMutexLock(&thread_input->job_queue->queue_mutex);
-        RMT_ASSERT(error_code == RMT_OK);
+        RMT_ASSERT(error_code == kRmtOk);
 
         // if there is no work then reset the signal and release the mutex
         if (thread_input->job_queue->queue_size == 0)
@@ -86,8 +87,8 @@ static uint32_t RMT_THREAD_FUNC JobSystemThreadFunc(void* input_data)
 RmtErrorCode RmtJobQueueInitialize(RmtJobQueue* job_queue, int32_t worker_thread_count)
 {
     RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(worker_thread_count > 0 && worker_thread_count <= RMT_MAXIMUM_WORKER_THREADS, RMT_ERROR_INDEX_OUT_OF_RANGE);
+    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(worker_thread_count > 0 && worker_thread_count <= RMT_MAXIMUM_WORKER_THREADS, kRmtErrorIndexOutOfRange);
 
     // stash anything we need in the structure
     job_queue->worker_thread_count = worker_thread_count;
@@ -97,13 +98,13 @@ RmtErrorCode RmtJobQueueInitialize(RmtJobQueue* job_queue, int32_t worker_thread
     memset(job_queue->queue_items, 0, sizeof(job_queue->queue_items));
 
     // create the event to signal when queue has work
-    RmtErrorCode error_code = RMT_OK;
+    RmtErrorCode error_code = kRmtOk;
     error_code              = RmtThreadEventCreate(&job_queue->signal, false, true, "");
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // create the mutex for altering the job queue
     error_code = RmtMutexCreate(&job_queue->queue_mutex, "RMT Job Queue Mutex");
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // set up the queue
     job_queue->queue_tail_index = 0;
@@ -122,17 +123,17 @@ RmtErrorCode RmtJobQueueInitialize(RmtJobQueue* job_queue, int32_t worker_thread
         // create the thread
         error_code = RmtThreadCreate(&job_queue->worker_threads[current_worker_thread_index], JobSystemThreadFunc, input);
 
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // shutdown the job queue
 RmtErrorCode RmtJobQueueShutdown(RmtJobQueue* job_queue)
 {
     RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
 
     // singal to terminate all the threads
     for (int32_t current_worker_thread_index = 0; current_worker_thread_index < job_queue->worker_thread_count; ++current_worker_thread_index)
@@ -148,13 +149,13 @@ RmtErrorCode RmtJobQueueShutdown(RmtJobQueue* job_queue)
     for (int32_t current_worker_thread_index = 0; current_worker_thread_index < job_queue->worker_thread_count; ++current_worker_thread_index)
     {
         const RmtErrorCode error_code = RmtThreadWaitForExit(&job_queue->worker_threads[current_worker_thread_index]);
-        RMT_ASSERT(error_code == RMT_OK);
+        RMT_ASSERT(error_code == kRmtOk);
     }
 
     RmtThreadEventDestroy(&job_queue->signal);
     RmtMutexDestroy(&job_queue->queue_mutex);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // add a single job the queue
@@ -168,19 +169,19 @@ RmtErrorCode RmtJobQueueAddMultiple(RmtJobQueue* job_queue, RmtJobFunction func,
 {
     RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
     RMT_ASSERT_MESSAGE(func, "Parameter func is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(func, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(count, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(func, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(count, kRmtErrorInvalidSize);
 
     // add work to the queue.
     const RmtErrorCode error_code = RmtMutexLock(&job_queue->queue_mutex);
-    RMT_ASSERT(error_code == RMT_OK);
+    RMT_ASSERT(error_code == kRmtOk);
 
     // check the size of the queue
     if (job_queue->queue_size == RMT_MAXIMUM_JOB_COUNT)
     {
         RmtMutexUnlock(&job_queue->queue_mutex);
-        return RMT_ERROR_OUT_OF_MEMORY;
+        return kRmtErrorOutOfMemory;
     }
 
     // work out the handle
@@ -214,14 +215,14 @@ RmtErrorCode RmtJobQueueAddMultiple(RmtJobQueue* job_queue, RmtJobFunction func,
         *out_handle = job_handle;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // check if a job has completed
 RmtErrorCode RmtJobQueueWaitForCompletion(RmtJobQueue* job_queue, RmtJobHandle handle)
 {
     RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
 
     do
     {
@@ -237,5 +238,5 @@ RmtErrorCode RmtJobQueueWaitForCompletion(RmtJobQueue* job_queue, RmtJobHandle h
 
     } while (true);
 
-    return RMT_OK;
+    return kRmtOk;
 }

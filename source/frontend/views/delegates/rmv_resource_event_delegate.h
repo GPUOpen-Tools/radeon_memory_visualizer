@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Header for the resource event delegate.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the resource event delegate.
 //=============================================================================
 
 #ifndef RMV_VIEWS_DELEGATES_RMV_RESOURCE_EVENT_DELEGATE_H_
@@ -28,25 +28,29 @@ public:
     /// The icon size factor relative to the height of the available rect.
     static const double kIconSizeFactor;
 
-    /// Constructor.
-    /// \param parent The delegate's parent.
-    /// \param model The model containing the resource details.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The delegate's parent.
+    /// @param [in] model  The model containing the resource details.
     explicit RMVResourceEventDelegate(QWidget* parent, rmv::ResourceDetailsModel* model);
 
-    /// Destructor.
-    ~RMVResourceEventDelegate();
+    /// @brief Destructor.
+    virtual ~RMVResourceEventDelegate();
 
-    /// Overridden sizeHint method.
-    /// \param option Style options related to this element.
-    /// \param index The model index for this element.
-    /// \return The desired size needed to paint this element.
+    /// @brief Overridden sizeHint method.
+    ///
+    /// @param [in] option Style options related to this element.
+    /// @param [in] index  The model index for this element.
+    ///
+    /// @return The desired size needed to paint this element.
     virtual QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const Q_DECL_OVERRIDE;
 
-    /// Overridden delegate paint method.
-    /// \param painter Pointer to the painter object.
-    /// \param option A QStyleOptionViewItem object, which contains the bounding rectangle for this element.
-    /// \param index The model index for this element.
-    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const Q_DECL_OVERRIDE;
+    /// @brief Overridden delegate paint method.
+    ///
+    /// @param [in] painter Pointer to the painter object.
+    /// @param [in] option  A QStyleOptionViewItem object, which contains the bounding rectangle for this element.
+    /// @param [in] index   The model index for this element.
+    virtual void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const Q_DECL_OVERRIDE;
 
 private:
     rmv::ResourceEventIcons    event_icons_;  ///< The icon painter helper object.

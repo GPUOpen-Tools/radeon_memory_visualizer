@@ -208,7 +208,7 @@
            </font>
           </property>
           <property name="text">
-           <string>Copyright © 2018-2020 Advanced Micro Devices, Inc. All rights reserved</string>
+           <string>Copyright © Advanced Micro Devices, Inc. All rights reserved.</string>
           </property>
          </widget>
         </item>

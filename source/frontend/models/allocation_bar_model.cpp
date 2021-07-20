@@ -1,12 +1,14 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for the allocation bar model base class. This model
-/// holds any state information for derived models that use a graphical
-/// representation of an allocation and is used for a single allocation bar,
-/// as seen in the allocation explorer pane. These allocations are rendered
-/// using RMVAllocationBar objects.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the allocation bar model base class.
+///
+/// This model holds any state information for derived models that use a
+/// graphical representation of an allocation and is used for a single
+/// allocation bar, as seen in the allocation explorer pane. These allocations
+/// are rendered using RMVAllocationBar objects.
+///
 //=============================================================================
 
 #include "models/allocation_bar_model.h"
@@ -18,8 +20,8 @@
 
 #include "util/string_util.h"
 
+#include "managers/trace_manager.h"
 #include "models/snapshot/allocation_overview_model.h"
-#include "models/trace_manager.h"
 
 namespace rmv
 {
@@ -94,7 +96,7 @@ namespace rmv
         return show_details_;
     }
 
-    int32_t AllocationBarModel::GetHoveredResourceForAllocation(int32_t allocation_index, int model_index) const
+    int32_t AllocationBarModel::GetHoveredResourceForAllocation(int32_t allocation_index, int32_t model_index) const
     {
         const RmtVirtualAllocation* allocation = GetAllocation(allocation_index, model_index);
         if (allocation == selection_state_[model_index].hovered_allocation && allocation != nullptr)
@@ -104,7 +106,7 @@ namespace rmv
         return -1;
     }
 
-    int32_t AllocationBarModel::GetSelectedResourceForAllocation(int32_t allocation_index, int model_index) const
+    int32_t AllocationBarModel::GetSelectedResourceForAllocation(int32_t allocation_index, int32_t model_index) const
     {
         const RmtVirtualAllocation* allocation = GetAllocation(allocation_index, model_index);
         if (allocation == selection_state_[model_index].selected_allocation && allocation != nullptr)
@@ -114,7 +116,7 @@ namespace rmv
         return -1;
     }
 
-    void AllocationBarModel::SetHoveredResourceForAllocation(int32_t allocation_index, int32_t resource_index, int model_index)
+    void AllocationBarModel::SetHoveredResourceForAllocation(int32_t allocation_index, int32_t resource_index, int32_t model_index)
     {
         const RmtVirtualAllocation* allocation = GetAllocation(allocation_index, model_index);
         if (allocation != nullptr)
@@ -124,7 +126,7 @@ namespace rmv
         }
     }
 
-    void AllocationBarModel::SetSelectedResourceForAllocation(int32_t allocation_index, int32_t resource_index, int model_index)
+    void AllocationBarModel::SetSelectedResourceForAllocation(int32_t allocation_index, int32_t resource_index, int32_t model_index)
     {
         const RmtVirtualAllocation* allocation = GetAllocation(allocation_index, model_index);
         SetSelectedResourceForAllocation(allocation, resource_index, model_index);
@@ -152,11 +154,11 @@ namespace rmv
 
         SetHoveredResourceForAllocation(allocation_index, -1, model_index);
 
-        // calculate which row the mouse is in.
+        // Calculate which row the mouse is in.
         qreal pixels_per_row = static_cast<qreal>(height) / static_cast<qreal>(GetNumRows(allocation));
         int   row            = mouse_pos.y() / pixels_per_row;
 
-        // find which resource is highlighted, and set the hovered bit.
+        // Find which resource is highlighted, and set the hovered bit.
         const double bytes_per_pixel = GetBytesPerPixel(allocation_index, model_index, width);
 
         for (int32_t current_resource_index = resource_count - 1; current_resource_index >= 0; --current_resource_index)
@@ -185,19 +187,19 @@ namespace rmv
         }
     }
 
-    bool AllocationBarModel::SetSelectedResourceForAllocation(const RmtVirtualAllocation* allocation, int32_t resource_index, int model_index)
+    bool AllocationBarModel::SetSelectedResourceForAllocation(const RmtVirtualAllocation* allocation, int32_t resource_index, int32_t model_index)
     {
         if (allocation != nullptr)
         {
             selection_state_[model_index].selected_allocation = allocation;
             selection_state_[model_index].selected_resource   = resource_index;
 
-            return TraceManager::Get().GetAliasModel().GetNumRows(allocation) > 1;
+            return SnapshotManager::Get().GetAliasModel().GetNumRows(allocation) > 1;
         }
         return false;
     }
 
-    void AllocationBarModel::SelectResource(int32_t allocation_index, int32_t model_index, int resource_index)
+    void AllocationBarModel::SelectResource(int32_t allocation_index, int32_t model_index, int32_t resource_index)
     {
         const RmtVirtualAllocation* allocation = GetAllocation(allocation_index, model_index);
         if (allocation == nullptr)
@@ -252,13 +254,12 @@ namespace rmv
             return nullptr;
         }
 
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return nullptr;
         }
 
-        const RmtDataSnapshot* snapshot = trace_manager.GetOpenSnapshot();
+        const RmtDataSnapshot* snapshot = SnapshotManager::Get().GetOpenSnapshot();
         if (snapshot == nullptr)
         {
             return nullptr;
@@ -266,7 +267,7 @@ namespace rmv
 
         const RmtResource* resource   = NULL;
         const RmtErrorCode error_code = RmtResourceListGetResourceByResourceId(&snapshot->resource_list, resource_identifier, &resource);
-        if (error_code != RMT_OK)
+        if (error_code != kRmtOk)
         {
             return nullptr;
         }
@@ -302,7 +303,7 @@ namespace rmv
             return 1;
         }
 
-        return TraceManager::Get().GetAliasModel().GetNumRows(allocation);
+        return SnapshotManager::Get().GetAliasModel().GetNumRows(allocation);
     }
 
     int AllocationBarModel::GetRowForResourceAtIndex(const RmtVirtualAllocation* allocation, int index) const
@@ -312,6 +313,6 @@ namespace rmv
             return 0;
         }
 
-        return TraceManager::Get().GetAliasModel().GetRowForResourceAtIndex(allocation, index);
+        return SnapshotManager::Get().GetAliasModel().GetRowForResourceAtIndex(allocation, index);
     }
 }  // namespace rmv

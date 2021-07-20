@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Implementation of a widget that implements a custom check box.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a widget that implements a custom check box.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_colored_checkbox.h"
@@ -93,17 +93,17 @@ void RMVColoredCheckbox::paintEvent(QPaintEvent* event)
     // If not checked or disabled, draw grayed out and unchecked.
     if (isChecked() == false || enabled == false)
     {
-        // Draw switch
+        // Draw switch.
         painter.setBrush(default_color);
         QRectF outer_rect(0, 0, switch_width, switch_height);
         painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
 
-        // Draw space
+        // Draw space.
         painter.setBrush(Qt::white);
         QRectF inner_rect(space_x_coord, space_y_coord, space_width, space_height);
         painter.drawRoundedRect(inner_rect, space_radius, space_radius);
 
-        // Draw button
+        // Draw button.
         painter.setBrush(default_color);
         const QRectF button_rect = QRectF(button_x_coord_off, button_y_coord, button_diameter, button_diameter);
         painter.drawEllipse(button_rect);
@@ -114,28 +114,28 @@ void RMVColoredCheckbox::paintEvent(QPaintEvent* event)
 
         if (!multi_color_)
         {
-            // Draw single color switch
+            // Draw single color switch.
             painter.setBrush(primary_color_);
             painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
         }
         else
         {
-            // Stencil the area to be painted
+            // Stencil the area to be painted.
             painter.setBrush(Qt::black);
             painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
 
             painter.setCompositionMode(QPainter::CompositionMode_Plus);
 
-            // paint top half of switch
+            // Paint top half of switch.
             painter.setBrush(primary_color_);
             painter.drawRect(0, 0, switch_width, half_height);
 
-            // paint bottom half of switch
+            // Paint bottom half of switch.
             painter.setBrush(secondary_color_);
             painter.drawRect(0, half_height, switch_width, ceil(half_height));
         }
 
-        // Draw white button in the middle
+        // Draw white button in the middle.
         painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
         painter.setBrush(Qt::white);
@@ -167,7 +167,7 @@ QSize RMVColoredCheckbox::sizeHint() const
 {
     QFontMetricsF font_metrics = fontMetrics();
 
-    // Height is defined by max of font height and scaled checkbox height
+    // Height is defined by max of font height and scaled checkbox height.
     const qreal base_height = GetSwitchHeight(font_metrics);
     int         height      = std::max<int>(font_metrics.height(), base_height);
 

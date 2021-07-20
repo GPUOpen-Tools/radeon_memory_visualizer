@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of the allocation overview pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the allocation overview pane.
 //=============================================================================
 
 #include "views/snapshot/allocation_overview_pane.h"
@@ -17,17 +17,15 @@
 
 #include "rmt_assert.h"
 #include "rmt_data_snapshot.h"
-#include "rmt_print.h"
-#include "rmt_util.h"
-#include "rmt_virtual_allocation_list.h"
 
+#include "managers/pane_manager.h"
+#include "managers/message_manager.h"
+#include "managers/snapshot_manager.h"
+#include "models/colorizer.h"
 #include "models/heap_combo_box_model.h"
-#include "models/message_manager.h"
 #include "models/snapshot/allocation_overview_model.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"
-#include "views/pane_manager.h"
-#include "views/colorizer.h"
 #include "views/custom_widgets/rmv_allocation_bar.h"
 
 // The number of graphic objects in the scene to show allocations. It's inefficient to
@@ -47,16 +45,16 @@ enum
     kNumAllocationModels,
 };
 
-// Map between sort type ID and its text representation
-// These are the items that will be added to the combo box
+// Map between sort type ID and its text representation.
+// These are the items that will be added to the combo box.
 static const std::map<int, QString> kSortTextMap = {{rmv::AllocationOverviewModel::kSortModeAllocationID, rmv::text::kSortByAllocationId},
                                                     {rmv::AllocationOverviewModel::kSortModeAllocationSize, rmv::text::kSortByAllocationSize},
                                                     {rmv::AllocationOverviewModel::kSortModeAllocationAge, rmv::text::kSortByAllocationAge},
                                                     {rmv::AllocationOverviewModel::kSortModeResourceCount, rmv::text::kSortByResourceCount},
                                                     {rmv::AllocationOverviewModel::kSortModeFragmentationScore, rmv::text::kSortByFragmentationScore}};
 
-// Map between sort direction ID and its text representation
-// These are the items that will be added to the combo box
+// Map between sort direction ID and its text representation.
+// These are the items that will be added to the combo box.
 static const std::map<int, QString> kDirectionTextMap = {
     {rmv::AllocationOverviewModel::kSortDirectionAscending, rmv::text::kSortAscending},
     {rmv::AllocationOverviewModel::kSortDirectionDescending, rmv::text::kSortDescending},
@@ -67,6 +65,7 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
     , ui_(new Ui::allocation_overview_pane)
 {
     ui_->setupUi(this);
+    ui_->empty_page_->SetEmptyTitleText();
 
     rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
 
@@ -91,7 +90,7 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
     preferred_heap_combo_box_model_->SetupHeapComboBox(ui_->preferred_heap_combo_box_);
     connect(preferred_heap_combo_box_model_, &rmv::HeapComboBoxModel::FilterChanged, this, &AllocationOverviewPane::HeapChanged);
 
-    // Add text strings to the sort combo box
+    // Add text strings to the sort combo box.
     ui_->sort_combo_box_->ClearItems();
     for (int loop = 0; loop < rmv::AllocationOverviewModel::kSortModeCount; loop++)
     {
@@ -107,7 +106,7 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
         }
     }
 
-    // Add text strings to the sort direction combo box
+    // Add text strings to the sort direction combo box.
     ui_->sort_direction_combo_box_->ClearItems();
     for (int loop = 0; loop < rmv::AllocationOverviewModel::kSortDirectionCount; loop++)
     {
@@ -123,7 +122,7 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
         }
     }
 
-    // set up scrollbar parameters for the memory map graphics view
+    // Set up scrollbar parameters for the memory map graphics view.
     ui_->allocation_list_view_->setMouseTracking(true);
     ui_->allocation_list_view_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui_->allocation_list_view_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -131,32 +130,32 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
     allocation_list_scene_ = new QGraphicsScene();
     ui_->allocation_list_view_->setScene(allocation_list_scene_);
 
-    colorizer_ = new Colorizer();
+    colorizer_ = new rmv::Colorizer();
 
-    // Set up a list of required coloring modes, in order
-    // The list is terminated with COLOR_MODE_COUNT
-    static const Colorizer::ColorMode mode_list[] = {
-        Colorizer::kColorModeResourceUsageType,
-        Colorizer::kColorModePreferredHeap,
-        Colorizer::kColorModeAllocationAge,
-        Colorizer::kColorModeResourceCreateAge,
-        Colorizer::kColorModeResourceBindAge,
-        Colorizer::kColorModeResourceGUID,
-        Colorizer::kColorModeResourceCPUMapped,
-        Colorizer::kColorModeNotAllPreferred,
-        Colorizer::kColorModeAliasing,
-        Colorizer::kColorModeCommitType,
-        Colorizer::kColorModeCount,
+    // Set up a list of required coloring modes, in order.
+    // The list is terminated with kColorModeCount.
+    static const rmv::Colorizer::ColorMode mode_list[] = {
+        rmv::Colorizer::kColorModeResourceUsageType,
+        rmv::Colorizer::kColorModePreferredHeap,
+        rmv::Colorizer::kColorModeAllocationAge,
+        rmv::Colorizer::kColorModeResourceCreateAge,
+        rmv::Colorizer::kColorModeResourceBindAge,
+        rmv::Colorizer::kColorModeResourceGUID,
+        rmv::Colorizer::kColorModeResourceCPUMapped,
+        rmv::Colorizer::kColorModeNotAllPreferred,
+        rmv::Colorizer::kColorModeAliasing,
+        rmv::Colorizer::kColorModeCommitType,
+        rmv::Colorizer::kColorModeCount,
     };
 
-    // Initialize the "color by" UI elements. Set up the combo box, legends and signals etc
+    // Initialize the "color by" UI elements. Set up the combo box, legends and signals etc.
     colorizer_->Initialize(parent, ui_->color_combo_box_, ui_->legends_view_, mode_list);
 
-    // set up what happens when the user selects an item from the sort combo box
+    // Set up what happens when the user selects an item from the sort combo box.
     connect(ui_->sort_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &AllocationOverviewPane::ApplySort);
     connect(ui_->sort_direction_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &AllocationOverviewPane::ApplySort);
     connect(ui_->color_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &AllocationOverviewPane::ColorModeChanged);
-    connect(&MessageManager::Get(), &MessageManager::ResourceSelected, this, &AllocationOverviewPane::SelectResource);
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ResourceSelected, this, &AllocationOverviewPane::SelectResource);
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &AllocationOverviewPane::OnScaleFactorChanged);
 
     connect(ui_->allocation_height_slider_, &QSlider::valueChanged, this, [=]() { AllocationHeightChanged(); });
@@ -224,15 +223,16 @@ void AllocationOverviewPane::ColorModeChanged()
 void AllocationOverviewPane::OpenSnapshot(RmtDataSnapshot* snapshot)
 {
     RMT_ASSERT(snapshot != nullptr);
-    if (snapshot != nullptr)
+    if (snapshot != nullptr && rmv::SnapshotManager::Get().LoadedSnapshotValid())
     {
+        ui_->pane_stack_->setCurrentIndex(rmv::kSnapshotIndexPopulatedPane);
         ui_->sort_combo_box_->SetSelectedRow(0);
         ui_->sort_direction_combo_box_->SetSelectedRow(0);
         model_->ResetModelValues();
 
         if (snapshot->virtual_allocation_list.allocation_count > 0)
         {
-            // remove any old allocations from the last snapshot and disconnect any connections
+            // Remove any old allocations from the last snapshot and disconnect any connections.
             size_t current_size = allocation_graphic_objects_.size();
             for (size_t i = 0; i < current_size; i++)
             {
@@ -242,7 +242,7 @@ void AllocationOverviewPane::OpenSnapshot(RmtDataSnapshot* snapshot)
             allocation_graphic_objects_.clear();
             allocation_list_scene_->clear();
 
-            // add the graphics items to the scene, one item per allocation
+            // Add the graphics items to the scene, one item per allocation.
             int32_t count = std::min<int>(kMaxAllocationObjects, snapshot->virtual_allocation_list.allocation_count);
             for (int i = 0; i < count; i++)
             {
@@ -252,12 +252,16 @@ void AllocationOverviewPane::OpenSnapshot(RmtDataSnapshot* snapshot)
                 connect(allocation_item, &RMVAllocationBar::ResourceSelected, this, &AllocationOverviewPane::SelectedResource);
             }
 
-            // Apply filters and sorting to the newly added items
+            // Apply filters and sorting to the newly added items.
             ApplyFilters();
             ApplySort();
         }
 
         ResizeItems();
+    }
+    else
+    {
+        ui_->pane_stack_->setCurrentIndex(rmv::kSnapshotIndexEmptyPane);
     }
 }
 
@@ -322,7 +326,7 @@ void AllocationOverviewPane::ResizeItems()
         allocation_graphic_objects_[current_allocation_graphic_object_index]->UpdateDimensions(view_width, allocation_height_);
         allocation_graphic_objects_[current_allocation_graphic_object_index]->setPos(0, y_offset);
 
-        // move down based on the size of the item that was just added.
+        // Move down based on the size of the item that was just added.
         y_offset += allocation_graphic_objects_[current_allocation_graphic_object_index]->boundingRect().height();
     }
 
@@ -396,13 +400,13 @@ void AllocationOverviewPane::ApplySort()
 
 void AllocationOverviewPane::SelectedResource(RmtResourceIdentifier resource_identifier, bool navigate_to_pane)
 {
-    // broadcast the resource selection to any listening panes
-    // or the user needs to navigate because they double clicked
-    emit MessageManager::Get().ResourceSelected(resource_identifier);
+    // Broadcast the resource selection to any listening panes
+    // or the user needs to navigate because they double clicked.
+    emit rmv::MessageManager::Get().ResourceSelected(resource_identifier);
 
     if (navigate_to_pane == true)
     {
-        emit MessageManager::Get().NavigateToPane(rmv::kPaneSnapshotAllocationExplorer);
+        emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdSnapshotAllocationExplorer);
     }
 }
 

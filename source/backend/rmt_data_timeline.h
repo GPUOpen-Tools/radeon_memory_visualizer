@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Data structures and functions to operate on a timeline.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Data structures and functions to operate on a timeline.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_DATA_TIMELINE_H_
@@ -25,7 +26,7 @@
 /// The maximum number of data series.
 #define RMT_MAXIMUM_TIMELINE_DATA_SERIES (20)
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -86,11 +87,11 @@ typedef struct RmtDataTimeline
 /// @param [in] timeline                                    A pointer to a <c><i>RmtDataTimeline</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                          The operation completed succesfully.
+/// kRmtOk                                          The operation completed succesfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                       The operation failed because <c><i>timeline</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                         The operation failed because <c><i>timeline</i></c> was <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_MALFORMED_DATA                        The operation failed because <c><i>timeline</i></c> was not correctly initialized.
+/// kRmtErrorMalformedData                          The operation failed because <c><i>timeline</i></c> was not correctly initialized.
 RmtErrorCode RmtDataTimelineDestroy(RmtDataTimeline* timeline);
 
 /// A view of the timeline data according to certain view parameters.
@@ -120,9 +121,9 @@ typedef struct RmtDataTimelineHistogram
 /// @param [out] out_timeline_histogram                     A pointer to a <c><i>RmtDataTimelineHistogram</i></c> structure to initialize.
 ///
 /// @retval
-/// RMT_OK                                          The operation completed successfully.
+/// kRmtOk                                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                       The operation failed because <c><i>timeline</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                         The operation failed because <c><i>timeline</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtDataTimelineCreateHistogram(const RmtDataTimeline*    timeline,
                                             RmtJobQueue*              job_queue,
                                             int32_t                   bucket_count,
@@ -136,9 +137,9 @@ RmtErrorCode RmtDataTimelineCreateHistogram(const RmtDataTimeline*    timeline,
 /// @param [in,out]     timeline_histogram                   A pointer to a <c><i>RmtDataTimelineHistogram</i></c> structure to destroy.
 ///
 /// @retval
-/// RMT_OK                                          The operation completed successfully.
+/// kRmtOk                                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                       The operation failed because <c><i>timelineHistogram</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                         The operation failed because <c><i>timelineHistogram</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtDataTimelineHistogramDestroy(RmtDataTimelineHistogram* timeline_histogram);
 
 /// Get the value at a specific bucket.
@@ -161,7 +162,7 @@ int64_t RmtDataTimelineHistogramGetValue(RmtDataTimelineHistogram* timeline_hist
 /// The index of the item at the specified location in the data set.
 int32_t RmtDataTimelineHistogramGetIndex(RmtDataTimelineHistogram* timeline_histogram, int32_t bucket_index, int32_t bucket_group_index);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_DATA_TIMELINE_H_

@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV system information about pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of RMV system information about pane.
 //=============================================================================
 
 #include "views/start/about_pane.h"
@@ -15,11 +15,11 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
+#include "util/constants.h"
 #include "util/version.h"
 #include "util/widget_util.h"
-#include "views/main_window.h"
 
-AboutPane::AboutPane(MainWindow* parent)
+AboutPane::AboutPane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::AboutPane)
     , check_for_updates_pending_dialog_(nullptr)
@@ -28,12 +28,16 @@ AboutPane::AboutPane(MainWindow* parent)
 {
     ui_->setupUi(this);
 
-    // Set label text for version information
+    // Set label text for version information.
     ui_->label_version_data_->setText(RMV_VERSION_STRING);
     ui_->label_build_data_->setText(QString::number(RMV_BUILD_NUMBER));
     ui_->label_build_date_data_->setText(RMV_BUILD_DATE_STRING);
 
-    // Set white background for this pane
+    QString copyright(RMV_COPYRIGHT_STRING);
+    copyright.replace("(C)", u8"\u00A9");
+    ui_->label_copyright_->setText(copyright);
+
+    // Set white background for this pane.
     rmv::widget_util::SetWidgetBackgroundColor(this, Qt::white);
 
     InitButton(ui_->open_getting_started_button_);
@@ -41,7 +45,7 @@ AboutPane::AboutPane(MainWindow* parent)
     InitButton(ui_->read_license_button_);
     InitButton(ui_->check_for_updates_button_);
 
-    // Hookup buttons
+    // Hookup buttons.
     connect(ui_->open_getting_started_button_, &QPushButton::clicked, this, &AboutPane::OpenTraceHelp);
     connect(ui_->open_rmv_help_button_, &QPushButton::clicked, this, &AboutPane::OpenRmvHelp);
     connect(ui_->read_license_button_, &QPushButton::clicked, this, &AboutPane::OpenRmvLicense);
@@ -52,24 +56,24 @@ AboutPane::~AboutPane()
 {
 }
 
-void AboutPane::InitButton(ScaledPushButton*& button)
+void AboutPane::InitButton(ScaledPushButton* button)
 {
     button->setCursor(Qt::PointingHandCursor);
 }
 
 void AboutPane::OpenHtmlFile(const QString& html_file)
 {
-    // Get the file info
+    // Get the file info.
     QFileInfo file_info(QCoreApplication::applicationDirPath() + html_file);
 
-    // Check to see if the file is not a directory and that it exists
+    // Check to see if the file is not a directory and that it exists.
     if (file_info.isFile() && file_info.exists())
     {
         QDesktopServices::openUrl(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + html_file));
     }
     else
     {
-        // The selected html file is missing on the disk so display a message box stating so
+        // The selected html file is missing on the disk so display a message box stating so.
         const QString text = rmv::text::kMissingRmvHelpFile + html_file;
         QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kMissingRmvHelpFile, text);
     }
@@ -114,12 +118,12 @@ void AboutPane::CheckForUpdates()
             check_for_updates_pending_dialog_->layout()->addItem(new QSpacerItem(5, 10, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
             // Add Cancel button to cancel the check for updates.
-            QDialogButtonBox* pButtonBox = new QDialogButtonBox(QDialogButtonBox::Cancel, check_for_updates_pending_dialog_);
-            pButtonBox->button(QDialogButtonBox::Cancel)->setCursor(Qt::PointingHandCursor);
-            check_for_updates_pending_dialog_->layout()->addWidget(pButtonBox);
+            QDialogButtonBox* button_box = new QDialogButtonBox(QDialogButtonBox::Cancel, check_for_updates_pending_dialog_);
+            button_box->button(QDialogButtonBox::Cancel)->setCursor(Qt::PointingHandCursor);
+            check_for_updates_pending_dialog_->layout()->addWidget(button_box);
 
             // If the cancel button is pressed, signal the dialog to reject, which is similar to closing it.
-            connect(pButtonBox, &QDialogButtonBox::rejected, check_for_updates_pending_dialog_, &QDialog::reject);
+            connect(button_box, &QDialogButtonBox::rejected, check_for_updates_pending_dialog_, &QDialog::reject);
         }
 
         // Cancel the check for updates if the dialog is closed.
@@ -163,7 +167,7 @@ void AboutPane::CheckForUpdatesCompleted(UpdateCheck::ThreadController* thread, 
             results_dialog->setFixedHeight(ScalingManager::Get().Scaled(rmv::kUpdatesResultsDialogHeight));
             results_dialog->SetShowTags(false);
 
-            QDialogButtonBox* button_box = results_dialog->findChild<QDialogButtonBox*>("buttonBox");
+            QDialogButtonBox* button_box = results_dialog->findChild<QDialogButtonBox*>("button_box_");
             if (button_box != nullptr)
             {
                 QPushButton* close_button = button_box->button(QDialogButtonBox::Close);

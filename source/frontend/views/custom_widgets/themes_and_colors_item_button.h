@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for a helper class for custom button rendering for the
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for a helper class for custom button rendering for the
 /// themes and colors pane.
 //=============================================================================
 
@@ -11,26 +11,31 @@
 
 #include "qt_common/custom_widgets/scaled_push_button.h"
 
-/// Helper class for custom button rendering.
+/// @brief Helper class for custom button rendering.
 class ThemesAndColorsItemButton : public ScaledPushButton
 {
 public:
-    /// Constructor.
-    /// \param parent The parent widget.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit ThemesAndColorsItemButton(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~ThemesAndColorsItemButton();
 
-    /// Themes and colors button color setter - stores color and font color values
-    /// for use in custom drawing.
-    /// \param color The color to set.
+    /// @brief Themes and colors button color setter.
+    ///
+    /// Stores color and font color values for use in custom drawing.
+    ///
+    /// @param [in] color The color to set.
     void SetColor(const QColor& color);
 
-    /// Themes and colors button paint event - overrides button draw function to
-    /// implement custom drawing functionality.
-    /// \param event Qt paint event.
-    void paintEvent(QPaintEvent* event) override;
+    /// @brief Themes and colors button paint event.
+    ///
+    /// Overrides button draw function to implement custom drawing functionality.
+    ///
+    /// @param [in] event Qt paint event.
+    virtual void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE;
 
 private:
     QColor button_color_;  ///< Color of this button.

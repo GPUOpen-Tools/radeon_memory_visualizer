@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model header for the Resource Overview pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Resource Overview model.
 //=============================================================================
 
 #ifndef RMV_MODELS_SNAPSHOT_RESOURCE_OVERVIEW_MODEL_H_
@@ -10,9 +10,11 @@
 
 #include "qt_common/utils/model_view_mapper.h"
 
+#include "rmt_resource_list.h"
+
 namespace rmv
 {
-    /// Enum containing indices for the widgets shared between the model and UI.
+    /// @brief Enum containing indices for the widgets shared between the model and UI.
     enum ResourceOverviewWidgets
     {
         kResourceOverviewTotalAvailableSize,
@@ -24,32 +26,48 @@ namespace rmv
         kResourceOverviewNumWidgets,
     };
 
-    /// Container class that holds model data for a given pane.
+    /// @brief Container class that holds model data for the resource overview pane.
     class ResourceOverviewModel : public ModelViewMapper
     {
     public:
-        /// Constructor.
+        /// @brief Constructor.
         explicit ResourceOverviewModel();
 
-        /// Destructor.
+        /// @brief Destructor.
         virtual ~ResourceOverviewModel();
 
-        /// Handle what happens when the size filter changes.
-        /// \param min_value Minimum value of slider span.
-        /// \param max_value Maximum value of slider span.
-        void FilterBySizeChanged(int min_value, int max_value);
+        /// @brief Handle what happens when the size filter changes.
+        ///
+        /// @param [in] min_value Minimum value of slider span.
+        /// @param [in] max_value Maximum value of slider span.
+        /// @param [in] use_unbound Use unbound resources when considering the size slider.
+        void FilterBySizeChanged(int32_t min_value, int32_t max_value, bool use_unbound);
 
-        /// Check to see if a resource size is within the slider range.
-        /// \param resource_size The size of the resource to check.
-        /// \return true if the size is in range, false otherwise.
-        bool IsSizeInRange(uint64_t resource_size) const;
+        /// @brief Check to see if a resource size is within the slider range.
+        ///
+        /// @param [in] resource_size The size of the resource to check.
+        ///
+        /// @return true if the size is in range, false otherwise.
+        bool IsSizeInSliderRange(uint64_t resource_size) const;
 
-        /// Update the model.
-        void Update();
+        /// @brief Update the model.
+        ///
+        /// @param [in] use_unbound Use unbound resources when considering the max resource size.
+        void Update(bool use_unbound);
+
+        /// @brief Get the data required for the tooltip.
+        ///
+        /// @param [in]  resource    The resource the tooltip is over.
+        /// @param [out] text_string A string to accept the tooltip string.
+        ///
+        /// @return true if the tooltip is valid, false if error.
+        bool GetTooltipString(const RmtResource* resource, QString& text_string) const;
 
     private:
-        /// Initialize blank data for the model.
-        void ResetModelValues();
+        /// @brief Initialize blank data for the model.
+        ///
+        /// @param [in] use_unbound Use unbound resources when considering the max resource size.
+        void ResetModelValues(bool use_unbound);
 
         uint64_t min_resource_size_;  ///< The minimum resource size to show.
         uint64_t max_resource_size_;  ///< The maximum resource size to show.

@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for a delta display widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for a delta display widget.
 //=============================================================================
 
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_DELTA_DISPLAY_WIDGET_H_
@@ -11,7 +11,7 @@
 #include <QGraphicsObject>
 #include <QFont>
 
-/// Enum of delta data types.
+/// @brief Enum of delta data types.
 enum DeltaValueType
 {
     kDeltaValueTypeString,
@@ -21,9 +21,10 @@ enum DeltaValueType
     kDeltaValueTypeCount,
 };
 
-/// Configuration struct for a widget showing delta value.
+/// @brief Configuration struct for a widget showing delta value.
 struct RMVDeltaDisplayWidgetConfig
 {
+    /// Constructor.
     RMVDeltaDisplayWidgetConfig()
         : width(0)
         , height(0)
@@ -43,52 +44,61 @@ struct RMVDeltaDisplayWidgetConfig
     QColor         custom_color;  ///< Render a non-standard color.
 };
 
-/// Container class for a widget designed to display delta +/- data
+/// @brief Container class for a widget designed to display delta +/- data
 class RMVDeltaDisplayWidget : public QGraphicsObject
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param config A configuration struct for this object.
+    /// @brief Constructor.
+    ///
+    /// @param config A configuration struct for this object.
     explicit RMVDeltaDisplayWidget(const RMVDeltaDisplayWidgetConfig& config);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~RMVDeltaDisplayWidget();
 
-    /// Implementation of Qt's bounding volume for this item.
-    /// \return The item's bounding rectangle.
+    /// @brief Implementation of Qt's bounding volume for this item.
+    ///
+    /// @return The item's bounding rectangle.
     virtual QRectF boundingRect() const Q_DECL_OVERRIDE;
 
-    /// Implementation of Qt's paint for this item.
-    /// \param painter The painter object to use.
-    /// \param item Provides style options for the item, such as its state, exposed area and its level-of-detail hints.
-    /// \param widget Points to the widget that is being painted on if specified.
+    /// @brief Implementation of Qt's paint for this item.
+    ///
+    /// @param [in] painter The painter object to use.
+    /// @param [in] item    Provides style options for the item, such as its state, exposed area and its level-of-detail hints.
+    /// @param [in] widget  Points to the widget that is being painted on if specified.
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* widget) Q_DECL_OVERRIDE;
 
-    /// Update dimensions.
-    /// \param width The width.
-    /// \param height The height.
+    /// @brief Update dimensions.
+    ///
+    /// @param [in] width  The width.
+    /// @param [in] height The height.
     void UpdateDimensions(int width, int height);
 
-    /// Update data type.
-    /// \param type The type.
+    /// @brief Update data type.
+    ///
+    /// @param [in] type The type.
     void UpdateDataType(DeltaValueType type);
 
-    /// Update data value.
-    /// \param value The value.
+    /// @brief Update data value.
+    ///
+    /// @param [in] value The value.
     void UpdateDataValueNum(int64_t value);
 
-    /// Update data string.
-    /// \param str The string.
-    void UpdateDataValueStr(const QString& str);
+    /// @brief Update data string.
+    ///
+    /// @param [in] string The string.
+    void UpdateDataValueString(const QString& string);
 
-    /// Update data color.
-    /// \param color The color.
-    void UpdateDataCustomColor(const QColor& str);
+    /// @brief Update data color.
+    ///
+    /// @param [in] color The color.
+    void UpdateDataCustomColor(const QColor& color);
 
-    /// Update data graphic.
-    /// \param graphic The graphic.
+    /// @brief Update data graphic.
+    ///
+    /// @param [in] graphic The graphic.
     void UpdateDataGraphic(bool graphic);
 
 private:

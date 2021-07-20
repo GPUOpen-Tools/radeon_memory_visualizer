@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  A linear allocator structure and helper functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  A linear allocator structure and helper functions.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_LINEAR_BUFFER_H_
@@ -28,9 +29,9 @@ typedef struct RmtAllocLinearBuffer
 /// @param [in] buffer_size             The size (in bytes) of the buffer pointed to by <c><i>buffer</i></c>.
 ///
 /// @retval
-/// RMT_OK                          The operation completed succesfully.
+/// kRmtOk                          The operation completed succesfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because either <c><i>linearBuffer</i></c> or <c><i>buffer</i></c> was NULL.
+/// kRmtErrorInvalidPointer         The operation failed because either <c><i>linearBuffer</i></c> or <c><i>buffer</i></c> was NULL.
 ///
 RmtErrorCode RmtAllocLinearBufferInitialize(RmtAllocLinearBuffer* linear_buffer, void* buffer, size_t buffer_size);
 

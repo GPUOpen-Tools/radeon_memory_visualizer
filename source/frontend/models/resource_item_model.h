@@ -1,8 +1,11 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for a resource item model. Used for the resource list tables
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for a resource item model.
+///
+/// Used for the resource list tables.
+///
 //=============================================================================
 
 #ifndef RMV_MODELS_RESOURCE_ITEM_MODEL_H_
@@ -15,65 +18,72 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_resource_list.h"
 
-/// Column Id's for the fields in the resource tables.
-enum ResourceColumn
-{
-    kResourceColumnCompareId,
-    kResourceColumnName,
-    kResourceColumnVirtualAddress,
-    kResourceColumnSize,
-    kResourceColumnPreferredHeap,
-    kResourceColumnMappedInvisible,
-    kResourceColumnMappedLocal,
-    kResourceColumnMappedHost,
-    kResourceColumnMappedNone,
-    kResourceColumnUsage,
-
-    // Hidden, these columns are used as proxies for sorting by other columns.
-    kResourceColumnAllocationIdInternal,
-    kResourceColumnGlobalId,
-
-    kResourceColumnCount,
-};
-
-/// Snapshot compare Id types used in the memory leak pane.
-enum SnapshotCompareId
-{
-    kSnapshotCompareIdUndefined = 0x0,
-    kSnapshotCompareIdCommon    = 0x1,
-    kSnapshotCompareIdOpen      = 0x2,
-    kSnapshotCompareIdCompared  = 0x4,
-};
-
 namespace rmv
 {
+    /// @brief Column Id's for the fields in the resource tables.
+    enum ResourceColumn
+    {
+        kResourceColumnCompareId,
+        kResourceColumnName,
+        kResourceColumnVirtualAddress,
+        kResourceColumnSize,
+        kResourceColumnPreferredHeap,
+        kResourceColumnMappedInvisible,
+        kResourceColumnMappedLocal,
+        kResourceColumnMappedHost,
+        kResourceColumnMappedNone,
+        kResourceColumnUsage,
+
+        // Hidden, these columns are used as proxies for sorting by other columns.
+        kResourceColumnAllocationIdInternal,
+        kResourceColumnGlobalId,
+
+        kResourceColumnCount,
+    };
+
+    /// @brief Snapshot compare Id types used in the memory leak pane.
+    enum SnapshotCompareId
+    {
+        kSnapshotCompareIdUndefined = 0x0,
+        kSnapshotCompareIdCommon    = 0x1,
+        kSnapshotCompareIdOpen      = 0x2,
+        kSnapshotCompareIdCompared  = 0x4,
+    };
+
+    /// @brief A class to handle the model data associated with a resource table.
     class ResourceItemModel : public QAbstractItemModel
     {
     public:
-        /// Constructor.
+        /// @brief Constructor.
         explicit ResourceItemModel(QObject* parent = nullptr);
 
-        /// Destructor.
-        ~ResourceItemModel();
+        /// @brief Destructor.
+        virtual ~ResourceItemModel();
 
-        /// Set the number of rows in the table.
-        /// \param rows The number of rows required.
+        /// @brief Set the number of rows in the table.
+        ///
+        /// @param [in] rows The number of rows required.
         void SetRowCount(int rows);
 
-        /// Set the number of columns in the table.
-        /// \param columns The number of columns required.
+        /// @brief Set the number of columns in the table.
+        ///
+        /// @param [in] columns The number of columns required.
         void SetColumnCount(int columns);
 
-        /// Initialize the resource list table. An instance of this table
-        /// is present in the resource list, allocation explorer and memory leak panes.
-        /// \param resource_table The table to initialize.
-        /// \param compare_visible If false, hide the compare column.
+        /// @brief Initialize the resource list table.
+        ///
+        /// An instance of this table is present in the resource list, allocation
+        /// explorer and memory leak panes.
+        ///
+        /// @param [in] resource_table  The table to initialize.
+        /// @param [in] compare_visible If false, hide the compare column.
         void Initialize(ScaledTableView* resource_table, bool compare_visible);
 
-        /// Add a resource to the table.
-        /// \param snapshot The snapshot where the resource data is located.
-        /// \param resource The resource to add.
-        /// \param compare_id The ID when used to compare 2 resources.
+        /// @brief Add a resource to the table.
+        ///
+        /// @param [in] snapshot   The snapshot where the resource data is located.
+        /// @param [in] resource   The resource to add.
+        /// @param [in] compare_id The ID when used to compare 2 resources.
         void AddResource(const RmtDataSnapshot* snapshot, const RmtResource* resource, SnapshotCompareId compare_id);
 
         // QAbstractItemModel overrides. See Qt documentation for parameter and return values
@@ -86,7 +96,7 @@ namespace rmv
         virtual int           columnCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
     private:
-        /// Data from the backend that needs caching for speed.
+        /// @brief Data from the backend that needs caching for speed.
         struct DataCache
         {
             DataCache()

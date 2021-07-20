@@ -1,9 +1,11 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a number of widget utilities. These functions
-///  apply a common look and feel to various widget types.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a number of widget utilities.
+///
+/// These functions apply a common look and feel to various widget types.
+///
 //=============================================================================
 
 #include <QHeaderView>
@@ -15,14 +17,14 @@
 
 namespace rmv
 {
-    void widget_util::InitDoubleSlider(DoubleSliderWidget* double_slider_widgets)
+    void widget_util::InitDoubleSlider(DoubleSliderWidget* double_slider_widget)
     {
-        double_slider_widgets->setFixedWidth(ScalingManager::Get().Scaled(rmv::kDoubleSliderWidth));
-        double_slider_widgets->setFixedHeight(ScalingManager::Get().Scaled(rmv::kDoubleSliderHeight));
-        double_slider_widgets->setCursor(Qt::PointingHandCursor);
-        double_slider_widgets->setMinimum(0);
-        double_slider_widgets->setMaximum(kSizeSliderRange);
-        double_slider_widgets->Init();
+        double_slider_widget->setFixedWidth(ScalingManager::Get().Scaled(rmv::kDoubleSliderWidth));
+        double_slider_widget->setFixedHeight(ScalingManager::Get().Scaled(rmv::kDoubleSliderHeight));
+        double_slider_widget->setCursor(Qt::PointingHandCursor);
+        double_slider_widget->setMinimum(0);
+        double_slider_widget->setMaximum(kSizeSliderRange);
+        double_slider_widget->Init();
     }
 
     void widget_util::InitSingleSelectComboBox(QWidget*           parent,
@@ -63,7 +65,7 @@ namespace rmv
         if (widget != nullptr)
         {
             QPalette palette(widget->palette());
-            palette.setColor(QPalette::Background, color);
+            palette.setColor(QPalette::Window, color);
             widget->setPalette(palette);
             widget->setAutoFillBackground(true);
         }

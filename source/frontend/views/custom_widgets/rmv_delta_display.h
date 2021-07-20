@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Header for a graphics view that implements data delta
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for a graphics view that implements data delta.
 //=============================================================================
 
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_DELTA_DISPLAY_H_
@@ -15,9 +15,10 @@
 
 static const int kHeapDeltaWidgetHeight = 80;
 
-/// Generic structure designed to hold either +/- data for an item.
+/// @brief Generic structure designed to hold either +/- data for an item.
 struct DeltaItem
 {
+    /// Default constructor.
     DeltaItem()
         : type(kDeltaValueTypeString)
         , graphic(false)
@@ -25,7 +26,20 @@ struct DeltaItem
     {
     }
 
-    DeltaItem(QString in_name, DeltaValueType in_type, bool in_graphic, int64_t in_value_num, QString in_value_string, QColor in_custom_color)
+    /// Constructor.
+    ///
+    /// @param [in] in_name         The item name.
+    /// @param [in] in_type         The item type.
+    /// @param [in] in_graphic      Whether to use a rendered graphic.
+    /// @param [in] in_value_num    The value number.
+    /// @param [in] in_value_string The value string.
+    /// @param [in] in_custom_color The custom color.
+    DeltaItem(const QString& in_name,
+              DeltaValueType in_type,
+              bool           in_graphic,
+              int64_t        in_value_num,
+              const QString& in_value_string,
+              const QColor&  in_custom_color)
         : name(in_name)
         , type(in_type)
         , graphic(in_graphic)
@@ -43,9 +57,10 @@ struct DeltaItem
     QColor         custom_color;  ///< Uses a non-standard color.
 };
 
-/// Encapsulates data used to render an individual delta component.
+/// @brief Encapsulates data used to render an individual delta component.
 struct DeltaComponent
 {
+    /// Constructor.
     DeltaComponent()
         : description(nullptr)
         , widget(nullptr)
@@ -57,38 +72,44 @@ struct DeltaComponent
     RMVDeltaDisplayWidget* widget;       ///< Custom Qt widget.
 };
 
-/// Graphics view that is aware of resize and mouse events.
+/// @brief Graphics view that is aware of resize and mouse events.
 class RMVDeltaDisplay : public QGraphicsView
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The parent widget.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit RMVDeltaDisplay(QWidget* parent);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~RMVDeltaDisplay();
 
-    /// Capture a resize event.
-    /// \param event The resize event.
+    /// @brief Capture a resize event.
+    ///
+    /// @param [in] event The resize event.
     virtual void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
-    /// Add a new item.
-    /// \param title The delta title.
-    /// \param item The new item.
-    /// \param width_scaler How much to scale spacing by.
+    /// @brief Add a new item.
+    ///
+    /// @param [in] title        The delta title.
+    /// @param [in] item         The new item.
+    /// @param [in] width_scaler How much to scale spacing by.
     void Init(const QString& title, const QVector<DeltaItem>& items, float width_scaler = 1.0F);
 
-    /// Update a single item based on name.
-    /// \param item The item to update.
+    /// @brief Update a single item based on name.
+    ///
+    /// @param [in] item The item to update.
     void UpdateItem(const DeltaItem& item);
 
 private:
-    /// Update view dimensions.
+    /// @brief Update view dimensions.
     void UpdateDimensions();
 
-    /// Get the font used by the checkbox.
+    /// @brief Get the font used by the checkbox.
+    ///
+    /// @return The checkbox font.
     QFont GetFont() const;
 
     QGraphicsScene          scene_;   ///< The scene containing the delta objects.

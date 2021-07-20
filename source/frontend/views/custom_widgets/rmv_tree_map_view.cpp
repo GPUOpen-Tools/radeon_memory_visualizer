@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2017-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a tree map view
+// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a tree map view.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_tree_map_view.h"
@@ -14,7 +14,8 @@
 
 #include "rmt_assert.h"
 
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
+#include "util/string_util.h"
 
 static const uint32_t kViewMargin = 8;
 
@@ -37,6 +38,8 @@ RMVTreeMapView::RMVTreeMapView(QWidget* parent)
     blocks_ = new RMVTreeMapBlocks(config);
 
     scene_->addItem(blocks_);
+
+    resource_tooltip_.CreateToolTip(scene_, false);
 }
 
 RMVTreeMapView::~RMVTreeMapView()
@@ -51,14 +54,22 @@ void RMVTreeMapView::mousePressEvent(QMouseEvent* event)
 void RMVTreeMapView::mouseMoveEvent(QMouseEvent* event)
 {
     QGraphicsView::mouseMoveEvent(event);
+    UpdateToolTip(event->pos());
 
 #if 0
-    QPoint mouseCoords = mapFromGlobal(QCursor::pos());
-    QPointF sceneCoords = mapToScene(mouseCoords);
-    qDebug() << "mouse: " << mouseCoords;
-    qDebug() << "sceneCoords: " << sceneCoords;
+    QPoint mouse_coords = mapFromGlobal(QCursor::pos());
+    QPointF scene_coords = mapToScene(mouse_coords);
+    qDebug() << "mouse: " << mouse_coords;
+    qDebug() << "scene coords: " << scene_coords;
     qDebug() << "---------";
 #endif
+}
+
+void RMVTreeMapView::leaveEvent(QEvent* event)
+{
+    Q_UNUSED(event);
+
+    resource_tooltip_.HideToolTip();
 }
 
 void RMVTreeMapView::resizeEvent(QResizeEvent* event)
@@ -75,7 +86,7 @@ void RMVTreeMapView::resizeEvent(QResizeEvent* event)
     UpdateTreeMap();
 }
 
-void RMVTreeMapView::SetModels(const rmv::ResourceOverviewModel* overview_model, const TreeMapModels* tree_map_models, const Colorizer* colorizer)
+void RMVTreeMapView::SetModels(const rmv::ResourceOverviewModel* overview_model, const TreeMapModels* tree_map_models, const rmv::Colorizer* colorizer)
 {
     overview_model_  = overview_model;
     tree_map_models_ = tree_map_models;
@@ -116,4 +127,19 @@ RMVTreeMapBlocks* RMVTreeMapView::BlocksWidget()
 void RMVTreeMapView::UpdateSliceTypes(const QVector<RMVTreeMapBlocks::SliceType>& slice_types)
 {
     blocks_->UpdateSliceTypes(slice_types);
+}
+
+void RMVTreeMapView::UpdateToolTip(const QPoint& mouse_pos)
+{
+    QString text_string;
+    if (overview_model_->GetTooltipString(blocks_->GetHoveredResource(), text_string))
+    {
+        const QPointF scene_pos = mapToScene(mouse_pos);
+        resource_tooltip_.SetText(text_string);
+        resource_tooltip_.UpdateToolTip(mouse_pos, scene_pos, scene_->width(), scene_->height());
+    }
+    else
+    {
+        resource_tooltip_.HideToolTip();
+    }
 }

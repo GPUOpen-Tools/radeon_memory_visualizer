@@ -1,9 +1,12 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a snapshot item model. Used for the snapshot
-///  table in the snapshot generation pane in the timeline tab
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a snapshot item model.
+///
+/// Used for the snapshot table in the snapshot generation pane in the timeline
+/// tab.
+///
 //=============================================================================
 
 #include "models/timeline/snapshot_item_model.h"
@@ -13,7 +16,7 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_util.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "util/string_util.h"
 #include "util/time_util.h"
 
@@ -62,7 +65,7 @@ namespace rmv
                 return false;
             }
 
-            // validate that the string isn't empty or is too long
+            // Validate that the string isn't empty or is too long.
             QString new_snapshot_name = value.toString();
             if (new_snapshot_name.isEmpty())
             {
@@ -74,8 +77,8 @@ namespace rmv
                 return false;
             }
 
-            // make sure this new snapshot name doesn't exist already in the table. This also tests
-            // the case to make sure the current snapshot name has changed
+            // Make sure this new snapshot name doesn't exist already in the table. This also tests
+            // the case to make sure the current snapshot name has changed.
             for (int i = 0; i < data_set->snapshot_count; i++)
             {
                 const RmtSnapshotPoint* snapshot_point = &data_set->snapshots[i];
@@ -85,7 +88,7 @@ namespace rmv
                 }
             }
 
-            // set data in the model
+            // Set data in the model.
             RmtDataSetRenameSnapshot(data_set, row, new_snapshot_name.toLatin1().data());
             return true;
         }

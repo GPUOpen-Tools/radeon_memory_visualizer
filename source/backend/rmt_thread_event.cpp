@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of platform-specific thread events.
 //=============================================================================
 
 #include <rmt_assert.h>
@@ -28,7 +29,7 @@ typedef struct RmtThreadEventInternal
 RmtErrorCode RmtThreadEventCreate(RmtThreadEvent* thread_event, bool initial_value, bool manual_reset, const char* name)
 {
     RMT_ASSERT_MESSAGE(thread_event, "Parameter threadEvent is NULL.");
-    RMT_RETURN_ON_ERROR(thread_event, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(thread_event, kRmtErrorInvalidPointer);
 
     // convert the pointer to the internal representation
     RmtThreadEventInternal* thread_event_internal = (RmtThreadEventInternal*)thread_event;
@@ -43,15 +44,15 @@ RmtErrorCode RmtThreadEventCreate(RmtThreadEvent* thread_event, bool initial_val
     thread_event_internal->handle = neosmart::CreateEvent(manual_reset, initial_value);
 #endif  // #ifdef _WIN32
 
-    RMT_RETURN_ON_ERROR(thread_event_internal->handle != NULL, RMT_ERROR_PLATFORM_FUNCTION_FAILED);
-    return RMT_OK;
+    RMT_RETURN_ON_ERROR(thread_event_internal->handle != NULL, kRmtErrorPlatformFunctionFailed);
+    return kRmtOk;
 }
 
 // signal a thread event
 RmtErrorCode RmtThreadEventSignal(RmtThreadEvent* thread_event)
 {
     RMT_ASSERT_MESSAGE(thread_event, "Parameter threadEvent is NULL.");
-    RMT_RETURN_ON_ERROR(thread_event, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(thread_event, kRmtErrorInvalidPointer);
 
     // convert the pointer to the internal representation
     RmtThreadEventInternal* thread_event_internal = (RmtThreadEventInternal*)thread_event;
@@ -63,55 +64,55 @@ RmtErrorCode RmtThreadEventSignal(RmtThreadEvent* thread_event)
     int     result                = neosmart::SetEvent(thread_event_internal->handle);
 #endif  // #ifdef _WIN32
 
-    RMT_RETURN_ON_ERROR(result, RMT_ERROR_PLATFORM_FUNCTION_FAILED);
-    return RMT_OK;
+    RMT_RETURN_ON_ERROR(result, kRmtErrorPlatformFunctionFailed);
+    return kRmtOk;
 }
 
 /* wait for a thread event */
 RmtErrorCode RmtThreadEventWait(RmtThreadEvent* thread_event)
 {
     RMT_ASSERT_MESSAGE(thread_event, "Parameter threadEvent is NULL.");
-    RMT_RETURN_ON_ERROR(thread_event, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(thread_event, kRmtErrorInvalidPointer);
 
     // convert the pointer to the internal representation
     RmtThreadEventInternal* thread_event_internal = (RmtThreadEventInternal*)thread_event;
 
 #ifdef _WIN32
     const uint32_t result = WaitForSingleObject(thread_event_internal->handle, INFINITE);
-    RMT_RETURN_ON_ERROR(result == WAIT_OBJECT_0, RMT_ERROR_PLATFORM_FUNCTION_FAILED);
+    RMT_RETURN_ON_ERROR(result == WAIT_OBJECT_0, kRmtErrorPlatformFunctionFailed);
 #else
     int32_t result                = neosmart::WaitForEvent(thread_event_internal->handle);
-    RMT_RETURN_ON_ERROR(result == 0, RMT_ERROR_PLATFORM_FUNCTION_FAILED);
+    RMT_RETURN_ON_ERROR(result == 0, kRmtErrorPlatformFunctionFailed);
 #endif  // #ifdef _WIN32
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 /* reset a thread event */
 RmtErrorCode RmtThreadEventReset(RmtThreadEvent* thread_event)
 {
     RMT_ASSERT_MESSAGE(thread_event, "Parameter threadEvent is NULL.");
-    RMT_RETURN_ON_ERROR(thread_event, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(thread_event, kRmtErrorInvalidPointer);
 
     // convert the pointer to the internal representation
     RmtThreadEventInternal* thread_event_internal = (RmtThreadEventInternal*)thread_event;
 
 #ifdef _WIN32
     const uint32_t result = ResetEvent(thread_event_internal->handle);
-    RMT_RETURN_ON_ERROR(result == WAIT_OBJECT_0, RMT_ERROR_PLATFORM_FUNCTION_FAILED);
+    RMT_RETURN_ON_ERROR(result == WAIT_OBJECT_0, kRmtErrorPlatformFunctionFailed);
 #else
     int result = neosmart::ResetEvent(thread_event_internal->handle);
 
-    RMT_RETURN_ON_ERROR(result == 0, RMT_ERROR_PLATFORM_FUNCTION_FAILED);
+    RMT_RETURN_ON_ERROR(result == 0, kRmtErrorPlatformFunctionFailed);
 #endif  // #ifdef _WIN32
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtThreadEventDestroy(RmtThreadEvent* thread_event)
 {
     RMT_ASSERT_MESSAGE(thread_event, "Parameter threadEvent is NULL.");
-    RMT_RETURN_ON_ERROR(thread_event, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(thread_event, kRmtErrorInvalidPointer);
 
     // convert the pointer to the internal representation
     RmtThreadEventInternal* thread_event_internal = (RmtThreadEventInternal*)thread_event;
@@ -122,6 +123,6 @@ RmtErrorCode RmtThreadEventDestroy(RmtThreadEvent* thread_event)
     int error_code = neosmart::DestroyEvent(thread_event_internal->handle);
 #endif  // #ifdef _WIN32
 
-    RMT_RETURN_ON_ERROR(error_code, RMT_ERROR_PLATFORM_FUNCTION_FAILED);
-    return RMT_OK;
+    RMT_RETURN_ON_ERROR(error_code, kRmtErrorPlatformFunctionFailed);
+    return kRmtOk;
 }

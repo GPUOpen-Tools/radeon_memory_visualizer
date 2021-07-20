@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Definition of platform-abstracted atomic functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of platform-abstracted atomic functions.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_ATOMIC_H_

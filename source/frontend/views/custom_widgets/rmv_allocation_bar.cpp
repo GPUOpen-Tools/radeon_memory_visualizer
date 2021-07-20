@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of an allocation graphics object
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of an allocation graphics object.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_allocation_bar.h"
@@ -11,17 +11,14 @@
 
 #include "qt_common/utils/scaling_manager.h"
 
-#include "rmt_util.h"
-#include "rmt_virtual_allocation_list.h"
-
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
 
 static const int kTitleFontSize              = 8;
 static const int kDefaultWidth               = 300;
 static const int kDefaultBarPadding          = 5;
 static const int kDefaultAllocationBarHeight = 50;
 
-RMVAllocationBar::RMVAllocationBar(rmv::AllocationBarModel* model, int32_t allocation_index, int32_t model_index, const Colorizer* colorizer)
+RMVAllocationBar::RMVAllocationBar(rmv::AllocationBarModel* model, int32_t allocation_index, int32_t model_index, const rmv::Colorizer* colorizer)
     : model_(model)
     , allocation_index_(allocation_index)
     , model_index_(model_index)
@@ -64,19 +61,19 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     double scaled_bar_y_offset = ScalingManager::Get().Scaled(kDefaultBarPadding);
 
-    // draw the details if necessary
+    // Draw the details if necessary.
     if (model_->ShowDetails())
     {
-        // Measure title text
+        // Measure title text.
         QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
         QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
         QSize        title_size   = font_metrics.size(0, title_text);
 
-        // Draw title text
+        // Draw title text.
         painter->setFont(title_font_);
         painter->drawText(0, title_size.height(), title_text);
 
-        // Draw description text
+        // Draw description text.
         painter->setFont(description_font_);
         QString description_string = model_->GetDescriptionText(allocation_index_, model_index_);
         painter->drawText(title_size.width(), title_size.height(), description_string);
@@ -91,13 +88,13 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     const double   bytes_per_pixel      = model_->GetBytesPerPixel(allocation_index_, model_index_, max_bar_width_);
     const int      allocation_bar_width = (double)allocation_size / bytes_per_pixel;
 
-    // paint the background first. Needs to be colored based on the coloring mode.
+    // Paint the background first. Needs to be colored based on the coloring mode.
     QColor background_brush_color = colorizer_->GetColor(allocation, nullptr);
     painter->setPen(Qt::NoPen);
     painter->setBrush(background_brush_color);
     painter->drawRect(0, scaled_bar_y_offset, allocation_bar_width, allocation_bar_height_);
 
-    // now paint all the resources on top.
+    // Now paint all the resources on top.
     int num_rows = model_->GetNumRows(allocation);
     if (num_rows > 0)
     {
@@ -121,15 +118,15 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
             if (current_resource_index == model_->GetHoveredResourceForAllocation(allocation_index_, model_index_))
             {
-                resource_background_brush_color = resource_background_brush_color.dark(rmv::kHoverDarkenColor);
+                resource_background_brush_color = resource_background_brush_color.darker(rmv::kHoverDarkenColor);
             }
 
-            // calculate the size of the resource
+            // Calculate the size of the resource.
             const uint64_t offset_in_bytes    = RmtResourceGetOffsetFromBoundAllocation(resource);
             const int      x_pos              = (double)offset_in_bytes / bytes_per_pixel;
             const int      resource_bar_width = RMT_MAXIMUM(1, (double)resource->size_in_bytes / bytes_per_pixel);
 
-            // render the resource
+            // Render the resource.
             QPen resource_border_pen(Qt::black);
             if (current_resource_index == model_->GetSelectedResourceForAllocation(allocation_index_, model_index_))
             {
@@ -148,7 +145,7 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         }
     }
 
-    // render border around the whole allocation
+    // Render border around the whole allocation.
     painter->setPen(QColor(0, 0, 0));
     painter->setBrush(Qt::NoBrush);
     painter->drawRect(0, scaled_bar_y_offset, allocation_bar_width, allocation_bar_height_);
@@ -203,7 +200,7 @@ void RMVAllocationBar::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
     qreal scaled_bar_y_offset = ScalingManager::Get().Scaled(kDefaultBarPadding);
     if (model_->ShowDetails())
     {
-        // Measure title text
+        // Measure title text.
         QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
         QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
         QSize        title_size   = font_metrics.size(0, title_text);
@@ -259,7 +256,7 @@ void RMVAllocationBar::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
 
     if (selected_resource >= 0)
     {
-        // selected a resource so emit a signal indicating so
+        // Selected a resource so emit a signal indicating so.
         Q_ASSERT(allocation->resources[selected_resource]);
         RmtResourceIdentifier resource_id = allocation->resources[selected_resource]->identifier;
 
@@ -268,8 +265,8 @@ void RMVAllocationBar::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
     else
     {
         // Didn't find a resource so probably clicked on an unbound area, so select the allocation and
-        // navigate to the allocation explorer
-        emit MessageManager::Get().UnboundResourceSelected(allocation);
-        emit MessageManager::Get().NavigateToPane(rmv::kPaneSnapshotAllocationExplorer);
+        // navigate to the allocation explorer.
+        emit rmv::MessageManager::Get().UnboundResourceSelected(allocation);
+        emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdSnapshotAllocationExplorer);
     }
 }

@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a base pane class
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the base pane class.
 //=============================================================================
 
 #ifndef RMV_VIEWS_BASE_PANE_H_
@@ -12,36 +12,35 @@
 
 typedef struct RmtDataSnapshot RmtDataSnapshot;
 
-/// Base class for a pane in the UI.
+/// @brief Base class for a pane in the UI.
 class BasePane : public QWidget
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The parent widget.
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
     explicit BasePane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~BasePane();
 
     /// Open a snapshot.
-    /// \param snapshot The snapshot to open.
+    ///
+    /// @param [in] snapshot The snapshot to open.
     virtual void OpenSnapshot(RmtDataSnapshot* snapshot);
 
-    /// Switch panes.
-    virtual void PaneSwitched();
-
-    /// Switch the time units.
+    /// @brief Switch the time units.
     virtual void SwitchTimeUnits();
 
-    /// Trace closed.
+    /// @brief Trace closed.
     virtual void OnTraceClose();
 
-    /// Reset the UI.
+    /// @brief Reset the UI.
     virtual void Reset();
 
-    /// Change the UI coloring based on the settings.
+    /// @brief Change the UI coloring based on the settings.
     virtual void ChangeColoring();
 };
 

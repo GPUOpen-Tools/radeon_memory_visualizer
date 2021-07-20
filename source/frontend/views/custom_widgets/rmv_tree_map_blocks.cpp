@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \fileHeader for a tree map block collection
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for a tree map block collection.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_tree_map_blocks.h"
@@ -20,15 +21,11 @@
 #include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_assert.h"
-#include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
-#include "rmt_resource_list.h"
-#include "rmt_util.h"
-#include "rmt_virtual_allocation_list.h"
 
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
+#include "managers/trace_manager.h"
 #include "models/snapshot/resource_overview_model.h"
-#include "models/trace_manager.h"
 #include "settings/rmv_settings.h"
 
 // The mimimum area that a resource can use. Anything smaller than this is ignored.
@@ -38,9 +35,11 @@ const static int kMinArea = 4;
 const static int kBooleanCount = 2;
 
 /// Sorting function.
-/// \param a1 First RmvMemoryBlockAllocation.
-/// \param a2 Second RmvMemoryBlockAllocation.
-/// \return true if a1 > a2, false otherwise.
+///
+/// @param [in] a1 First RmvMemoryBlockAllocation.
+/// @param [in] a2 Second RmvMemoryBlockAllocation.
+///
+/// @return true if a1 > a2, false otherwise.
 static bool SortResourcesBySizeFunc(const RmtResource* a1, const RmtResource* a2)
 {
     return a1->size_in_bytes > a2->size_in_bytes;
@@ -65,7 +64,7 @@ RMVTreeMapBlocks::~RMVTreeMapBlocks()
     }
 }
 
-void RMVTreeMapBlocks::SetColorizer(const Colorizer* colorizer)
+void RMVTreeMapBlocks::SetColorizer(const rmv::Colorizer* colorizer)
 {
     colorizer_ = colorizer;
 }
@@ -75,9 +74,9 @@ QRectF RMVTreeMapBlocks::boundingRect() const
     return QRectF(0, 0, config_.width, config_.height);
 }
 
-void RMVTreeMapBlocks::PaintClusterParents(QPainter* painter, ResourceCluster& cluster)
+void RMVTreeMapBlocks::PaintClusterParents(QPainter* painter, const ResourceCluster& cluster)
 {
-    // This paints the borders around slicing modes
+    // This paints the borders around slicing modes.
     QPen pen;
     pen.setWidth(ScalingManager::Get().Scaled(2));
     pen.setColor(Qt::black);
@@ -85,30 +84,30 @@ void RMVTreeMapBlocks::PaintClusterParents(QPainter* painter, ResourceCluster& c
     painter->setBrush(Qt::NoBrush);
     painter->drawRect(cluster.geometry);
 
-    // Go to next parent
+    // Go to next parent.
     if (cluster.sub_clusters.size() != 0)
     {
-        QMutableMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
+        QMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
         while (next_it.hasNext())
         {
             next_it.next();
 
-            ResourceCluster& subCluster = next_it.value();
+            const ResourceCluster& sub_cluster = next_it.value();
 
-            PaintClusterParents(painter, subCluster);
+            PaintClusterParents(painter, sub_cluster);
         }
     }
 }
 
-void RMVTreeMapBlocks::PaintClusterChildren(QPainter*         painter,
-                                            ResourceCluster&  cluster,
-                                            TreeMapBlockData& hovered_resource,
-                                            TreeMapBlockData& selected_resource)
+void RMVTreeMapBlocks::PaintClusterChildren(QPainter*              painter,
+                                            const ResourceCluster& cluster,
+                                            TreeMapBlockData&      hovered_resource,
+                                            TreeMapBlockData&      selected_resource)
 {
-    // This paints blocks inside each cluster
+    // This paints blocks inside each cluster.
     if (cluster.sub_clusters.size() == 0)
     {
-        QMutableMapIterator<const RmtResource*, QRectF> render_it(cluster.alloc_geometry_map);
+        QMapIterator<const RmtResource*, QRectF> render_it(cluster.alloc_geometry_map);
         while (render_it.hasNext())
         {
             render_it.next();
@@ -122,13 +121,13 @@ void RMVTreeMapBlocks::PaintClusterChildren(QPainter*         painter,
             {
                 const QColor& curr_color = colorizer_->GetColor(resource->bound_allocation, resource);
 
-                // figure out the brush style.
+                // Figure out the brush style.
                 Qt::BrushStyle style = ((RmtResourceGetAliasCount(resource) > 0) ? Qt::BrushStyle::Dense1Pattern : Qt::BrushStyle::SolidPattern);
                 const QBrush   curr_brush(curr_color, style);
 
                 painter->fillRect(block_rect, curr_brush);
 
-                // Figure out what we hovered over
+                // Figure out what we hovered over.
                 if (hovered_resource.is_visible == false)
                 {
                     if (hovered_resource_identifier_ == resource->identifier && hovered_resource_ == resource)
@@ -139,7 +138,7 @@ void RMVTreeMapBlocks::PaintClusterChildren(QPainter*         painter,
                     }
                 }
 
-                // Figure out what we selected
+                // Figure out what we selected.
                 if (selected_resource.is_visible == false)
                 {
                     if (selected_resource_identifier_ == resource->identifier && selected_resource_ == resource)
@@ -153,15 +152,15 @@ void RMVTreeMapBlocks::PaintClusterChildren(QPainter*         painter,
         }
     }
 
-    // Move onto next set of subslices
+    // Move onto next set of subslices.
     else
     {
-        QMutableMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
+        QMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
         while (next_it.hasNext())
         {
             next_it.next();
 
-            ResourceCluster& sub_cluster = next_it.value();
+            const ResourceCluster& sub_cluster = next_it.value();
 
             PaintClusterChildren(painter, sub_cluster, hovered_resource, selected_resource);
         }
@@ -183,14 +182,14 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     if (hovered_block.resource && selected_block.resource && hovered_block.resource->identifier == selected_block.resource->identifier &&
         hovered_block.resource->bound_allocation == selected_block.resource->bound_allocation)
     {
-        // decide what to do if a resource is clicked on
+        // Decide what to do if a resource is clicked on.
         if ((hovered_block.is_visible == true) && (selected_block.is_visible == true))
         {
             QPen pen;
             pen.setBrush(Qt::black);
             pen.setWidth(ScalingManager::Get().Scaled(2));
             painter->setPen(pen);
-            painter->setBrush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource).dark(rmv::kHoverDarkenColor));
+            painter->setBrush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource).darker(rmv::kHoverDarkenColor));
             painter->drawRect(selected_block.bounding_rect);
         }
     }
@@ -201,7 +200,7 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             if (hovered_block.resource->identifier != 0 || hovered_block.resource == hovered_resource_)
             {
                 painter->setPen(Qt::NoPen);
-                painter->setBrush(colorizer_->GetColor(hovered_block.resource->bound_allocation, hovered_block.resource).dark(rmv::kHoverDarkenColor));
+                painter->setBrush(colorizer_->GetColor(hovered_block.resource->bound_allocation, hovered_block.resource).darker(rmv::kHoverDarkenColor));
                 painter->drawRect(hovered_block.bounding_rect);
             }
         }
@@ -218,13 +217,16 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     }
 }
 
-bool RMVTreeMapBlocks::FindBlockData(ResourceCluster& cluster, QPointF user_location, RmtResourceIdentifier& resource_identifier, const RmtResource*& resource)
+bool RMVTreeMapBlocks::FindBlockData(ResourceCluster&       cluster,
+                                     QPointF                user_location,
+                                     RmtResourceIdentifier& resource_identifier,
+                                     const RmtResource*&    resource) const
 {
     resource_identifier = 0;
 
     bool result = false;
 
-    // Move onto next levels
+    // Move onto next levels.
     QMutableMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
     while (next_it.hasNext())
     {
@@ -240,7 +242,7 @@ bool RMVTreeMapBlocks::FindBlockData(ResourceCluster& cluster, QPointF user_loca
         }
     }
 
-    // Only perform search at bottom-most level
+    // Only perform search at bottom-most level.
     if (cluster.sub_clusters.size() == 0)
     {
         QMutableMapIterator<const RmtResource*, QRectF> search_it(cluster.alloc_geometry_map);
@@ -272,9 +274,14 @@ void RMVTreeMapBlocks::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
 {
     setCursor(Qt::PointingHandCursor);
 
-    FindBlockData(clusters_[kSliceTypeNone], event->pos(), hovered_resource_identifier_, hovered_resource_);
-
+    const bool found_resource = FindBlockData(clusters_[kSliceTypeNone], event->pos(), hovered_resource_identifier_, hovered_resource_);
     update();
+
+    if (!found_resource)
+    {
+        hovered_resource_identifier_ = 0;
+        hovered_resource_            = nullptr;
+    }
 }
 
 void RMVTreeMapBlocks::hoverLeaveEvent(QGraphicsSceneHoverEvent* event)
@@ -352,12 +359,12 @@ void RMVTreeMapBlocks::Reset()
     clusters_.clear();
 }
 
-double RMVTreeMapBlocks::CalculateAspectRatio(double width, double height)
+double RMVTreeMapBlocks::CalculateAspectRatio(double width, double height) const
 {
     return RMT_MAXIMUM(width / height, height / width);
 }
 
-bool RMVTreeMapBlocks::ShouldDrawVertically(double width, double height)
+bool RMVTreeMapBlocks::ShouldDrawVertically(double width, double height) const
 {
     return (width > height);
 }
@@ -400,6 +407,11 @@ void RMVTreeMapBlocks::SelectResource(RmtResourceIdentifier resource_identifier)
     selected_resource_            = nullptr;
 
     update();
+}
+
+const RmtResource* RMVTreeMapBlocks::GetHoveredResource() const
+{
+    return hovered_resource_;
 }
 
 void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resources,
@@ -588,10 +600,9 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
                                        uint32_t                          view_width,
                                        uint32_t                          view_height)
 {
-    const TraceManager& trace_manager = TraceManager::Get();
-    RmtDataSnapshot*    open_snapshot = trace_manager.GetOpenSnapshot();
+    RmtDataSnapshot* open_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
 
-    if (trace_manager.DataSetValid() && open_snapshot != nullptr)
+    if (rmv::TraceManager::Get().DataSetValid() && open_snapshot != nullptr)
     {
         clusters_.clear();
         for (int32_t i = 0; i < unbound_resources_.size(); i++)
@@ -603,7 +614,7 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
         ResourceCluster& parent_cluster   = clusters_[kSliceTypeNone];
         const int32_t    allocation_count = open_snapshot->virtual_allocation_list.allocation_count;
 
-        // calculate how much memory is to be displayed
+        // Calculate how much memory is to be displayed.
         uint64_t total_memory = 0;
         for (int32_t i = 0; i < allocation_count; i++)
         {
@@ -631,13 +642,13 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
             for (int32_t current_unbound_region_index = 0; current_unbound_region_index < current_virtual_allocation->unbound_memory_region_count;
                  ++current_unbound_region_index)
             {
-                // add any unbound memory
+                // Add any unbound memory.
                 const RmtMemoryRegion* current_unbound_region = &current_virtual_allocation->unbound_memory_regions[current_unbound_region_index];
                 if (current_unbound_region->size == 0)
                 {
                     continue;
                 }
-                if (overview_model->IsSizeInRange(current_unbound_region->size) == false)
+                if (overview_model->IsSizeInSliderRange(current_unbound_region->size) == false)
                 {
                     continue;
                 }
@@ -662,7 +673,7 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
                 {
                     const double total_cut_area = resource->size_in_bytes / bytes_per_pixel;
 
-                    // Only include allocations that could actually be visible
+                    // Only include allocations that could actually be visible.
                     if (total_cut_area >= kMinArea)
                     {
                         parent_cluster.amount += resource->size_in_bytes;
@@ -679,13 +690,13 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
             for (int32_t current_unbound_region_index = 0; current_unbound_region_index < current_virtual_allocation->unbound_memory_region_count;
                  ++current_unbound_region_index)
             {
-                // add any unbound memory
+                // Add any unbound memory.
                 const RmtMemoryRegion* current_unbound_region = &current_virtual_allocation->unbound_memory_regions[current_unbound_region_index];
                 if (current_unbound_region->size == 0)
                 {
                     continue;
                 }
-                if (overview_model->IsSizeInRange(current_unbound_region->size) == false)
+                if (overview_model->IsSizeInSliderRange(current_unbound_region->size) == false)
                 {
                     continue;
                 }
@@ -704,7 +715,7 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
 #ifdef _DEBUG
                     strcpy_s(unbound_resource->name, RMT_MAXIMUM_NAME_LENGTH, "unbound");
 #endif
-                    // keep track of the unbound resource
+                    // Keep track of the unbound resource.
                     unbound_resources_.push_back(unbound_resource);
 
                     parent_cluster.amount += current_unbound_region->size;
@@ -715,13 +726,13 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
 
         std::stable_sort(parent_cluster.sorted_resources.begin(), parent_cluster.sorted_resources.end(), SortResourcesBySizeFunc);
 
-        // Something actually selected in the UI
+        // Something actually selected in the UI.
         if (slice_types_.empty() == false)
         {
             FillClusterResources(parent_cluster, slice_types_, 0, slice_types_.size());
         }
 
-        // Nothing selected, so just show all allocations without slicing
+        // Nothing selected, so just show all allocations without slicing.
         else
         {
             for (int i = 0; i < parent_cluster.sorted_resources.size(); i++)
@@ -749,14 +760,18 @@ bool RMVTreeMapBlocks::ResourceFiltered(const rmv::ResourceOverviewModel* overvi
     {
         return false;
     }
-    if (overview_model->IsSizeInRange(resource->size_in_bytes) == false)
+    if (overview_model->IsSizeInSliderRange(resource->size_in_bytes) == false)
     {
         return false;
     }
     return true;
 }
 
-void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster, int parent_width, int parent_height, int parent_offset_x, int parent_offset_y)
+void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster,
+                                           uint32_t         parent_width,
+                                           uint32_t         parent_height,
+                                           int32_t          parent_offset_x,
+                                           int32_t          parent_offset_y)
 {
     parent_cluster.geometry = QRectF(parent_offset_x, parent_offset_y, parent_width, parent_height);
 
@@ -765,10 +780,10 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster, int 
         return;
     }
 
-    // Helper map to associate a slice key to a resource
+    // Helper map to associate a slice key to a resource.
     QMap<uint32_t, const RmtResource*> sliceIdToAlloc;  // probably can just be an array of vectors.
 
-    // Create some temporary allocations so we can later compute geometry for parent bounds
+    // Create some temporary allocations so we can later compute geometry for parent bounds.
     uint64_t                                temp_parent_allocs_size = 0;
     QVector<const RmtResource*>             temp_resources;
     QMapIterator<uint32_t, ResourceCluster> it_1(parent_cluster.sub_clusters);
@@ -784,23 +799,23 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster, int 
         temp_resources.push_back(temp_resource);
         temp_parent_allocs_size += subCluster.amount;
 
-        // Fill out helper map
+        // Fill out helper map.
         sliceIdToAlloc[sliceType] = temp_resource;
     }
 
     std::stable_sort(temp_resources.begin(), temp_resources.end(), SortResourcesBySizeFunc);
 
-    // Figure out geometry for parent bounds
+    // Figure out geometry for parent bounds.
     GenerateTreeMapRects(
         temp_resources, temp_parent_allocs_size, parent_width, parent_height, parent_offset_x, parent_offset_y, parent_cluster.alloc_geometry_map);
 
-    // Clean up temp RmvMemoryBlockAllocations
+    // Clean up temp RmvMemoryBlockAllocations.
     for (int32_t i = 0; i < temp_resources.size(); i++)
     {
         delete temp_resources[i];
     }
 
-    // Figure out geometry for sub-clusters, but bound by parent bounds
+    // Figure out geometry for sub-clusters, but bound by parent bounds.
     QMutableMapIterator<uint32_t, ResourceCluster> it_2(parent_cluster.sub_clusters);
     while (it_2.hasNext())
     {
@@ -811,7 +826,7 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster, int 
 
         QRectF& bounding_rect = parent_cluster.alloc_geometry_map[sliceIdToAlloc[sliceType]];
 
-        // Figure out child geometry
+        // Figure out child geometry.
         GenerateTreeMapRects(subCluster.sorted_resources,
                              subCluster.amount,
                              bounding_rect.width(),
@@ -820,7 +835,7 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster, int 
                              bounding_rect.top(),
                              subCluster.alloc_geometry_map);
 
-        // Next child
+        // Next child.
         FillClusterGeometry(subCluster, bounding_rect.width(), bounding_rect.height(), bounding_rect.left(), bounding_rect.top());
     }
 }
@@ -1011,7 +1026,7 @@ void RMVTreeMapBlocks::FilterInPreferredHeap(ResourceCluster&       parent_clust
     }
 }
 
-void RMVTreeMapBlocks::FillClusterResources(ResourceCluster& parent_cluster, QVector<SliceType>& target_slice_types, int level, int max_level)
+void RMVTreeMapBlocks::FillClusterResources(ResourceCluster& parent_cluster, QVector<SliceType>& target_slice_types, int32_t level, int32_t max_level)
 {
     RMT_ASSERT(level <= max_level);
 
@@ -1023,9 +1038,8 @@ void RMVTreeMapBlocks::FillClusterResources(ResourceCluster& parent_cluster, QVe
     RMT_ASSERT(level < target_slice_types.size());
     SliceType slice_type = target_slice_types[level];
 
-    const TraceManager&    trace_manager = TraceManager::Get();
-    const RmtDataSnapshot* snapshot      = trace_manager.GetOpenSnapshot();
-    if (!trace_manager.DataSetValid() || snapshot == nullptr)
+    const RmtDataSnapshot* snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
+    if (!rmv::TraceManager::Get().DataSetValid() || snapshot == nullptr)
     {
         return;
     }

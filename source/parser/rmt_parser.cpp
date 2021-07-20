@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Implementation of functions for parsing RMT data.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of functions for parsing RMT data.
 //=============================================================================
 
 #include "rmt_parser.h"
@@ -27,6 +28,7 @@
 #define RMT_TOKEN_SIZE_RESOURCE_DESTROY (40 / 8)    ///< Resource Destroy Token Size, in bytes
 
 #define IMAGE_RESOURCE_TOKEN_SIZE (304 / 8)                 ///< Image Resource Token Size
+#define IMAGE_RESOURCE_TOKEN_SIZE_V1_6 (312 / 8)            ///< Image Resource Token Size for V1.6 onwards
 #define BUFFER_RESOURCE_TOKEN_SIZE (88 / 8)                 ///< Buffer Resource Token Size
 #define GPU_EVENT_RESOURCE_TOKEN_SIZE (8 / 8)               ///< GPU Event Resource Token Size
 #define BORDER_COLOR_PALETTE_RESOURCE_TOKEN_SIZE (8 / 8)    ///< Border Color Palette Resource Token Size
@@ -48,69 +50,85 @@
 
 #define TIMESTAMP_QUANTA (32)
 
+// Is the file version greater than or equal to the version passed in.
+// @param rmt_parser The parser containing the current chunk version.
+// @param major_version The major version requested.
+// @param minor_version The minor version requested.
+// @return true if version >= file version, false otherwise.
+static bool FileVersionGreaterOrEqual(const RmtParser* rmt_parser, int32_t major_version, int32_t minor_version)
+{
+    int32_t file_version = (rmt_parser->major_version * 10) + rmt_parser->minor_version;
+    int32_t requested_version = (major_version * 10) + minor_version;
+    if (file_version >= requested_version)
+    {
+        return true;
+    }
+    return false;
+}
+
 // read unsigned 8 bit value from the parser's buffer.
 static RmtErrorCode ReadUInt8(const RmtParser* rmt_parser, uint8_t* value, size_t offset)
 {
-    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint8_t) <= rmt_parser->stream_size, RMT_EOF);
+    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint8_t) <= rmt_parser->stream_size, kRmtEof);
     RMT_RETURN_ON_ERROR((size_t)(rmt_parser->file_buffer_offset + offset + sizeof(uint8_t)) <= (size_t)rmt_parser->file_buffer_actual_size,
-                        RMT_ERROR_INVALID_SIZE);
+                        kRmtErrorInvalidSize);
 
     const uintptr_t base_address = (uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + offset;
     const uint8_t*  base_ptr     = (const uint8_t*)base_address;
     *value                       = *base_ptr;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // read an unsigned 16bit value from the parser's buffer
 static RmtErrorCode ReadUInt16(const RmtParser* rmt_parser, uint16_t* value, size_t offset)
 {
     // validate that there is enough data to read from the buffers
-    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint16_t) <= rmt_parser->stream_size, RMT_EOF);
+    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint16_t) <= rmt_parser->stream_size, kRmtEof);
     RMT_RETURN_ON_ERROR((size_t)(rmt_parser->file_buffer_offset + offset + sizeof(uint16_t)) <= (size_t)rmt_parser->file_buffer_actual_size,
-                        RMT_ERROR_INVALID_SIZE);
+                        kRmtErrorInvalidSize);
 
     const uintptr_t base_address = (uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + offset;
     const uint16_t* base_ptr     = (const uint16_t*)base_address;
     *value                       = *base_ptr;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // read an unsigned 32bit value from the parser's buffer
 static RmtErrorCode ReadUInt32(const RmtParser* rmt_parser, uint32_t* value, size_t offset)
 {
     // validate that there is enough data to read from the buffers
-    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint32_t) <= rmt_parser->stream_size, RMT_EOF);
+    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint32_t) <= rmt_parser->stream_size, kRmtEof);
     RMT_RETURN_ON_ERROR((size_t)(rmt_parser->file_buffer_offset + offset + sizeof(uint32_t)) <= (size_t)rmt_parser->file_buffer_actual_size,
-                        RMT_ERROR_INVALID_SIZE);
+                        kRmtErrorInvalidSize);
 
     const uintptr_t base_address = (uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + offset;
     const uint32_t* base_ptr     = (const uint32_t*)base_address;
     *value                       = *base_ptr;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // read an unsigned 64bit value from the parser's buffer
 static RmtErrorCode ReadUInt64(RmtParser* rmt_parser, uint64_t* value, size_t offset)
 {
     // validate that there is enough data to read from the buffers
-    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint64_t) <= rmt_parser->stream_size, RMT_EOF);
+    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + sizeof(uint64_t) <= rmt_parser->stream_size, kRmtEof);
     RMT_RETURN_ON_ERROR((size_t)(rmt_parser->file_buffer_offset + offset + sizeof(uint64_t)) <= (size_t)rmt_parser->file_buffer_actual_size,
-                        RMT_ERROR_INVALID_SIZE);
+                        kRmtErrorInvalidSize);
 
     const uintptr_t base_address = (uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + offset;
     const uint8_t*  base_ptr     = (const uint8_t*)base_address;
     *value = ((uint64_t)base_ptr[7] << 56) | ((uint64_t)base_ptr[6] << 48) | ((uint64_t)base_ptr[5] << 40) | ((uint64_t)base_ptr[4] << 32) |
              ((uint64_t)base_ptr[3] << 24) | ((uint64_t)base_ptr[2] << 16) | ((uint64_t)base_ptr[1] << 8) | ((uint64_t)base_ptr[0]);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // read an array of unsigned 8 bit value from the parser's buffer.
 static RmtErrorCode ReadBytes(const RmtParser* rmt_parser, uint8_t* value, size_t offset, size_t size)
 {
-    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + (sizeof(uint8_t) * size) <= rmt_parser->stream_size, RMT_EOF);
+    RMT_RETURN_ON_ERROR(rmt_parser->stream_current_offset + (sizeof(uint8_t) * size) <= rmt_parser->stream_size, kRmtEof);
     RMT_RETURN_ON_ERROR((size_t)(rmt_parser->file_buffer_offset + offset + (sizeof(uint8_t) * size)) <= (size_t)rmt_parser->file_buffer_actual_size,
-                        RMT_ERROR_INVALID_SIZE);
+                        kRmtErrorInvalidSize);
 
     const uintptr_t base_address = (uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + offset;
     const uint8_t*  base_ptr     = (const uint8_t*)base_address;
@@ -119,7 +137,7 @@ static RmtErrorCode ReadBytes(const RmtParser* rmt_parser, uint8_t* value, size_
         value[current_byte_index] = base_ptr[current_byte_index];
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Get the specified bits from the provided source data, up to 64 bits.
@@ -187,14 +205,14 @@ static void UpdateTimeState(RmtParser* rmt_parser, const uint16_t token_header)
         {
             uint64_t     timestamp  = 0;
             RmtErrorCode error_code = ReadUInt64(rmt_parser, &timestamp, 0);
-            if (error_code != RMT_OK)
+            if (error_code != kRmtOk)
             {
                 return;
             }
 
             uint32_t frequency = 0;
             error_code         = ReadUInt32(rmt_parser, &frequency, 8);
-            if (error_code != RMT_OK)
+            if (error_code != kRmtOk)
             {
                 return;
             }
@@ -229,7 +247,7 @@ static void UpdateTimeState(RmtParser* rmt_parser, const uint16_t token_header)
         {
             uint8_t      num_delta_bytes = 0;
             RmtErrorCode error_code      = ReadUInt8(rmt_parser, &num_delta_bytes, 0);
-            if (error_code != RMT_OK)
+            if (error_code != kRmtOk)
             {
                 return;
             }
@@ -237,7 +255,7 @@ static void UpdateTimeState(RmtParser* rmt_parser, const uint16_t token_header)
 
             uint64_t delta = 0;
             error_code     = ReadBytes(rmt_parser, (uint8_t*)&delta, 1, num_delta_bytes);
-            if (error_code != RMT_OK)
+            if (error_code != kRmtOk)
             {
                 return;
             }
@@ -251,7 +269,7 @@ static void UpdateTimeState(RmtParser* rmt_parser, const uint16_t token_header)
         {
             uint64_t           timestamp  = 0;
             const RmtErrorCode error_code = ReadUInt64(rmt_parser, &timestamp, 0);
-            if (error_code != RMT_OK)
+            if (error_code != kRmtOk)
             {
                 return;
             }
@@ -275,7 +293,15 @@ static int32_t GetResourceDescriptionSize(RmtParser* rmt_parser, RmtResourceType
     switch (resource_type)
     {
     case kRmtResourceTypeImage:
-        return IMAGE_RESOURCE_TOKEN_SIZE;
+        // Image format changed at V1.6.
+        if (FileVersionGreaterOrEqual(rmt_parser, 1, 6))
+        {
+            return IMAGE_RESOURCE_TOKEN_SIZE_V1_6;
+        }
+        else
+        {
+            return IMAGE_RESOURCE_TOKEN_SIZE;
+        }
     case kRmtResourceTypeBuffer:
         return BUFFER_RESOURCE_TOKEN_SIZE;
     case kRmtResourceTypeGpuEvent:
@@ -333,7 +359,7 @@ static int32_t GetTokenSize(RmtParser* rmt_parser, const uint16_t token_header)
     {
         uint32_t           payload_length = 0;
         const RmtErrorCode error_code     = ReadUInt32(rmt_parser, &payload_length, 0);  // [31:12]
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, 0);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, 0);
         payload_length = (payload_length >> 12) & 0xfffff;
         return RMT_TOKEN_SIZE_USERDATA + payload_length;
     }
@@ -356,7 +382,7 @@ static int32_t GetTokenSize(RmtParser* rmt_parser, const uint16_t token_header)
         const int32_t      base_size_of_resource_description = RMT_TOKEN_SIZE_RESOURCE_CREATE;
         uint8_t            resource_type_byte                = 0;
         const RmtErrorCode error_code                        = ReadUInt8(rmt_parser, &resource_type_byte, 6);  // [53:48]
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, 0);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, 0);
         const RmtResourceType resource_type                        = (RmtResourceType)resource_type_byte;
         const int32_t         size_of_resource_description_payload = GetResourceDescriptionSize(rmt_parser, resource_type);
         return base_size_of_resource_description + size_of_resource_description_payload;
@@ -365,7 +391,7 @@ static int32_t GetTokenSize(RmtParser* rmt_parser, const uint16_t token_header)
     {
         uint8_t            num_delta_bytes = 0;
         const RmtErrorCode error_code      = ReadUInt8(rmt_parser, &num_delta_bytes, 0);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, 0);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, 0);
         num_delta_bytes = (num_delta_bytes >> 4) & 7;
         return 1 + num_delta_bytes;
     }
@@ -396,12 +422,12 @@ static RmtErrorCode ParseTimestamp(RmtParser* rmt_parser, const uint16_t token_h
     // token-specific fields.
     uint8_t            data[RMT_TOKEN_SIZE_TIMESTAMP];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     uint64_t timestamp             = ReadBitsFromBuffer(data, sizeof(data), 63, 4);
     out_timestamp_token->timestamp = (timestamp >> 4) * TIMESTAMP_QUANTA;
     out_timestamp_token->frequency = (uint32_t)ReadBitsFromBuffer(data, sizeof(data), 95, 64);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a virtual free token
@@ -413,11 +439,11 @@ static RmtErrorCode ParseVirtualFree(RmtParser* rmt_parser, const uint16_t token
 
     uint8_t            data[RMT_TOKEN_SIZE_VIRTUAL_FREE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_free_token->virtual_address = ReadBitsFromBuffer(data, sizeof(data), 55, 8);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a page table update
@@ -430,7 +456,7 @@ static RmtErrorCode ParsePageTableUpdate(RmtParser* rmt_parser, const uint16_t t
     // token-specific fields.
     uint8_t            data[RMT_TOKEN_SIZE_PAGE_TABLE_UPDATE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     const uint64_t virtual_address               = ReadBitsFromBuffer(data, sizeof(data), 43, 8);
     out_page_table_update_token->virtual_address = virtual_address << 12;
@@ -455,7 +481,7 @@ static RmtErrorCode ParsePageTableUpdate(RmtParser* rmt_parser, const uint16_t t
     const RmtPageTableController controller = (RmtPageTableController)(ReadBitsFromBuffer(data, sizeof(data), 138, 138));
     out_page_table_update_token->controller = controller;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a user data blob
@@ -467,7 +493,7 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
 
     uint32_t           payload_length = 0;
     const RmtErrorCode error_code     = ReadUInt32(rmt_parser, &payload_length, 0);  // [31:12]
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, 0);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, 0);
     out_userdata_token->userdata_type = (RmtUserdataType)((payload_length & 0xf00) >> 8);
     out_userdata_token->size_in_bytes = (payload_length >> 12) & 0xfffff;
     out_userdata_token->payload       = (void*)((uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + sizeof(uint32_t));
@@ -485,7 +511,7 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
         out_userdata_token->resource_identifer = 0;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a misc token
@@ -499,7 +525,7 @@ static RmtErrorCode ParseMisc(RmtParser* rmt_parser, const uint16_t token_header
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
     RMT_UNUSED(error_code);
     out_misc_token->type = (RmtMiscType)ReadBitsFromBuffer(data, sizeof(data), 11, 8);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a resource reference token
@@ -511,12 +537,12 @@ static RmtErrorCode ParserResourceReference(RmtParser* rmt_parser, const uint16_
 
     uint8_t            data[RMT_TOKEN_SIZE_RESOURCE_REFERENCE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_residency_update->residency_update_type = (RmtResidencyUpdateType)ReadBitsFromBuffer(data, sizeof(data), 8, 8);
     out_residency_update->virtual_address       = ReadBitsFromBuffer(data, sizeof(data), 56, 9);
     out_residency_update->queue                 = ReadBitsFromBuffer(data, sizeof(data), 63, 57);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a resource bind token
@@ -528,13 +554,13 @@ static RmtErrorCode ParseResourceBind(RmtParser* rmt_parser, const uint16_t toke
 
     uint8_t            data[RMT_TOKEN_SIZE_RESOURCE_BIND];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_resource_bind->virtual_address     = ReadBitsFromBuffer(data, sizeof(data), 55, 8);
     out_resource_bind->size_in_bytes       = ReadBitsFromBuffer(data, sizeof(data), 99, 56);
     out_resource_bind->is_system_memory    = (ReadBitsFromBuffer(data, sizeof(data), 100, 100) != 0U);
     out_resource_bind->resource_identifier = ReadBitsFromBuffer(data, sizeof(data), 135, 104);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a process event token
@@ -546,12 +572,12 @@ static RmtErrorCode ParseProcessEvent(RmtParser* rmt_parser, const uint16_t toke
 
     uint8_t            data[RMT_TOKEN_SIZE_PROCESS_EVENT];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_process_event->common.process_id = (RmtProcessId)ReadBitsFromBuffer(data, sizeof(data), 39, 8);
     out_process_event->event_type        = (RmtProcessEventType)ReadBitsFromBuffer(data, sizeof(data), 47, 40);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a page reference token
@@ -572,7 +598,7 @@ static RmtErrorCode ParsePageReference(RmtParser* rmt_parser, const uint16_t tok
     RMT_UNUSED(is_compressed);
     RMT_UNUSED(page_reference_data);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a CPU map token
@@ -584,15 +610,15 @@ static RmtErrorCode ParseCpuMap(RmtParser* rmt_parser, const uint16_t token_head
 
     uint8_t            data[RMT_TOKEN_SIZE_CPU_MAP];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_cpu_map->virtual_address = ReadBitsFromBuffer(data, sizeof(data), 55, 8);
     out_cpu_map->is_unmap        = (ReadBitsFromBuffer(data, sizeof(data), 56, 56) != 0U);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
-// parse a virtual allocation
+// Parse a virtual allocation.
 static RmtErrorCode ParseVirtualAllocate(RmtParser* rmt_parser, const uint16_t token_header, RmtTokenVirtualAllocate* out_virtual_allocate)
 {
     RMT_UNUSED(token_header);
@@ -601,7 +627,7 @@ static RmtErrorCode ParseVirtualAllocate(RmtParser* rmt_parser, const uint16_t t
 
     uint8_t            data[RMT_TOKEN_SIZE_VIRTUAL_ALLOCATE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     const uint64_t size_in_pages_minus_one = ReadBitsFromBuffer(data, sizeof(data), 31, 8);
     out_virtual_allocate->size_in_bytes    = ((size_in_pages_minus_one + 1) * (4 * 1024));
@@ -612,23 +638,36 @@ static RmtErrorCode ParseVirtualAllocate(RmtParser* rmt_parser, const uint16_t t
     out_virtual_allocate->preference[2]    = (RmtHeapType)ReadBitsFromBuffer(data, sizeof(data), 87, 86);
     out_virtual_allocate->preference[3]    = (RmtHeapType)ReadBitsFromBuffer(data, sizeof(data), 89, 88);
 
-    // handle flattening of GART_CACHABLE and GART_USWC.
-    for (int32_t current_heap_index = 0; current_heap_index < 4; ++current_heap_index)
+    // Handle flattening of GART_CACHABLE and GART_USWC.
+    for (int32_t current_heap_index = 0; current_heap_index < RMT_NUM_HEAP_PREFERENCES; ++current_heap_index)
     {
         if (out_virtual_allocate->preference[current_heap_index] == 3)
         {
             out_virtual_allocate->preference[current_heap_index] = kRmtHeapTypeSystem;
         }
     }
-    return RMT_OK;
+
+    // Handle cases where preferred heap is not required (V1.6 and higher).
+    if (FileVersionGreaterOrEqual(rmt_parser, 1, 6))
+    {
+        // The heap importance count indicates how many heap preferences should be considered. A value
+        // of 0 indicates that there are no heap preferences.
+        // This value can be used as a start index of heap preferences that can be set to kRmtHeapTypeNone.
+        uint64_t heap_importance_count = ReadBitsFromBuffer(data, sizeof(data), 92, 90);
+        for (uint64_t index = heap_importance_count; index < RMT_NUM_HEAP_PREFERENCES; index++)
+        {
+            out_virtual_allocate->preference[index] = kRmtHeapTypeNone;
+        }
+    }
+    return kRmtOk;
 }
 
-// parse a image description payload.
+// Parse a image description payload.
 static RmtErrorCode ParseResourceDescriptionPayloadImage(RmtParser* rmt_parser, RmtResourceDescriptionImage* out_image)
 {
     uint8_t            data[IMAGE_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // FLAGS [19:0] Creation flags describing how the image was created.
     out_image->create_flags = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 19, 0));
@@ -730,7 +769,119 @@ static RmtErrorCode ParseResourceDescriptionPayloadImage(RmtParser* rmt_parser, 
 
     // FULLSCREEN [303] This bit is set to 1 if the image is fullscreen presentable.
     out_image->fullscreen = (bool)(ReadBitsFromBuffer(data, sizeof(data), 303, 303));
-    return RMT_OK;
+    return kRmtOk;
+}
+
+// Parse a image description payload for chunk file version > 1.6. This requires an extra bit added to the X,Y,Z
+// image dimensions, which shifts everything else out by 3 bits. The payload size is also increased by 1 byte
+// to accommodate these extra bits.
+static RmtErrorCode ParseResourceDescriptionPayloadImageV1_6(RmtParser* rmt_parser, RmtResourceDescriptionImage* out_image)
+{
+    uint8_t            data[IMAGE_RESOURCE_TOKEN_SIZE_V1_6];
+    const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+
+    // FLAGS [19:0] Creation flags describing how the image was created.
+    out_image->create_flags = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 19, 0));
+
+    // USAGE_FLAGS [34:20] Usage flags describing how the image is used by the application.
+    out_image->usage_flags = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 34, 20));
+
+    // TYPE [36:35] The type of the image
+    out_image->image_type = (RmtImageType)(ReadBitsFromBuffer(data, sizeof(data), 36, 35));
+
+    // DIMENSION_X [50:37] The dimension of the image in the X dimension, minus 1.
+    int32_t dimension      = (int32_t)ReadBitsFromBuffer(data, sizeof(data), 50, 37);
+    out_image->dimension_x = dimension + 1;
+
+    // DIMENSION_Y [64:51] The dimension of the image in the Y dimension, minus 1.
+    dimension              = (int32_t)ReadBitsFromBuffer(&data[0], sizeof(data), 64, 51);
+    out_image->dimension_y = (int32_t)(dimension + 1);
+
+    // DIMENSION_Z [78:65] The dimension of the image in the Z dimension, minus 1.
+    dimension              = (int32_t)ReadBitsFromBuffer(data, sizeof(data), 78, 65);
+    out_image->dimension_z = (int32_t)(dimension + 1);
+
+    // FORMAT [98:79] The format of the image.
+    uint64_t format = ReadBitsFromBuffer(data, sizeof(data), 98, 79);
+    //   SWIZZLE_X [2:0]
+    out_image->format.swizzle_x = (RmtChannelSwizzle)ReadBitsFromBuffer((uint8_t*)&format, sizeof(format), 2, 0);
+    //   SWIZZLE_Y [5:3]
+    out_image->format.swizzle_y = (RmtChannelSwizzle)ReadBitsFromBuffer((uint8_t*)&format, sizeof(format), 5, 3);
+    //   SWIZZLE_Z [8:6]
+    out_image->format.swizzle_z = (RmtChannelSwizzle)ReadBitsFromBuffer((uint8_t*)&format, sizeof(format), 8, 6);
+    //   SWIZZLE_W [11:9]
+    out_image->format.swizzle_w = (RmtChannelSwizzle)ReadBitsFromBuffer((uint8_t*)&format, sizeof(format), 11, 9);
+    //   NUM_FORMAT [19:12]
+    out_image->format.format = (RmtFormat)ReadBitsFromBuffer((uint8_t*)&format, sizeof(format), 19, 12);
+
+    // MIPS [102:99] The number of mip-map levels in the image.
+    out_image->mip_levels = (int32_t)(ReadBitsFromBuffer(data, sizeof(data), 102, 99));
+
+    // SLICES [113:103] The number of slices in the image minus one. The maximum this can be in the range [1..2048].
+    int32_t slices    = (int32_t)(ReadBitsFromBuffer(data, sizeof(data), 113, 103));
+    out_image->slices = slices + 1;
+
+    // SAMPLES [116:114] The Log2(n) of the sample count for the image.
+    int32_t log2_samples    = (int32_t)(ReadBitsFromBuffer(data, sizeof(data), 116, 114));
+    out_image->sample_count = (1 << log2_samples);
+
+    // FRAGMENTS [118:117] The Log2(n) of the fragment count for the image.
+    int32_t log2_fragments    = (int32_t)(ReadBitsFromBuffer(data, sizeof(data), 118, 117));
+    out_image->fragment_count = (1 << log2_fragments);
+
+    // TILING_TYPE [120:119] The tiling type used for the image
+    out_image->tiling_type = (RmtTilingType)(ReadBitsFromBuffer(data, sizeof(data), 120, 119));
+
+    // TILING_OPT_MODE [122:121] The tiling optimisation mode for the image
+    out_image->tiling_optimization_mode = (RmtTilingOptimizationMode)(ReadBitsFromBuffer(data, sizeof(data), 122, 121));
+
+    // METADATA_MODE [124:123] The metadata mode for the image
+    out_image->metadata_mode = (RmtMetadataMode)(ReadBitsFromBuffer(&data[0], sizeof(data), 124, 123));
+
+    // MAX_BASE_ALIGNMENT [129:125] The alignment of the image resource. This is stored as the Log2(n) of the
+    //                                alignment, it is therefore possible to encode alignments from [1Byte..2MiB].
+    uint64_t log2_alignment       = ReadBitsFromBuffer(data, sizeof(data), 129, 125);
+    out_image->max_base_alignment = (1ULL << log2_alignment);
+
+    // PRESENTABLE [130] This bit is set to 1 if the image is presentable.
+    out_image->presentable = (bool)(ReadBitsFromBuffer(data, sizeof(data), 130, 130));
+
+    // IMAGE_SIZE [162:131] The size of the core image data inside the resource.
+    out_image->image_size = ReadBitsFromBuffer(data, sizeof(data), 162, 131);
+
+    // METADATA_OFFSET [194:163] The offset from the base virtual address of the resource to the metadata of
+    //                           the image.
+    out_image->metadata_tail_offset = ReadBitsFromBuffer(data, sizeof(data), 194, 163);
+
+    // METADATA_SIZE [226:195] The size of the metadata inside the resource.
+    out_image->metadata_tail_size = ReadBitsFromBuffer(data, sizeof(data), 226, 195);
+
+    // METADATA_HEADER_OFFSET [258:227] The offset from the base virtual address of the resource to the
+    //                                  metadata header.
+    out_image->metadata_head_offset = ReadBitsFromBuffer(data, sizeof(data), 258, 227);
+
+    // METADATA_HEADER_SIZE [290:259] The size of the metadata header inside the resource.
+    out_image->metadata_head_size = ReadBitsFromBuffer(data, sizeof(data), 290, 259);
+
+    // IMAGE_ALIGN [295:291] The alignment of the core image data within the resource’s virtual address allocation.
+    //                       This is stored as the Log2(n) of the alignment.
+    log2_alignment             = ReadBitsFromBuffer(data, sizeof(data), 295, 291);
+    out_image->image_alignment = (1ULL << log2_alignment);
+
+    // METADATA_ALIGN [300:296] The alignment of the metadata within the resource’s virtual address allocation.
+    //                          This is stored as the Log2(n) of the alignment.
+    log2_alignment                     = ReadBitsFromBuffer(data, sizeof(data), 300, 296);
+    out_image->metadata_tail_alignment = (1ULL << log2_alignment);
+
+    // METADATA_HEADER_ALIGN [305:301] The alignment of the metadata header within the resource’s virtual address
+    //                                 allocation. This is stored as the Log2(n) of the alignment.
+    log2_alignment                     = ReadBitsFromBuffer(data, sizeof(data), 305, 301);
+    out_image->metadata_head_alignment = (1ULL << log2_alignment);
+
+    // FULLSCREEN [306] This bit is set to 1 if the image is fullscreen presentable.
+    out_image->fullscreen = (bool)(ReadBitsFromBuffer(data, sizeof(data), 306, 306));
+    return kRmtOk;
 }
 
 // parse a buffer description payload.
@@ -738,7 +889,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadBuffer(RmtParser* rmt_parser,
 {
     uint8_t            data[BUFFER_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // CREATE_FLAGS [7:0] The create flags for a buffer.
     out_buffer->create_flags = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 7, 0));
@@ -746,7 +897,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadBuffer(RmtParser* rmt_parser,
     out_buffer->usage_flags = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 23, 8));
     // SIZE [87:24] The size in bytes of the buffer.
     out_buffer->size_in_bytes = ReadBitsFromBuffer(data, sizeof(data), 87, 24);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a gpu event description payload.
@@ -758,7 +909,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadGpuEvent(RmtParser* rmt_parse
 
     // FLAGS [7:0] The flags used to create the GPU event.
     out_gpu_event->flags = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 7, 0));
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a border palette description payload.
@@ -766,11 +917,11 @@ static RmtErrorCode ParseResourceDescriptionPayloadBorderColorPalette(RmtParser*
 {
     uint8_t            data[BORDER_COLOR_PALETTE_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // NUM_ENTRIES [7:0] The number of entries in the border color palette.
     out_border_color_palette->size_in_entries = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 7, 0));
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse perf experiment description payload.
@@ -778,7 +929,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadPerfExperiment(RmtParser* rmt
 {
     uint8_t            data[PERF_EXPERIMENT_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // SPM_SIZE [31:0] The size in bytes for the amount of memory allocated for SPM counter streaming.
     out_perf_experiment->spm_size = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 31, 0));
@@ -788,7 +939,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadPerfExperiment(RmtParser* rmt
 
     // COUNTER_SIZE [95:64] The size in bytes for the amount of memory allocated for per-draw counter data.
     out_perf_experiment->counter_size = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 95, 64));
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse query heap description payload.
@@ -796,14 +947,14 @@ static RmtErrorCode ParseResourceDescriptionPayloadQueryHeap(RmtParser* rmt_pars
 {
     uint8_t            data[QUERY_HEAP_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // TYPE [1:0] The type of the query heap. See RMT_QUERY_HEAP_TYPE.
     out_query_heap->heap_type = (RmtQueryHeapType)(ReadBitsFromBuffer(data, sizeof(data), 1, 0));
 
     // ENABLE_CPU_ACCESS [2] Set to 1 if CPU access is enabled.
     out_query_heap->enable_cpu_access = (bool)(ReadBitsFromBuffer(data, sizeof(data), 2, 2));
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse video decoder description payload.
@@ -811,7 +962,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadVideoDecoder(RmtParser* rmt_p
 {
     uint8_t            data[VIDEO_DECODER_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // ENGINE_TYPE [3:0] The type of engine that the video decoder will run on.
     out_video_decoder->engine_type = (RmtEngineType)(ReadBitsFromBuffer(data, sizeof(data), 3, 0));
@@ -826,7 +977,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadVideoDecoder(RmtParser* rmt_p
     // HEIGHT [31:20] The height of the video minus one.
     uint32_t height           = (uint32_t)(ReadBitsFromBuffer(data, sizeof(data), 31, 20));
     out_video_decoder->height = height + 1;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse video encoder description payload.
@@ -834,7 +985,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadVideoEncoder(RmtParser* rmt_p
 {
     uint8_t            data[VIDEO_ENCODER_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // ENGINE_TYPE [3:0] The type of engine that the video encoder will run on.
     out_video_encoder->engine_type = (RmtEngineType)(ReadBitsFromBuffer(data, sizeof(data), 3, 0));
@@ -863,7 +1014,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadVideoEncoder(RmtParser* rmt_p
     //   NUM_FORMAT [19:12]
     out_video_encoder->format.format = (RmtFormat)ReadBitsFromBuffer((uint8_t*)&format, sizeof(format), 19, 12);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse heap description payload.
@@ -871,7 +1022,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadHeap(RmtParser* rmt_parser, R
 {
     uint8_t            data[HEAP_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // FLAGS [4:0] The flags used to create the heap.
     out_heap->flags = (uint8_t)(ReadBitsFromBuffer(data, sizeof(data), 4, 0));
@@ -885,7 +1036,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadHeap(RmtParser* rmt_parser, R
     // SEGMENT_INDEX [77:74] The segment index where the heap was requested to be created.
     out_heap->segment_index = (uint8_t)(ReadBitsFromBuffer(data, sizeof(data), 77, 74));
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a pipeline.
@@ -893,7 +1044,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadPipeline(RmtParser* rmt_parse
 {
     uint8_t            data[PIPELINE_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // CREATE_FLAGS [7:0] Describes the creation flags for the pipeline.
     out_pipeline->create_flags = (uint8_t)(ReadBitsFromBuffer(data, sizeof(data), 7, 0));
@@ -908,7 +1059,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadPipeline(RmtParser* rmt_parse
     // IS_NGG [144] The bit is set to true if the pipeline was compiled in NGG mode.
     out_pipeline->is_ngg = (bool)(ReadBitsFromBuffer(data, sizeof(data), 144, 144));
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse descriptor heap experiment description payload.
@@ -916,7 +1067,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadDescriptorHeap(RmtParser* rmt
 {
     uint8_t            data[DESCRIPTOR_HEAP_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // TYPE [3:0] The type of descriptors in the heap.
     out_descriptor_heap->descriptor_type = (RmtDescriptorType)(ReadBitsFromBuffer(data, sizeof(data), 3, 0));
@@ -930,7 +1081,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadDescriptorHeap(RmtParser* rmt
     // NUM_DESCRIPTORS [28:13] The number of descriptors in the heap.
     out_descriptor_heap->num_descriptors = (uint16_t)(ReadBitsFromBuffer(data, sizeof(data), 28, 13));
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse descriptor pool experiment description payload.
@@ -938,7 +1089,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadDescriptorPool(RmtParser* rmt
 {
     uint8_t      data[DESCRIPTOR_POOL_RESOURCE_TOKEN_SIZE];
     RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // MAX_SETS [11:0] Maximum number of descriptor sets that can be allocated from the pool.
     out_descriptor_pool->max_sets = (uint16_t)(ReadBitsFromBuffer(data, sizeof(data), 15, 0));
@@ -951,7 +1102,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadDescriptorPool(RmtParser* rmt
     {
         uint8_t pool_desc_data[DESCRIPTOR_POOL_DESCRIPTION_SIZE];
         error_code = ReadBytes(rmt_parser, pool_desc_data, offset, sizeof(pool_desc_data));
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // TYPE [15:0] Descriptor type this pool can hold.
         out_descriptor_pool->pools[i].type = (RmtDescriptorType)(ReadBitsFromBuffer(pool_desc_data, sizeof(pool_desc_data), 15, 0));
@@ -962,7 +1113,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadDescriptorPool(RmtParser* rmt
         offset += sizeof(pool_desc_data);
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse command allocator experiment description payload.
@@ -970,7 +1121,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadCmdAllocator(RmtParser* rmt_p
 {
     uint8_t            data[CMD_ALLOCATOR_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // FLAGS [3:0] Describes the creation flags for the command allocator.
     out_command_allocator->flags = (uint8_t)(ReadBitsFromBuffer(data, sizeof(data), 3, 0));
@@ -1002,7 +1153,7 @@ static RmtErrorCode ParseResourceDescriptionPayloadCmdAllocator(RmtParser* rmt_p
     // GPU_SCRATCH_MEM_SUBALLOC_SIZE [351:296] Size, in bytes, of the chunks the command allocator will give to command buffers for GPU scratch memory. Expressed as 4kB chunks
     out_command_allocator->gpu_scratch_suballoc_size = ReadBitsFromBuffer(data, sizeof(data), 351, 296);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a misc internal resource.
@@ -1010,10 +1161,10 @@ static RmtErrorCode ParseResourceDescriptionPayloadMiscInternal(RmtParser* rmt_p
 {
     uint8_t            data[MISC_INTERNAL_RESOURCE_TOKEN_SIZE];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_misc_internal->type = (RmtResourceMiscInternalType)data[0];
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a resource description
@@ -1026,7 +1177,7 @@ static RmtErrorCode ParseResourceCreate(RmtParser* rmt_parser, const uint16_t to
 
     uint8_t      data[RMT_TOKEN_SIZE_RESOURCE_CREATE];
     RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_resource_description->resource_identifier = ReadBitsFromBuffer(data, sizeof(data), 39, 8);
     out_resource_description->owner_type          = (RmtOwnerType)ReadBitsFromBuffer(data, sizeof(data), 41, 40);
@@ -1038,67 +1189,75 @@ static RmtErrorCode ParseResourceCreate(RmtParser* rmt_parser, const uint16_t to
     switch (out_resource_description->resource_type)
     {
     case kRmtResourceTypeImage:
-        error_code = ParseResourceDescriptionPayloadImage(rmt_parser, &out_resource_description->image);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        // Image format changed at V1.6.
+        if (FileVersionGreaterOrEqual(rmt_parser, 1, 6))
+        {
+            error_code = ParseResourceDescriptionPayloadImageV1_6(rmt_parser, &out_resource_description->image);
+        }
+        else
+        {
+            error_code = ParseResourceDescriptionPayloadImage(rmt_parser, &out_resource_description->image);
+        }
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeBuffer:
         error_code = ParseResourceDescriptionPayloadBuffer(rmt_parser, &out_resource_description->buffer);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeGpuEvent:
         error_code = ParseResourceDescriptionPayloadGpuEvent(rmt_parser, &out_resource_description->gpu_event);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeBorderColorPalette:
         error_code = ParseResourceDescriptionPayloadBorderColorPalette(rmt_parser, &out_resource_description->border_color_palette);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypePerfExperiment:
         error_code = ParseResourceDescriptionPayloadPerfExperiment(rmt_parser, &out_resource_description->perf_experiment);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeQueryHeap:
         error_code = ParseResourceDescriptionPayloadQueryHeap(rmt_parser, &out_resource_description->query_heap);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeVideoDecoder:
         error_code = ParseResourceDescriptionPayloadVideoDecoder(rmt_parser, &out_resource_description->video_decoder);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeVideoEncoder:
         error_code = ParseResourceDescriptionPayloadVideoEncoder(rmt_parser, &out_resource_description->video_encoder);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeHeap:
         error_code = ParseResourceDescriptionPayloadHeap(rmt_parser, &out_resource_description->heap);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypePipeline:
         error_code = ParseResourceDescriptionPayloadPipeline(rmt_parser, &out_resource_description->pipeline);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeDescriptorHeap:
         error_code = ParseResourceDescriptionPayloadDescriptorHeap(rmt_parser, &out_resource_description->descriptor_heap);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeDescriptorPool:
         error_code = ParseResourceDescriptionPayloadDescriptorPool(rmt_parser, &out_resource_description->descriptor_pool);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeCommandAllocator:
         error_code = ParseResourceDescriptionPayloadCmdAllocator(rmt_parser, &out_resource_description->command_allocator);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
     case kRmtResourceTypeMiscInternal:
         error_code = ParseResourceDescriptionPayloadMiscInternal(rmt_parser, &out_resource_description->misc_internal);
-        RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
 
     default:
         break;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a time delta
@@ -1111,15 +1270,15 @@ static RmtErrorCode ParseTimeDelta(RmtParser* rmt_parser, const uint16_t token_h
     // token-specific fields.
     uint8_t      num_delta_bytes = 0;
     RmtErrorCode error_code      = ReadUInt8(rmt_parser, &num_delta_bytes, 0);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     num_delta_bytes = (num_delta_bytes >> 4) & 7;
 
     uint64_t delta = 0;
     error_code     = ReadUInt64(rmt_parser, &delta, 1);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_time_delta->delta = ((delta >> (8 - num_delta_bytes)) * TIMESTAMP_QUANTA) / 1000000;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // parse a resource destroy
@@ -1131,10 +1290,10 @@ static RmtErrorCode ParseResourceDestroy(RmtParser* rmt_parser, const uint16_t t
 
     uint8_t            data[kRmtTokenTypeResourceDestroy];
     const RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_resource_destroy->resource_identifier = ReadBitsFromBuffer(data, sizeof(data), 39, 8);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtParserInitialize(RmtParser* rmt_parser,
@@ -1149,9 +1308,9 @@ RmtErrorCode RmtParserInitialize(RmtParser* rmt_parser,
                                  uint64_t   process_id,
                                  uint64_t   thread_id)
 {
-    RMT_RETURN_ON_ERROR(rmt_parser, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(file_handle, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR((stream_size >= 1), RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(rmt_parser, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(file_handle, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR((stream_size >= 1), kRmtErrorInvalidSize);
 
     rmt_parser->start_timestamp         = 0;
     rmt_parser->current_timestamp       = 0;
@@ -1169,13 +1328,13 @@ RmtErrorCode RmtParserInitialize(RmtParser* rmt_parser,
     rmt_parser->process_id              = process_id;
     rmt_parser->thread_id               = thread_id;
     rmt_parser->stream_index            = stream_index;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtParserPosition* out_parser_position)
 {
-    RMT_RETURN_ON_ERROR(rmt_parser, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_token, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(rmt_parser, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_token, kRmtErrorInvalidPointer);
 
     if (out_parser_position != nullptr)
     {
@@ -1203,7 +1362,7 @@ RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtPar
     // Figure out what the token is we have to parse.
     uint16_t     token_header = 0;
     RmtErrorCode error_code   = ReadUInt16(rmt_parser, &token_header, 0);
-    if (error_code != RMT_OK)
+    if (error_code != kRmtOk)
     {
         return error_code;
     }
@@ -1260,25 +1419,25 @@ RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtPar
         break;
     default:
         RMT_ASSERT(0);
-        error_code = RMT_ERROR_MALFORMED_DATA;  // corrupted file.
+        error_code = kRmtErrorMalformedData;  // corrupted file.
         break;
     }
 
     // if there was an error during the parsing of the packet, then return it.
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // advance the stream by the size of the token.
     const int32_t token_size = GetTokenSize(rmt_parser, token_header);
     rmt_parser->stream_current_offset += token_size;
     rmt_parser->file_buffer_offset += token_size;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtParserSetPosition(RmtParser* rmt_parser, const RmtParserPosition* parser_position)
 {
-    RMT_RETURN_ON_ERROR(rmt_parser, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(parser_position, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(rmt_parser, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(parser_position, kRmtErrorInvalidPointer);
 
     // set the position up
     rmt_parser->stream_current_offset   = parser_position->stream_current_offset;
@@ -1288,7 +1447,7 @@ RmtErrorCode RmtParserSetPosition(RmtParser* rmt_parser, const RmtParserPosition
     rmt_parser->file_buffer_actual_size = parser_position->file_buffer_actual_size;
     rmt_parser->file_buffer_offset      = parser_position->file_buffer_offset;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 bool RmtParserIsCompleted(RmtParser* rmt_parser)
@@ -1300,12 +1459,12 @@ bool RmtParserIsCompleted(RmtParser* rmt_parser)
     const RmtErrorCode error_code = RmtParserAdvance(rmt_parser, &token, &parser_pos);
     RmtParserSetPosition(rmt_parser, &parser_pos);
 
-    return error_code != RMT_OK;
+    return error_code != kRmtOk;
 }
 
 RmtErrorCode RmtParserReset(RmtParser* rmt_parser)
 {
-    RMT_RETURN_ON_ERROR(rmt_parser, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(rmt_parser, kRmtErrorInvalidPointer);
 
     // state related values
     rmt_parser->start_timestamp       = 0;
@@ -1319,5 +1478,5 @@ RmtErrorCode RmtParserReset(RmtParser* rmt_parser)
     rmt_parser->file_buffer_actual_size = 0;
     rmt_parser->file_buffer_offset      = 0;
 
-    return RMT_OK;
+    return kRmtOk;
 }

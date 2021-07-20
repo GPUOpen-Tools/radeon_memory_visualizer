@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Data structures and functions to help construct a map of proc IDs
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Data structures and functions to help construct a map of proc IDs.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_PROCESS_MAP_H_
@@ -27,9 +28,9 @@ typedef struct RmtProcessMap
 /// @param [in]  process_map                    A pointer to a <c><i>RmtProcessMap</i></c> structure that will contain the process map.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtProcessMapInitialize(RmtProcessMap* process_map);
 
 /// Add a process ID to the map.
@@ -38,11 +39,11 @@ RmtErrorCode RmtProcessMapInitialize(RmtProcessMap* process_map);
 /// @param [in]  process_id                     The process ID to add.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_OUT_OF_MEMORY                     The operation failed due to the number of processes in the map being greater than <c><i>RMT_MAXIMUM_PROCESS_COUNT</i></c>.
+/// kRmtErrorOutOfMemory                        The operation failed due to the number of processes in the map being greater than <c><i>RMT_MAXIMUM_PROCESS_COUNT</i></c>.
 RmtErrorCode RmtProcessMapAddProcess(RmtProcessMap* process_map, uint64_t process_id);
 
 /// Get the amount of committed memory (in bytes) for a specified process ID.
@@ -61,9 +62,9 @@ uint64_t RmtProcessMapGetCommittedMemoryForProcessId(const RmtProcessMap* proces
 /// @param [in]  size_in_bytes                  The amount of memory to add.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtProcessMapAddCommittedMemoryForProcessId(RmtProcessMap* process_map, uint64_t process_id, uint64_t size_in_bytes);
 
 /// Remove some memory (in bytes) from a specified process ID.
@@ -73,9 +74,9 @@ RmtErrorCode RmtProcessMapAddCommittedMemoryForProcessId(RmtProcessMap* process_
 /// @param [in]  size_in_bytes                  The amount of memory to remove.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>process_map</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtProcessMapRemoveCommittedMemoryForProcessId(RmtProcessMap* process_map, uint64_t process_id, uint64_t size_in_bytes);
 
 /// Query the process map to see if it contains the specified process ID.
@@ -94,9 +95,9 @@ bool RmtProcessMapContainsProcessId(const RmtProcessMap* process_map, uint64_t p
 /// @param [out] out_index                      Pointer to an <c><i>int32_t</i></c> to receive the index.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>process_map</i></c> or <c><i>out_index</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>process_map</i></c> or <c><i>out_index</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtProcessMapGetIndexFromProcessId(const RmtProcessMap* process_map, uint64_t process_id, int32_t* out_index);
 
 #ifdef __cplusplus

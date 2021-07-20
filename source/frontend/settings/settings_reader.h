@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for RMV XML settings reader.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the XML settings reader.
 //=============================================================================
 
 #ifndef RMV_SETTINGS_SETTINGS_READER_H_
@@ -15,35 +15,37 @@
 
 namespace rmv
 {
-    /// Support for RMV XML settings reader.
+    /// @brief Support for the XML settings reader.
     class SettingsReader
     {
     public:
-        /// Constructor.
-        /// \param settings Output settings class.
+        /// @brief Constructor.
+        ///
+        /// @param [in] settings Output settings class.
         explicit SettingsReader(RMVSettings* settings);
 
-        /// Destructor.
+        /// @brief Destructor.
         ~SettingsReader();
 
-        /// Begin reading RMV XML file and make sure it's valid.
-        /// \param device The XML file represented by a Qt IO device.
+        /// @brief Begin reading the XML file and make sure it's valid.
+        ///
+        /// @param [in] device The XML file represented by a Qt IO device.
         bool Read(QIODevice* device);
 
     private:
-        /// Detect global settings and recently used files section.
+        /// @brief Read global settings and recently used files section.
         void ReadSettingsAndRecents();
 
-        /// Detect setting list.
+        /// @brief Read settings list.
         void ReadSettings();
 
-        /// Read individual settings.
+        /// @brief Read individual settings.
         void ReadSetting();
 
-        /// Detect recently opened file list.
+        /// @brief Read recently opened file list.
         void ReadRecentFiles();
 
-        /// Read individual recently opened files.
+        /// @brief Read individual recently opened files.
         void ReadRecentFile();
 
         QXmlStreamReader reader_;    ///< Qt's XML stream.

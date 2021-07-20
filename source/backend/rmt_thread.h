@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Abstraction of a thread.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Abstraction of a thread.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_THREAD_H_
@@ -39,11 +40,11 @@ typedef uint32_t(RMT_THREAD_FUNC* RmtThreadFunc)(void* input_data);
 /// @param [in]     input_data                  Data to pass to the threads <c><i>inputData</i></c> parameter.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>thread</i></c> or <c><i>threadFunc</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>thread</i></c> or <c><i>threadFunc</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtThreadCreate(RmtThread* thread, RmtThreadFunc thread_func, void* input_data);
 
@@ -52,9 +53,9 @@ RmtErrorCode RmtThreadCreate(RmtThread* thread, RmtThreadFunc thread_func, void*
 /// @param [in]     thread                      A pointer to a <c><i>RmtThread</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>thread</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>thread</i></c> was NULL.
 ///
 RmtErrorCode RmtThreadWaitForExit(RmtThread* thread);
 

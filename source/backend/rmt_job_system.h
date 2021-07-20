@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  A job system to run work on multiple threads.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  A job system to run work on multiple threads.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_JOB_SYSTEM_H_
@@ -89,11 +90,11 @@ typedef struct RmtJobQueue
 /// @param [in]     worker_thread_count             The number of worker threads to create.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_INDEX_OUT_OF_RANGE                The operation failed because <c><i>workerThreadCount</i></c> was not in range [0..<c><i>RMT_MAXIMUM_WORKER_THREADS</i></c>].
+/// kRmtErrorIndexOutOfRange                    The operation failed because <c><i>workerThreadCount</i></c> was not in range [0..<c><i>RMT_MAXIMUM_WORKER_THREADS</i></c>].
 ///
 RmtErrorCode RmtJobQueueInitialize(RmtJobQueue* job_queue, int32_t worker_thread_count);
 
@@ -102,9 +103,9 @@ RmtErrorCode RmtJobQueueInitialize(RmtJobQueue* job_queue, int32_t worker_thread
 /// @param [in,out] job_queue                       A pointer to the <c><i>RmtJobSystem</i></c> structure to shutdown.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
 ///
 RmtErrorCode RmtJobQueueShutdown(RmtJobQueue* job_queue);
 
@@ -116,11 +117,11 @@ RmtErrorCode RmtJobQueueShutdown(RmtJobQueue* job_queue);
 /// @param [out]    out_handle                      An optional pointer to a <c><i>RmtJobHandle</i></c>.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_OUT_OF_MEMORY                     The operation failed because there was no space left in the queue.
+/// kRmtErrorOutOfMemory                        The operation failed because there was no space left in the queue.
 ///
 RmtErrorCode RmtJobQueueAddSingle(RmtJobQueue* job_queue, RmtJobFunction func, void* input, RmtJobHandle* out_handle);
 
@@ -147,11 +148,11 @@ RmtErrorCode RmtJobQueueAddSingle(RmtJobQueue* job_queue, RmtJobFunction func, v
 /// @param [out]    out_handle                      An optional pointer to a <c><i>RmtJobHandle</i></c>.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_OUT_OF_MEMORY                     The operation failed because there was no space left in the queue.
+/// kRmtErrorOutOfMemory                        The operation failed because there was no space left in the queue.
 ///
 RmtErrorCode RmtJobQueueAddMultiple(RmtJobQueue* job_queue, RmtJobFunction func, void* input, int32_t base_index, int32_t count, RmtJobHandle* out_handle);
 
@@ -161,9 +162,9 @@ RmtErrorCode RmtJobQueueAddMultiple(RmtJobQueue* job_queue, RmtJobFunction func,
 /// @param [in]     handle                          A handle to the job that was added using <c><i>RmtJobQueueAddSingle</i></c> or <c><i>RmtJobQueueAddMultiple</i></c>.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed because <c><i>jobQueue</i></c> was <c><i>NULL</i></c>.
 ///
 RmtErrorCode RmtJobQueueWaitForCompletion(RmtJobQueue* job_queue, RmtJobHandle handle);
 

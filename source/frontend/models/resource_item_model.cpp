@@ -1,9 +1,11 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a resource item model. Used for the resource
-///  list tables
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a resource item model.
+///
+/// Used for the resource list tables.
+///
 //=============================================================================
 
 #include "models/resource_item_model.h"
@@ -13,7 +15,7 @@
 #include "rmt_resource_list.h"
 #include "rmt_util.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -67,7 +69,7 @@ namespace rmv
             resource_table->hideColumn(kResourceColumnCompareId);
         }
 
-        // hide columns used for proxy models
+        // Hide columns used for proxy models.
         resource_table->hideColumn(kResourceColumnAllocationIdInternal);
         resource_table->hideColumn(kResourceColumnGlobalId);
     }
@@ -187,6 +189,25 @@ namespace rmv
                 return QVariant::fromValue<qulonglong>(cache_[row].unmapped_bytes);
             case kResourceColumnGlobalId:
                 return QVariant::fromValue<qulonglong>(resource->identifier);
+
+            default:
+                break;
+            }
+        }
+        else if (role == Qt::ToolTipRole)
+        {
+            switch (index.column())
+            {
+            case kResourceColumnSize:
+                return rmv::string_util::LocalizedValueBytes(resource->size_in_bytes);
+            case kResourceColumnMappedInvisible:
+                return rmv::string_util::LocalizedValueBytes(cache_[row].invisible_bytes);
+            case kResourceColumnMappedLocal:
+                return rmv::string_util::LocalizedValueBytes(cache_[row].local_bytes);
+            case kResourceColumnMappedHost:
+                return rmv::string_util::LocalizedValueBytes(cache_[row].host_bytes);
+            case kResourceColumnMappedNone:
+                return rmv::string_util::LocalizedValueBytes(cache_[row].unmapped_bytes);
 
             default:
                 break;

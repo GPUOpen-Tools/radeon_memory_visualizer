@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV's carousel resource types widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the carousel resource types widget.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_carousel_resource_types.h"
@@ -12,16 +12,16 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
+#include "models/colorizer.h"
 #include "util/rmv_util.h"
 #include "util/string_util.h"
-#include "views/colorizer.h"
 
 static const int kLegendStartOffset  = 44;
 static const int kLegendHeight       = 26;
 static const int kEdgeMargin         = 5;
 static const int kIconWidth          = 20;
 static const int kNumResourcesToShow = 6;
-static const int kTextGap            = 5;  /// The gap between the text desc
+static const int kTextGap            = 5;  // The gap between the text descriptions.
 
 RMVCarouselResourceTypes::RMVCarouselResourceTypes(const RMVCarouselConfig& config)
     : RMVCarouselItem(config)
@@ -101,7 +101,7 @@ void RMVCarouselResourceTypes::paint(QPainter* painter, const QStyleOptionGraphi
     int bar_length = (config_.width / 2) - kEdgeMargin;
     int y_pos      = 0;
 
-    // Display the most abundant resource types
+    // Display the most abundant resource types.
     for (int i = 0; i < kNumResourcesToShow; i++)
     {
         y_pos                           = kLegendStartOffset + (i * kLegendHeight);
@@ -110,25 +110,25 @@ void RMVCarouselResourceTypes::paint(QPainter* painter, const QStyleOptionGraphi
         DrawCarouselMemoryUsageLegend(painter,
                                       y_pos,
                                       rmv::string_util::GetResourceUsageString(usage_type),
-                                      Colorizer::GetResourceUsageColor(usage_type),
+                                      rmv::Colorizer::GetResourceUsageColor(usage_type),
                                       data_.usage_map[i].usage_amount);
         DrawHorizontalBarComponent(painter, "", bar_offset, y_pos, bar_length, kIconWidth, data_.usage_map[i].usage_amount, data_.usage_maximum, false);
     }
 
-    // Total up all the other resources
+    // Total up all the other resources.
     int32_t other_amount = 0;
     for (int i = kNumResourcesToShow; i < kRmtResourceUsageTypeCount; i++)
     {
         other_amount += data_.usage_map[i].usage_amount;
     }
 
-    // Show the other resources
+    // Show the other resources.
     y_pos = kLegendStartOffset + (kNumResourcesToShow * kLegendHeight);
-    DrawCarouselMemoryUsageLegend(painter, y_pos, "Other", Colorizer::GetResourceUsageColor(kRmtResourceUsageTypeFree), other_amount);
+    DrawCarouselMemoryUsageLegend(painter, y_pos, "Other", rmv::Colorizer::GetResourceUsageColor(kRmtResourceUsageTypeFree), other_amount);
     DrawHorizontalBarComponent(painter, "", bar_offset, y_pos, bar_length, kIconWidth, other_amount, data_.usage_maximum, false);
 }
 
-void RMVCarouselResourceTypes::SetData(const RMVCarouselData& data)
+void RMVCarouselResourceTypes::SetData(const rmv::RMVCarouselData& data)
 {
     data_ = data.resource_types_data;
     update();

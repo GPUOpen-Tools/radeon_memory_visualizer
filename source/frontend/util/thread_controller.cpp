@@ -1,15 +1,15 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a thread controller.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a thread controller.
 //=============================================================================
 
 #include "util/thread_controller.h"
 
 #include "rmt_util.h"
 
-#include "views/main_window.h"
+#include "managers/load_animation_manager.h"
 
 namespace rmv
 {
@@ -27,16 +27,22 @@ namespace rmv
         emit WorkerFinished();
     }
 
-    ThreadController::ThreadController(MainWindow* main_window, QWidget* parent, BackgroundTask* background_task)
-        : main_window_(main_window)
-        , background_task_(background_task)
+    ThreadController::ThreadController(QWidget* parent, BackgroundTask* background_task)
+        : background_task_(background_task)
         , finished_(false)
     {
-        // start the loading animation
-        main_window_->StartAnimation(parent, 0);
+        // Start the loading animation.
+        if (parent == nullptr)
+        {
+            rmv::LoadAnimationManager::Get().StartAnimation();
+        }
+        else
+        {
+            rmv::LoadAnimationManager::Get().StartAnimation(parent, 0);
+        }
 
-        // create the thread. It will be setup to be deleted below when the thread has
-        // finished (it emits a QThread::Finished signal)
+        // Create the thread. It will be setup to be deleted below when the thread has
+        // finished (it emits a QThread::Finished signal).
         thread_ = new QThread();
         background_task_->moveToThread(thread_);
 
@@ -57,7 +63,7 @@ namespace rmv
 
     void ThreadController::WorkerFinished()
     {
-        main_window_->StopAnimation();
+        rmv::LoadAnimationManager::Get().StopAnimation();
         finished_ = true;
         emit ThreadFinished();
     }

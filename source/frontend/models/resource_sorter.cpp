@@ -1,10 +1,12 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a resource sorter. Contains a list of resources
-/// and allows them to be sorted and returns sorted values and smaller values
-/// grouped together as "other"
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a resource sorter.
+///
+/// Contains a list of resources and allows them to be sorted and returns
+/// sorted values and smaller values grouped together as "other"
+///
 //=============================================================================
 
 #include "models/resource_sorter.h"
@@ -39,24 +41,24 @@ namespace rmv
         std::stable_sort(resource_list_.begin(), resource_list_.end(), &ResourceSorter::SortComparator);
     }
 
-    size_t ResourceSorter::GetNumResources()
+    size_t ResourceSorter::GetNumResources() const
     {
         return resource_list_.size();
     }
 
-    RmtResourceUsageType ResourceSorter::GetResourceType(size_t index)
+    RmtResourceUsageType ResourceSorter::GetResourceType(size_t index) const
     {
         RMT_ASSERT(index < resource_list_.size());
         return resource_list_[index].type;
     }
 
-    uint64_t ResourceSorter::GetResourceValue(size_t index)
+    uint64_t ResourceSorter::GetResourceValue(size_t index) const
     {
         RMT_ASSERT(index < resource_list_.size());
         return resource_list_[index].count;
     }
 
-    int64_t ResourceSorter::GetRemainder(int start_index)
+    int64_t ResourceSorter::GetRemainder(int start_index) const
     {
         int64_t value = 0;
         for (size_t i = start_index; i < GetNumResources(); i++)

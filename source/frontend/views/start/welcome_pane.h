@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for RMV welcome pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the welcome pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_START_WELCOME_PANE_H_
@@ -21,65 +21,72 @@
 
 #include "views/base_pane.h"
 
-class MainWindow;
-
-/// Support for RMV recently opened traces pane.
+/// @brief Class declaration.
 class WelcomePane : public BasePane
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The widget's parent.
-    explicit WelcomePane(MainWindow* parent);
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
+    explicit WelcomePane(QWidget* parent);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~WelcomePane();
 
-signals:
-    void FileListChanged();
-
 private slots:
-    /// Setup the list of recent files. Called whenever the number of recent files
-    /// changes or whenever the list needs updating.
+    /// @brief Setup the list of recent files.
+    ///
+    /// Called whenever the number of recent files changes or whenever the list needs updating.
     void SetupFileList();
 
-    /// Open RMV help file.
+    /// @brief Open RMV help file.
+    ///
     /// Present the user with help regarding RMV.
     void OpenRmvHelp();
 
-    /// Open trace help file.
+    /// @brief Open trace help file.
+    ///
     /// Present the user with help about how to capture a trace with the panel.
     void OpenTraceHelp();
 
-    /// Open a URL to GPUOpen.
+    /// @brief Open a URL to GPUOpen.
     void OpenGPUOpenURL();
 
-    /// Open a URL to RGP.
+    /// @brief Open a URL to GitHub.
+    void OpenGitHubURL();
+
+    /// @brief Open a URL to RGP.
     void OpenRGPURL();
 
-    /// Open a URL to RGA.
+    /// @brief Open a URL to RGA.
     void OpenRGAURL();
 
-    /// Open sample trace.
+    /// @brief Open sample trace.
     void OpenSampleTrace();
 
-    /// Notify the user that a new version is available.
-    /// \param thread The background thread that checked for updates.
-    /// \param update_check_results The results of the check for updates.
+    /// @brief Open performance guide on GPUOpen.
+    void OpenRDNAPerformanceURL();
+
+    /// @brief Notify the user that a new version is available.
+    ///
+    /// @param [in] thread               The background thread that checked for updates.
+    /// @param [in] update_check_results The results of the check for updates.
     void NotifyOfNewVersion(UpdateCheck::ThreadController* thread, const UpdateCheck::Results& update_check_results);
 
 private:
-    /// Open an HTML file.
-    /// \\param html_file the file to open.
+    /// @brief Open an HTML file.
+    ///
+    /// @param [in] html_file the file to open.
     void OpenHtmlFile(const QString& html_file);
 
-    /// Initialize the button.
-    /// \param button Pointer to the push button.
-    void InitButton(ScaledPushButton*& button);
+    /// @brief Initialize the button.
+    ///
+    /// @param button [in] Pointer to the push button.
+    void InitButton(ScaledPushButton* button);
 
     Ui::WelcomePane*                ui_;             ///< Pointer to the Qt UI design.
-    MainWindow*                     main_window_;    ///< Reference to the mainwindow (parent).
     QVector<RecentTraceMiniWidget*> trace_widgets_;  ///< Array of trace widgets.
 };
 

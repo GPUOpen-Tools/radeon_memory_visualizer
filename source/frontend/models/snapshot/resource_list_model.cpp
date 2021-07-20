@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model implementation for Allocation List pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for Resource List model.
 //=============================================================================
 
 #include "models/snapshot/resource_list_model.h"
@@ -16,7 +16,7 @@
 #include "rmt_util.h"
 #include "rmt_virtual_allocation_list.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -66,10 +66,9 @@ namespace rmv
 
     void ResourceListModel::UpdateTable()
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        RmtDataSnapshot*    snapshot      = trace_manager.GetOpenSnapshot();
+        RmtDataSnapshot* snapshot = SnapshotManager::Get().GetOpenSnapshot();
 
-        if (trace_manager.DataSetValid() && (snapshot != nullptr))
+        if (TraceManager::Get().DataSetValid() && (snapshot != nullptr))
         {
             const RmtResourceList* resource_list = &snapshot->resource_list;
 
@@ -124,9 +123,9 @@ namespace rmv
 
     void ResourceListModel::FilterBySizeChanged(int min_value, int max_value)
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        const uint64_t      scaled_min    = trace_manager.GetSizeFilterThreshold(min_value);
-        const uint64_t      scaled_max    = trace_manager.GetSizeFilterThreshold(max_value);
+        const SnapshotManager& snapshot_manager = SnapshotManager::Get();
+        const uint64_t         scaled_min       = snapshot_manager.GetSizeFilterThreshold(min_value);
+        const uint64_t         scaled_max       = snapshot_manager.GetSizeFilterThreshold(max_value);
 
         proxy_model_->SetSizeFilter(scaled_min, scaled_max);
         proxy_model_->invalidate();

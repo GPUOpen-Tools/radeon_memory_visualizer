@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a snapshot marker
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a snapshot marker.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_snapshot_marker.h"
@@ -12,7 +12,7 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "models/message_manager.h"
+#include "managers/snapshot_manager.h"
 #include "util/rmv_util.h"
 
 RMVSnapshotMarker::RMVSnapshotMarker(const RMVSnapshotMarkerConfig& config)
@@ -141,10 +141,10 @@ void RMVSnapshotMarker::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
     hovered_ = false;
 
-    // get the snapshot id
+    // Get the snapshot id.
     if (config_.snapshot_point != nullptr)
     {
-        emit MessageManager::Get().SelectSnapshot(config_.snapshot_point);
+        emit rmv::SnapshotManager::Get().SnapshotMarkerSelected(config_.snapshot_point);
     }
 }
 
@@ -156,7 +156,8 @@ void RMVSnapshotMarker::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
 
     if (config_.snapshot_point != nullptr)
     {
-        emit MessageManager::Get().OpenSnapshot(config_.snapshot_point);
+        rmv::SnapshotManager::Get().SetSelectedSnapshotPoint(config_.snapshot_point);
+        emit rmv::SnapshotManager::Get().SnapshotOpened();
     }
 }
 
@@ -170,12 +171,12 @@ void RMVSnapshotMarker::SetState(SnapshotState state)
     state_ = state;
 }
 
-RmtSnapshotPoint* RMVSnapshotMarker::GetSnapshotPoint()
+RmtSnapshotPoint* RMVSnapshotMarker::GetSnapshotPoint() const
 {
     return config_.snapshot_point;
 }
 
-SnapshotState RMVSnapshotMarker::GetState()
+SnapshotState RMVSnapshotMarker::GetState() const
 {
     return state_;
 }

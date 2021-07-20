@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  The adapter information captured for the target process.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  The adapter information captured for the target process.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_ADAPTER_INFO_H_
@@ -12,7 +13,7 @@
 #include <rmt_format.h>
 #include <rmt_file_format.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -55,7 +56,7 @@ typedef struct RmtAdapterInfo
 /// Pointer to the memory chip type string.
 const char* RmtAdapterInfoGetVideoMemoryType(const RmtAdapterInfo* adapter_info);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_ADAPTER_INFO_H_

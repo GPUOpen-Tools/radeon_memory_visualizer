@@ -1,15 +1,15 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of Settings pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of Settings pane.
 //=============================================================================
 
 #include "views/settings/settings_pane.h"
 
 #include "qt_common/utils/scaling_manager.h"
 
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"
 #include "views/custom_widgets/rmv_colored_checkbox.h"
@@ -22,18 +22,18 @@ SettingsPane::SettingsPane(QWidget* parent)
 
     rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
 
-    ui_->check_for_updates_on_startup_checkbox_->Initialize(RMVSettings::Get().GetCheckForUpdatesOnStartup(), rmv::kCheckboxEnableColor, Qt::black);
-    ui_->heap_uniqueness_checkbox_->Initialize(RMVSettings::Get().GetAllocUniqunessHeap(), rmv::kCheckboxEnableColor, Qt::black);
-    ui_->allocation_uniqueness_checkbox_->Initialize(RMVSettings::Get().GetAllocUniqunessAllocation(), rmv::kCheckboxEnableColor, Qt::black);
-    ui_->offset_uniqueness_checkbox_->Initialize(RMVSettings::Get().GetAllocUniqunessOffset(), rmv::kCheckboxEnableColor, Qt::black);
+    ui_->check_for_updates_on_startup_checkbox_->Initialize(rmv::RMVSettings::Get().GetCheckForUpdatesOnStartup(), rmv::kCheckboxEnableColor, Qt::black);
+    ui_->heap_uniqueness_checkbox_->Initialize(rmv::RMVSettings::Get().GetAllocUniqunessHeap(), rmv::kCheckboxEnableColor, Qt::black);
+    ui_->allocation_uniqueness_checkbox_->Initialize(rmv::RMVSettings::Get().GetAllocUniqunessAllocation(), rmv::kCheckboxEnableColor, Qt::black);
+    ui_->offset_uniqueness_checkbox_->Initialize(rmv::RMVSettings::Get().GetAllocUniqunessOffset(), rmv::kCheckboxEnableColor, Qt::black);
 
-    // For now, hide the memory leak settings (they may be used in a future release)
+    // For now, hide the memory leak settings (they may be used in a future release).
     ui_->memory_leak_title_->hide();
     ui_->heap_uniqueness_checkbox_->hide();
     ui_->allocation_uniqueness_checkbox_->hide();
     ui_->offset_uniqueness_checkbox_->hide();
 
-    // populate the time combo box
+    // Populate the time combo box.
     rmv::widget_util::InitSingleSelectComboBox(parent, ui_->units_combo_push_button_, rmv::text::kSettingsUnitsClocks, false);
     ui_->units_combo_push_button_->ClearItems();
     ui_->units_combo_push_button_->AddItem(rmv::text::kSettingsUnitsClocks);
@@ -58,16 +58,10 @@ void SettingsPane::showEvent(QShowEvent* event)
     Q_UNUSED(event);
 
     // Update the combo box push button text.
-    int units = RMVSettings::Get().GetUnits();
+    int units = rmv::RMVSettings::Get().GetUnits();
     UpdateTimeComboBox(units);
 
     QWidget::showEvent(event);
-}
-
-void SettingsPane::SaveTimeUnits(int current_index)
-{
-    RMVSettings::Get().SetUnits((TimeUnitType)current_index);
-    RMVSettings::Get().SaveSettings();
 }
 
 void SettingsPane::UpdateTimeComboBox(int units)
@@ -89,59 +83,42 @@ void SettingsPane::TimeUnitsChanged()
     {
         index += (kTimeUnitTypeMillisecond - kTimeUnitTypeClk - 1);
     }
-    SaveTimeUnits(index);
+    rmv::RMVSettings::Get().SetUnits(static_cast<TimeUnitType>(index));
+    rmv::RMVSettings::Get().SaveSettings();
 }
 
-void SettingsPane::CycleTimeUnits()
+void SettingsPane::SwitchTimeUnits()
 {
-    int units = RMVSettings::Get().GetUnits();
-    switch (units)
-    {
-    case kTimeUnitTypeClk:
-        units = kTimeUnitTypeMillisecond;
-        break;
-    case kTimeUnitTypeMillisecond:
-        units = kTimeUnitTypeSecond;
-        break;
-    case kTimeUnitTypeSecond:
-        units = kTimeUnitTypeMinute;
-        break;
-    case kTimeUnitTypeMinute:
-    default:
-        units = kTimeUnitTypeClk;
-        break;
-    }
-
+    int units = rmv::RMVSettings::Get().GetUnits();
     UpdateTimeComboBox(units);
-    SaveTimeUnits(units);
 }
 
 void SettingsPane::CheckForUpdatesOnStartupStateChanged()
 {
-    RMVSettings::Get().SetCheckForUpdatesOnStartup(ui_->check_for_updates_on_startup_checkbox_->isChecked());
-    RMVSettings::Get().SaveSettings();
+    rmv::RMVSettings::Get().SetCheckForUpdatesOnStartup(ui_->check_for_updates_on_startup_checkbox_->isChecked());
+    rmv::RMVSettings::Get().SaveSettings();
 }
 
 void SettingsPane::HeapUniquenessSelectionStateChanged()
 {
-    RMVSettings::Get().SetAllocUniqunessHeap(ui_->heap_uniqueness_checkbox_->isChecked());
-    RMVSettings::Get().SaveSettings();
+    rmv::RMVSettings::Get().SetAllocUniqunessHeap(ui_->heap_uniqueness_checkbox_->isChecked());
+    rmv::RMVSettings::Get().SaveSettings();
 
-    emit MessageManager::Get().UpdateHashes();
+    emit rmv::MessageManager::Get().HashesChanged();
 }
 
 void SettingsPane::AllocationUniquenessSelectionStateChanged()
 {
-    RMVSettings::Get().SetAllocUniqunessAllocation(ui_->allocation_uniqueness_checkbox_->isChecked());
-    RMVSettings::Get().SaveSettings();
+    rmv::RMVSettings::Get().SetAllocUniqunessAllocation(ui_->allocation_uniqueness_checkbox_->isChecked());
+    rmv::RMVSettings::Get().SaveSettings();
 
-    emit MessageManager::Get().UpdateHashes();
+    emit rmv::MessageManager::Get().HashesChanged();
 }
 
 void SettingsPane::OffsetUniquenessSelectionStateChanged()
 {
-    RMVSettings::Get().SetAllocUniqunessOffset(ui_->offset_uniqueness_checkbox_->isChecked());
-    RMVSettings::Get().SaveSettings();
+    rmv::RMVSettings::Get().SetAllocUniqunessOffset(ui_->offset_uniqueness_checkbox_->isChecked());
+    rmv::RMVSettings::Get().SaveSettings();
 
-    emit MessageManager::Get().UpdateHashes();
+    emit rmv::MessageManager::Get().HashesChanged();
 }

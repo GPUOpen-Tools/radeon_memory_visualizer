@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for the Recent traces pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Recent traces pane.
 //=============================================================================
 
 #ifndef RMV_VIEWS_START_RECENT_TRACES_PANE_H_
@@ -18,38 +18,38 @@
 
 #include "views/base_pane.h"
 
-class MainWindow;
-
-/// Class declaration.
+/// @brief Class declaration.
 class RecentTracesPane : public BasePane
 {
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param parent The widget's parent.
-    explicit RecentTracesPane(MainWindow* parent = nullptr);
+    /// @brief Constructor.
+    ///
+    /// @param [in] parent The parent widget.
+    explicit RecentTracesPane(QWidget* parent = nullptr);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~RecentTracesPane();
 
 signals:
-    /// Something changed the file list (either a delete or a new file added).
-    void FileListChanged();
+    /// @brief A file in the recent file list was deleted.
+    void RecentFileDeleted();
 
 public slots:
-    /// Set up the list of recent traces in the UI.
+    /// @brief Set up the list of recent traces in the UI.
     void SetupFileList();
 
-    /// Slot to delete a trace from the Recent traces list. Only removes it from
-    /// the list; doesn't actually delete the file.
-    /// \param path The path to the trace file.
-    void DeleteTrace(QString path);
+    /// @brief Slot to delete a trace from the Recent traces list.
+    ///
+    /// Only removes it from the list; doesn't actually delete the file.
+    ///
+    /// @param [in] path The path to the trace file.
+    void DeleteTrace(const QString& path);
 
 private:
     Ui::RecentTracesPane* ui_;  ///< Pointer to the Qt UI design.
 
-    MainWindow*                 main_window_;                  ///< Reference to the mainwindow (parent).
     QVector<RecentTraceWidget*> trace_widgets_;                ///< Array of trace widgets.
     QVBoxLayout*                vbox_layout_;                  ///< The vertical layout to handle custom widgets.
     QWidget*                    scroll_area_widget_contents_;  ///< The scroll area widget contents widget.

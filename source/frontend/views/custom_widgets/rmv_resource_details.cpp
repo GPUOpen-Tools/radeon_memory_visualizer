@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Header for the resource details widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the resource details widget.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_resource_details.h"
@@ -11,9 +11,6 @@
 
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
-
-#include "rmt_data_set.h"
-#include "rmt_assert.h"
 
 #include "util/string_util.h"
 
@@ -57,7 +54,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
         {
             painter->setPen(Qt::black);
 
-            // It's possible for a resource to not have a parent allocation, so handle it
+            // It's possible for a resource to not have a parent allocation, so handle it.
             if (allocation != nullptr)
             {
                 if (identifier != 0)
@@ -81,7 +78,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
             painter->setBrush(QColor(230, 230, 230));
             painter->drawRect(0, bar_y_pos, bar_width, bar_height);
 
-            // Only draw the resource in the parent allocation if it has one
+            // Only draw the resource in the parent allocation if it has one.
             if (allocation != nullptr)
             {
                 double        pixels_per_byte = static_cast<double>(bar_width) / static_cast<double>(allocation_size);
@@ -128,8 +125,8 @@ void RMVResourceDetails::UpdateResource(const RmtResource* resource)
 {
     if (resource != nullptr)
     {
-        // make a copy of the resource since in the case of unbounded resources
-        // the pointers will change when the heap overview size is changed
+        // Make a copy of the resource since in the case of unbounded resources
+        // the pointers will change when the heap overview size is changed.
         memcpy(&config_.resource, resource, sizeof(RmtResource));
         config_.resource_valid = true;
     }

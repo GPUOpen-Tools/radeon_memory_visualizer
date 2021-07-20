@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model implementation for the Device configuration pane
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the Device configuration model.
 //=============================================================================
 
 #include "models/timeline/device_configuration_model.h"
@@ -12,7 +12,7 @@
 #include "rmt_adapter_info.h"
 #include "rmt_data_set.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "util/string_util.h"
 #include "util/widget_util.h"
 

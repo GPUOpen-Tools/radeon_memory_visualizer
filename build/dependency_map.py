@@ -10,12 +10,12 @@ sys.dont_write_bytecode = True
 
 # To allow for future updates where we may have cloned the project somewhere other than gerrit, store the root of
 # the repo in a variable. In future, we can automatically calculate this based on the git config
-gitRoot = "https://github.com/GPUOpen-Tools/"
+git_root = "https://github.com/GPUOpen-Tools/"
 
 # Define a set of dependencies that exist as separate git projects.
 # each git dependency has a desired directory where it will be cloned - along with a commit to checkout
-gitMapping = {
-    gitRoot + "QtCommon"                : ["../external/qt_common",        "v3.6.0"],
-    gitRoot + "UpdateCheckAPI"          : ["../external/update_check_api", "v2.0.0"],
+git_mapping = {
+    git_root + "QtCommon"                : ["../external/qt_common",        "v3.7.0"],
+    git_root + "UpdateCheckAPI"          : ["../external/update_check_api", "v2.0.1"],
 }
 

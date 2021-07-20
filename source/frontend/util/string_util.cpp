@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a number of string utilities.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a number of string utilities.
 //=============================================================================
 
 #include "string_util.h"
@@ -98,14 +98,14 @@ QString rmv::string_util::LocalizedValueMemory(double value, bool base_10, bool 
     static const QString kBinarySizePostfix[] = {" bytes", " KiB", " MiB", " GiB", " TiB", " PiB"};
     static const QString kBase10SizePostfix[] = {" bytes", " KB", " MB", " GB", " TB", " PB"};
 
-    // If index is too large, it's probably down to bad data so display as bytes in this case
+    // If index is too large, it's probably down to bad data so display as bytes in this case.
     if (postfix_index >= 6)
     {
         postfix_index = 0;
         scaled_size   = value;
     }
 
-    // Display value string to 2 decimal places if not bytes. No fractional part for bytes
+    // Display value string to 2 decimal places if not bytes. No fractional part for bytes.
     QString value_string;
     if (postfix_index != 0)
     {
@@ -130,6 +130,11 @@ QString rmv::string_util::LocalizedValueAddress(RmtGpuAddress address)
 {
     QString str = "0x" + QString::number(address, 16);
     return str;
+}
+
+QString rmv::string_util::LocalizedValueBytes(int64_t value)
+{
+    return rmv::string_util::LocalizedValue(value) + " bytes";
 }
 
 QString rmv::string_util::GetResourceUsageString(RmtResourceUsageType usage_type)

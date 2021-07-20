@@ -1,26 +1,22 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Implementation for back/fwd navigation manager
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for back/fwd navigation manager.
 //=============================================================================
 
-#include "views/navigation_manager.h"
+#include "navigation_manager.h"
 
 #include <QDebug>
 
-#include "qt_common/custom_widgets/navigation_bar.h"
-
 #include "rmt_assert.h"
-#include "rmt_data_set.h"
 
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
 
 namespace rmv
 {
     NavigationManager::NavigationManager()
         : navigation_history_location_(0)
-        , current_pane_(kPaneStartWelcome)
     {
         Reset();
     }
@@ -36,13 +32,13 @@ namespace rmv
         return instance;
     }
 
-    void NavigationManager::RecordNavigationEventPaneSwitch(RMVPane pane)
+    void NavigationManager::RecordNavigationEventPaneSwitch(RMVPaneId pane)
     {
         const NavEvent& curr_event = navigation_history_[navigation_history_location_];
 
         if (curr_event.type == kNavigationTypePaneSwitch)
         {
-            // Prevent dupes
+            // Prevent duplicates.
             if (curr_event.pane != pane)
             {
                 AddNewPaneSwitch(pane);
@@ -60,25 +56,18 @@ namespace rmv
 
         NavEvent first_event = {};
         first_event.type     = kNavigationTypePaneSwitch;
-        first_event.pane     = kPaneStartWelcome;
+        first_event.pane     = kPaneIdStartWelcome;
 
         navigation_history_.push_back(first_event);
         navigation_history_location_ = 0;
-
-        current_pane_ = kPaneStartWelcome;
 
         emit EnableBackNavButton(false);
         emit EnableForwardNavButton(false);
     }
 
-    void NavigationManager::UpdateCurrentPane(RMVPane pane)
-    {
-        current_pane_ = pane;
-    }
-
     void NavigationManager::ReplayNavigationEvent(const NavEvent& event)
     {
-        emit MessageManager::Get().NavigateToPaneUnrecorded(event.pane);
+        emit NavigateButtonClicked(event.pane);
     }
 
     NavigationManager::NavEvent NavigationManager::FindPrevNavigationEvent()
@@ -186,7 +175,7 @@ namespace rmv
         emit EnableBackNavButton(true);
     }
 
-    void NavigationManager::AddNewPaneSwitch(RMVPane pane)
+    void NavigationManager::AddNewPaneSwitch(RMVPaneId pane)
     {
         DiscardObsoleteNavHistory();
 
@@ -230,58 +219,58 @@ namespace rmv
         qDebug() << out;
     }
 
-    QString NavigationManager::GetPaneString(RMVPane pane) const
+    QString NavigationManager::GetPaneString(RMVPaneId pane) const
     {
         QString out = "";
 
         switch (pane)
         {
-        case kPaneStartWelcome:
+        case kPaneIdStartWelcome:
             out = "Welcome";
             break;
-        case kPaneStartRecentTraces:
+        case kPaneIdStartRecentTraces:
             out = "Recent traces";
             break;
-        case kPaneStartAbout:
+        case kPaneIdStartAbout:
             out = "About";
             break;
-        case kPaneTimelineGenerateSnapshot:
+        case kPaneIdTimelineGenerateSnapshot:
             out = "Generate snapshot";
             break;
-        case kPaneTimelineDeviceConfiguration:
+        case kPaneIdTimelineDeviceConfiguration:
             out = "Device configuration";
             break;
-        case kPaneSnapshotResourceOverview:
+        case kPaneIdSnapshotResourceOverview:
             out = "Resource overview";
             break;
-        case kPaneSnapshotAllocationOverview:
+        case kPaneIdSnapshotAllocationOverview:
             out = "Allocation overview";
             break;
-        case kPaneSnapshotResourceList:
+        case kPaneIdSnapshotResourceList:
             out = "Resource list";
             break;
-        case kPaneSnapshotResourceDetails:
+        case kPaneIdSnapshotResourceDetails:
             out = "Resource details";
             break;
-        case kPaneSnapshotAllocationExplorer:
+        case kPaneIdSnapshotAllocationExplorer:
             out = "Allocation explorer";
             break;
-        case kPaneSnapshotHeapOverview:
+        case kPaneIdSnapshotHeapOverview:
             out = "Heap overview";
             break;
-        case kPaneCompareSnapshotDelta:
+        case kPaneIdCompareSnapshotDelta:
             out = "Snapshot delta";
             break;
-        case kPaneCompareMemoryLeakFinder:
+        case kPaneIdCompareMemoryLeakFinder:
             out = "Memory leak finder";
             break;
-        case kPaneSettingsGeneral:
+        case kPaneIdSettingsGeneral:
             out = "General";
             break;
-        case kPaneSettingsThemesAndColors:
+        case kPaneIdSettingsThemesAndColors:
             out = "Themes and colors";
             break;
-        case kPaneSettingsKeyboardShortcuts:
+        case kPaneIdSettingsKeyboardShortcuts:
             out = "Keyboard shortcuts";
             break;
         default:

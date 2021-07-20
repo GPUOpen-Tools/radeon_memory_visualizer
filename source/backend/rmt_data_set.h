@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief Structures and functions for working with a data set.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Structures and functions for working with a data set.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_DATA_SET_H_
@@ -22,7 +23,7 @@
 #include <rmt_file_format.h>
 #include <rmt_parser.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -58,7 +59,8 @@ typedef struct RmtDataSet
     char   temporary_file_path[RMT_MAXIMUM_FILE_PATH];  ///< The file path to the safe temporary file being worked with.
     void*  file_handle;                                 ///< The handle to the RMT file (operates on the temporary).
     size_t file_size_in_bytes;                          ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
-    bool   read_only;                                   ///< Whether the dataset is loaded as read-only
+    bool   read_only;                                   ///< Whether the dataset is loaded as read-only.
+    time_t create_time;                                 ///< The time the trace was created.
 
     RmtDataSetAllocationFunc allocate_func;  ///< Allocate memory function pointer.
     RmtDataSetFreeFunc       free_func;      ///< Free memory function pointer.
@@ -112,18 +114,18 @@ typedef struct RmtDataSet
 /// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure that will contain the data set.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set);
 
 /// Destroy the data set.
 ///
 /// @param [in]  data_set                       A pointer to a <c><i>RmtDataSet</i></c> structure that will contain the data set.
 ///
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set);
 
 /// Generate a timeline from the data set.
@@ -133,11 +135,11 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set);
 /// @param [out] out_timeline                               The address of a <c><i>RmtDataTimeline</i></c> structure to populate.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_OUT_OF_MEMORY                     The operation failed due as memory could not be allocated to create the timeline.
+/// kRmtErrorOutOfMemory                        The operation failed due as memory could not be allocated to create the timeline.
 RmtErrorCode RmtDataSetGenerateTimeline(RmtDataSet* data_set, RmtDataTimelineType timeline_type, RmtDataTimeline* out_timeline);
 
 /// Genereate a snapshot from a data set at a specific time.
@@ -148,11 +150,11 @@ RmtErrorCode RmtDataSetGenerateTimeline(RmtDataSet* data_set, RmtDataTimelineTyp
 /// @param [out] out_snapshot                               The address of a <c><i>RmtDataSnapshot</i></c> structure to populate.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_OUT_OF_MEMORY                     The operation failed due as memory could not be allocated to create the snapshot.
+/// kRmtErrorOutOfMemory                        The operation failed due as memory could not be allocated to create the snapshot.
 RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* snapshot_point, RmtDataSnapshot* out_snapshot);
 
 /// Find a segment from a physical address.
@@ -162,11 +164,11 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
 /// @param [out] out_segment_info                           The address of a pointer to a <c><i>RmtSegmentInfo</i></c> structure. This will be set to <c><i>NULL</i></c> if the segment wasn't found.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_ALLOCATION_FOUND               The operation failed due to <c><i>physicalAddress</i></c> not being present in the segment info.
+/// kRmtErrorNoAllocationFound                  The operation failed due to <c><i>physicalAddress</i></c> not being present in the segment info.
 RmtErrorCode RmtDataSetGetSegmentForPhysicalAddress(const RmtDataSet* data_set, RmtGpuAddress physical_address, const RmtSegmentInfo** out_segment_info);
 
 /// Get the time corresponding to the given number of cpu clock cycles
@@ -176,11 +178,11 @@ RmtErrorCode RmtDataSetGetSegmentForPhysicalAddress(const RmtDataSet* data_set, 
 /// @param [out] out_cpu_timestamp                          The time, in nanoseconds, corresponding to the number of clock cycles
 ///
 /// @returns
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_TIMESTAMP_OUT_OF_BOUNDS           The operation failed due to the CPU clock being invalid.
+/// kRmtErrorTimestampOutOfBounds               The operation failed due to the CPU clock being invalid.
 RmtErrorCode RmtDataSetGetCpuClockTimestamp(const RmtDataSet* data_set, uint64_t clk, double* out_cpu_timestamp);
 
 /// Get whether the CPU clock timestamp is valid
@@ -188,11 +190,11 @@ RmtErrorCode RmtDataSetGetCpuClockTimestamp(const RmtDataSet* data_set, uint64_t
 /// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
 ///
 /// @returns
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_TIMESTAMP_OUT_OF_BOUNDS           The operation failed due to the CPU clock being invalid.
+/// kRmtErrorTimestampOutOfBounds               The operation failed due to the CPU clock being invalid.
 RmtErrorCode RmtDataSetGetCpuClockTimestampValid(const RmtDataSet* data_set);
 
 /// Add a new snapshot to the file.
@@ -203,9 +205,9 @@ RmtErrorCode RmtDataSetGetCpuClockTimestampValid(const RmtDataSet* data_set);
 /// @param [out] out_snapshot_point                         The address of a pointer to a <c><i>RmtSnapshotPoint</i></c> structure.
 ///
 /// @returns
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSetAddSnapshot(RmtDataSet* data_set, const char* name, uint64_t timestamp, RmtSnapshotPoint** out_snapshot_point);
 
 /// Remove a new snapshot to the file.
@@ -218,9 +220,9 @@ RmtErrorCode RmtDataSetAddSnapshot(RmtDataSet* data_set, const char* name, uint6
 /// @param [in]  snapshot_index                             The index of the snapshot to delete.
 ///
 /// @returns
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index);
 
 /// Rename an existing snapshot in the file.
@@ -230,9 +232,9 @@ RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapsh
 /// @param [in]  name                                       The name of the snapshot.
 ///
 /// @returns
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, const char* name);
 
 /// Get the index in level-0 of a series for a specified timestamp.
@@ -244,7 +246,7 @@ RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapsh
 /// The series index.
 int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t timestamp);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_DATA_SET_H_

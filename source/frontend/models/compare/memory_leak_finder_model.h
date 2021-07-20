@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model header for the Memory Leak Finder pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Memory Leak Finder model.
 //=============================================================================
 
 #ifndef RMV_MODELS_COMPARE_MEMORY_LEAK_FINDER_MODEL_H_
@@ -22,7 +22,7 @@
 
 namespace rmv
 {
-    /// Enum containing the id's of UI elements needed by the model.
+    /// @brief Enum containing the id's of UI elements needed by the model.
     enum MemoryLeakFinderWidgets
     {
         kMemoryLeakFinderBaseStats,
@@ -38,77 +38,90 @@ namespace rmv
         kMemoryLeakFinderNumWidgets,
     };
 
-    /// Container class that holds model data for a given pane.
+    /// @brief Container class that holds model data for the memory leak finder pane.
     class MemoryLeakFinderModel : public ModelViewMapper
     {
     public:
-        /// Constructor.
+        /// @brief Constructor.
         explicit MemoryLeakFinderModel();
 
-        /// Destructor.
+        /// @brief Destructor.
         virtual ~MemoryLeakFinderModel();
 
-        /// Initialize the table model.
-        /// \param table_view The view to the table.
-        /// \param num_rows Total rows of the table.
-        /// \param num_columns Total columns of the table.
-        /// \param compare_id_filter starting filter.
+        /// @brief Initialize the table model.
+        ///
+        /// @param [in] table_view        The view to the table.
+        /// @param [in] num_rows          Total rows of the table.
+        /// @param [in] num_columns       Total columns of the table.
+        /// @param [in] compare_id_filter The starting filter value.
         void InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns, uint32_t compare_id_filter);
 
-        /// Update the model.
-        /// \param compare_filter The compare filter ID, to indicate which resources are to be displayed.
+        /// @brief Update the model.
+        ///
+        /// @param [in] compare_filter The compare filter ID, to indicate which resources are to be displayed.
         void Update(SnapshotCompareId compare_filter);
 
-        /// Initialize blank data for the model.
+        /// @brief Initialize blank data for the model.
         void ResetModelValues();
 
-        /// Handle what happens when user changes the 'filter by size' slider.
-        /// \param filter The search text filter.
+        /// @brief Handle what happens when user changes the search filter.
+        ///
+        /// @param [in] filter The search text filter.
         void SearchBoxChanged(const QString& filter);
 
-        /// Handle what happens when the size filter changes.
-        /// \param min_value Minimum value of slider span.
-        /// \param max_value Maximum value of slider span.
+        /// @brief Handle what happens when user changes the 'filter by size' slider.
+        ///
+        /// @param [in] min_value Minimum value of slider span.
+        /// @param [in] max_value Maximum value of slider span.
         void FilterBySizeChanged(int min_value, int max_value);
 
-        /// Update the list of heaps selected. This is set up from the preferred heap combo box.
-        /// \param preferred_heap_filter The regular expression string of selected heaps.
+        /// @brief Update the list of heaps selected. This is set up from the preferred heap combo box.
+        ///
+        /// @param [in] preferred_heap_filter The regular expression string of selected heaps.
         void UpdatePreferredHeapList(const QString& preferred_heap_filter);
 
-        /// Update the list of resources available. This is set up from the resource usage combo box.
-        /// \param resource_usage_filter The regular expression string of selected resource usage types.
+        /// @brief Update the list of resources available. This is set up from the resource usage combo box.
+        ///
+        /// @param [in] resource_usage_filter The regular expression string of selected resource usage types.
         void UpdateResourceUsageList(const QString& resource_usage_filter);
 
-        /// Get the resource proxy model. Used to set up a connection between the table being sorted and the UI update.
-        /// \return the proxy model.
+        /// @brief Get the resource proxy model. Used to set up a connection between the table being sorted and the UI update.
+        ///
+        /// @return the proxy model.
         MemoryLeakFinderProxyModel* GetResourceProxyModel() const;
 
-        /// Figure out which snapshot the selected table entry is from and load the snapshot
-        /// if it's not already loaded. It will be in memory already but just needs assigning
-        /// to be the snapshot that is visible in the snapshot tab.
-        /// \param index The model index for the entry selected in the memory leak resource table.
-        RmtSnapshotPoint* LoadSnapshot(const QModelIndex& index);
+        /// @brief Figure out which snapshot the selected table entry is from and set up the snapshot
+        /// for load if it's not already loaded.
+        ///
+        /// It will be in memory already but just needs assigning to be the snapshot that is visible
+        /// in the snapshot tab.
+        ///
+        /// @param [in] index The model index for the entry selected in the memory leak resource table.
+        ///
+        /// @return The snapshot point of the snapshot containing the resource.
+        RmtSnapshotPoint* FindSnapshot(const QModelIndex& index) const;
 
     private:
-        /// Update the resource size buckets. This is used by the double-slider to
-        /// group the resource sizes. Called whenever the table data changes.
+        /// @brief Update the resource size buckets.
+        ///
+        /// This is used by the double-slider to group the resource sizes. Called whenever the table data changes.
         void UpdateResourceThresholds();
 
-        /// Update labels at the bottom.
+        /// @brief Update labels at the bottom.
         void UpdateLabels();
 
-        /// Reset the snapshot stats.
+        /// @brief Reset the snapshot stats.
         void ResetStats();
 
         ResourceItemModel*          table_model_;                                ///< The data for the resource table.
         MemoryLeakFinderProxyModel* proxy_model_;                                ///< The proxy model for the resource table.
         uint64_t                    resource_thresholds_[kSizeSliderRange + 1];  ///< List of resource size thresholds for the filter by size sliders.
 
-        // struct to describe the snapshot statistics
+        /// @brief struct to describe the snapshot statistics
         struct SnapshotStats
         {
-            uint32_t num_resources;
-            uint64_t size;
+            uint32_t num_resources;  ///< The number of resources.
+            uint64_t size;           ///< The total size of all resources.
         };
 
         SnapshotStats stats_in_both_;       ///< Attributes in both snapshots.

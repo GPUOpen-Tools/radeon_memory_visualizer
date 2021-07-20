@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a number of time-related utilities.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a number of time-related utilities.
 //=============================================================================
 
 #include "util/time_util.h"
@@ -13,7 +13,7 @@
 #include "rmt_error.h"
 #include "rmt_data_set.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "settings/rmv_settings.h"
 
 namespace rmv
@@ -33,11 +33,11 @@ namespace rmv
             TraceManager& trace_manager = TraceManager::Get();
             if (trace_manager.DataSetValid())
             {
-                // This should only get called if the CPU clock timestamp is valid
+                // This should only get called if the CPU clock timestamp is valid.
                 const RmtDataSet* data_set   = trace_manager.GetDataSet();
                 RmtErrorCode      error_code = RmtDataSetGetCpuClockTimestamp(data_set, clk, &time);
                 RMT_UNUSED(error_code);
-                RMT_ASSERT(error_code == RMT_OK);
+                RMT_ASSERT(error_code == kRmtOk);
             }
         }
 

@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a model corresponding to a resource combo box.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a model corresponding to a resource combo box.
 //=============================================================================
 
 #include "models/resource_usage_combo_box_model.h"
@@ -27,7 +27,7 @@ namespace rmv
     ResourceUsageComboBoxModel::ResourceUsageComboBoxModel()
         : ComboBoxModel()
     {
-        // inform the model which entries are ignored in the UI.
+        // Inform the model which entries are ignored in the UI.
         SetupExcludeIndexList(kExcludedResources);
     }
 
@@ -37,7 +37,7 @@ namespace rmv
 
     void ResourceUsageComboBoxModel::SetupResourceComboBox(ArrowIconComboBox* combo_box)
     {
-        // Add the "All" entry to the combo box
+        // Add the "All" entry to the combo box.
         QCheckBox* checkbox = combo_box->AddCheckboxItem("All", QVariant(), false, true);
         RMT_ASSERT(checkbox != nullptr);
         if (checkbox != nullptr)
@@ -45,7 +45,7 @@ namespace rmv
             connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true); });
         }
 
-        // Add resources if they are not excluded
+        // Add resources if they are not excluded.
         for (int i = 0; i < static_cast<int>(kRmtResourceUsageTypeCount); i++)
         {
             auto it = kExcludedResources.find(i);
@@ -64,7 +64,7 @@ namespace rmv
 
     void ResourceUsageComboBoxModel::ResetResourceComboBox(ArrowIconComboBox* combo_box)
     {
-        // index 0 is the "all" combo box entry
+        // Index 0 is the "all" combo box entry.
         if (kDisabledResources.size() > 0)
         {
             // If there are disabled resources, then disable the "All" checkbox.
@@ -74,7 +74,7 @@ namespace rmv
 
             for (int i = 0; i < static_cast<int>(kRmtResourceUsageTypeCount); i++)
             {
-                // if this resource is excluded, skip it
+                // If this resource is excluded, skip it.
                 auto exclude_it = kExcludedResources.find(i);
                 if (exclude_it != kExcludedResources.end())
                 {
@@ -100,7 +100,7 @@ namespace rmv
     {
         SetupState(combo_box);
 
-        // build the resource filter
+        // Build the resource filter.
         QString resource_filter = QString("(=");
         for (int resource = 0; resource < kRmtResourceUsageTypeCount; resource++)
         {
@@ -118,4 +118,5 @@ namespace rmv
     {
         ComboBoxModel::SetupState(combo_box, true);
     }
+
 }  // namespace rmv

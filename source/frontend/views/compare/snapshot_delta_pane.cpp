@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of Snapshot delta pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the Snapshot delta pane.
 //=============================================================================
 
 #include "views/compare/snapshot_delta_pane.h"
@@ -15,7 +15,7 @@
 typedef struct RmtDataSnapshot RmtDataSnapshot;
 
 SnapshotDeltaPane::SnapshotDeltaPane(QWidget* parent)
-    : BasePane(parent)
+    : ComparePane(parent)
     , ui_(new Ui::SnapshotDeltaPane)
 {
     ui_->setupUi(this);
@@ -88,15 +88,15 @@ void SnapshotDeltaPane::showEvent(QShowEvent* event)
 
 void SnapshotDeltaPane::OnScaleFactorChanged()
 {
-    // Carousel
+    // Carousel.
     ui_->carousel_view_->setFixedHeight(ScalingManager::Get().Scaled(kCarouselItemHeight));
 
-    // Legend
+    // Legend.
     QRectF legend_rect = legends_->itemsBoundingRect();
     ui_->legends_view_->setFixedSize(legend_rect.toRect().size());
     ui_->legends_view_->setSceneRect(legend_rect);
 
-    // Delta Displays
+    // Delta Displays.
     ui_->delta_view_heap_0_->setFixedHeight(ScalingManager::Get().Scaled(kHeapDeltaWidgetHeight));
     ui_->delta_view_heap_1_->setFixedHeight(ScalingManager::Get().Scaled(kHeapDeltaWidgetHeight));
     ui_->delta_view_heap_2_->setFixedHeight(ScalingManager::Get().Scaled(kHeapDeltaWidgetHeight));
@@ -112,7 +112,7 @@ void SnapshotDeltaPane::SwitchSnapshots()
 
 void SnapshotDeltaPane::UpdateUI()
 {
-    // update delta information
+    // Update delta information.
     for (int32_t current_heap_index = 0; current_heap_index <= kRmtHeapTypeSystem; current_heap_index++)
     {
         delta_line_pairs_[current_heap_index].display->Init(model_->GetHeapName(current_heap_index), delta_items_);
@@ -120,7 +120,7 @@ void SnapshotDeltaPane::UpdateUI()
 
     model_->UpdateCarousel(carousel_);
 
-    // Update heap data
+    // Update heap data.
     for (int32_t current_heap_index = 0; current_heap_index <= kRmtHeapTypeSystem; current_heap_index++)
     {
         rmv::SnapshotDeltaModel::HeapDeltaData heap_delta_data;
@@ -162,11 +162,6 @@ void SnapshotDeltaPane::Refresh()
             }
         }
     }
-}
-
-void SnapshotDeltaPane::PaneSwitched()
-{
-    ResizeItems();
 }
 
 void SnapshotDeltaPane::Reset()

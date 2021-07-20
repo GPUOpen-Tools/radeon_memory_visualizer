@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Structures and functions for working with a resource history.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Structures and functions for working with a resource history.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_RESOURCE_HISTORY_H_
@@ -11,7 +12,7 @@
 #include <rmt_error.h>
 #include <rmt_configuration.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -61,7 +62,6 @@ typedef struct RmtResourceHistory
     RmtResourceHistoryEvent     events[RMT_MAXIMUM_RESOURCE_HISTORY_EVENTS];  ///< A pointer to an array of <c><i>RmtResourceHistoryEvent</i></c> structures.
     int32_t                     event_count;      ///< The number of <c><i>RmtResourceHistoryEvent</i></c> structures pointed to by <c><i>events</i></c>.
     const RmtVirtualAllocation* base_allocation;  ///< A pointer to a <c><i>RmtVirtualAllocation</i></c> structure that underpins <c><i>resource</i></c>.
-
 } RmtResourceHistory;
 
 /// Add a new event to the resource history.
@@ -73,9 +73,9 @@ typedef struct RmtResourceHistory
 /// @param [in] compact                             If true, ignore identical sequential events.
 ///
 /// @retval
-/// RMT_OK                                          The operation completed successfully.
+/// kRmtOk                                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                       The operation failed because <c><i>resourceHistory</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                         The operation failed because <c><i>resourceHistory</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtResourceHistoryAddEvent(RmtResourceHistory*         resource_history,
                                         RmtResourceHistoryEventType event_type,
                                         uint64_t                    thread_id,
@@ -87,12 +87,12 @@ RmtErrorCode RmtResourceHistoryAddEvent(RmtResourceHistory*         resource_his
 /// @param [in] resource_history                    A pointer to a <c><i>RmtResourceHistory</i></c> structure to destroy.
 ///
 /// @retval
-/// RMT_OK                                          The operation completed successfully.
+/// kRmtOk                                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                       The operation failed because <c><i>resourceHistory</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                         The operation failed because <c><i>resourceHistory</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtResourceHistoryDestroy(RmtResourceHistory* resource_history);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_RESOURCE_HISTORY_H_

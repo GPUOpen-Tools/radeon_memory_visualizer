@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Definition of structures and functions for a fixed-size pool
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of structures and functions for a fixed-size pool
 ///         memory allocator.
 //=============================================================================
 
@@ -49,11 +50,11 @@ typedef struct RmtPool
 /// @param [in] block_size              The size of a single block to allocate. Must be >= sizeof(uintptr_t).
 ///
 /// @retval
-/// RMT_OK                          The operation completed succesfully.
+/// kRmtOk                          The operation completed succesfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because either <c><i>pool</i></c> or <c><i>buffer</i></c> was NULL.
+/// kRmtErrorInvalidPointer         The operation failed because either <c><i>pool</i></c> or <c><i>buffer</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_INVALID_SIZE          The operation failed because <c><i>chunkSize</i></c> was not greater than or equal to sizeof(uintptr_t).
+/// kRmtErrorInvalidSize            The operation failed because <c><i>chunkSize</i></c> was not greater than or equal to sizeof(uintptr_t).
 ///
 RmtErrorCode RmtPoolInitialize(RmtPool* pool, void* buffer, size_t buffer_size, size_t block_size);
 

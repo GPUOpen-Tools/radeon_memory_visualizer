@@ -31,7 +31,7 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <layout class="QVBoxLayout" name="vertical_layout_" stretch="2,3">
+      <layout class="QVBoxLayout" name="vertical_layout_stack_">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -45,18 +45,13 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QSplitter" name="splitter_">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QStackedWidget" name="pane_stack_">
+         <property name="currentIndex">
+          <number>0</number>
          </property>
-         <widget class="QWidget" name="allocation_layout_" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <layout class="QVBoxLayout" name="vertical_layout_1_" stretch="0,1,0">
+         <widget class="SnapshotStartPane" name="empty_page_"/>
+         <widget class="QWidget" name="populated_page_">
+          <layout class="QVBoxLayout" name="vertical_layout_" stretch="2,3">
            <property name="leftMargin">
             <number>0</number>
            </property>
@@ -67,224 +62,21 @@
             <number>0</number>
            </property>
            <property name="bottomMargin">
-            <number>8</number>
+            <number>0</number>
            </property>
            <item>
-            <widget class="QWidget" name="allocation_filter_widget_" native="true">
-             <layout class="QHBoxLayout" name="allocation_filter_layout_">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="TextSearchWidget" name="allocation_search_box_"/>
-              </item>
-              <item>
-               <spacer name="allocation_spacer_">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>282</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="ScaledLabel" name="allocation_size_label_">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Filter by size:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="DoubleSliderWidget" name="allocation_size_slider_">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="RMVClickableTableView" name="allocation_table_view_">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="vertical_spacer_1_">
+            <widget class="QSplitter" name="splitter_">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>5</height>
-              </size>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::MinimumExpanding</enum>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="allocation_bar_layout_" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <layout class="QVBoxLayout" name="vertical_layout_2_">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>8</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QWidget" name="resource_controls_widget_" native="true">
-             <layout class="QHBoxLayout" name="resource_controls_layout_">
-              <property name="leftMargin">
-               <number>0</number>
+             <widget class="QWidget" name="allocation_layout_" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="ArrowIconComboBox" name="color_combo_box_" native="true">
-                <property name="text" stdset="0">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="RMVColoredCheckbox" name="aliased_resource_checkbox_">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Show aliasing</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="resource_controls_spacer_">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>783</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGraphicsView" name="memory_block_view_">
-             <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
-             </property>
-             <property name="verticalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOff</enum>
-             </property>
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOff</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="ColoredLegendGraphicsView" name="legends_view_"/>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="resources_layout_" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <layout class="QVBoxLayout" name="vertical_layout_3_">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>8</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QStackedWidget" name="resource_table_valid_switch_">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="currentIndex">
-              <number>0</number>
-             </property>
-             <widget class="QWidget" name="resource_table_empty_">
-              <layout class="QVBoxLayout" name="resource_table_empty_layout_">
+              <layout class="QVBoxLayout" name="vertical_layout_1_" stretch="0,1,0">
                <property name="leftMargin">
                 <number>0</number>
                </property>
@@ -295,93 +87,11 @@
                 <number>0</number>
                </property>
                <property name="bottomMargin">
-                <number>0</number>
+                <number>8</number>
                </property>
                <item>
-                <spacer name="vertical_spacer_2_">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_1_">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="pixmap">
-                  <pixmap resource="resources.qrc">:/Resources/assets/stop_128x128.png</pixmap>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="ScaledLabel" name="label_2_">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>12</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>The selected allocation does not contain any resources.</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="vertical_spacer_3_">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="resource_table_valid_">
-              <layout class="QVBoxLayout" name="resource_table_valid_layout_" stretch="0,1,0">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QWidget" name="resource_filter_widget_" native="true">
-                 <layout class="QHBoxLayout" name="resource_filter_layout_">
+                <widget class="QWidget" name="allocation_filter_widget_" native="true">
+                 <layout class="QHBoxLayout" name="allocation_filter_layout_">
                   <property name="leftMargin">
                    <number>0</number>
                   </property>
@@ -395,10 +105,10 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="TextSearchWidget" name="resource_search_box_"/>
+                   <widget class="TextSearchWidget" name="allocation_search_box_"/>
                   </item>
                   <item>
-                   <spacer name="resource_spacer_">
+                   <spacer name="allocation_spacer_">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -411,7 +121,7 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="ScaledLabel" name="resource_size_label_">
+                   <widget class="ScaledLabel" name="allocation_size_label_">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -424,7 +134,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="DoubleSliderWidget" name="resource_size_slider_">
+                   <widget class="DoubleSliderWidget" name="allocation_size_slider_">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -434,7 +144,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="RMVClickableTableView" name="resource_table_view_" native="true">
+                <widget class="RMVClickableTableView" name="allocation_table_view_">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                    <horstretch>0</horstretch>
@@ -444,7 +154,7 @@
                 </widget>
                </item>
                <item>
-                <spacer name="vertical_spacer_4_">
+                <spacer name="vertical_spacer_1_">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
                  </property>
@@ -458,6 +168,320 @@
                   <enum>QSizePolicy::MinimumExpanding</enum>
                  </property>
                 </spacer>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="allocation_bar_layout_" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QVBoxLayout" name="vertical_layout_2_">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>8</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QWidget" name="resource_controls_widget_" native="true">
+                 <layout class="QHBoxLayout" name="resource_controls_layout_">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="ArrowIconComboBox" name="color_combo_box_" native="true">
+                    <property name="text" stdset="0">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="RMVColoredCheckbox" name="aliased_resource_checkbox_">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Show aliasing</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="resource_controls_spacer_">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>783</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGraphicsView" name="memory_block_view_">
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                 <property name="verticalScrollBarPolicy">
+                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                 </property>
+                 <property name="horizontalScrollBarPolicy">
+                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="ColoredLegendGraphicsView" name="legends_view_"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="resources_layout_" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QVBoxLayout" name="vertical_layout_3_">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>8</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QStackedWidget" name="resource_table_valid_switch_">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="currentIndex">
+                  <number>0</number>
+                 </property>
+                 <widget class="QWidget" name="resource_table_empty_">
+                  <layout class="QVBoxLayout" name="resource_table_empty_layout_">
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <spacer name="vertical_spacer_2_">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_1_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="pixmap">
+                      <pixmap resource="resources.qrc">:/Resources/assets/stop_128x128.png</pixmap>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="ScaledLabel" name="label_2_">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>12</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>The selected allocation does not contain any resources.</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="vertical_spacer_3_">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="resource_table_valid_">
+                  <layout class="QVBoxLayout" name="resource_table_valid_layout_" stretch="0,1,0">
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QWidget" name="resource_filter_widget_" native="true">
+                     <layout class="QHBoxLayout" name="resource_filter_layout_">
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="TextSearchWidget" name="resource_search_box_"/>
+                      </item>
+                      <item>
+                       <spacer name="resource_spacer_">
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>282</width>
+                          <height>20</height>
+                         </size>
+                        </property>
+                       </spacer>
+                      </item>
+                      <item>
+                       <widget class="ScaledLabel" name="resource_size_label_">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="text">
+                         <string>Filter by size:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="DoubleSliderWidget" name="resource_size_slider_">
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="RMVClickableTableView" name="resource_table_view_" native="true">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="vertical_spacer_4_">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>5</height>
+                      </size>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::MinimumExpanding</enum>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </widget>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -514,6 +538,12 @@
    <class>RMVClickableTableView</class>
    <extends>ScaledTableView</extends>
    <header>views/custom_widgets/rmv_clickable_table_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SnapshotStartPane</class>
+   <extends>QWidget</extends>
+   <header>views/snapshot/snapshot_start_pane.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Implementation of the linear allocator helper functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the linear allocator helper functions.
 //=============================================================================
 
 #include "rmt_linear_buffer.h"
@@ -9,12 +10,12 @@
 
 RmtErrorCode RmtAllocLinearBufferInitialize(RmtAllocLinearBuffer* linear_buffer, void* buffer, size_t buffer_size)
 {
-    RMT_RETURN_ON_ERROR(linear_buffer && buffer, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(linear_buffer && buffer, kRmtErrorInvalidPointer);
 
     linear_buffer->buffer_base = buffer;
     linear_buffer->buffer_size = buffer_size;
     linear_buffer->offset      = 0;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 void* RmtAllocLinearBufferAllocate(RmtAllocLinearBuffer* linear_buffer, size_t size)

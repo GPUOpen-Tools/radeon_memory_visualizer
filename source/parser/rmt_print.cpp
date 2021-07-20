@@ -1,16 +1,25 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Implementation of printing helper functions for RMT.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of printing helper functions for RMT.
 //=============================================================================
 
 #include "rmt_print.h"
+
+#include <stdarg.h>
 #include <stdio.h>   // for sprintf
 #include <string.h>  // for strcat
 
 #ifndef _WIN32
 #include "linux/safe_crt.h"
+#else
+#include <Windows.h>
 #endif
+
+// The printing callback function.
+static RmtPrintingCallback printing_func       = nullptr;
+static bool                is_printing_enabled = true;
 
 const char* RmtGetPageSizeNameFromPageSize(RmtPageSize page_size)
 {
@@ -850,6 +859,10 @@ static const char* GetPipelineStageNameFromPipelineStageBits(int32_t bitfield)
         return "GS";
     case kRmtPipelineStageMaskCs:
         return "CS";
+    case kRmtPipelineStageMaskTs:
+        return "TS";
+    case kRmtPipelineStageMaskMs:
+        return "MS";
     default:
         return "";
     }
@@ -937,4 +950,43 @@ void RmtGetCmdAllocatorNameFromCmdAllocatorFlags(int32_t flags, char* flag_text,
 void RmtGetPipelineStageNameFromPipelineStageFlags(int32_t flags, char* flag_text, int text_length)
 {
     GetFlagsNameFromFlags(flags, flag_text, text_length, &GetPipelineStageNameFromPipelineStageBits);
+}
+
+void RmtSetPrintingCallback(RmtPrintingCallback callback_func, bool enable_printing)
+{
+    printing_func       = callback_func;
+    is_printing_enabled = enable_printing;
+}
+
+void RmtPrint(const char* format, ...)
+{
+    if (!is_printing_enabled)
+    {
+        return;
+    }
+
+    va_list args;
+    va_start(args, format);
+
+    if (printing_func == nullptr)
+    {
+        char buffer[2048];
+        vsnprintf(buffer, 2048, format, args);
+#ifdef _WIN32
+        const size_t len = strlen(buffer);
+        buffer[len]      = '\n';
+        buffer[len + 1]  = '\0';
+        OutputDebugString(buffer);
+#else
+        printf("%s\n", buffer);
+#endif
+    }
+    else
+    {
+        char buffer[2048];
+        vsnprintf(buffer, 2048, format, args);
+        printing_func(buffer);
+    }
+
+    va_end(args);
 }

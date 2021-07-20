@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model implementation for Allocation explorer pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the Allocation explorer model.
 //=============================================================================
 
 #include "models/snapshot/allocation_explorer_model.h"
@@ -19,7 +19,8 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
+#include "util/rmv_util.h"
 
 namespace rmv
 {
@@ -70,20 +71,19 @@ namespace rmv
 
     void VirtualAllocationExplorerModel::UpdateAllocationTable()
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return;
         }
 
-        const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
+        const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
 
         allocation_table_model_->removeRows(0, allocation_table_model_->rowCount());
 
         minimum_allocation_size_ = UINT64_MAX;
         maximum_allocation_size_ = 0;
 
-        // update allocation table and min/max allocation sizes
+        // Update allocation table and min/max allocation sizes.
         int32_t allocation_count = open_snapshot->virtual_allocation_list.allocation_count;
         allocation_table_model_->SetRowCount(allocation_count);
         for (int32_t allocation_index = 0; allocation_index < allocation_count; allocation_index++)
@@ -107,8 +107,7 @@ namespace rmv
     {
         int resource_count = 0;
 
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return resource_count;
         }
@@ -121,8 +120,8 @@ namespace rmv
 
         resource_table_model_->removeRows(0, resource_table_model_->rowCount());
 
-        // update resource table
-        const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
+        // Update resource table.
+        const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
         resource_count                       = selected_allocation->resource_count;
         resource_table_model_->SetRowCount(resource_count);
         for (int32_t i = 0; i < resource_count; i++)
@@ -224,7 +223,7 @@ namespace rmv
             {
                 resource_sizes.push_back(selected_allocation->resources[current_resource_index]->size_in_bytes);
             }
-            TraceManager::Get().BuildResourceSizeThresholds(resource_sizes, resource_thresholds_);
+            rmv_util::BuildResourceSizeThresholds(resource_sizes, resource_thresholds_);
         }
     }
 

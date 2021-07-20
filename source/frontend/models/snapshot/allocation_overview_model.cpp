@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model implementation for the allocation overview pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the allocation overview model.
 //=============================================================================
 
 #include "models/snapshot/allocation_overview_model.h"
@@ -13,7 +13,7 @@
 #include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "util/string_util.h"
 
 namespace rmv

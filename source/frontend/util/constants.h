@@ -1,14 +1,15 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Intended to hold globally-known definitions.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Intended to hold globally-known definitions.
 //=============================================================================
 
 #ifndef RMV_UTIL_CONSTANTS_H_
 #define RMV_UTIL_CONSTANTS_H_
 
 #include <QColor>
+#include <QUrl>
 
 namespace rmv
 {
@@ -37,7 +38,7 @@ namespace rmv
     // Rendering things.
     static const int kHoverDarkenColor = 125;
 
-    // memory subscription colors.
+    // Memory subscription colors.
     static const QColor kUnderSubscribedColor   = QColor(0, 175, 80);
     static const QColor kOverSubscribedColor    = QColor(255, 0, 0);
     static const QColor kCloseToSubscribedColor = QColor(226, 124, 48);
@@ -61,6 +62,11 @@ namespace rmv
 
     // App colors.
     static const QColor kCheckboxEnableColor = QColor(0, 122, 217);
+
+    // Indices for the SNAPSHOT and COMPARE stacked widget. Index 1 is displayed if
+    // a snapshot loaded, otherwise an empty pane (0) is shown.
+    static const int kSnapshotIndexEmptyPane     = 0;
+    static const int kSnapshotIndexPopulatedPane = 1;
 
     namespace text
     {
@@ -99,17 +105,24 @@ namespace rmv
         static const QString kSettingsUnitsSeconds      = "Seconds";
         static const QString kSettingsUnitsMinutes      = "Minutes";
 
-        // The file extension for RMV trace files.
+        // The file extension for trace files.
         static const QString kTraceFileExtension = ".rmv";
 
         // Help file locations for trace and RMV.
         static const QString kTraceHelpFile       = "/docs/help/rdp/html/index.html";
         static const QString kRmvHelpFile         = "/docs/help/rmv/html/index.html";
-        static const QString kRmvLicenseFile      = "/docs/License.htm";
+        static const QString kRmvLicenseFile      = "/License.txt";
         static const QString kSampleTraceLocation = "/samples/sampleTrace" + kTraceFileExtension;
         static const QString kFileOpenFileTypes   = "RMV trace files (*.rmv);;All files (*)";
         static const QString kMissingRmvTrace     = "Missing RMV sample trace: ";
         static const QString kMissingRmvHelpFile  = "Missing RMV help file: ";
+
+        // External links.
+        static const QUrl kGpuOpenUrl                = QUrl("https://gpuopen.com");
+        static const QUrl kRmvGithubUrl              = QUrl("https://github.com/GPUOpen-Tools/radeon_memory_visualizer");
+        static const QUrl kRgpGpuOpenUrl             = QUrl("https://gpuopen.com/rgp/");
+        static const QUrl kRgaGpuOpenUrl             = QUrl("https://gpuopen.com/rga/");
+        static const QUrl kRdnaPerformanceGpuOpenUrl = QUrl("https://gpuopen.com/performance/");
     }  // namespace text
 
     namespace resource

@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of Colors and Themes pane.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of Colors and Themes pane.
 //=============================================================================
 
 #include "views/settings/themes_and_colors_pane.h"
@@ -75,7 +75,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     button_group_.addButton(ui_->button_commit_type_placed_, kSettingThemesAndColorsCommitTypePlaced);
     button_group_.addButton(ui_->button_commit_type_virtual_, kSettingThemesAndColorsCommitTypeVirtual);
 
-    // Slot/signal connection for various widgets
+    // Slot/signal connection for various widgets.
     connect(ui_->color_widget_, &RMVColorPickerWidget::ColorSelected, this, &ThemesAndColorsPane::PickerColorSelected);
     connect(&button_group_, SIGNAL(buttonClicked(int)), this, SLOT(ItemButtonClicked(int)));
     connect(ui_->default_settings_button_, SIGNAL(clicked(bool)), this, SLOT(DefaultSettingsButtonClicked()));
@@ -92,7 +92,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
 
     // Set up color picker.
     ui_->color_widget_->SetRowAndColumnCount(kPickerRows, kPickerColumns);
-    ui_->color_widget_->SetPalette(RMVSettings::Get().GetColorPalette());
+    ui_->color_widget_->SetPalette(rmv::RMVSettings::Get().GetColorPalette());
 
     // Initial checked item.
     ui_->button_snapshots_viewed_->setChecked(true);
@@ -117,7 +117,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
         else
         {
             // Invalid settings strings which still produce an integer value in range.
-            // Should be overwritten with that integer value
+            // Should be overwritten with that integer value.
             SetSettingsPaletteId(button_id, palette_id);
         }
     }
@@ -138,7 +138,7 @@ void ThemesAndColorsPane::PickerColorSelected(int palette_id, const QColor& colo
 
     int button_id = button_group_.checkedId();
 
-    // Set palette id in RMV settings.
+    // Set palette id in the settings.
     SetSettingsPaletteId(button_id, palette_id);
 
     Refresh();
@@ -154,7 +154,7 @@ void ThemesAndColorsPane::ItemButtonClicked(int button_id)
 void ThemesAndColorsPane::DefaultSettingsButtonClicked()
 {
     // Restore default palette ids.
-    RMVSettings::Get().RestoreDefaultColors();
+    rmv::RMVSettings::Get().RestoreDefaultColors();
 
     Refresh();
 }
@@ -162,7 +162,7 @@ void ThemesAndColorsPane::DefaultSettingsButtonClicked()
 void ThemesAndColorsPane::DefaultPaletteButtonClicked()
 {
     // Restore default palette settings.
-    RMVSettings::Get().RestoreDefaultPalette();
+    rmv::RMVSettings::Get().RestoreDefaultPalette();
 
     Refresh();
 }
@@ -177,7 +177,7 @@ void ThemesAndColorsPane::RgbValuesChanged()
 
     // Set the new color in the palette.
     palette.SetColor(palette_id, color);
-    RMVSettings::Get().SetColorPalette(palette);
+    rmv::RMVSettings::Get().SetColorPalette(palette);
 
     Refresh();
 }
@@ -186,7 +186,7 @@ void ThemesAndColorsPane::Refresh()
 {
     QColor color;
 
-    // Set button color values from corresponding RMV settings.
+    // Set button color values from corresponding settings.
     for (QAbstractButton* button : button_group_.buttons())
     {
         int button_id = button_group_.id(button);
@@ -205,7 +205,7 @@ void ThemesAndColorsPane::Refresh()
     }
 
     // Set color picker palette.
-    ui_->color_widget_->SetPalette(RMVSettings::Get().GetColorPalette());
+    ui_->color_widget_->SetPalette(rmv::RMVSettings::Get().GetColorPalette());
 
     // Set RGB spinbox/slider values.
     color = ui_->color_widget_->GetSelectedColor();
@@ -223,9 +223,9 @@ void ThemesAndColorsPane::Refresh()
     emit RefreshedColors();
 }
 
-QColor ThemesAndColorsPane::GetSettingsColor(int button_id)
+QColor ThemesAndColorsPane::GetSettingsColor(int button_id) const
 {
-    return RMVSettings::Get().GetColorPalette().GetColor(GetSettingsPaletteId(button_id));
+    return rmv::RMVSettings::Get().GetColorPalette().GetColor(GetSettingsPaletteId(button_id));
 }
 
 void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
@@ -273,7 +273,7 @@ void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
     case kSettingThemesAndColorsCommitTypeCommitted:
     case kSettingThemesAndColorsCommitTypePlaced:
     case kSettingThemesAndColorsCommitTypeVirtual:
-        RMVSettings::Get().SetPaletteId(static_cast<RMVSettingID>(button_id), palette_id);
+        rmv::RMVSettings::Get().SetPaletteId(static_cast<RMVSettingID>(button_id), palette_id);
         break;
 
     default:
@@ -282,7 +282,7 @@ void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
     }
 }
 
-int ThemesAndColorsPane::GetSettingsPaletteId(int button_id)
+int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
 {
     switch (button_id)
     {
@@ -335,7 +335,7 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id)
     case kSettingThemesAndColorsCommitTypeCommitted:
     case kSettingThemesAndColorsCommitTypePlaced:
     case kSettingThemesAndColorsCommitTypeVirtual:
-        return RMVSettings::Get().GetPaletteId(static_cast<RMVSettingID>(button_id));
+        return rmv::RMVSettings::Get().GetPaletteId(static_cast<RMVSettingID>(button_id));
 
     default:
         return -1;

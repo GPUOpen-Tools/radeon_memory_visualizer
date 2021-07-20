@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of Timeline pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of Timeline pane.
 //=============================================================================
 
 #include "views/timeline/timeline_pane.h"
@@ -16,20 +16,15 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "rmt_assert.h"
-#include "rmt_data_snapshot.h"
-#include "rmt_util.h"
-
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
+#include "managers/pane_manager.h"
+#include "managers/snapshot_manager.h"
+#include "managers/trace_manager.h"
 #include "models/proxy_models/snapshot_timeline_proxy_model.h"
-#include "models/snapshot_manager.h"
 #include "models/timeline/snapshot_item_model.h"
 #include "models/timeline/timeline_model.h"
-#include "models/trace_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/time_util.h"
-#include "views/main_window.h"
-#include "views/pane_manager.h"
 
 #ifndef _WIN32
 #include <linux/safe_crt.h>
@@ -39,50 +34,20 @@ const static QString kRenameAction  = "Rename snapshot";
 const static QString kDeleteAction  = "Delete snapshot";
 const static QString kCompareAction = "Compare snapshots";
 
-/// Worker class definition to do the processing of the timeline generation
-/// on a separate thread.
-class TimelineWorker : public rmv::BackgroundTask
-{
-public:
-    /// Constructor.
-    explicit TimelineWorker(rmv::TimelineModel* model, RmtDataTimelineType timeline_type)
-        : BackgroundTask()
-        , model_(model)
-        , timeline_type_(timeline_type)
-    {
-    }
-
-    /// Destructor.
-    ~TimelineWorker()
-    {
-    }
-
-    /// Worker thread function.
-    virtual void ThreadFunc()
-    {
-        model_->GenerateTimeline(timeline_type_);
-    }
-
-private:
-    rmv::TimelineModel* model_;          ///< Pointer to the model data
-    RmtDataTimelineType timeline_type_;  ///< The timeline type
-};
-
-TimelinePane::TimelinePane(MainWindow* parent)
+TimelinePane::TimelinePane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::TimelinePane)
-    , main_window_(parent)
     , thread_controller_(nullptr)
 {
     ui_->setupUi(this);
 
     rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
 
-    // fix up the ratios of the 2 splitter regions
+    // Fix up the ratios of the 2 splitter regions.
     ui_->splitter_->setStretchFactor(0, 5);
     ui_->splitter_->setStretchFactor(1, 4);
 
-    // initialize the snapshot legends
+    // Initialize the snapshot legends.
     rmv::widget_util::InitGraphicsView(ui_->snapshot_legends_view_, rmv::kColoredLegendsHeight);
     rmv::widget_util::InitColorLegend(snapshot_legends_, ui_->snapshot_legends_view_);
     AddSnapshotLegends();
@@ -90,21 +55,21 @@ TimelinePane::TimelinePane(MainWindow* parent)
     model_ = new rmv::TimelineModel();
 
     model_->InitializeModel(ui_->snapshot_count_label_, rmv::kTimelineSnapshotCount, "text");
-    model_->InitializeTableModel(ui_->snapshot_table_view_, 0, kSnapshotTimelineColumnCount);
+    model_->InitializeTableModel(ui_->snapshot_table_view_, 0, rmv::kSnapshotTimelineColumnCount);
 
     // Set default columns widths appropriately so that they can show the table contents.
     ui_->snapshot_table_view_->SetColumnPadding(0);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnID, 10);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnName, 11);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnTime, 10);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnVirtualAllocations, 12);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnResources, 9);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnAllocatedTotalVirtualMemory, 14);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnAllocatedBoundVirtualMemory, 14);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnAllocatedUnboundVirtualMemory, 16);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnCommittedLocal, 16);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnCommittedInvisible, 18);
-    ui_->snapshot_table_view_->SetColumnWidthEms(kSnapshotTimelineColumnCommittedHost, 16);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnID, 10);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnName, 11);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnTime, 10);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnVirtualAllocations, 12);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnResources, 9);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnAllocatedTotalVirtualMemory, 14);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnAllocatedBoundVirtualMemory, 14);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnAllocatedUnboundVirtualMemory, 16);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnCommittedLocal, 16);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnCommittedInvisible, 18);
+    ui_->snapshot_table_view_->SetColumnWidthEms(rmv::kSnapshotTimelineColumnCommittedHost, 16);
 
     // Allow users to resize columns if desired.
     ui_->snapshot_table_view_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
@@ -112,20 +77,20 @@ TimelinePane::TimelinePane(MainWindow* parent)
 
     ui_->snapshot_table_view_->horizontalHeader()->setSectionsClickable(true);
     ui_->snapshot_table_view_->setSortingEnabled(true);
-    ui_->snapshot_table_view_->sortByColumn(kSnapshotTimelineColumnTime, Qt::AscendingOrder);
+    ui_->snapshot_table_view_->sortByColumn(rmv::kSnapshotTimelineColumnTime, Qt::AscendingOrder);
     ui_->snapshot_table_view_->setEditTriggers(QAbstractItemView::EditKeyPressed);
 
-    // hide columns that we are using for sorting
-    ui_->snapshot_table_view_->hideColumn(kSnapshotTimelineColumnID);
+    // Hide columns that we are using for sorting.
+    ui_->snapshot_table_view_->hideColumn(rmv::kSnapshotTimelineColumnID);
 
-    // hide the snapshot legends for now. Currently not used but maybe needed in future
+    // Hide the snapshot legends for now. Currently not used but maybe needed in future.
     ui_->snapshot_legends_controls_wrapper_->hide();
 
-    // initialize the timeline type combo box
-    colorizer_ = new TimelineColorizer();
+    // Initialize the timeline type combo box.
+    colorizer_ = new rmv::TimelineColorizer();
 
     // Set up a list of required timeline modes, in order.
-    // The list is terminated with -1
+    // The list is terminated with -1.
     static const RmtDataTimelineType type_list[] = {kRmtDataTimelineTypeResourceUsageVirtualSize,
                                                     kRmtDataTimelineTypeResourceUsageCount,
                                                     kRmtDataTimelineTypeVirtualMemory,
@@ -133,16 +98,16 @@ TimelinePane::TimelinePane(MainWindow* parent)
                                                     // kRmtDataTimelineTypeProcess,
                                                     RmtDataTimelineType(-1)};
 
-    // Initialize the "color by" UI elements. Set up the combo box, legends and signals etc
+    // Initialize the "color by" UI elements. Set up the combo box, legends and signals etc.
     colorizer_->Initialize(parent, ui_->timeline_type_combo_box_, ui_->timeline_legends_view_, type_list);
     connect(ui_->timeline_type_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &TimelinePane::TimelineTypeChanged);
 
     model_->SetTimelineType(type_list[0]);
 
-    // allow multiple snapshots to be selected so they can be compared.
+    // Allow multiple snapshots to be selected so they can be compared.
     ui_->snapshot_table_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    // Set up the zoom buttons
+    // Set up the zoom buttons.
     ZoomIconManagerConfiguration zoom_config        = {};
     zoom_config.zoom_in_button                      = ui_->zoom_in_button_;
     zoom_config.zoom_in_resource_enabled            = rmv::resource::kZoomInEnabled;
@@ -161,17 +126,17 @@ TimelinePane::TimelinePane(MainWindow* parent)
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->search_box_, ui_->size_slider_);
 
-    // hide size slider for now
+    // Hide size slider for now.
     ui_->size_slider_->hide();
     ui_->size_slider_label_->hide();
 
-    // disable the compare button
+    // Disable the compare button.
     ui_->compare_button_->setEnabled(false);
 
-    keyboard_zoom_shortcuts_ = new KeyboardZoomShortcutsTimeline(this, ui_->timeline_view_->horizontalScrollBar(), ui_->timeline_view_);
+    keyboard_zoom_shortcuts_ = new rmv::KeyboardZoomShortcutsTimeline(this, ui_->timeline_view_->horizontalScrollBar(), ui_->timeline_view_);
 
-    connect(keyboard_zoom_shortcuts_, &KeyboardZoomShortcutsTimeline::ZoomInSelectionSignal, this, &TimelinePane::ZoomInSelection);
-    connect(keyboard_zoom_shortcuts_, &KeyboardZoomShortcutsTimeline::ResetViewSignal, this, &TimelinePane::ZoomReset);
+    connect(keyboard_zoom_shortcuts_, &rmv::KeyboardZoomShortcutsTimeline::ZoomInSelectionSignal, this, &TimelinePane::ZoomInSelection);
+    connect(keyboard_zoom_shortcuts_, &rmv::KeyboardZoomShortcutsTimeline::ResetViewSignal, this, &TimelinePane::ZoomReset);
     connect(ui_->size_slider_, &DoubleSliderWidget::SpanChanged, this, &TimelinePane::FilterBySizeSliderChanged);
     connect(ui_->search_box_, &QLineEdit::textChanged, this, &TimelinePane::SearchBoxChanged);
     connect(ui_->zoom_to_selection_button_, &QPushButton::pressed, this, &TimelinePane::ZoomInSelection);
@@ -188,9 +153,9 @@ TimelinePane::TimelinePane(MainWindow* parent)
     connect(ui_->timeline_view_, &RMVSnapshotTimeline::UpdateZoomButtonsForZoomToSelection, this, &TimelinePane::UpdateZoomButtonsForZoomToSelection);
     connect(ui_->timeline_view_->horizontalScrollBar(), &QScrollBar::valueChanged, this, &TimelinePane::ScrollBarChanged);
     connect(ui_->compare_button_, &QPushButton::pressed, this, &TimelinePane::CompareSnapshots);
-    connect(&MessageManager::Get(), &MessageManager::SelectSnapshot, this, &TimelinePane::SelectSnapshot);
+    connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::SnapshotMarkerSelected, this, &TimelinePane::UpdateSnapshotTable);
 
-    // set up a connection between the timeline being sorted and making sure the selected event is visible
+    // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetProxyModel(), &rmv::SnapshotTimelineProxyModel::layoutChanged, this, &TimelinePane::ScrollToSelectedSnapshot);
 }
 
@@ -198,6 +163,7 @@ TimelinePane::~TimelinePane()
 {
     delete zoom_icon_manager_;
     delete colorizer_;
+    delete model_;
 }
 
 void TimelinePane::showEvent(QShowEvent* event)
@@ -210,16 +176,38 @@ void TimelinePane::showEvent(QShowEvent* event)
 
 void TimelinePane::SelectTableRows()
 {
+    ui_->snapshot_table_view_->clearSelection();
+
+    // Temporarily set multi-selection on the table so multiple rows can be selected.
+    // MultiSelection will toggle the selected row and leave all other rows unchanged.
+    // ExtendedSelection will deselect the last row selected before selecting the new row
+    // (unless ctrl or shift are pressed).
     ui_->snapshot_table_view_->setSelectionMode(QAbstractItemView::MultiSelection);
-    const RmtSnapshotPoint* snapshot_point = SnapshotManager::Get().GetSelectedSnapshotPoint();
-    if (snapshot_point != nullptr)
+
+    // Cache the snapshot points since selectRow() will alter their values in the snapshot manager.
+    const RmtSnapshotPoint* snapshot_point      = rmv::SnapshotManager::Get().GetSelectedSnapshotPoint();
+    const RmtSnapshotPoint* diff_snapshot_point = rmv::SnapshotManager::Get().GetSelectedCompareSnapshotPointDiff();
+
+    // Do the diff snapshot point first if valid, since the last selected snapshot will be the one used for single snapshot mode.
+    if (diff_snapshot_point != nullptr)
     {
-        const QModelIndex& index = model_->GetProxyModel()->FindModelIndex(((uintptr_t)snapshot_point), kSnapshotTimelineColumnID);
+        const QModelIndex& index = model_->GetProxyModel()->FindModelIndex(((uintptr_t)diff_snapshot_point), rmv::kSnapshotTimelineColumnID);
         if (index.isValid())
         {
             ui_->snapshot_table_view_->selectRow(index.row());
         }
     }
+
+    if (snapshot_point != nullptr && snapshot_point != diff_snapshot_point)
+    {
+        const QModelIndex& index = model_->GetProxyModel()->FindModelIndex(((uintptr_t)snapshot_point), rmv::kSnapshotTimelineColumnID);
+        if (index.isValid())
+        {
+            ui_->snapshot_table_view_->selectRow(index.row());
+        }
+    }
+
+    // Restore table selection mode.
     ui_->snapshot_table_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
@@ -239,7 +227,7 @@ void TimelinePane::OnTraceLoad()
     SwitchTimeUnits();
 
     ui_->timeline_wrapper_->show();
-    ui_->snapshot_table_view_->showColumn(kSnapshotTimelineColumnTime);
+    ui_->snapshot_table_view_->showColumn(rmv::kSnapshotTimelineColumnTime);
 
     model_->UpdateMemoryGraph(ui_->timeline_view_->ViewableStartClk(), ui_->timeline_view_->ViewableEndClk());
     colorizer_->UpdateLegends();
@@ -249,7 +237,7 @@ void TimelinePane::OnTraceLoad()
 
 void TimelinePane::UpdateSnapshotMarkers()
 {
-    TraceManager& trace_manager = TraceManager::Get();
+    rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
     if (trace_manager.DataSetValid() == false)
     {
         return;
@@ -257,7 +245,7 @@ void TimelinePane::UpdateSnapshotMarkers()
 
     ui_->timeline_view_->ClearSnapshotMarkers();
 
-    // add snapshot widgets
+    // Add snapshot widgets.
     RmtDataSet* data_set = trace_manager.GetDataSet();
     for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < data_set->snapshot_count; current_snapshot_point_index++)
     {
@@ -265,13 +253,13 @@ void TimelinePane::UpdateSnapshotMarkers()
         RMVSnapshotMarker* marker                 = AddSnapshot(current_snapshot_point);
         RMT_UNUSED(marker);
     }
-    const RmtSnapshotPoint* snapshot_point = SnapshotManager::Get().GetSelectedSnapshotPoint();
+    const RmtSnapshotPoint* snapshot_point = rmv::SnapshotManager::Get().GetSelectedSnapshotPoint();
     ui_->timeline_view_->SelectSnapshot(snapshot_point);
 }
 
 void TimelinePane::OnTraceClose()
 {
-    // reset the timeline type combo back to default
+    // Reset the timeline type combo back to default.
     int row_index = 0;
     ui_->timeline_type_combo_box_->SetSelectedRow(row_index);
     RmtDataTimelineType new_timeline_type = colorizer_->ApplyColorMode(row_index);
@@ -300,7 +288,8 @@ void TimelinePane::UpdateHoverClock(uint64_t clock)
 void TimelinePane::Reset()
 {
     model_->ResetModelValues();
-    SnapshotManager::Get().SetSelectedSnapshotPoint(nullptr);
+    rmv::SnapshotManager::Get().SetSelectedSnapshotPoint(nullptr);
+    rmv::SnapshotManager::Get().SetSelectedCompareSnapshotPoints(nullptr, nullptr);
 
     ZoomReset();
 
@@ -312,7 +301,7 @@ void TimelinePane::Reset()
 void TimelinePane::SwitchTimeUnits()
 {
     double ratio = rmv::time_util::TimeToClockRatio();
-    ui_->timeline_view_->UpdateTimeUnits(RMVSettings::Get().GetUnits(), ratio);
+    ui_->timeline_view_->UpdateTimeUnits(rmv::RMVSettings::Get().GetUnits(), ratio);
     model_->Update();
 }
 
@@ -385,7 +374,7 @@ void TimelinePane::UpdateZoomButtonsForZoomOut(bool zoom)
 
 void TimelinePane::UpdateTimelineScrollbarContextMenu(bool shown)
 {
-    // hide the right-click context menu on the scrollbar if fully zoomed out.
+    // Hide the right-click context menu on the scrollbar if fully zoomed out.
     QScrollBar* scroll_bar = ui_->timeline_view_->horizontalScrollBar();
     if (scroll_bar != nullptr)
     {
@@ -423,77 +412,99 @@ void TimelinePane::SearchBoxChanged()
 
 void TimelinePane::CompareSnapshots()
 {
-    QItemSelectionModel* pItemSelectionModel = ui_->snapshot_table_view_->selectionModel();
-    QModelIndexList      selected_rows       = pItemSelectionModel->selectedRows();
+    const QItemSelectionModel* selection_model = ui_->snapshot_table_view_->selectionModel();
+    const QModelIndexList      selected_rows   = selection_model->selectedRows();
 
     if (selected_rows.count() == 2)
     {
-        RmtSnapshotPoint* snapshot_point_base =
-            reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[kSnapshotCompareBase].row(), kSnapshotTimelineColumnID));
-        RmtSnapshotPoint* snapshot_point_diff =
-            reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[kSnapshotCompareDiff].row(), kSnapshotTimelineColumnID));
-
-        emit MessageManager::Get().CompareSnapshot(snapshot_point_base, snapshot_point_diff);
+        emit rmv::SnapshotManager::Get().CompareSnapshotsOpened();
     }
 }
 
-void TimelinePane::SelectSnapshot(RmtSnapshotPoint* snapshot_point)
+void TimelinePane::UpdateSnapshotTable(const RmtSnapshotPoint* snapshot_point) const
 {
-    ui_->timeline_view_->SelectSnapshot(snapshot_point);
+    const QModelIndex& selected_index = model_->GetProxyModel()->FindModelIndex(((uintptr_t)snapshot_point), rmv::kSnapshotTimelineColumnID);
 
-    const QModelIndex& index = model_->GetProxyModel()->FindModelIndex(((uintptr_t)snapshot_point), kSnapshotTimelineColumnID);
-
-    if (index.isValid() == true)
+    if (selected_index.isValid() == true)
     {
-        ui_->snapshot_table_view_->selectRow(index.row());
-
-        QItemSelectionModel* selected_item = ui_->snapshot_table_view_->selectionModel();
-        if (selected_item->hasSelection())
-        {
-            QModelIndexList selected_rows = selected_item->selectedRows();
-            if (selected_rows.size() > 0)
-            {
-                ui_->compare_button_->setEnabled(selected_rows.count() == 2);
-            }
-        }
-
-        //ui_->snapshot_table_view_->setFocus(Qt::FocusReason::OtherFocusReason);
+        ui_->snapshot_table_view_->selectRow(selected_index.row());
     }
-    SnapshotManager::Get().SetSelectedSnapshotPoint(snapshot_point);
 }
 
 void TimelinePane::TableSelectionChanged()
 {
     const QItemSelectionModel* selection_model = ui_->snapshot_table_view_->selectionModel();
-    const QModelIndexList&     selected_rows   = selection_model->selectedRows();
     const QModelIndex          current_index   = selection_model->currentIndex();
     bool                       is_selected     = selection_model->isSelected(current_index);
 
+    RmtSnapshotPoint* selected_snapshot = nullptr;
     if (is_selected == true)
     {
         if (current_index.isValid())
         {
-            RmtSnapshotPoint* selected_snapshot = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(current_index.row(), kSnapshotTimelineColumnID));
-            SelectSnapshot(selected_snapshot);
+            selected_snapshot = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(current_index.row(), rmv::kSnapshotTimelineColumnID));
         }
     }
-    else
+
+    // If no snapshot is selected, this could have been caused by the user deselecting a snapshot, leaving 2 or less snapshots
+    // selected. In this case, pick the topmost snapshot to use as the snapshot that is currently highlighted.
+    if (selected_snapshot == nullptr)
     {
-        SnapshotManager::Get().SetSelectedSnapshotPoint(nullptr);
-        ui_->timeline_view_->SelectSnapshot(nullptr);
+        const QModelIndexList& selected_rows = selection_model->selectedRows();
+        const int              count         = selected_rows.count();
+        if (count > 0)
+        {
+            int base_row      = selected_rows[0].row();
+            selected_snapshot = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(base_row, rmv::kSnapshotTimelineColumnID));
+        }
     }
 
-    // Enable the compare button if 2 entries in the table are selected
-    ui_->compare_button_->setEnabled(selected_rows.count() == 2);
+    ui_->timeline_view_->SelectSnapshot(selected_snapshot);
+
+    // Assign the selected rows in the table to selected snapshots in the snapshot manager.
+    if (selection_model->hasSelection())
+    {
+        const QModelIndexList& selected_rows = selection_model->selectedRows();
+        const int              count         = selected_rows.count();
+
+        if (count == 2)
+        {
+            // Make sure the row for the base snapshot is the entry that is selected.
+            const QModelIndex& selected_index = model_->GetProxyModel()->FindModelIndex(((uintptr_t)selected_snapshot), rmv::kSnapshotTimelineColumnID);
+
+            int row0     = selected_rows[0].row();
+            int row1     = selected_rows[1].row();
+            int base_row = selected_index.row();
+            int diff_row = (base_row == row0) ? row1 : row0;
+            Q_ASSERT(base_row != diff_row);
+
+            // Enable comparing of snapshots.
+            RmtSnapshotPoint* snapshot_point_base = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(base_row, rmv::kSnapshotTimelineColumnID));
+            RmtSnapshotPoint* snapshot_point_diff = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(diff_row, rmv::kSnapshotTimelineColumnID));
+            rmv::SnapshotManager::Get().SetSelectedCompareSnapshotPoints(snapshot_point_base, snapshot_point_diff);
+            ui_->compare_button_->setEnabled(true);
+        }
+        else
+        {
+            // Comparing snapshots not valid since 2 entries in the table are not selected.
+            rmv::SnapshotManager::Get().SetSelectedCompareSnapshotPoints(nullptr, nullptr);
+            ui_->compare_button_->setEnabled(false);
+        }
+    }
+
+    rmv::SnapshotManager::Get().SetSelectedSnapshotPoint(selected_snapshot);
 }
 
 void TimelinePane::TableDoubleClicked(const QModelIndex& index)
 {
     if (index.isValid())
     {
-        RmtSnapshotPoint* snapshot_point = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(index.row(), kSnapshotTimelineColumnID));
-
-        emit MessageManager::Get().OpenSnapshot(snapshot_point);
+        RmtSnapshotPoint* snapshot_point = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(index.row(), rmv::kSnapshotTimelineColumnID));
+        if (snapshot_point)
+        {
+            rmv::SnapshotManager::Get().SetSelectedSnapshotPoint(snapshot_point);
+            emit rmv::SnapshotManager::Get().SnapshotOpened();
+        }
     }
 }
 
@@ -509,8 +520,7 @@ void TimelinePane::GenerateSnapshotAtTime(uint64_t snapshot_time)
 
 RMVTimelineGraph* TimelinePane::AddTimelineGraph()
 {
-    RMVTimelineGraph* new_object = ui_->timeline_view_->AddTimelineGraph(model_, colorizer_);
-    return new_object;
+    return ui_->timeline_view_->AddTimelineGraph(model_, colorizer_);
 }
 
 RMVSnapshotMarker* TimelinePane::AddSnapshot(RmtSnapshotPoint* snapshot_point)
@@ -526,51 +536,26 @@ RMVSnapshotMarker* TimelinePane::AddSnapshot(RmtSnapshotPoint* snapshot_point)
 
 void TimelinePane::RemoveSnapshot(RmtSnapshotPoint* snapshot_point)
 {
-    const TraceManager& trace_manager = TraceManager::Get();
+    const rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
     if (trace_manager.DataSetValid() == false)
     {
         return;
     }
 
-    // if the snapshot point has a cached snapshot (i.e.: there's a chance its open, then look at closing it)
-    if (snapshot_point->cached_snapshot)
-    {
-        // if we're about to remove the snapshot that's open, then signal to everyone its about to vanish.
-        const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
-        if (open_snapshot == snapshot_point->cached_snapshot)
-        {
-            if (open_snapshot != nullptr)
-            {
-                emit MessageManager::Get().OpenSnapshot(nullptr);
-            }
-        }
-
-        if (trace_manager.GetComparedSnapshot(kSnapshotCompareBase) == snapshot_point->cached_snapshot ||
-            trace_manager.GetComparedSnapshot(kSnapshotCompareDiff) == snapshot_point->cached_snapshot)
-        {
-            if (trace_manager.GetComparedSnapshot(kSnapshotCompareBase) != nullptr || trace_manager.GetComparedSnapshot(kSnapshotCompareDiff) != nullptr)
-            {
-                emit MessageManager::Get().CompareSnapshot(nullptr, nullptr);
-            }
-        }
-    }
-
-    // deselect the selected snapshot if it's being removed
-    if (snapshot_point == SnapshotManager::Get().GetSelectedSnapshotPoint())
-    {
-        SnapshotManager::Get().SetSelectedSnapshotPoint(nullptr);
-    }
+    rmv::SnapshotManager::Get().RemoveSnapshot(snapshot_point);
 
     model_->RemoveSnapshot(snapshot_point);
 
+    emit rmv::MessageManager::Get().TitleBarChanged();
     UpdateSnapshotMarkers();
     UpdateTableDisplay();
 }
 
 void TimelinePane::RenameSnapshotByIndex(int32_t snapshot_index)
 {
-    QModelIndex model_index = ui_->snapshot_table_view_->model()->index(snapshot_index, kSnapshotTimelineColumnName, QModelIndex());
+    QModelIndex model_index = ui_->snapshot_table_view_->model()->index(snapshot_index, rmv::kSnapshotTimelineColumnName, QModelIndex());
     ui_->snapshot_table_view_->edit(model_index);
+    emit rmv::MessageManager::Get().TitleBarChanged();
 }
 
 void TimelinePane::keyPressEvent(QKeyEvent* event)
@@ -609,19 +594,19 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
 {
     // Check that there are exactly two selected objects -- offer to compare them.
     // Else offer to remove the snapshot.
-    QItemSelectionModel* item_selection_model = ui_->snapshot_table_view_->selectionModel();
+    const QItemSelectionModel* selection_model = ui_->snapshot_table_view_->selectionModel();
 
-    if (!item_selection_model->hasSelection())
+    if (!selection_model->hasSelection())
     {
         return;
     }
 
-    // Get the number of rows in the table selected
-    QModelIndexList selected_rows = item_selection_model->selectedRows();
+    // Get the number of rows in the table selected.
+    QModelIndexList selected_rows = selection_model->selectedRows();
 
     if (selected_rows.count() == 1)
     {
-        // if 1 row selected, allow user to rename or delete a snapshot
+        // If 1 row selected, allow user to rename or delete a snapshot.
         QMenu   menu;
         QAction rename_action(kRenameAction);
         QAction delete_action(kDeleteAction);
@@ -636,7 +621,8 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
             QString selection_text = pAction->text();
             if (selection_text.compare(kDeleteAction) == 0)
             {
-                RmtSnapshotPoint* snapshot_point = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[0].row(), kSnapshotTimelineColumnID));
+                RmtSnapshotPoint* snapshot_point =
+                    reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[0].row(), rmv::kSnapshotTimelineColumnID));
                 RemoveSnapshot(snapshot_point);
             }
             else if (selection_text.compare(kRenameAction) == 0)
@@ -650,21 +636,22 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
 
     if (selected_rows.count() == 2)
     {
-        // if 2 rows selected, allow user to compare snapshots
+        // If 2 rows selected, allow user to compare snapshots.
         QAction action(kCompareAction);
 
         QMenu menu;
         menu.addAction(&action);
 
+        // Make sure the table is up to date. In the case where 3 snapshots are chosen, then 1 is deselected,
+        // there won't be a selected table entry. If there are 2 snapshots selected in the table, these will be set up
+        // for comparison.
+        TableSelectionChanged();
+
         QAction* pAction = menu.exec(event->globalPos());
 
         if (pAction != nullptr)
         {
-            RmtSnapshotPoint* snapshot_point_base =
-                reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[kSnapshotCompareBase].row(), kSnapshotTimelineColumnID));
-            RmtSnapshotPoint* snapshot_point_diff =
-                reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[kSnapshotCompareDiff].row(), kSnapshotTimelineColumnID));
-            emit MessageManager::Get().CompareSnapshot(snapshot_point_base, snapshot_point_diff);
+            emit rmv::SnapshotManager::Get().CompareSnapshotsOpened();
         }
 
         return;
@@ -673,19 +660,23 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
 
 void TimelinePane::TimelineTypeChanged()
 {
-    int index = ui_->timeline_type_combo_box_->CurrentRow();
-    if (index >= 0)
+    const rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
+    if (trace_manager.DataSetValid())
     {
-        RmtDataTimelineType new_timeline_type = colorizer_->ApplyColorMode(index);
-        model_->SetTimelineType(new_timeline_type);
+        const int index = ui_->timeline_type_combo_box_->CurrentRow();
+        if (index >= 0)
+        {
+            RmtDataTimelineType new_timeline_type = colorizer_->ApplyColorMode(index);
+            model_->SetTimelineType(new_timeline_type);
 
-        // start the processing thread and pass in the worker object. The thread controller will take ownership
-        // of the worker and delete it once it's complete
-        thread_controller_ = new rmv::ThreadController(main_window_, ui_->timeline_view_, new TimelineWorker(model_, new_timeline_type));
+            // Start the processing thread and pass in the worker object. The thread controller will take ownership
+            // of the worker and delete it once it's complete.
+            thread_controller_ = new rmv::ThreadController(ui_->timeline_view_, model_->CreateWorkerThread(new_timeline_type));
 
-        // when the worker thread has finished, a signal will be emitted. Wait for the signal here and update
-        // the UI with the newly acquired data from the worker thread
-        connect(thread_controller_, &rmv::ThreadController::ThreadFinished, this, &TimelinePane::TimelineWorkerThreadFinished);
+            // When the worker thread has finished, a signal will be emitted. Wait for the signal here and update
+            // the UI with the newly acquired data from the worker thread.
+            connect(thread_controller_, &rmv::ThreadController::ThreadFinished, this, &TimelinePane::TimelineWorkerThreadFinished);
+        }
     }
 }
 
@@ -708,9 +699,9 @@ void TimelinePane::ScrollToSelectedSnapshot()
         QModelIndexList item_list = selected_item->selectedRows();
         if (item_list.size() > 0)
         {
-            // get the model index of the name column since column 0 (ID) is hidden and scrollTo
-            // doesn't appear to scroll on hidden columns
-            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), kSnapshotTimelineColumnName);
+            // Get the model index of the name column since column 0 (ID) is hidden and scrollTo
+            // doesn't appear to scroll on hidden columns.
+            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), rmv::kSnapshotTimelineColumnName);
             ui_->snapshot_table_view_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
         }
     }

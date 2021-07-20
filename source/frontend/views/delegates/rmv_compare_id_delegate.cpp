@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2017-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Implementation of RMVCompareIdDelegate.
+// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of RMVCompareIdDelegate.
 //=============================================================================
 
 #include "views/delegates/rmv_compare_id_delegate.h"
@@ -124,7 +124,7 @@ void RMVCompareIdDelegate::HeightToMarginAndDiameter(const int height, int& marg
 
 void RMVCompareIdDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
-    if (index.column() == kResourceColumnCompareId)
+    if (index.column() == rmv::kResourceColumnCompareId)
     {
         QItemDelegate::drawBackground(painter, option, index);
 
@@ -144,16 +144,16 @@ void RMVCompareIdDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
         const int color_index     = index.data().toInt();
         const int y_offset        = option.rect.y() + margin;
 
-        if (color_index == kSnapshotCompareIdCommon)
+        if (color_index == rmv::kSnapshotCompareIdCommon)
         {
             DrawCircleCheckmark(painter, open_color, margin, y_offset, diameter);
             DrawCircleCheckmark(painter, compared_color, compared_offset, y_offset, diameter);
         }
-        else if (color_index == kSnapshotCompareIdOpen)
+        else if (color_index == rmv::kSnapshotCompareIdOpen)
         {
             DrawCircleCheckmark(painter, open_color, margin, y_offset, diameter);
         }
-        else if (color_index == kSnapshotCompareIdCompared)
+        else if (color_index == rmv::kSnapshotCompareIdCompared)
         {
             DrawCircleCheckmark(painter, compared_color, compared_offset, y_offset, diameter);
         }

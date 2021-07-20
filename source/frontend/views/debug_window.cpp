@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV debug window.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the debug window.
 //=============================================================================
 
 #include "views/debug_window.h"
@@ -21,12 +21,13 @@
 #include <linux/safe_crt.h>
 #endif
 
-// The one and only instance of the debug window
+// The one and only instance of the debug window.
 static DebugWindow* debug_window = nullptr;
 
-/// Assert on a Qt message. Add the Qt message as part of the ASSERT warning.
-/// \param type The Qt message type.
-/// \param text The text string containing the error message from Qt.
+/// @brief Assert on a Qt message. Add the Qt message as part of the ASSERT warning.
+///
+/// @param [in] type The Qt message type.
+/// @param [in] text The text string containing the error message from Qt.
 static void AssertOnQtMessage(const char* type, const QString text)
 {
     static char message[2048];
@@ -35,10 +36,11 @@ static void AssertOnQtMessage(const char* type, const QString text)
     RMT_ASSERT_MESSAGE(false, message);
 }
 
-/// Detect the type of message sent into Qt and return it as a string.
-/// \param type The Qt message type (info/error/warning/etc).
-/// \param context The message context.
-/// \param msg The output string.
+/// @brief Detect the type of message sent into Qt and return it as a string.
+///
+/// @param [in] type The Qt message type (info/error/warning/etc).
+/// @param [in] context The message context.
+/// @param [in] msg The output string.
 static void MyMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {
     Q_UNUSED(context);
@@ -85,7 +87,7 @@ DebugWindow::DebugWindow()
     ui_->setupUi(this);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-    // Use monospace font style so that things align
+    // Use monospace font style so that things align.
     QFont font("unexistent");
     font.setStyleHint(QFont::Monospace);
     ui_->plain_text_edit_->setFont(font);

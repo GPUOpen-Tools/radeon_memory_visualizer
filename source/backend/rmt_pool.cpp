@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Implementation of functions for a fixed-size pool memory allocator.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of functions for a fixed-size pool memory allocator.
 //=============================================================================
 
 #include "rmt_pool.h"
@@ -16,10 +17,10 @@
 RmtErrorCode RmtPoolInitialize(RmtPool* pool, void* buffer, size_t buffer_size, size_t block_size)
 {
     // validate pool parameters
-    RMT_RETURN_ON_ERROR(pool, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(buffer, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR((buffer_size >= block_size) && (buffer_size % block_size) == 0, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR(block_size >= sizeof(uintptr_t), RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(pool, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(buffer, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR((buffer_size >= block_size) && (buffer_size % block_size) == 0, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR(block_size >= sizeof(uintptr_t), kRmtErrorInvalidSize);
 
     // setup structure fields
     pool->buffer      = buffer;
@@ -40,7 +41,7 @@ RmtErrorCode RmtPoolInitialize(RmtPool* pool, void* buffer, size_t buffer_size, 
     // write the terminal null
     uintptr_t* terminal_null = (uintptr_t*)((uintptr_t)buffer + (block_count * block_size));
     *terminal_null           = (uintptr_t)NULL;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // allocate a new block

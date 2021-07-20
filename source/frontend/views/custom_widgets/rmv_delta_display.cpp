@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Implementation of a graphics view that data delta
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a graphics view that implements data delta.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_delta_display.h"
@@ -106,7 +106,7 @@ void RMVDeltaDisplay::UpdateItem(const DeltaItem& item)
             deltas_[i].description->setPlainText(item.name);
             deltas_[i].widget->UpdateDataType(item.type);
             deltas_[i].widget->UpdateDataValueNum(item.value_num);
-            deltas_[i].widget->UpdateDataValueStr(item.value_string);
+            deltas_[i].widget->UpdateDataValueString(item.value_string);
             deltas_[i].widget->UpdateDataCustomColor(item.custom_color);
             deltas_[i].widget->UpdateDataGraphic(item.graphic);
 

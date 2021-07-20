@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Definition of structures and functions for a multi-level page table.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of structures and functions for a multi-level page table.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_PAGE_TABLE_H_
@@ -44,7 +45,7 @@
 /// The number of level 3 nodes to keep space for. This value maps exactly to number of MB of VA space than can be mapped at once.
 #define RMT_PAGE_DIRECTORY_LEVEL_3_COUNT (64 * 1024)
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -119,9 +120,9 @@ typedef struct RmtPageTable
 /// @param [in] target_process_id           The target process being traced.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed as <c><i>pageTable</i></c> structure was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed as <c><i>pageTable</i></c> structure was <c><i>NULL</i></c>.
 RmtErrorCode RmtPageTableInitialize(RmtPageTable* page_table, const RmtSegmentInfo* segment_info, int32_t segment_info_count, uint64_t target_process_id);
 
 /// Map some virtual memory to an underlaying physical range.
@@ -139,11 +140,11 @@ RmtErrorCode RmtPageTableInitialize(RmtPageTable* page_table, const RmtSegmentIn
 /// @param [in] process_id                  The process id.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed as <c><i>pageTable</i></c> structure was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed as <c><i>pageTable</i></c> structure was <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_ADDRESS_ALREADY_MAPPED    The operation failed because some memory in this range was already mapped.
+/// kRmtErrorAddressAlreadyMapped       The operation failed because some memory in this range was already mapped.
 RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
                                               RmtGpuAddress          virtual_address,
                                               RmtGpuAddress          physical_address,
@@ -160,11 +161,11 @@ RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
 /// @param [out] out_physical_address   The physical address for the specified virtual address.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed as <c><i>pageTable</i></c> structure was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed as <c><i>pageTable</i></c> structure was <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_ADDRESS_NOT_MAPPED        The operation failed as <c><i>virtualAddress</i></c> was not mapped to a physical address.
+/// kRmtErrorAddressNotMapped           The operation failed as <c><i>virtualAddress</i></c> was not mapped to a physical address.
 RmtErrorCode RmtPageTableGetPhysicalAddressForVirtualAddress(const RmtPageTable* page_table,
                                                              RmtGpuAddress       virtual_address,
                                                              RmtGpuAddress*      out_physical_address);
@@ -183,7 +184,7 @@ bool RmtPageTableIsEntireVirtualAllocationPhysicallyMapped(const RmtPageTable* p
 ///
 bool RmtPageTableIsEntireResourcePhysicallyMapped(const RmtPageTable* page_table, const RmtResource* resource);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_PAGE_TABLE_H_

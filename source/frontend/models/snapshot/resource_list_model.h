@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model header for the Allocation List pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the Resource List model.
 //=============================================================================
 
 #ifndef RMV_MODELS_SNAPSHOT_RESOURCE_LIST_MODEL_H_
@@ -20,7 +20,7 @@
 
 namespace rmv
 {
-    /// Enum containing indices for the widgets shared between the model and UI.
+    /// @brief Enum containing indices for the widgets shared between the model and UI.
     enum ResourceListWidgets
     {
         kResourceListTotalResources,
@@ -29,54 +29,60 @@ namespace rmv
         kResourceListNumWidgets,
     };
 
-    /// Container class that holds model data for a given pane.
+    /// @brief Container class that holds model data for the resource list pane.
     class ResourceListModel : public ModelViewMapper
     {
     public:
-        /// Constructor.
+        /// @brief Constructor.
         explicit ResourceListModel();
 
-        /// Destructor.
+        /// @brief Destructor.
         virtual ~ResourceListModel();
 
-        /// Initialize the table model.
-        /// \param table_view The view to the table.
-        /// \param num_rows Total rows of the table.
-        /// \param num_columns Total columns of the table.
+        /// @brief Initialize the table model.
+        ///
+        /// @param [in] table_view  The view to the table.
+        /// @param [in] num_rows    Total rows of the table.
+        /// @param [in] num_columns Total columns of the table.
         void InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns);
 
-        /// Handle what happens when user changes the filter.
-        /// \param filter new text filter.
+        /// @brief Handle what happens when user changes the filter.
+        ///
+        /// @param [in] filter The new text filter.
         void SearchBoxChanged(const QString& filter);
 
-        /// Handle what happens when the size filter changes.
-        /// \param min_value Minimum value of slider span.
-        /// \param max_value Maximum value of slider span.
+        /// @brief Handle what happens when the size filter changes.
+        ///
+        /// @param [in] min_value Minimum value of slider span.
+        /// @param [in] max_value Maximum value of slider span.
         void FilterBySizeChanged(int min_value, int max_value);
 
-        /// Read the dataset and update model.
+        /// @brief Read the dataset and update model.
         void Update();
 
-        /// Update the list of heaps selected. This is set up from the preferred heap combo box.
-        /// \param preferred_heap_filter The regular expression string of selected heaps.
+        /// @brief Update the list of heaps selected. This is set up from the preferred heap combo box.
+        ///
+        /// \@param [in] preferred_heap_filter The regular expression string of selected heaps.
         void UpdatePreferredHeapList(const QString& preferred_heap_filter);
 
-        /// Update the list of resources available. This is set up from the resource usage combo box.
-        /// \param resource_usage_filter The regular expression string of selected resource usage types.
+        /// @brief Update the list of resources available. This is set up from the resource usage combo box.
+        ///
+        /// @param [in] resource_usage_filter The regular expression string of selected resource usage types.
         void UpdateResourceUsageList(const QString& resource_usage_filter);
 
-        /// Initialize blank data for the model.
+        /// @brief Initialize blank data for the model.
         void ResetModelValues();
 
-        /// Get the resource proxy model. Used to set up a connection between the table being sorted and the UI update.
-        /// \return the proxy model.
+        /// @brief Get the resource proxy model. Used to set up a connection between the table being sorted and the UI update.
+        ///
+        /// @return the proxy model.
         ResourceProxyModel* GetResourceProxyModel() const;
 
     private:
-        /// Update the labels on the bottom.
+        /// @brief Update the labels on the bottom.
         void UpdateBottomLabels();
 
-        /// Update the resource list table.
+        /// @brief Update the resource list table.
         void UpdateTable();
 
         ResourceItemModel*  table_model_;  ///< Resource table model data.

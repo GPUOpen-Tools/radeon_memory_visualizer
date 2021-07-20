@@ -1,8 +1,8 @@
-﻿//=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of rmv_util which holds useful utility functions.
+//=============================================================================
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of rmv_util which holds useful utility functions.
 //=============================================================================
 
 #include "util/rmv_util.h"
@@ -19,19 +19,22 @@
 #endif
 
 #include <QDir>
+#include <cmath>
 
 #include "rmt_assert.h"
 
 #include "settings/rmv_settings.h"
 #include "util/version.h"
 
-// Get the brightness of a given color. Adds weighting values to the color
-// components to compute a color brightness. HSV won't work that well here
-// as the brightness for 2 given hues may be different for identical
-// saturation and value.
-// Uses a standard luminance formula.
-// \param background_color The color to calculate the brightness of.
-// \return The brightness (0 is black, 255 is white).
+/// @brief Get the brightness of a given color.
+///
+/// Adds weighting values to the color components to compute a color brightness. HSV won't work that well here
+/// as the brightness for 2 given hues may be different for identical saturation and value.
+/// Uses a standard luminance formula.
+///
+/// @param [in] background_color The color to calculate the brightness of.
+///
+/// @return The brightness (0 is black, 255 is white).
 static int GetColorBrightness(const QColor& background_color)
 {
     double r          = background_color.red();
@@ -83,7 +86,7 @@ QString rmv_util::GetFileLocation()
     file_location.append("/." + rmv::kRmvExecutableBaseFilename);
 #endif
 
-    // make sure the folder exists. If not, create it
+    // Make sure the folder exists. If not, create it.
     std::string dir = file_location.toStdString();
     if (QDir(dir.c_str()).exists() == false)
     {
@@ -104,10 +107,10 @@ QColor rmv_util::GetSnapshotStateColor(SnapshotState state)
         out = Qt::black;
         break;
     case kSnapshotStateViewed:
-        out = RMVSettings::Get().GetColorSnapshotViewed();
+        out = rmv::RMVSettings::Get().GetColorSnapshotViewed();
         break;
     case kSnapshotStateCompared:
-        out = RMVSettings::Get().GetColorSnapshotCompared();
+        out = rmv::RMVSettings::Get().GetColorSnapshotCompared();
         break;
     case kSnapshotStateCount:
         out = Qt::black;
@@ -126,13 +129,13 @@ QColor rmv_util::GetDeltaChangeColor(DeltaChange delta)
     switch (delta)
     {
     case kDeltaChangeIncrease:
-        out = RMVSettings::Get().GetColorDeltaIncrease();
+        out = rmv::RMVSettings::Get().GetColorDeltaIncrease();
         break;
     case kDeltaChangeDecrease:
-        out = RMVSettings::Get().GetColorDeltaDecrease();
+        out = rmv::RMVSettings::Get().GetColorDeltaDecrease();
         break;
     case kDeltaChangeNone:
-        out = RMVSettings::Get().GetColorDeltaNoChange();
+        out = rmv::RMVSettings::Get().GetColorDeltaNoChange();
         break;
     case kDeltaChangeCount:
         out = Qt::black;
@@ -142,4 +145,17 @@ QColor rmv_util::GetDeltaChangeColor(DeltaChange delta)
     }
 
     return out;
+}
+
+void rmv_util::BuildResourceSizeThresholds(std::vector<uint64_t>& resource_sizes, uint64_t* resource_thresholds)
+{
+    std::stable_sort(resource_sizes.begin(), resource_sizes.end());
+
+    float step_size = (resource_sizes.size() - 1) / static_cast<float>(rmv::kSizeSliderRange);
+    float index     = 0.0F;
+    for (int loop = 0; loop <= rmv::kSizeSliderRange; loop++)
+    {
+        resource_thresholds[loop] = resource_sizes[static_cast<int>(round(index))];
+        index += step_size;
+    }
 }

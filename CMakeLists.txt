@@ -39,6 +39,9 @@ IF(WIN32)
     # this warning is caused by the QT header files - use pragma to disable at source
     # disable warning C4127: conditional expression is constant
     add_compile_options(/wd4127)
+    # this warning is caused by QT header files and has been introduced by VS2019 16.9.6
+    # disable warning C5240: 'nodiscard': attribute is ignored in this syntactic position
+    add_compile_options(/wd5240)
     # bump the stack size
     add_link_options(/STACK:16777216)
 ELSEIF(UNIX)
@@ -101,17 +104,64 @@ IF(WIN32)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT RadeonMemoryVisualizer)
 ENDIF(WIN32)
 
-## Copy Documentation and Samples to output directory
-add_custom_target(Documentation ALL)
+## Copy Documentation and Samples to output directory. Note - this target is intentionally not included in
+## the default project build. It needs to be explicitly built as a separate project
+
+# Determine where the build process will be placing the binary files
+# This is evaluated at project build time - not at CMake generation time
+set(BUILD_ROOT $<$<CONFIG:debug>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}>$<$<CONFIG:release>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}>)
+
+# Define the option to pass to the sphinx documentation job
+set(SPHINX_OPTION public)
+
+find_program(SPHINX_EXECUTABLE sphinx-build)
+if(NOT SPHINX_EXECUTABLE)
+  message(FATAL_ERROR "SPHINX_EXECUTABLE (sphinx-build) is not found!")
+endif()
+
+# group sphinx source files into a sphinx folder
+file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_SOURCE_DIR}/documentation/source/*.rst)
+set (SPHINX_DOC_MAIN ${CMAKE_SOURCE_DIR}/documentation/source/conf.py)
+source_group("sphinx" FILES ${SPHINX_DOC_FILES} ${SPHINX_DOC_MAIN})
+
+# group release documents into a release_docs folder
+set (RELEASE_DOCS_IN_ROOT
+     ${CMAKE_SOURCE_DIR}/README.md
+     ${CMAKE_SOURCE_DIR}/Release_Notes.txt
+     ${CMAKE_SOURCE_DIR}/NOTICES.txt
+     ${CMAKE_SOURCE_DIR}/License.txt
+)
+set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
+source_group("release_docs" FILES ${RELEASE_DOCS})
+
+# hang the sphinx build on the conf.py file and specify a dummy output ("sphinx_output")
+# this ensures the sphinx docs are built everytime you ask to build the Documentation target
+# Sphinx has proper dependency checking, so this works as expected.
+# Once built, clean up any unneeded files.
+add_custom_target(Documentation SOURCES ${SPHINX_DOC_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
+add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
+    COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
+    COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${BUILD_ROOT}/docs/help/rmv/html/. -t ${SPHINX_OPTION}
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${BUILD_ROOT}/docs/help/rmv/html/.doctrees
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/allocation_explorer.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/allocation_overview.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/capture.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/carousel.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/heap_overview.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/memory_leak_finder.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/resource_details.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/resource_list.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/resource_overview.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/settings.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/snapshot_delta.html
+    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/timeline.html
+)
+
 add_custom_command(TARGET Documentation POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "copying documentation to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/docs
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/documentation/License.htm     $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/docs/.
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/README.md                     $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/.
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/Release_Notes.txt             $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/.
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/NOTICES.txt                   $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/.
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/License.txt                   $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/.
-    COMMAND ${CMAKE_COMMAND} -E echo "copying samples to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sampleTrace.rmv       $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/samples/.
+    COMMAND ${CMAKE_COMMAND} -E echo "copying Documentation to output directory"
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_ROOT}/docs
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${BUILD_ROOT}/.
+    COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_ROOT}/samples
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sampleTrace.rmv  ${BUILD_ROOT}/samples/.
 )

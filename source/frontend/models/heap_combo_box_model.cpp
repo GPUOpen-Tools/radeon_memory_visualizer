@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a model corresponding to a heap combo box.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a model corresponding to a heap combo box.
 //=============================================================================
 
 #include "models/heap_combo_box_model.h"
@@ -27,7 +27,7 @@ namespace rmv
     {
         combo_box->ClearItems();
 
-        // Add the "All" entry to the combo box
+        // Add the "All" entry to the combo box.
         QCheckBox* checkbox = combo_box->AddCheckboxItem("All", QVariant(), false, true);
         RMT_ASSERT(checkbox != nullptr);
         if (checkbox != nullptr)
@@ -49,7 +49,7 @@ namespace rmv
 
     void HeapComboBoxModel::ResetHeapComboBox(ArrowIconComboBox* combo_box)
     {
-        // index 0 is the "all" combo box entry
+        // Index 0 is the "all" combo box entry.
         int combo_box_row = 0;
         combo_box->SetChecked(combo_box_row, true);
         combo_box_row++;
@@ -66,7 +66,7 @@ namespace rmv
     {
         SetupState(combo_box);
 
-        // build the heap filter
+        // Build the heap filter.
         QString heap_filter = QString("(-|ORPHANED");
         for (int heap = 0; heap < kRmtHeapTypeCount; heap++)
         {

@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Definition of structures and functions for RMT warnings.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of structures and functions for RMT warnings.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_WARNINGS_H_
@@ -10,7 +11,7 @@
 #include <rmt_types.h>
 #include <rmt_error.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -28,7 +29,7 @@ typedef enum RmtWarningType
     kRmtWarningTypeCount
 } RmtWarningType;
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_WARNINGS_H_

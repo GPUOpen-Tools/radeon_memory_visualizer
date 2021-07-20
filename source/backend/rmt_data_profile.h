@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Structures for profiling the RMT data for future parsing.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Structures for profiling the RMT data for future parsing.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_DATA_PROFILE_H_
@@ -11,7 +12,7 @@
 #include "rmt_configuration.h"
 #include <rmt_file_format.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -31,7 +32,7 @@ typedef struct RmtDataProfile
 
 } RmtDataProfile;
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_BACKEND_RMT_DATA_PROFILE_H_

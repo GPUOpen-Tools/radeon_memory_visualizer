@@ -1,36 +1,31 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV main window.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the main window.
 //=============================================================================
 
 #include "views/main_window.h"
 
-#include "ui_main_window.h"
-
-#include <map>
-#include <functional>
-
 #include <QDesktopWidget>
-#include <QFileDialog>
 #include <QDesktopServices>
+#include <QFileDialog>
 #include <QMimeData>
+#include <QScreen>
 
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "rmt_data_snapshot.h"
-#include "rmt_assert.h"
-
-#include "models/snapshot_manager.h"
-#include "models/trace_manager.h"
-#include "models/message_manager.h"
+#include "managers/load_animation_manager.h"
+#include "managers/message_manager.h"
+#include "managers/navigation_manager.h"
+#include "managers/pane_manager.h"
+#include "managers/snapshot_manager.h"
+#include "managers/trace_manager.h"
 #include "views/compare/snapshot_delta_pane.h"
 #include "views/compare/memory_leak_finder_pane.h"
 #include "views/compare/compare_start_pane.h"
-#include "views/navigation_manager.h"
 #include "views/settings/settings_pane.h"
 #include "views/settings/themes_and_colors_pane.h"
 #include "views/settings/keyboard_shortcuts_pane.h"
@@ -42,25 +37,27 @@
 #include "views/snapshot/heap_overview_pane.h"
 #include "views/snapshot/snapshot_start_pane.h"
 #include "views/start/about_pane.h"
+#include "views/start/recent_traces_pane.h"
+#include "views/start/welcome_pane.h"
 #include "views/timeline/timeline_pane.h"
 #include "views/timeline/device_configuration_pane.h"
 #include "settings/rmv_settings.h"
 #include "settings/rmv_geometry_settings.h"
 #include "util/time_util.h"
-#include "util/thread_controller.h"
 #include "util/version.h"
 #include "util/widget_util.h"
 
-// Indices for the SNAPSHOT and COMPARE stacked widget. Index 1 is displayed if
-// a snapshot loaded, otherwise and empty pane (0) is shown
-static const int kIndexEmptyPane     = 0;
-static const int kIndexPopulatedPane = 1;
+// Indices for the COMPARE stacked widget. These need to match the widget order
+// in the .ui file.
+enum SnapshotStackIndex
+{
+    kCompareNotLoaded = 0,  // Snapshots not loaded.
+    kCompareEmpty     = 1,  // Snapshots contain no allocations or resources.
+    kCompareOk        = 2,  // Snapshots loaded and contain useful data.
+};
 
-// Thread count for the job queue.
-static const int32_t kThreadCount = 8;
-
+// The maximum number of snapshots to list in the recent traces list.
 static const int kMaxSubmenuSnapshots = 10;
-RmtJobQueue      MainWindow::job_queue_;
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -73,10 +70,9 @@ MainWindow::MainWindow(QWidget* parent)
     , about_action_(nullptr)
     , help_menu_(nullptr)
     , recent_traces_menu_(nullptr)
-    , file_load_animation_(nullptr)
     , navigation_bar_(this)
 {
-    const bool loaded_settings = RMVSettings::Get().LoadSettings();
+    const bool loaded_settings = rmv::RMVSettings::Get().LoadSettings();
 
     ui_->setupUi(this);
 
@@ -84,56 +80,40 @@ MainWindow::MainWindow(QWidget* parent)
     setWindowIcon(QIcon(":/Resources/assets/rmv_icon_32x32.png"));
     setAcceptDrops(true);
 
-    // Set white background for this pane
+    // Set white background for this pane.
     rmv::widget_util::SetWidgetBackgroundColor(this, Qt::white);
 
-    // Setup window sizes and settings
+    // Setup window sizes and settings.
     SetupWindowRects(loaded_settings);
 
-    welcome_pane_                                = CreatePane<WelcomePane>();
-    recent_traces_pane_                          = CreatePane<RecentTracesPane>();
-    BasePane* about_pane                         = CreatePane<AboutPane>();
-    timeline_pane_                               = CreatePane<TimelinePane>();
-    BasePane* resource_overview_pane             = CreatePane<ResourceOverviewPane>();
-    BasePane* allocation_overview_pane           = CreatePane<AllocationOverviewPane>();
-    BasePane* resource_list_pane                 = CreatePane<ResourceListPane>();
-    BasePane* resource_details_pane              = CreatePane<ResourceDetailsPane>();
-    BasePane* device_configuration_pane          = CreatePane<DeviceConfigurationPane>();
-    BasePane* allocation_explorer_pane           = CreatePane<AllocationExplorerPane>();
-    BasePane* heap_overview_pane                 = CreatePane<HeapOverviewPane>();
-    snapshot_delta_pane_                         = CreatePane<SnapshotDeltaPane>();
-    memory_leak_finder_pane_                     = CreatePane<MemoryLeakFinderPane>();
-    settings_pane_                               = CreatePane<SettingsPane>();
-    ThemesAndColorsPane* themes_and_colors_pane  = CreatePane<ThemesAndColorsPane>();
-    BasePane*            keyboard_shortcuts_pane = CreatePane<KeyboardShortcutsPane>();
-    snapshot_start_pane_                         = dynamic_cast<BasePane*>(ui_->snapshot_start_stack_->widget(0));
-    compare_start_pane_                          = dynamic_cast<BasePane*>(ui_->compare_start_stack_->widget(0));
+    // NOTE: Widgets need creating in the order they are to appear in the UI.
+    CreatePane<WelcomePane>(ui_->start_stack_);
+    RecentTracesPane* recent_traces_pane = CreatePane<RecentTracesPane>(ui_->start_stack_);
+    CreatePane<AboutPane>(ui_->start_stack_);
+    timeline_pane_ = CreatePane<TimelinePane>(ui_->timeline_stack_);
+    CreatePane<DeviceConfigurationPane>(ui_->timeline_stack_);
+    CreatePane<HeapOverviewPane>(ui_->snapshot_stack_);
+    CreatePane<ResourceOverviewPane>(ui_->snapshot_stack_);
+    CreatePane<AllocationOverviewPane>(ui_->snapshot_stack_);
+    CreatePane<ResourceListPane>(ui_->snapshot_stack_);
+    CreatePane<AllocationExplorerPane>(ui_->snapshot_stack_);
+    resource_details_pane_ = CreatePane<ResourceDetailsPane>(ui_->snapshot_stack_);
+    CreateComparePane<SnapshotDeltaPane>(ui_->compare_stack_);
+    CreateComparePane<MemoryLeakFinderPane>(ui_->compare_stack_);
+    CreatePane<SettingsPane>(ui_->settings_stack_);
+    ThemesAndColorsPane* themes_and_colors_pane = CreatePane<ThemesAndColorsPane>(ui_->settings_stack_);
+    CreatePane<KeyboardShortcutsPane>(ui_->settings_stack_);
 
-    // NOTE: Widgets need adding in the order they are to appear in the UI
-    ui_->start_stack_->addWidget(welcome_pane_);
-    ui_->start_stack_->addWidget(recent_traces_pane_);
-    ui_->start_stack_->addWidget(about_pane);
-    ui_->timeline_stack_->addWidget(timeline_pane_);
-    ui_->timeline_stack_->addWidget(device_configuration_pane);
-    ui_->snapshot_stack_->addWidget(heap_overview_pane);
-    ui_->snapshot_stack_->addWidget(resource_overview_pane);
-    ui_->snapshot_stack_->addWidget(allocation_overview_pane);
-    ui_->snapshot_stack_->addWidget(resource_list_pane);
-    ui_->snapshot_stack_->addWidget(allocation_explorer_pane);
-    ui_->snapshot_stack_->addWidget(resource_details_pane);
-    ui_->compare_stack_->addWidget(snapshot_delta_pane_);
-    ui_->compare_stack_->addWidget(memory_leak_finder_pane_);
-    ui_->settings_stack_->addWidget(settings_pane_);
-    ui_->settings_stack_->addWidget(themes_and_colors_pane);
-    ui_->settings_stack_->addWidget(keyboard_shortcuts_pane);
+    ui_->compare_snapshots_empty_->SetEmptyTitleText();
 
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneTimeline, false);
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneSnapshot, false);
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneCompare, false);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneTimeline, false);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneSnapshot, false);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneCompare, false);
 
     SetupTabBar();
     CreateActions();
     CreateMenus();
+    rmv::LoadAnimationManager::Get().Initialize(ui_->main_tab_widget_, file_menu_);
 
     ResetUI();
 
@@ -141,15 +121,14 @@ MainWindow::MainWindow(QWidget* parent)
     ui_->snapshot_combo_box_->SetListAboveButton(true);
     connect(ui_->snapshot_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &MainWindow::OpenSelectedSnapshot);
 
-    ViewPane(rmv::kPaneStartWelcome);
+    ViewPane(rmv::kPaneIdStartWelcome);
 
     connect(&navigation_bar_.BackButton(), &QPushButton::clicked, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateBack);
     connect(&navigation_bar_.ForwardButton(), &QPushButton::clicked, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateForward);
     connect(&rmv::NavigationManager::Get(), &rmv::NavigationManager::EnableBackNavButton, &navigation_bar_, &NavigationBar::EnableBackButton);
     connect(&rmv::NavigationManager::Get(), &rmv::NavigationManager::EnableForwardNavButton, &navigation_bar_, &NavigationBar::EnableForwardButton);
-    connect(&MessageManager::Get(), &MessageManager::OpenTrace, this, &MainWindow::LoadTrace);
 
-    // Update the navigation and pane switching when the UI panes are changed
+    // Update the navigation and pane switching when the UI panes are changed.
     connect(ui_->start_list_, &QListWidget::currentRowChanged, this, &MainWindow::UpdateStartListRow);
     connect(ui_->timeline_list_, &QListWidget::currentRowChanged, this, &MainWindow::UpdateTimelineListRow);
     connect(ui_->snapshot_list_, &QListWidget::currentRowChanged, this, &MainWindow::UpdateSnapshotListRow);
@@ -157,21 +136,33 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui_->settings_list_, &QListWidget::currentRowChanged, this, &MainWindow::UpdateSettingsListRow);
     connect(ui_->main_tab_widget_, &QTabWidget::currentChanged, this, &MainWindow::UpdateMainTabIndex);
 
-    // Set up the stack widget signals so they know which pane in their stack to switch to
+    // Set up the stack widget signals so they know which pane in their stack to switch to.
     connect(ui_->start_list_, &QListWidget::currentRowChanged, ui_->start_stack_, &QStackedWidget::setCurrentIndex);
     connect(ui_->timeline_list_, &QListWidget::currentRowChanged, ui_->timeline_stack_, &QStackedWidget::setCurrentIndex);
     connect(ui_->snapshot_list_, &QListWidget::currentRowChanged, ui_->snapshot_stack_, &QStackedWidget::setCurrentIndex);
     connect(ui_->compare_list_, &QListWidget::currentRowChanged, ui_->compare_stack_, &QStackedWidget::setCurrentIndex);
     connect(ui_->settings_list_, &QListWidget::currentRowChanged, ui_->settings_stack_, &QStackedWidget::setCurrentIndex);
 
-    connect(&MessageManager::Get(), &MessageManager::NavigateToPane, this, &MainWindow::ViewPane);
-    connect(&MessageManager::Get(), &MessageManager::NavigateToPaneUnrecorded, this, &MainWindow::SetupNextPane);
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::OpenTraceFileMenuClicked, this, &MainWindow::OpenTraceFromFileMenu);
+    connect(recent_traces_pane, &RecentTracesPane::RecentFileDeleted, this, &MainWindow::SetupRecentTracesMenu);
 
-    connect(&MessageManager::Get(), &MessageManager::OpenSnapshot, this, &MainWindow::OpenSnapshot);
-    connect(&MessageManager::Get(), &MessageManager::CompareSnapshot, this, &MainWindow::CompareSnapshot);
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::TitleBarChanged, this, &MainWindow::UpdateTitlebar);
+
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::PaneSwitchRequested, this, &MainWindow::ViewPane);
+    connect(&rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateButtonClicked, this, &MainWindow::SetupNextPane);
+
+    connect(&rmv::TraceManager::Get(), &rmv::TraceManager::TraceOpened, this, &MainWindow::OpenTrace);
+    connect(&rmv::TraceManager::Get(), &rmv::TraceManager::TraceClosed, this, &MainWindow::CloseTrace);
+
+    connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::SnapshotOpened, this, &MainWindow::OpenSnapshotPane);
+    connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::CompareSnapshotsOpened, this, &MainWindow::OpenComparePane);
+
+    connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::SnapshotLoaded, this, &MainWindow::ShowSnapshotPane);
+    connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::CompareSnapshotsLoaded, this, &MainWindow::ShowComparePane);
+
     connect(themes_and_colors_pane, &ThemesAndColorsPane::RefreshedColors, this, &MainWindow::BroadcastChangeColoring);
 
-    // Connect to ScalingManager for notifications
+    // Connect to ScalingManager for notifications.
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
 }
 
@@ -214,10 +205,10 @@ void MainWindow::ResizeNavigationLists()
 
 void MainWindow::SetupTabBar()
 {
-    // Set grey background for main tab bar background
+    // Set grey background for main tab bar background.
     rmv::widget_util::SetWidgetBackgroundColor(ui_->main_tab_widget_, QColor(51, 51, 51));
 
-    // set the mouse cursor to pointing hand cursor for all of the tabs
+    // Set the mouse cursor to pointing hand cursor for all of the tabs.
     QList<QTabBar*> tab_bar = ui_->main_tab_widget_->findChildren<QTabBar*>();
     foreach (QTabBar* item, tab_bar)
     {
@@ -229,25 +220,34 @@ void MainWindow::SetupTabBar()
     }
 
     // Set the tab that divides the left and right justified tabs.
-    ui_->main_tab_widget_->SetSpacerIndex(kMainPaneSpacer);
+    ui_->main_tab_widget_->SetSpacerIndex(rmv::kMainPaneSpacer);
 
     // Adjust spacing around the navigation bar so that it appears centered on the tab bar.
     navigation_bar_.layout()->setContentsMargins(15, 3, 35, 2);
 
     // Setup navigation browser toolbar on the main tab bar.
-    ui_->main_tab_widget_->SetTabTool(kMainPaneNavigation, &navigation_bar_);
+    ui_->main_tab_widget_->SetTabTool(rmv::kMainPaneNavigation, &navigation_bar_);
 }
 
 void MainWindow::SetupWindowRects(bool loaded_settings)
 {
+    QList<QScreen*> screens = QGuiApplication::screens();
+    QRect           geometry;
+
+    Q_ASSERT(!screens.empty());
+
+    if (!screens.empty())
+    {
+        geometry = screens.front()->availableGeometry();
+    }
+
     if (loaded_settings)
     {
-        RMVGeometrySettings::Restore(this);
+        rmv::RMVGeometrySettings::Restore(this);
     }
     else
     {
         // Move main window to default position if settings file was not loaded.
-        const QRect  geometry                   = QApplication::desktop()->availableGeometry();
         const QPoint available_desktop_top_left = geometry.topLeft();
         move(available_desktop_top_left.x() + rmv::kDesktopMargin, available_desktop_top_left.y() + rmv::kDesktopMargin);
 
@@ -257,22 +257,20 @@ void MainWindow::SetupWindowRects(bool loaded_settings)
     }
 
 #if RMV_DEBUG_WINDOW
-    const int   screen_number = QApplication::desktop()->screenNumber(this);
-    const QRect desktop_res   = QApplication::desktop()->availableGeometry(screen_number);
-
-    const int desktop_width  = (rmv::kDesktopAvailableWidthPercentage / 100.0f) * desktop_res.width();
-    const int desktop_height = (rmv::kDesktopAvailableHeightPercentage / 100.0f) * desktop_res.height();
+    const int desktop_width  = (rmv::kDesktopAvailableWidthPercentage / 100.0f) * geometry.width();
+    const int desktop_height = (rmv::kDesktopAvailableHeightPercentage / 100.0f) * geometry.height();
 
     const int dbg_width  = desktop_width * (rmv::kDebugWindowDesktopWidthPercentage / 100.0f);
     const int dbg_height = desktop_height * (rmv::kDebugWindowDesktopHeightPercentage / 100.f);
 
-    const int dbg_loc_x = rmv::kDesktopMargin + desktop_res.left();
-    const int dbg_loc_y = (desktop_height - dbg_height - rmv::kDesktopMargin) + desktop_res.top();
+    const int dbg_loc_x = rmv::kDesktopMargin + geometry.left();
+    const int dbg_loc_y = (desktop_height - dbg_height - rmv::kDesktopMargin) + geometry.top();
 
-    // place debug out window
+    // Place debug out window.
     debug_window_.move(dbg_loc_x, dbg_loc_y);
     debug_window_.resize(dbg_width, dbg_height);
     debug_window_.show();
+
 #endif  // RMV_DEBUG_WINDOW
 }
 
@@ -289,22 +287,22 @@ void MainWindow::SetupHotkeyNavAction(QSignalMapper* mapper, int key, int pane)
 void MainWindow::CreateActions()
 {
     QSignalMapper* signal_mapper = new QSignalMapper(this);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoWelcomePane, rmv::kPaneStartWelcome);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoRecentSnapshotsPane, rmv::kPaneStartRecentTraces);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoGenerateSnapshotPane, rmv::kPaneTimelineGenerateSnapshot);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoDeviceConfigurationPane, rmv::kPaneTimelineDeviceConfiguration);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoHeapOverviewPane, rmv::kPaneSnapshotHeapOverview);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceOverviewPane, rmv::kPaneSnapshotResourceOverview);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAllocationOverviewPane, rmv::kPaneSnapshotAllocationOverview);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceListPane, rmv::kPaneSnapshotResourceList);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceHistoryPane, rmv::kPaneSnapshotResourceDetails);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAllocationExplorerPane, rmv::kPaneSnapshotAllocationExplorer);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoSnapshotDeltaPane, rmv::kPaneCompareSnapshotDelta);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoMemoryLeakFinderPane, rmv::kPaneCompareMemoryLeakFinder);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoKeyboardShortcutsPane, rmv::kPaneSettingsKeyboardShortcuts);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoWelcomePane, rmv::kPaneIdStartWelcome);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoRecentSnapshotsPane, rmv::kPaneIdStartRecentTraces);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoGenerateSnapshotPane, rmv::kPaneIdTimelineGenerateSnapshot);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoDeviceConfigurationPane, rmv::kPaneIdTimelineDeviceConfiguration);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoHeapOverviewPane, rmv::kPaneIdSnapshotHeapOverview);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceOverviewPane, rmv::kPaneIdSnapshotResourceOverview);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAllocationOverviewPane, rmv::kPaneIdSnapshotAllocationOverview);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceListPane, rmv::kPaneIdSnapshotResourceList);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceHistoryPane, rmv::kPaneIdSnapshotResourceDetails);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAllocationExplorerPane, rmv::kPaneIdSnapshotAllocationExplorer);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoSnapshotDeltaPane, rmv::kPaneIdCompareSnapshotDelta);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoMemoryLeakFinderPane, rmv::kPaneIdCompareMemoryLeakFinder);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoKeyboardShortcutsPane, rmv::kPaneIdSettingsKeyboardShortcuts);
     connect(signal_mapper, SIGNAL(mapped(int)), this, SLOT(ViewPane(int)));
 
-    // Set up forward/backward navigation
+    // Set up forward/backward navigation.
     QAction* shortcut = new QAction(this);
     shortcut->setShortcut(Qt::ALT | rmv::kKeyNavForwardArrow);
 
@@ -323,7 +321,7 @@ void MainWindow::CreateActions()
     connect(shortcut, &QAction::triggered, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateBack);
     this->addAction(shortcut);
 
-    // Set up time unit cycling
+    // Set up time unit cycling.
     shortcut = new QAction(this);
     shortcut->setShortcut(Qt::CTRL | Qt::Key_T);
 
@@ -332,7 +330,7 @@ void MainWindow::CreateActions()
 
     open_trace_action_ = new QAction(tr("Open trace"), this);
     open_trace_action_->setShortcut(Qt::CTRL | Qt::Key_O);
-    connect(open_trace_action_, &QAction::triggered, this, &MainWindow::OpenTrace);
+    connect(open_trace_action_, &QAction::triggered, this, &MainWindow::OpenTraceFromFileMenu);
 
     close_trace_action_ = new QAction(tr("Close trace"), this);
     close_trace_action_->setShortcut(Qt::CTRL | Qt::Key_F4);
@@ -357,10 +355,10 @@ void MainWindow::CreateActions()
 
 void MainWindow::CycleTimeUnits()
 {
-    settings_pane_->CycleTimeUnits();
+    rmv::RMVSettings::Get().CycleTimeUnits();
     pane_manager_.SwitchTimeUnits();
-    UpdateSnapshotCombobox(SnapshotManager::Get().GetSelectedSnapshotPoint());
-    if (pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane()) == kMainPaneSnapshot)
+    UpdateSnapshotCombobox(rmv::SnapshotManager::Get().GetSelectedSnapshotPoint());
+    if (pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane()) == rmv::kMainPaneSnapshot)
     {
         ResizeNavigationLists();
     }
@@ -377,7 +375,7 @@ void MainWindow::SetupRecentTracesMenu()
 
     recent_traces_menu_->clear();
 
-    const QVector<RecentFileData>& files = RMVSettings::Get().RecentFiles();
+    const QVector<RecentFileData>& files = rmv::RMVSettings::Get().RecentFiles();
 
     const int num_items = (files.size() > kMaxSubmenuSnapshots) ? kMaxSubmenuSnapshots : files.size();
 
@@ -394,13 +392,7 @@ void MainWindow::SetupRecentTracesMenu()
         connect(recent_trace_mappers_[i], SIGNAL(mapped(QString)), this, SLOT(LoadTrace(QString)));
     }
 
-    emit welcome_pane_->FileListChanged();
-    emit recent_traces_pane_->FileListChanged();
-}
-
-void MainWindow::OpenRecentTracesPane()
-{
-    ViewPane(rmv::kPaneStartRecentTraces);
+    emit rmv::MessageManager::Get().RecentFileListChanged();
 }
 
 void MainWindow::CreateMenus()
@@ -424,129 +416,58 @@ void MainWindow::CreateMenus()
 
 void MainWindow::LoadTrace(const QString& trace_file)
 {
-    TraceManager& trace_manager = TraceManager::Get();
-    if (trace_manager.ReadyToLoadTrace())
-    {
-        if (trace_manager.TraceValidToLoad(trace_file) == true)
-        {
-            bool success = trace_manager.LoadTrace(trace_file, false);
-
-            if (success)
-            {
-                StartAnimation(ui_->main_tab_widget_, ui_->main_tab_widget_->TabHeight());
-            }
-        }
-        else
-        {
-            // The selected trace file is missing on the disk so display a message box stating so
-            const QString text = rmv::text::kOpenRecentTraceStart + trace_file + rmv::text::kOpenRecentTraceEnd;
-            QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
-        }
-    }
+    rmv::TraceManager::Get().LoadTrace(trace_file);
 }
 
-void MainWindow::TraceLoadComplete()
+void MainWindow::OpenTrace()
 {
     close_trace_action_->setDisabled(false);
     timeline_pane_->OnTraceLoad();
 
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneTimeline, true);
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneSnapshot, true);
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneCompare, true);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneTimeline, true);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneSnapshot, true);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneCompare, true);
 
-    ViewPane(rmv::kPaneTimelineGenerateSnapshot);
+    ViewPane(rmv::kPaneIdTimelineGenerateSnapshot);
 
     SetupRecentTracesMenu();
 
     UpdateTitlebar();
 }
 
-void MainWindow::StartAnimation(QWidget* parent, int height_offset)
-{
-    if (file_load_animation_ == nullptr)
-    {
-        file_load_animation_ = new FileLoadingWidget(parent);
-
-        // Set overall size of the widget to cover the tab contents.
-        int width  = parent->width();
-        int height = parent->height() - height_offset;
-        file_load_animation_->setGeometry(parent->x(), parent->y() + height_offset, width, height);
-
-        // Set the contents margin so that the animated bars cover a portion of the middle of the screen.
-        const int desired_loading_dimension = ScalingManager::Get().Scaled(200);
-        int       vertical_margin           = (height - desired_loading_dimension) / 2;
-        int       horizontal_margin         = (width - desired_loading_dimension) / 2;
-        file_load_animation_->setContentsMargins(horizontal_margin, vertical_margin, horizontal_margin, vertical_margin);
-
-        file_load_animation_->show();
-        ui_->main_tab_widget_->setDisabled(true);
-        file_menu_->setDisabled(true);
-
-        qApp->setOverrideCursor(Qt::BusyCursor);
-    }
-}
-
-void MainWindow::StopAnimation()
-{
-    if (file_load_animation_ != nullptr)
-    {
-        delete file_load_animation_;
-        file_load_animation_ = nullptr;
-
-        ui_->main_tab_widget_->setEnabled(true);
-        file_menu_->setEnabled(true);
-
-        qApp->restoreOverrideCursor();
-    }
-}
-
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    RMVSettings::Get().SetWindowSize(event->size().width(), event->size().height());
+    rmv::RMVSettings::Get().SetWindowSize(event->size().width(), event->size().height());
 
     ResizeNavigationLists();
 
-    // Update Animation widget on window resize
-    if (file_load_animation_ != nullptr)
-    {
-        // Set overall size of the widget to cover the tab contents.
-        double   height_offset = ui_->main_tab_widget_->TabHeight();
-        QWidget* parent        = file_load_animation_->parentWidget();
-        int      width         = parent->width();
-        int      height        = parent->height() - height_offset;
-        file_load_animation_->setGeometry(parent->x(), parent->y() + height_offset, width, height);
-
-        // Set the contents margin so that the animated bars only cover a small area in the middle of the screen.
-        const int desired_loading_dimension = 200;
-        int       vertical_margin           = (height - desired_loading_dimension) / 2;
-        int       horizontal_margin         = (width - desired_loading_dimension) / 2;
-        file_load_animation_->setContentsMargins(horizontal_margin, vertical_margin, horizontal_margin, vertical_margin);
-    }
+    rmv::LoadAnimationManager::Get().ResizeAnimation();
 }
 
 void MainWindow::moveEvent(QMoveEvent* event)
 {
     QMainWindow::moveEvent(event);
 
-    RMVSettings::Get().SetWindowPos(geometry().x(), geometry().y());
+    rmv::RMVSettings::Get().SetWindowPos(geometry().x(), geometry().y());
 }
 
-void MainWindow::OpenTrace()
+void MainWindow::OpenTraceFromFileMenu()
 {
-    QString file_name = QFileDialog::getOpenFileName(this, "Open file", RMVSettings::Get().GetLastFileOpenLocation(), rmv::text::kFileOpenFileTypes);
+    QString file_name = QFileDialog::getOpenFileName(this, "Open file", rmv::RMVSettings::Get().GetLastFileOpenLocation(), rmv::text::kFileOpenFileTypes);
 
     if (!file_name.isNull())
     {
-        LoadTrace(file_name);
+        rmv::TraceManager::Get().LoadTrace(file_name);
     }
 }
 
 void MainWindow::CloseTrace()
 {
-    TraceManager::Get().ClearTrace();
+    rmv::TraceManager::Get().ClearTrace();
 
-    BroadcastOnTraceClose();
+    pane_manager_.OnTraceClose();
+
     ResetUI();
     rmv::NavigationManager::Get().Reset();
     close_trace_action_->setDisabled(true);
@@ -556,8 +477,8 @@ void MainWindow::CloseTrace()
 
 void MainWindow::ResetUI()
 {
-    // Default to first tab
-    const NavLocation& nav_location = pane_manager_.ResetNavigation();
+    // Default to first tab.
+    const rmv::NavLocation& nav_location = pane_manager_.ResetNavigation();
 
     ui_->main_tab_widget_->setCurrentIndex(nav_location.main_tab_index);
     ui_->start_list_->setCurrentRow(nav_location.start_list_row);
@@ -566,29 +487,30 @@ void MainWindow::ResetUI()
     ui_->compare_list_->setCurrentRow(nav_location.compare_list_row);
     ui_->settings_list_->setCurrentRow(nav_location.settings_list_row);
 
-    ui_->snapshot_start_stack_->setCurrentIndex(kIndexEmptyPane);
-    ui_->compare_start_stack_->setCurrentIndex(kIndexEmptyPane);
+    ui_->snapshot_start_stack_->setCurrentIndex(rmv::kSnapshotIndexEmptyPane);
+    ui_->compare_start_stack_->setCurrentIndex(kCompareNotLoaded);
 
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneTimeline, false);
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneSnapshot, false);
-    ui_->main_tab_widget_->setTabEnabled(kMainPaneCompare, false);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneTimeline, false);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneSnapshot, false);
+    ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneCompare, false);
 
-    BroadcastReset();
+    UpdateTitlebar();
+    pane_manager_.Reset();
 }
 
 void MainWindow::OpenHelp()
 {
-    // Get the file info
+    // Get the file info.
     QFileInfo file_info(QCoreApplication::applicationDirPath() + rmv::text::kRmvHelpFile);
 
-    // Check to see if the file is not a directory and that it exists
+    // Check to see if the file is not a directory and that it exists.
     if (file_info.isFile() && file_info.exists())
     {
         QDesktopServices::openUrl(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + rmv::text::kRmvHelpFile));
     }
     else
     {
-        // The selected help file is missing on the disk so display a message box stating so
+        // The selected help file is missing on the disk so display a message box stating so.
         const QString text = rmv::text::kMissingRmvHelpFile + QCoreApplication::applicationDirPath() + rmv::text::kRmvHelpFile;
         QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kMissingRmvHelpFile, text);
     }
@@ -596,7 +518,7 @@ void MainWindow::OpenHelp()
 
 void MainWindow::OpenAboutPane()
 {
-    ViewPane(rmv::kPaneStartAbout);
+    ViewPane(rmv::kPaneIdStartAbout);
 }
 
 void MainWindow::CloseRmv()
@@ -613,7 +535,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 {
     Q_UNUSED(event);
 
-    RMVGeometrySettings::Save(this);
+    rmv::RMVGeometrySettings::Save(this);
 
     CloseRmv();
 }
@@ -640,72 +562,44 @@ void MainWindow::dropEvent(QDropEvent* event)
         {
             const QString potential_trace_path = event->mimeData()->urls().at(i).toLocalFile();
 
-            if (TraceManager::Get().TraceValidToLoad(potential_trace_path) == true)
+            if (rmv::TraceManager::Get().TraceValidToLoad(potential_trace_path) == true)
             {
-                LoadTrace(potential_trace_path);
+                rmv::TraceManager::Get().LoadTrace(potential_trace_path);
             }
         }
     }
 }
 
-rmv::RMVPane MainWindow::SetupNextPane(rmv::RMVPane pane)
+rmv::RMVPaneId MainWindow::SetupNextPane(rmv::RMVPaneId pane)
 {
-    MainPanes           main_pane     = pane_manager_.GetMainPaneFromPane(pane);
-    const TraceManager& trace_manager = TraceManager::Get();
-
-    if (main_pane == kMainPaneSnapshot || main_pane == kMainPaneCompare)
+    const rmv::NavLocation* const nav_location = pane_manager_.SetupNextPane(pane);
+    if (nav_location == nullptr)
     {
-        // make sure at least one snapshot is generated before navigating to the
-        // snapshot or compare panes
-        if (!trace_manager.DataSetValid())
-        {
-            return pane;
-        }
-
-        RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
-        if (main_pane == kMainPaneSnapshot && open_snapshot == nullptr)
-        {
-            return pane;
-        }
-
-        if (main_pane == kMainPaneCompare &&
-            (trace_manager.GetComparedSnapshot(kSnapshotCompareBase) == nullptr || trace_manager.GetComparedSnapshot(kSnapshotCompareDiff) == nullptr))
-        {
-            return pane;
-        }
-    }
-    else if (main_pane == kMainPaneTimeline)
-    {
-        // make sure a trace is loaded before navigating to the timeline pane
-        if (!trace_manager.DataSetValid())
-        {
-            return pane;
-        }
+        return pane;
     }
 
-    const NavLocation& nav_location = pane_manager_.SetupNextPane(pane);
+    // These things emit signals.
+    ui_->start_list_->setCurrentRow(nav_location->start_list_row);
+    ui_->timeline_list_->setCurrentRow(nav_location->timeline_list_row);
+    ui_->snapshot_list_->setCurrentRow(nav_location->snapshot_list_row);
+    ui_->compare_list_->setCurrentRow(nav_location->compare_list_row);
+    ui_->settings_list_->setCurrentRow(nav_location->settings_list_row);
+    ui_->main_tab_widget_->setCurrentIndex(nav_location->main_tab_index);
 
-    // These things emit signals
-    ui_->start_list_->setCurrentRow(nav_location.start_list_row);
-    ui_->timeline_list_->setCurrentRow(nav_location.timeline_list_row);
-    ui_->snapshot_list_->setCurrentRow(nav_location.snapshot_list_row);
-    ui_->compare_list_->setCurrentRow(nav_location.compare_list_row);
-    ui_->settings_list_->setCurrentRow(nav_location.settings_list_row);
-    ui_->main_tab_widget_->setCurrentIndex(nav_location.main_tab_index);
-
-    rmv::RMVPane new_pane = pane_manager_.UpdateCurrentPane();
+    rmv::RMVPaneId new_pane = pane_manager_.UpdateCurrentPane();
     return (new_pane);
 }
 
 void MainWindow::ViewPane(int pane)
 {
-    rmv::RMVPane current_pane = SetupNextPane(static_cast<rmv::RMVPane>(pane));
+    rmv::RMVPaneId current_pane = SetupNextPane(static_cast<rmv::RMVPaneId>(pane));
+    Q_ASSERT(pane == current_pane);
     rmv::NavigationManager::Get().RecordNavigationEventPaneSwitch(current_pane);
 }
 
 void MainWindow::UpdateSnapshotCombobox(RmtSnapshotPoint* selected_snapshot_point)
 {
-    TraceManager& trace_manager = TraceManager::Get();
+    rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
 
     if (trace_manager.DataSetValid())
     {
@@ -726,8 +620,8 @@ void MainWindow::UpdateSnapshotCombobox(RmtSnapshotPoint* selected_snapshot_poin
 
         if (data_set->snapshot_count > 1)
         {
-            ui_->main_tab_widget_->setTabEnabled(kMainPaneSnapshot, true);
-            ui_->main_tab_widget_->setTabEnabled(kMainPaneCompare, true);
+            ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneSnapshot, true);
+            ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneCompare, true);
         }
 
         // Search the list of items in the combo box that has the open snapshot pointer.
@@ -744,190 +638,197 @@ void MainWindow::OpenSelectedSnapshot()
         const QVariant    item_data              = ui_->snapshot_combo_box_->ItemData(current_row_index, Qt::UserRole);
         const uintptr_t   snapshot_point_address = item_data.toULongLong();
         RmtSnapshotPoint* snapshot_point         = (RmtSnapshotPoint*)snapshot_point_address;
-        RMT_ASSERT(snapshot_point);
+        Q_ASSERT(snapshot_point);
 
         // Do not attempt to re-open the currently open snapshot.
-        RmtDataSnapshot* current_snapshot = TraceManager::Get().GetOpenSnapshot();
+        RmtDataSnapshot* current_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
         if (current_snapshot != nullptr && current_snapshot->snapshot_point != snapshot_point)
         {
-            // if switching snapshot on the resource details pane, navigate to the heap overview
-            // pane since the selected resource will not be valid
-            if (pane_manager_.GetCurrentPane() == rmv::kPaneSnapshotResourceDetails)
+            rmv::SnapshotManager::Get().SetSelectedSnapshotPoint(snapshot_point);
+
+            // If switching snapshot on the resource details pane, navigate to the heap overview
+            // pane since the selected resource will not be valid.
+            if (pane_manager_.GetCurrentPane() == rmv::kPaneIdSnapshotResourceDetails)
             {
-                emit MessageManager::Get().NavigateToPane(rmv::kPaneSnapshotResourceOverview);
+                emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdSnapshotHeapOverview);
             }
 
-            emit MessageManager::Get().SelectSnapshot(snapshot_point);
-            emit MessageManager::Get().OpenSnapshot(snapshot_point);
+            rmv::SnapshotManager::Get().SetSelectedResource(0);
+            OpenSnapshot();
         }
     }
-}
-
-void MainWindow::BroadcastOnTraceClose()
-{
-    pane_manager_.OnTraceClose();
 }
 
 void MainWindow::UpdateStartListRow(const int row)
 {
     pane_manager_.UpdateStartListRow(row);
-    BroadcastPaneSwitched();
 }
 
 void MainWindow::UpdateTimelineListRow(const int row)
 {
     pane_manager_.UpdateTimelineListRow(row);
-    BroadcastPaneSwitched();
 }
 
 void MainWindow::UpdateSnapshotListRow(const int row)
 {
     pane_manager_.UpdateSnapshotListRow(row);
-    BroadcastPaneSwitched();
 }
 
 void MainWindow::UpdateCompareListRow(const int row)
 {
     pane_manager_.UpdateCompareListRow(row);
-    BroadcastPaneSwitched();
 }
 
 void MainWindow::UpdateSettingsListRow(const int row)
 {
     pane_manager_.UpdateSettingsListRow(row);
-    BroadcastPaneSwitched();
 }
 
-void MainWindow::UpdateMainTabIndex(const int row)
+void MainWindow::UpdateMainTabIndex(const int tab_index)
 {
-    pane_manager_.UpdateMainTabIndex(row);
-    BroadcastPaneSwitched();
-}
+    pane_manager_.UpdateMainTabIndex(tab_index);
 
-void MainWindow::BroadcastPaneSwitched()
-{
-    UpdateSnapshotCombobox(SnapshotManager::Get().GetSelectedSnapshotPoint());
-
-    // Catch any transition to the snapshot tab from any other tab and
-    // make sure the snapshot is opened, specifically the case of selecting
-    // something in the timeline pane, and then moving to the snapshot view.
-    MainPanes previous_main_pane = pane_manager_.GetMainPaneFromPane(pane_manager_.GetPreviousPane());
-    MainPanes current_main_pane  = pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane());
-    if (current_main_pane == kMainPaneSnapshot && previous_main_pane != kMainPaneSnapshot)
+    if (pane_manager_.ClickedSnapshotTab())
     {
-        // Only open the snapshot if it's different to the one already opened
-        RmtSnapshotPoint* snapshot_point = SnapshotManager::Get().GetSelectedSnapshotPoint();
-        RmtDataSnapshot*  snapshot       = nullptr;
-        if (snapshot_point != nullptr)
+        if (rmv::SnapshotManager::Get().LoadSnapshotRequired())
         {
-            snapshot = snapshot_point->cached_snapshot;
+            OpenSnapshot();
         }
-        if (TraceManager::Get().SnapshotAlreadyOpened(snapshot) == false || snapshot == nullptr)
+        else
         {
-            OpenSnapshot(snapshot_point);
+            ShowSnapshotPane();
         }
     }
-    UpdateTitlebar();
-    ResizeNavigationLists();
 
-    pane_manager_.PaneSwitched();
+    else if (pane_manager_.ClickedCompareTab())
+    {
+        if (rmv::SnapshotManager::Get().LoadCompareSnapshotsRequired())
+        {
+            OpenCompareSnapshots();
+
+            // Reset to the snapshot delta pane since new snapshots were chosen.
+            emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdCompareSnapshotDelta);
+        }
+        else
+        {
+            ShowComparePane();
+        }
+    }
 }
 
-void MainWindow::BroadcastReset()
+void MainWindow::OpenSnapshotPane(RmtResourceIdentifier resource_identifier)
 {
-    UpdateTitlebar();
+    // User has requested to view a snapshot so transition to appropriate snapshot pane.
+    // If the snapshot is selected from the timeline pane or from the memory leak finder pane,
+    // then navigate to the heap overview pane.
+    // The actual tab transition will start the snapshot load and display, which duplicates
+    // the same behavior had the user just clicked on the SNAPSHOT tab directly.
+    rmv::SnapshotManager::Get().SetSelectedResource(resource_identifier);
 
-    pane_manager_.Reset();
+    rmv::RMVPaneId current_pane = pane_manager_.GetCurrentPane();
+    if (current_pane == rmv::kPaneIdTimelineGenerateSnapshot)
+    {
+        emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdSnapshotHeapOverview);
+    }
+    else if (current_pane == rmv::kPaneIdCompareMemoryLeakFinder)
+    {
+        emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdSnapshotResourceDetails);
+    }
 }
 
-void MainWindow::OpenSnapshot(RmtSnapshotPoint* snapshot_point)
+void MainWindow::OpenComparePane()
 {
+    // User has requested to view a snapshot comparison so transition to the snapshot delta pane.
+    // The actual tab transition will start the snapshot load and display, which duplicates
+    // the same behavior had the user just clicked on the COMPARE tab directly.
+    rmv::RMVPaneId current_pane = pane_manager_.GetCurrentPane();
+    if (current_pane == rmv::kPaneIdTimelineGenerateSnapshot)
+    {
+        emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdCompareSnapshotDelta);
+    }
+}
+
+void MainWindow::OpenSnapshot()
+{
+    RmtSnapshotPoint* snapshot_point = rmv::SnapshotManager::Get().GetSelectedSnapshotPoint();
     if (!snapshot_point)
     {
-        // disable snapshot window
-        TraceManager::Get().ClearOpenSnapshot();
-        ui_->snapshot_start_stack_->setCurrentIndex(kIndexEmptyPane);
-        return;
-    }
-
-    if (!snapshot_point->cached_snapshot)
-    {
-        qApp->setOverrideCursor(Qt::BusyCursor);
-        // Generate the snapshot via a worker thread. When the worker
-        // thread finishes, this function will be called again but this time
-        // snapshot_point->cachedSnapshot will contain valid data
-        SnapshotManager::Get().GenerateSnapshot(snapshot_point, this, ui_->main_tab_widget_);
+        // Disable snapshot window.
+        ui_->snapshot_start_stack_->setCurrentIndex(rmv::kSnapshotIndexEmptyPane);
     }
     else
     {
-        // Snapshot is loaded at this point.
-        // deselect any selected resource
-        emit MessageManager::Get().ResourceSelected(0);
-
-        TraceManager::Get().SetOpenSnapshot(snapshot_point->cached_snapshot);
-
-        ui_->snapshot_start_stack_->setCurrentIndex(kIndexPopulatedPane);
-        UpdateCompares();
-
-        pane_manager_.OpenSnapshot(snapshot_point->cached_snapshot);
-
-        UpdateTitlebar();
-        UpdateSnapshotCombobox(snapshot_point);
-
-        // Should only do this jump if we're on the timeline pane as this will catch the case
-        // of opening a snapshot while on the timeline pane, and jump to heap overview.
-        // It shouldn't do this if we open a snapshot from the snapshot pane itself.
-        if (pane_manager_.GetCurrentPane() == rmv::kPaneTimelineGenerateSnapshot)
-        {
-            emit MessageManager::Get().NavigateToPane(rmv::kPaneSnapshotHeapOverview);
-        }
-        ResizeNavigationLists();
-
-        qApp->restoreOverrideCursor();
+        qApp->setOverrideCursor(Qt::BusyCursor);
+        // Generate the snapshot via a worker thread if it isn't cached. If it is cached,
+        // then update the active snapshot.
+        rmv::SnapshotManager::Get().GenerateSnapshot(rmv::TraceManager::Get().GetDataSet(), snapshot_point);
     }
 }
 
-void MainWindow::CompareSnapshot(RmtSnapshotPoint* snapshot_base, RmtSnapshotPoint* snapshot_diff)
+void MainWindow::ShowSnapshotPane()
 {
+    rmv::SnapshotManager& snapshot_manager = rmv::SnapshotManager::Get();
+
+    if (snapshot_manager.ResetSelectedResource() == true)
+    {
+        // The switch to resource details pane will cause the pane to be shown. However, the
+        // snapshot may not be loaded yet since loading is done on a tab switch.
+        // Force a reshow of the resource details pane now that the snapshot is loaded.
+        resource_details_pane_->LoadResourceTimeline();
+    }
+
+    RmtDataSnapshot* snapshot = snapshot_manager.GetOpenSnapshot();
+
+    pane_manager_.OpenSnapshot(snapshot);
+    ui_->snapshot_start_stack_->setCurrentIndex(rmv::kSnapshotIndexPopulatedPane);
+
+    UpdateTitlebar();
+    UpdateSnapshotCombobox(snapshot->snapshot_point);
+    ResizeNavigationLists();
+
+    qApp->restoreOverrideCursor();
+}
+
+void MainWindow::OpenCompareSnapshots()
+{
+    RmtSnapshotPoint* snapshot_base = rmv::SnapshotManager::Get().GetSelectedCompareSnapshotPointBase();
+    RmtSnapshotPoint* snapshot_diff = rmv::SnapshotManager::Get().GetSelectedCompareSnapshotPointDiff();
+
     if (snapshot_base == nullptr || snapshot_diff == nullptr)
     {
-        TraceManager::Get().ClearComparedSnapshots();
-
-        // disable compare window
-        ui_->compare_start_stack_->setCurrentIndex(kIndexEmptyPane);
-        return;
-    }
-
-    if (!snapshot_base->cached_snapshot || !snapshot_diff->cached_snapshot)
-    {
-        qApp->setOverrideCursor(Qt::BusyCursor);
-        // Generate the snapshots via a worker thread. When the worker
-        // thread finishes, this function will be called again but this time
-        // snapshot_point->cachedSnapshot will contain valid data
-        SnapshotManager::Get().GenerateComparison(snapshot_base, snapshot_diff, this, ui_->main_tab_widget_);
+        // Disable compare window.
+        ui_->compare_start_stack_->setCurrentIndex(kCompareNotLoaded);
     }
     else
     {
-        TraceManager::Get().SetComparedSnapshot(snapshot_base->cached_snapshot, snapshot_diff->cached_snapshot);
-
-        UpdateCompares();
-
-        UpdateTitlebar();
-
-        emit MessageManager::Get().NavigateToPane(rmv::kPaneCompareSnapshotDelta);
-
-        qApp->restoreOverrideCursor();
+        qApp->setOverrideCursor(Qt::BusyCursor);
+        // Generate the snapshot via a worker thread if it isn't cached. If it is cached,
+        // then update the active snapshot.
+        rmv::SnapshotManager::Get().GenerateComparison(rmv::TraceManager::Get().GetDataSet(), snapshot_base, snapshot_diff);
     }
 }
 
-QString MainWindow::GetTitleBarString()
+void MainWindow::ShowComparePane()
+{
+    if (rmv::SnapshotManager::Get().LoadedCompareSnapshotsValid())
+    {
+        ui_->compare_start_stack_->setCurrentIndex(kCompareOk);
+        pane_manager_.UpdateCompares();
+        UpdateTitlebar();
+    }
+    else
+    {
+        ui_->compare_start_stack_->setCurrentIndex(kCompareEmpty);
+    }
+    qApp->restoreOverrideCursor();
+}
+
+QString MainWindow::GetTitleBarString() const
 {
     QString title = RMV_APP_NAME RMV_BUILD_SUFFIX;
 
     title.append(" - ");
-    QString version_string;
-
-    version_string.sprintf("V%s", RMV_VERSION_STRING);
+    QString version_string = QString("V%1").arg(RMV_VERSION_STRING);
 
     title.append(version_string);
 
@@ -938,25 +839,26 @@ void MainWindow::UpdateTitlebar()
 {
     QString title = "";
 
-    const TraceManager& trace_manager = TraceManager::Get();
+    const rmv::TraceManager&    trace_manager    = rmv::TraceManager::Get();
+    const rmv::SnapshotManager& snapshot_manager = rmv::SnapshotManager::Get();
 
     if (trace_manager.DataSetValid())
     {
         const QString file_name = trace_manager.GetTracePath();
 
-        if (pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane()) == kMainPaneSnapshot)
+        if (pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane()) == rmv::kMainPaneSnapshot)
         {
-            const char* snapshot_name = trace_manager.GetOpenSnapshotName();
+            const char* snapshot_name = snapshot_manager.GetOpenSnapshotName();
             if (snapshot_name != nullptr)
             {
                 title.append(QString(snapshot_name));
                 title.append(" - ");
             }
         }
-        if (pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane()) == kMainPaneCompare)
+        if (pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane()) == rmv::kMainPaneCompare)
         {
-            const char* base_name = trace_manager.GetCompareSnapshotName(kSnapshotCompareBase);
-            const char* diff_name = trace_manager.GetCompareSnapshotName(kSnapshotCompareDiff);
+            const char* base_name = snapshot_manager.GetCompareSnapshotName(rmv::kSnapshotCompareBase);
+            const char* diff_name = snapshot_manager.GetCompareSnapshotName(rmv::kSnapshotCompareDiff);
             if (base_name != nullptr && diff_name != nullptr)
             {
                 title.append(QString(base_name) + " vs. " + QString(diff_name));
@@ -973,36 +875,12 @@ void MainWindow::UpdateTitlebar()
     setWindowTitle(title);
 }
 
-void MainWindow::UpdateCompares()
-{
-    if (TraceManager::Get().GetComparedSnapshot(kSnapshotCompareDiff) != nullptr)
-    {
-        ui_->compare_start_stack_->setCurrentIndex(kIndexPopulatedPane);
-
-        snapshot_delta_pane_->Refresh();
-        memory_leak_finder_pane_->Refresh();
-    }
-}
-
 void MainWindow::BroadcastChangeColoring()
 {
     pane_manager_.ChangeColoring();
-    snapshot_start_pane_->ChangeColoring();
-    compare_start_pane_->ChangeColoring();
-}
 
-void MainWindow::InitializeJobQueue()
-{
-    const RmtErrorCode error_code = RmtJobQueueInitialize(&job_queue_, kThreadCount);
-    RMT_ASSERT(error_code == RMT_OK);
-}
-
-RmtJobQueue* MainWindow::GetJobQueue()
-{
-    return &job_queue_;
-}
-
-void MainWindow::DestroyJobQueue()
-{
-    RmtJobQueueShutdown(&job_queue_);
+    // Also change coloring on the empty snapshot and compare panes.
+    ui_->snapshot_page_1_->ChangeColoring();
+    ui_->compare_snapshots_not_loaded_->ChangeColoring();
+    ui_->compare_snapshots_empty_->ChangeColoring();
 }

@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for RMV's carousel memory types widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for the carousel memory types widget.
 //=============================================================================
 
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_CAROUSEL_MEMORY_TYPES_H_
@@ -19,30 +19,34 @@ class RMVCarouselMemoryTypes : public RMVCarouselItem
     Q_OBJECT
 
 public:
-    /// Constructor.
-    /// \param config A configuration struct for this object.
+    /// @brief Constructor.
+    ///
+    /// @param [in] config A configuration struct for this object.
     explicit RMVCarouselMemoryTypes(const RMVCarouselConfig& config);
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~RMVCarouselMemoryTypes();
 
-    /// Implementation of Qt's paint for this item.
-    /// \param painter The painter object to use.
-    /// \param item Provides style options for the item, such as its state, exposed area and its level-of-detail hints.
-    /// \param widget Points to the widget that is being painted on if specified.
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* widget) override;
+    /// @brief Implementation of Qt's paint for this item.
+    ///
+    /// @param [in] painter The painter object to use.
+    /// @param [in] item    Provides style options for the item, such as its state, exposed area and its level-of-detail hints.
+    /// @param [in] widget  Points to the widget that is being painted on if specified.
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* widget) Q_DECL_OVERRIDE;
 
-    /// Should this item display the physical heap data.
-    /// \param is_physical_heap If true, show the physical heap.
+    /// @brief Should this item display the physical heap data.
+    ///
+    /// @param [in] is_physical_heap If true, show the physical heap.
     void SetIsPhysicalHeap(bool is_physical_heap);
 
-    /// Set new data and update.
-    /// \param data new data.
-    void SetData(const RMVCarouselData& data) override;
+    /// @brief Set new data and update.
+    ///
+    /// @param [in] data New data.
+    void SetData(const rmv::RMVCarouselData& data) Q_DECL_OVERRIDE;
 
 private:
-    RMVCarouselMemoryTypesData data_;           ///< The data required by this item.
-    bool                       physical_heap_;  ///< If true, display physical heap data, otherwise preferred heap.
+    rmv::RMVCarouselMemoryTypesData data_;           ///< The data required by this item.
+    bool                            physical_heap_;  ///< If true, display physical heap data, otherwise preferred heap.
 };
 
 #endif  // RMV_VIEWS_CUSTOM_WIDGETS_RMV_CAROUSEL_MEMORY_TYPES_H_

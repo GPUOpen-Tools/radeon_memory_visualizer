@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of a mutex abstraction.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_MUTEX_H_
@@ -28,11 +29,11 @@ typedef struct RmtMutex
 /// @param [in]     name                        The name of the mutex.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>mutex</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>mutex</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtMutexCreate(RmtMutex* mutex, const char* name);
 
@@ -41,11 +42,11 @@ RmtErrorCode RmtMutexCreate(RmtMutex* mutex, const char* name);
 /// @param [in]     mutex                       A pointer to a <c><i>RmtMutex</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtMutexLock(RmtMutex* mutex);
 
@@ -54,11 +55,11 @@ RmtErrorCode RmtMutexLock(RmtMutex* mutex);
 /// @param [in]     mutex                       A pointer to a <c><i>RmtMutex</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtMutexUnlock(RmtMutex* mutex);
 
@@ -67,11 +68,11 @@ RmtErrorCode RmtMutexUnlock(RmtMutex* mutex);
 /// @param [in]     mutex                       A pointer to a <c><i>RmtMutex</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtMutexDestroy(RmtMutex* mutex);
 

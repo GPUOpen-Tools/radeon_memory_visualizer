@@ -1418,6 +1418,7 @@
            </item>
           </layout>
          </widget>
+         <widget class="SnapshotStartPane" name="snapshot_empty_"/>
         </widget>
        </item>
       </layout>
@@ -1462,6 +1463,12 @@
    <class>RMVClickableTableView</class>
    <extends>ScaledTableView</extends>
    <header>views/custom_widgets/rmv_clickable_table_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SnapshotStartPane</class>
+   <extends>QWidget</extends>
+   <header>views/snapshot/snapshot_start_pane.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

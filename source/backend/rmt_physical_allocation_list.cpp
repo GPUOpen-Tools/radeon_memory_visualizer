@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Implementation of the physical allocation list functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the physical allocation list functions.
 //=============================================================================
 
 #include "rmt_physical_allocation_list.h"
@@ -48,10 +49,10 @@ RmtErrorCode RmtPhysicalAllocationListInitialize(RmtPhysicalAllocationList* phys
                                                  int32_t                    maximum_concurrent_allocations)
 {
     RMT_ASSERT(physical_allocation_list);
-    RMT_RETURN_ON_ERROR(physical_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(buffer, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(buffer_size, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR(RmtPhysicalAllocationListGetBufferSize(maximum_concurrent_allocations) <= buffer_size, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(physical_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(buffer, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(buffer_size, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR(RmtPhysicalAllocationListGetBufferSize(maximum_concurrent_allocations) <= buffer_size, kRmtErrorInvalidSize);
 
     // dice up the buffer
     physical_allocation_list->allocation_intervals = (RmtPhysicalAllocationInterval*)buffer;
@@ -61,7 +62,7 @@ RmtErrorCode RmtPhysicalAllocationListInitialize(RmtPhysicalAllocationList* phys
     physical_allocation_list->next_allocation_guid           = 0;
     physical_allocation_list->maximum_concurrent_allocations = maximum_concurrent_allocations;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // add an allocation to the list.
@@ -73,9 +74,9 @@ RmtErrorCode RmtPhysicalAllocationListAddAllocation(RmtPhysicalAllocationList* p
                                                     RmtProcessId               process_id)
 {
     RMT_ASSERT(physical_allocation_list);
-    RMT_RETURN_ON_ERROR(physical_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(size_in_4kb_pages, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR((address >> 12) + size_in_4kb_pages < RMT_PAGE_TABLE_MAX_SIZE, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(physical_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(size_in_4kb_pages, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR((address >> 12) + size_in_4kb_pages < RMT_PAGE_TABLE_MAX_SIZE, kRmtErrorInvalidSize);
 
     const int32_t next_allocation_index = physical_allocation_list->allocation_count++;
 
@@ -94,21 +95,21 @@ RmtErrorCode RmtPhysicalAllocationListAddAllocation(RmtPhysicalAllocationList* p
     allocation_details->process_id            = process_id;
     allocation_details->heap_type             = heap_type;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // tradtional free of an allocation from the list.
 RmtErrorCode RmtPhysicalAllocationListDiscardAllocation(RmtPhysicalAllocationList* physical_allocation_list, RmtGpuAddress address)
 {
     RMT_ASSERT(physical_allocation_list);
-    RMT_RETURN_ON_ERROR(physical_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(physical_allocation_list->allocation_count, RMT_ERROR_NO_ALLOCATION_FOUND);
+    RMT_RETURN_ON_ERROR(physical_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(physical_allocation_list->allocation_count, kRmtErrorNoAllocationFound);
 
     // find the allocation index.
     const int32_t index = FindAllocationIndexForAddress(physical_allocation_list, address);
     if (index < 0)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     const int32_t last_physica_allocation_index = physical_allocation_list->allocation_count - 1;
@@ -117,7 +118,7 @@ RmtErrorCode RmtPhysicalAllocationListDiscardAllocation(RmtPhysicalAllocationLis
     if (index == last_physica_allocation_index)
     {
         physical_allocation_list->allocation_count--;
-        return RMT_OK;
+        return kRmtOk;
     }
 
     // copy over.
@@ -126,26 +127,26 @@ RmtErrorCode RmtPhysicalAllocationListDiscardAllocation(RmtPhysicalAllocationLis
     memcpy(current_physical_allocation, last_physical_allocation, sizeof(RmtPhysicalAllocation));
     physical_allocation_list->allocation_count--;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // transfer of memory to system.
 RmtErrorCode RmtPhysicaAllocationListTransferAllocation(RmtPhysicalAllocationList* physical_allocation_list, RmtGpuAddress address)
 {
     RMT_ASSERT(physical_allocation_list);
-    RMT_RETURN_ON_ERROR(physical_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(physical_allocation_list->allocation_count, RMT_ERROR_NO_ALLOCATION_FOUND);
+    RMT_RETURN_ON_ERROR(physical_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(physical_allocation_list->allocation_count, kRmtErrorNoAllocationFound);
 
     const int32_t index = FindAllocationIndexForAddress(physical_allocation_list, address);
     if (index < 0)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     RmtPhysicalAllocation* allocation = &physical_allocation_list->allocation_details[index];
     allocation->flags |= kRmtPhysicalAllocationFlagTransferred;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // find an allocation for an address.
@@ -155,18 +156,18 @@ RmtErrorCode RmtPhysicalAllocationListGetAllocationForAddress(const RmtPhysicalA
 {
     RMT_ASSERT(physical_allocation_list);
     RMT_ASSERT(out_allocation);
-    RMT_RETURN_ON_ERROR(physical_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_allocation, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(physical_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_allocation, kRmtErrorInvalidPointer);
 
     const int32_t index = FindAllocationIndexForAddress(physical_allocation_list, address);
     if (index < 0)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     const RmtPhysicalAllocation* allocation = &physical_allocation_list->allocation_details[index];
     *out_allocation                         = allocation;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtPhysicalAllocationListGetAllocationAtIndex(const RmtPhysicalAllocationList* physical_allocation_list,
@@ -175,13 +176,13 @@ RmtErrorCode RmtPhysicalAllocationListGetAllocationAtIndex(const RmtPhysicalAllo
 {
     RMT_ASSERT(physical_allocation_list);
     RMT_ASSERT(out_allocation);
-    RMT_RETURN_ON_ERROR(physical_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_allocation, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(0 <= index && index < physical_allocation_list->allocation_count, RMT_ERROR_INDEX_OUT_OF_RANGE);
+    RMT_RETURN_ON_ERROR(physical_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_allocation, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(0 <= index && index < physical_allocation_list->allocation_count, kRmtErrorIndexOutOfRange);
 
     const RmtPhysicalAllocation* allocation = &physical_allocation_list->allocation_details[index];
     *out_allocation                         = allocation;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 uint64_t RmtPhysicalAllocationListGetTotalSizeInBytes(const RmtPhysicalAllocationList* physical_allocation_list)

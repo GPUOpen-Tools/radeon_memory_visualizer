@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Structures and functions for managing a virtual allocation list.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Structures and functions for managing a virtual allocation list.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_VIRTUAL_ALLOCATION_LIST_H_
@@ -41,24 +42,24 @@ typedef enum RmtAllocationDetailFlagBits
 /// A structure encapsulating extra details about an allocation.
 typedef struct RmtVirtualAllocation
 {
-    uint64_t      base_address;             ///< The base address of the allocation.
-    int32_t       size_in_4kb_page;         ///< The size of the allocation.
-    int32_t       guid;                     ///< A GUID for the this allocation.
-    uint32_t      flags;                    ///< A set of flags for the alllcation.
-    uint64_t      timestamp;                ///< The timestamp when the allocation was made.
-    uint64_t      last_residency_update;    ///< The timestamp when the last residency update was made.
-    uint64_t      last_cpu_map;             ///< THe timestamp when the last CPU map operation occurred.
-    uint64_t      last_cpu_un_map;          ///< The timestamp when the last CPU unmap operation occurred.
-    int32_t       add_count;                ///< The number of times a residency update add was requested for this allocation.
-    int32_t       remove_count;             ///< The number of times a residency update remove was requeted for this allocation.
-    int32_t       map_count;                ///< The current number of times the address is CPU mapped.
-    int32_t       resource_count;           ///< The number of resources bound to this allocation.
-    int32_t       non_heap_resource_count;  ///< The number of resources bound to this allocation which are not heaps.
-    RmtHeapType   heap_preferences[4];      ///< The heap preferences in order.
-    RmtOwnerType  owner;                    ///< The owner of the allocation.
-    uint32_t      commit_type;              ///< A bit field of all commit types used by resources inside this allocation.
-    RmtResource** resources;                ///< The address of an array of points to <c><i>RmtResource</i></c> structures.
-    int32_t       next_resource_index;      ///< The index of the new resource.
+    uint64_t      base_address;                                ///< The base address of the allocation.
+    int32_t       size_in_4kb_page;                            ///< The size of the allocation.
+    int32_t       guid;                                        ///< A GUID for the this allocation.
+    uint32_t      flags;                                       ///< A set of flags for the alllcation.
+    uint64_t      timestamp;                                   ///< The timestamp when the allocation was made.
+    uint64_t      last_residency_update;                       ///< The timestamp when the last residency update was made.
+    uint64_t      last_cpu_map;                                ///< The timestamp when the last CPU map operation occurred.
+    uint64_t      last_cpu_un_map;                             ///< The timestamp when the last CPU unmap operation occurred.
+    int32_t       add_count;                                   ///< The number of times a residency update add was requested for this allocation.
+    int32_t       remove_count;                                ///< The number of times a residency update remove was requeted for this allocation.
+    int32_t       map_count;                                   ///< The current number of times the address is CPU mapped.
+    int32_t       resource_count;                              ///< The number of resources bound to this allocation.
+    int32_t       non_heap_resource_count;                     ///< The number of resources bound to this allocation which are not heaps.
+    RmtHeapType   heap_preferences[RMT_NUM_HEAP_PREFERENCES];  ///< The heap preferences in order.
+    RmtOwnerType  owner;                                       ///< The owner of the allocation.
+    uint32_t      commit_type;                                 ///< A bit field of all commit types used by resources inside this allocation.
+    RmtResource** resources;                                   ///< The address of an array of points to <c><i>RmtResource</i></c> structures.
+    int32_t       next_resource_index;                         ///< The index of the new resource.
     RmtMemoryRegion*
             unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing the unbound memory inside this virtual allocation.
     int32_t unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
@@ -80,7 +81,7 @@ uint64_t RmtVirtualAllocationGetSizeInBytes(const RmtVirtualAllocation* virtual_
 /// The size (in bytes) of the largest resource bound to <c><i>virtualAllocation</i></c>.
 uint64_t RmtVirtualAllocationGetLargestResourceSize(const RmtVirtualAllocation* virtual_allocation);
 
-/// Get the total amount of memory used for resourced within a virtual allocation.
+/// Get the total amount of memory used for resources within a virtual allocation.
 ///
 /// @param [in] snapshot                            A pointer to a <c><i>RmtDataSnapshot</i></c> structure.
 /// @param [in] virtual_allocation                  A pointer to a <c><i>RmtVirtualAllocation</i></c> structure.
@@ -135,9 +136,9 @@ float RmtVirtualAllocationGetFragmentationQuotient(const RmtVirtualAllocation* v
 /// @param [out] out_histogram_total                    A pointer to a <c><i>uint64_t</i></c> value where the size will be written.
 ///
 /// @retval
-/// RMT_OK                                  The operation completed successfully.
+/// kRmtOk                                  The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER               The operation failed because <c><i>snapshot</i></c> or <c><i>outAllocation</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                 The operation failed because <c><i>snapshot</i></c> or <c><i>outAllocation</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapshot*      snapshot,
                                                             const RmtVirtualAllocation* virtual_allocation,
                                                             uint64_t*                   out_bytes_per_backing_storage_type,
@@ -197,11 +198,11 @@ size_t RmtVirtualAllocationListGetBufferSize(int32_t total_allocations, int32_t 
 /// @param [in] total_resources                         The maximum number of resources that can be in flight at once.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>virtual_allocation_list</i></c> or <c><i>buffer</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>virtual_allocation_list</i></c> or <c><i>buffer</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_INVALID_SIZE          The operation failed because <c><i>buffer_size</i></c> is invalid.
+/// kRmtErrorInvalidSize            The operation failed because <c><i>buffer_size</i></c> is invalid.
 RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtual_allocation_list,
                                                 void*                     buffer,
                                                 size_t                    buffer_size,
@@ -219,11 +220,11 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
 /// @param [in] owner                                   The owner of the allocation.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_INVALID_SIZE          The operation failed because <c><i>size_in_4kb_pages</i></c> is invalid.
+/// kRmtErrorInvalidSize            The operation failed because <c><i>size_in_4kb_pages</i></c> is invalid.
 RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* virtual_allocation_list,
                                                    uint64_t                  timestamp,
                                                    RmtGpuAddress             address,
@@ -237,11 +238,11 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
 /// @param [in] address                                 The address of the allocation.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_ALLOCATION_FOUND   The operation failed because the allocation at <c><i>address</i></c> wasn't found.
+/// kRmtErrorNoAllocationFound      The operation failed because the allocation at <c><i>address</i></c> wasn't found.
 RmtErrorCode RmtVirtualAllocationListRemoveAllocation(RmtVirtualAllocationList* virtual_allocation_list, RmtGpuAddress address);
 
 /// Add a residency update to a specific address.
@@ -253,11 +254,11 @@ RmtErrorCode RmtVirtualAllocationListRemoveAllocation(RmtVirtualAllocationList* 
 /// @param [in] queue                                   The address of the allocation.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_ALLOCATION_FOUND   The operation failed because the allocation at <c><i>address</i></c> wasn't found.
+/// kRmtErrorNoAllocationFound      The operation failed because the allocation at <c><i>address</i></c> wasn't found.
 RmtErrorCode RmtVirtualAllocationListAddResourceReference(RmtVirtualAllocationList* virtual_allocation_list,
                                                           uint64_t                  timestamp,
                                                           RmtGpuAddress             address,
@@ -271,11 +272,11 @@ RmtErrorCode RmtVirtualAllocationListAddResourceReference(RmtVirtualAllocationLi
 /// @param [in] address                                 The address of the allocation.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_ALLOCATION_FOUND   The operation failed because the allocation at <c><i>address</i></c> wasn't found.
+/// kRmtErrorNoAllocationFound      The operation failed because the allocation at <c><i>address</i></c> wasn't found.
 RmtErrorCode RmtVirtualAllocationListAddCpuMap(RmtVirtualAllocationList* virtual_allocation_list, uint64_t timestamp, RmtGpuAddress address);
 
 /// Add a CPU unmap to a specific address.
@@ -285,11 +286,11 @@ RmtErrorCode RmtVirtualAllocationListAddCpuMap(RmtVirtualAllocationList* virtual
 /// @param [in] address                                 The address of the allocation.
 ///
 /// @retval
-/// RMT_OK                          The operation completed successfully.
+/// kRmtOk                          The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER       The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer         The operation failed because <c><i>virtual_allocation_list</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_NO_ALLOCATION_FOUND   The operation failed because the allocation at <c><i>address</i></c> wasn't found.
+/// kRmtErrorNoAllocationFound      The operation failed because the allocation at <c><i>address</i></c> wasn't found.
 RmtErrorCode RmtVirtualAllocationListAddCpuUnmap(RmtVirtualAllocationList* virtual_allocation_list, uint64_t timestamp, RmtGpuAddress address);
 
 /// Perform compaction on the virtual allocation list. This will remove any allocations
@@ -299,9 +300,9 @@ RmtErrorCode RmtVirtualAllocationListAddCpuUnmap(RmtVirtualAllocationList* virtu
 /// @param [in] fixup_resources                         Set to true if you want the compaction to attempt to change the bound pointers on resources.
 ///
 /// @retval
-/// RMT_OK                                  The operation completed successfully.
+/// kRmtOk                                  The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER               The operation failed because <c><i>virtual_allocation_list</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                 The operation failed because <c><i>virtual_allocation_list</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtVirtualAllocationListCompact(RmtVirtualAllocationList* virtual_allocation_list, bool fixup_resources);
 
 /// Find base address of allocation from address.
@@ -312,9 +313,9 @@ RmtErrorCode RmtVirtualAllocationListCompact(RmtVirtualAllocationList* virtual_a
 
 ///
 /// @retval
-/// RMT_OK                                  The operation completed successfully.
+/// kRmtOk                                  The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER               The operation failed because <c><i>virtual_allocation_list</i></c> or <c><i>out_allocation</i></c> was <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer                 The operation failed because <c><i>virtual_allocation_list</i></c> or <c><i>out_allocation</i></c> was <c><i>NULL</i></c>.
 RmtErrorCode RmtVirtualAllocationListGetAllocationForAddress(const RmtVirtualAllocationList* virtual_allocation_list,
                                                              RmtGpuAddress                   address,
                                                              const RmtVirtualAllocation**    out_allocation);

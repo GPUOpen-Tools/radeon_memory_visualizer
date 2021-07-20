@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of Allocation List pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the Resource List pane.
 //=============================================================================
 
 #include "views/snapshot/resource_list_pane.h"
@@ -13,19 +13,13 @@
 #include "qt_common/custom_widgets/double_slider_widget.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "rmt_assert.h"
-#include "rmt_data_set.h"
-#include "rmt_data_snapshot.h"
-#include "rmt_print.h"
-#include "rmt_resource_list.h"
-#include "rmt_util.h"
-
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
+#include "managers/pane_manager.h"
+#include "managers/snapshot_manager.h"
 #include "models/proxy_models/resource_proxy_model.h"
 #include "models/resource_item_model.h"
 #include "models/snapshot/resource_list_model.h"
 #include "settings/rmv_settings.h"
-#include "views/pane_manager.h"
 
 ResourceListPane::ResourceListPane(QWidget* parent)
     : BasePane(parent)
@@ -34,6 +28,7 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     , selected_resource_identifier_(0)
 {
     ui_->setupUi(this);
+    ui_->empty_page_->SetEmptyTitleText();
 
     rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
 
@@ -42,7 +37,7 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     model_->InitializeModel(ui_->total_resources_label_, rmv::kResourceListTotalResources, "text");
     model_->InitializeModel(ui_->total_size_label_, rmv::kResourceListTotalSize, "text");
 
-    model_->InitializeTableModel(ui_->resource_table_view_, 0, kResourceColumnCount);
+    model_->InitializeTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount);
 
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->preferred_heap_combo_box_, rmv::text::kPreferredHeap);
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->resource_usage_combo_box_, rmv::text::kResourceUsage);
@@ -71,10 +66,10 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     connect(ui_->resource_table_view_, &QTableView::clicked, this, &ResourceListPane::TableClicked);
     connect(ui_->resource_table_view_, &QTableView::doubleClicked, this, &ResourceListPane::TableDoubleClicked);
 
-    // set up a connection between the timeline being sorted and making sure the selected event is visible
+    // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetResourceProxyModel(), &rmv::ResourceProxyModel::layoutChanged, this, &ResourceListPane::ScrollToSelectedResource);
 
-    connect(&MessageManager::Get(), &MessageManager::ResourceSelected, this, &ResourceListPane::SelectResource);
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ResourceSelected, this, &ResourceListPane::SelectResource);
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ResourceListPane::OnScaleFactorChanged);
 }
 
@@ -90,7 +85,7 @@ ResourceListPane::~ResourceListPane()
 
 void ResourceListPane::OnScaleFactorChanged()
 {
-    // Carousel
+    // Carousel.
     ui_->carousel_view_->setFixedHeight(ScalingManager::Get().Scaled(kCarouselItemHeight));
 }
 
@@ -145,17 +140,25 @@ void ResourceListPane::OpenSnapshot(RmtDataSnapshot* snapshot)
 {
     Q_UNUSED(snapshot);
 
-    if (this->isVisible())
+    if (rmv::SnapshotManager::Get().LoadedSnapshotValid())
     {
-        // This pane is visible so showEvent won't get called to update the resource table
-        // so update it now.
-        Refresh();
+        ui_->pane_stack_->setCurrentIndex(rmv::kSnapshotIndexPopulatedPane);
+        if (this->isVisible())
+        {
+            // This pane is visible so showEvent won't get called to update the resource table
+            // so update it now.
+            Refresh();
+        }
+        else
+        {
+            // Indicate the model data is not valid so the table will be updated when showEvent
+            // is called.
+            model_valid_ = false;
+        }
     }
     else
     {
-        // Indicate the model data is not valid so the table will be updated when showEvent
-        // is called
-        model_valid_ = false;
+        ui_->pane_stack_->setCurrentIndex(rmv::kSnapshotIndexEmptyPane);
     }
 }
 
@@ -177,13 +180,13 @@ void ResourceListPane::resizeEvent(QResizeEvent* event)
 
 void ResourceListPane::PopulateResourceTable()
 {
-    // create the Resource table. Only do this once when showing the pane for the first
-    // time for the current snapshot
-    // Prior to doing a table update, disable sorting since Qt is super slow about it
+    // Create the Resource table. Only do this once when showing the pane for the first
+    // time for the current snapshot.
+    // Prior to doing a table update, disable sorting since Qt is super slow about it.
     ui_->resource_table_view_->setSortingEnabled(false);
     model_->Update();
     ui_->resource_table_view_->setSortingEnabled(true);
-    ui_->resource_table_view_->sortByColumn(kResourceColumnName, Qt::DescendingOrder);
+    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnName, Qt::DescendingOrder);
     ui_->resource_table_view_->horizontalHeader()->adjustSize();
     model_valid_ = true;
     SelectResourceInTable();
@@ -209,7 +212,7 @@ void ResourceListPane::FilterBySizeSliderChanged(int min_value, int max_value)
 
 void ResourceListPane::HeapChanged(bool checked)
 {
-    // rebuild the table depending on what the state of the combo box items is
+    // Rebuild the table depending on what the state of the combo box items is.
     RMT_UNUSED(checked);
 
     QString filter_string = preferred_heap_combo_box_model_->GetFilterString(ui_->preferred_heap_combo_box_);
@@ -219,7 +222,7 @@ void ResourceListPane::HeapChanged(bool checked)
 
 void ResourceListPane::ResourceChanged(bool checked)
 {
-    // rebuild the table depending on what the state of the combo box items is
+    // Rebuild the table depending on what the state of the combo box items is.
     RMT_UNUSED(checked);
 
     QString filter_string = resource_usage_combo_box_model_->GetFilterString(ui_->resource_usage_combo_box_);
@@ -237,8 +240,8 @@ void ResourceListPane::TableClicked(const QModelIndex& index)
 {
     if (index.isValid() == true)
     {
-        const RmtResourceIdentifier resource_identifier = model_->GetResourceProxyModel()->GetData(index.row(), kResourceColumnGlobalId);
-        emit                        MessageManager::Get().ResourceSelected(resource_identifier);
+        const RmtResourceIdentifier resource_identifier = model_->GetResourceProxyModel()->GetData(index.row(), rmv::kResourceColumnGlobalId);
+        emit                        rmv::MessageManager::Get().ResourceSelected(resource_identifier);
     }
 }
 
@@ -246,9 +249,9 @@ void ResourceListPane::TableDoubleClicked(const QModelIndex& index)
 {
     if (index.isValid() == true)
     {
-        const RmtResourceIdentifier resource_identifier = model_->GetResourceProxyModel()->GetData(index.row(), kResourceColumnGlobalId);
-        emit                        MessageManager::Get().ResourceSelected(resource_identifier);
-        emit                        MessageManager::Get().NavigateToPane(rmv::kPaneSnapshotResourceDetails);
+        const RmtResourceIdentifier resource_identifier = model_->GetResourceProxyModel()->GetData(index.row(), rmv::kResourceColumnGlobalId);
+        emit                        rmv::MessageManager::Get().ResourceSelected(resource_identifier);
+        emit                        rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdSnapshotResourceDetails);
     }
 }
 
@@ -260,9 +263,9 @@ void ResourceListPane::ScrollToSelectedResource()
         QModelIndexList item_list = selected_item->selectedRows();
         if (item_list.size() > 0)
         {
-            // get the model index of the name column since column 0 (compare ID) is hidden and scrollTo
-            // doesn't appear to scroll on hidden columns
-            QModelIndex model_index = model_->GetResourceProxyModel()->index(item_list[0].row(), kResourceColumnName);
+            // Get the model index of the name column since column 0 (compare ID) is hidden and scrollTo
+            // doesn't appear to scroll on hidden columns.
+            QModelIndex model_index = model_->GetResourceProxyModel()->index(item_list[0].row(), rmv::kResourceColumnName);
             ui_->resource_table_view_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
         }
     }
@@ -272,8 +275,8 @@ void ResourceListPane::SelectResourceInTable()
 {
     if (selected_resource_identifier_ != 0)
     {
-        // select the resource in the resource table
-        const QModelIndex& resource_index = model_->GetResourceProxyModel()->FindModelIndex(selected_resource_identifier_, kResourceColumnGlobalId);
+        // Select the resource in the resource table.
+        const QModelIndex& resource_index = model_->GetResourceProxyModel()->FindModelIndex(selected_resource_identifier_, rmv::kResourceColumnGlobalId);
         if (resource_index.isValid() == true)
         {
             ui_->resource_table_view_->selectRow(resource_index.row());

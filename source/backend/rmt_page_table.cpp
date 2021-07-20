@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Game Engineering Group
-/// \brief  Implementation of the page table helper functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the page table helper functions.
 //=============================================================================
 
 #include "rmt_page_table.h"
@@ -182,7 +183,7 @@ static void UpdateMappingForSingle4KPage(RmtPageTable* page_table,
 RmtErrorCode RmtPageTableInitialize(RmtPageTable* page_table, const RmtSegmentInfo* segment_info, int32_t segment_info_count, uint64_t target_process_id)
 {
     RMT_ASSERT(page_table);
-    RMT_RETURN_ON_ERROR(page_table, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(page_table, kRmtErrorInvalidPointer);
 
     // copy the segment info over.
     memcpy(page_table->segment_info, segment_info, sizeof(RmtSegmentInfo) * segment_info_count);
@@ -196,16 +197,16 @@ RmtErrorCode RmtPageTableInitialize(RmtPageTable* page_table, const RmtSegmentIn
     }
 
     // Initialize the allocators for level 1, 2 and 3 nodes.
-    RmtErrorCode error_code = RMT_OK;
+    RmtErrorCode error_code = kRmtOk;
     error_code = RmtPoolInitialize(&page_table->level1_allocator, page_table->level1_nodes, sizeof(page_table->level1_nodes), sizeof(RmtPageDirectoryLevel1));
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     error_code = RmtPoolInitialize(&page_table->level2_allocator, page_table->level2_nodes, sizeof(page_table->level2_nodes), sizeof(RmtPageDirectoryLevel2));
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     error_code = RmtPoolInitialize(&page_table->level3_allocator, page_table->level3_nodes, sizeof(page_table->level3_nodes), sizeof(RmtPageDirectoryLevel3));
-    RMT_ASSERT(error_code == RMT_OK);
-    RMT_RETURN_ON_ERROR(error_code == RMT_OK, error_code);
+    RMT_ASSERT(error_code == kRmtOk);
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // clear per-heap byte tracking.
     for (int32_t current_heap_index = 0; current_heap_index < kRmtHeapTypeCount; ++current_heap_index)
@@ -213,7 +214,7 @@ RmtErrorCode RmtPageTableInitialize(RmtPageTable* page_table, const RmtSegmentIn
         page_table->mapped_per_heap[current_heap_index] = 0;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Map virtual memory.
@@ -229,12 +230,12 @@ RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
     RMT_UNUSED(process_id);
 
     RMT_ASSERT(page_table);
-    RMT_RETURN_ON_ERROR(page_table, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(page_table, kRmtErrorInvalidPointer);
 
     // For now, we ignore anything that's not a regular update.
     if (update_type != kRmtPageTableUpdateTypeUpdate)
     {
-        return RMT_OK;
+        return kRmtOk;
     }
 
     // For a regular mapping operation these must be valid.
@@ -243,7 +244,7 @@ RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
     // NOTE: process filtering, driver doesn't seem to be producing >1 process currently?
     if (process_id <= 1)
     {
-        return RMT_OK;
+        return kRmtOk;
     }
 
     // Calculate the number of 4KiB pages we require.
@@ -277,13 +278,13 @@ RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
         }
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // Get the physical address for a specified virtual address.
 RmtErrorCode RmtPageTableGetPhysicalAddressForVirtualAddress(const RmtPageTable* page_table, RmtGpuAddress virtual_address, RmtGpuAddress* out_physical_address)
 {
-    RMT_RETURN_ON_ERROR(page_table, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(page_table, kRmtErrorInvalidPointer);
 
     int32_t level0_radix;
     int32_t level1_radix;
@@ -292,13 +293,13 @@ RmtErrorCode RmtPageTableGetPhysicalAddressForVirtualAddress(const RmtPageTable*
     DecomposeAddress(virtual_address, &level0_radix, &level1_radix, &level2_radix, &level3_radix);
 
     const RmtPageDirectoryLevel1* level1 = page_table->level0[level0_radix];
-    RMT_RETURN_ON_ERROR(level1, RMT_ERROR_ADDRESS_NOT_MAPPED);
+    RMT_RETURN_ON_ERROR(level1, kRmtErrorAddressNotMapped);
 
     const RmtPageDirectoryLevel2* level2 = level1->page_directory[level1_radix];
-    RMT_RETURN_ON_ERROR(level2, RMT_ERROR_ADDRESS_NOT_MAPPED);
+    RMT_RETURN_ON_ERROR(level2, kRmtErrorAddressNotMapped);
 
     const RmtPageDirectoryLevel3* level3 = level2->page_directory[level2_radix];
-    RMT_RETURN_ON_ERROR(level3, RMT_ERROR_ADDRESS_NOT_MAPPED);
+    RMT_RETURN_ON_ERROR(level3, kRmtErrorAddressNotMapped);
 
     // Each physical address value at level 3 of the page map trie is 36 bits in size.
     const int32_t byte_offset = level3_radix / 8;
@@ -306,7 +307,7 @@ RmtErrorCode RmtPageTableGetPhysicalAddressForVirtualAddress(const RmtPageTable*
     const uint8_t mask        = (1 << bit_offset);
     if ((level3->is_mapped[byte_offset] & mask) != mask)
     {
-        return RMT_ERROR_ADDRESS_NOT_MAPPED;
+        return kRmtErrorAddressNotMapped;
     }
 
     // Look up the physical address value from the level 3 node.
@@ -320,7 +321,7 @@ RmtErrorCode RmtPageTableGetPhysicalAddressForVirtualAddress(const RmtPageTable*
                                 ((RmtGpuAddress)level3->physical_addresses[(level3_radix * 6) + 5] << 0);
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // check if entire resource physically
@@ -343,7 +344,7 @@ bool RmtPageTableIsEntireResourcePhysicallyMapped(const RmtPageTable* page_table
     {
         RmtGpuAddress      physical_address = 0;
         const RmtErrorCode error_code       = RmtPageTableGetPhysicalAddressForVirtualAddress(page_table, current_virtual_address, &physical_address);
-        if (error_code == RMT_ERROR_ADDRESS_NOT_MAPPED)
+        if (error_code == kRmtErrorAddressNotMapped)
         {
             return false;
         }
@@ -369,7 +370,7 @@ bool RmtPageTableIsEntireVirtualAllocationPhysicallyMapped(const RmtPageTable* p
     {
         RmtGpuAddress      physical_address = 0;
         const RmtErrorCode error_code       = RmtPageTableGetPhysicalAddressForVirtualAddress(page_table, current_virtual_address, &physical_address);
-        if (error_code == RMT_ERROR_ADDRESS_NOT_MAPPED)
+        if (error_code == kRmtErrorAddressNotMapped)
         {
             return false;
         }

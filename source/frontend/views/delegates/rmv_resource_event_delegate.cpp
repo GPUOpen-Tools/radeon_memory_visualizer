@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief Implementation of the resource event delegate.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the resource event delegate.
 //=============================================================================
 
 #include "views/delegates/rmv_resource_event_delegate.h"
@@ -20,7 +20,7 @@ const double RMVResourceEventDelegate::kIconDefaultSizeHint = 24;
 
 // The icon size factor (percentage) relative to the height of the available rect. If the icon is to be 70%
 // the height of the rect, a value of 0.7 should be used. This allows for some space above/below the icon
-// in the rect
+// in the rect.
 const double RMVResourceEventDelegate::kIconSizeFactor = 0.7;
 
 RMVResourceEventDelegate::RMVResourceEventDelegate(QWidget* parent, rmv::ResourceDetailsModel* model)
@@ -37,7 +37,7 @@ QSize RMVResourceEventDelegate::sizeHint(const QStyleOptionViewItem& option, con
 {
     QSize size_hint;
 
-    if (index.column() == kResourceHistoryLegend)
+    if (index.column() == rmv::kResourceHistoryLegend)
     {
         int scaled_dimension = ScalingManager::Get().Scaled(kIconDefaultSizeHint);
         size_hint.setWidth(scaled_dimension);
@@ -53,15 +53,15 @@ QSize RMVResourceEventDelegate::sizeHint(const QStyleOptionViewItem& option, con
 
 void RMVResourceEventDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
-    if (index.column() == kResourceHistoryLegend)
+    if (index.column() == rmv::kResourceHistoryLegend)
     {
         const RmtResourceHistoryEventType event_type = (RmtResourceHistoryEventType)index.data().toInt();
         QColor                            color      = model_->GetColorFromEventType(event_type, false);
 
-        // Draw cell background color
+        // Draw cell background color.
         if (option.state & QStyle::State_Selected)
         {
-            // Draw selection highlight
+            // Draw selection highlight.
             painter->fillRect(option.rect, QBrush(kTableSelectionColor));
             color = Qt::white;
         }
@@ -73,7 +73,7 @@ void RMVResourceEventDelegate::paint(QPainter* painter, const QStyleOptionViewIt
         int    mid_y     = (option.rect.top() + option.rect.bottom()) / 2;
         double icon_size = option.rect.height() * kIconSizeFactor;
 
-        // calculate offset for the icon in the table
+        // Calculate offset for the icon in the table.
         double x_offset = (option.rect.width() - icon_size) / 2.0;
         x_offset        = std::min<int>(x_offset, icon_size / 2);
         x_offset += option.rect.x();

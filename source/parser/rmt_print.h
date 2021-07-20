@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Printing helper functions for RMT.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// $brief  Printing helper functions for RMT.
 //=============================================================================
 
 #ifndef RMV_PARSER_RMT_PRINT_H_
@@ -10,7 +11,10 @@
 #include "rmt_error.h"
 #include "rmt_format.h"
 
-#ifdef __cpluplus
+/// Callback function for printing.
+typedef void (*RmtPrintingCallback)(const char* msg);
+
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -169,7 +173,22 @@ void RmtGetCmdAllocatorNameFromCmdAllocatorFlags(int32_t flags, char* flag_text,
 /// @param [in]     text_length                 The length of the flag text string.
 void RmtGetPipelineStageNameFromPipelineStageFlags(int32_t flags, char* flag_text, int text_length);
 
-#ifdef __cpluplus
+/// @brief Set the printing callback for backend functions to do logging.
+///
+/// @param [in] callback_func   The callback function to use for printing.
+/// @param [in] enable_printing Enable the print function that prints to stdout if no callback specified.
+///                             May be useful to disable in case the backend is being used outside of RMV.
+void RmtSetPrintingCallback(RmtPrintingCallback callback_func, bool enable_printing = true);
+
+/// @brief Printing function to use. Will use printing function set with
+/// <c><i>RgpSetPrintingCallback</i></c>. If nothing is set, then
+/// printf will be used.
+///
+/// @param [in] format The formatting string.
+/// @param [in] ...    Variable parameters determined by <c><i>format</i></c>.
+void RmtPrint(const char* format, ...);
+
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_PARSER_RMT_PRINT_H_

@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief  Core parsing code for RMT data.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Core parsing code for RMT data.
 //=============================================================================
 
 #ifndef RMV_PARSER_RMT_PARSER_H_
@@ -12,7 +13,7 @@
 
 typedef struct RmtToken RmtToken;
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -22,10 +23,10 @@ typedef struct RmtParser RmtParser;
 /// A callback function that <c><i>rmtParseAdvance</i></c> will call when it runs out of memory.
 ///
 /// The host code can then either provide an additional memory to the parser for it to continue
-/// parsing. If the host code returns memory to the parser then it should also return RMT_OK
+/// parsing. If the host code returns memory to the parser then it should also return kRmtOk
 /// from the callback function. If the host does not wish to provide additional memory (perhaps
 /// the end of the buffer has already been reached) then the host code can return
-/// <c><i>RMT_ERROR_OUT_OF_MEMORY</i></c> from the callback to indicate that there is no more
+/// <c><i>kRmtErrorOutOfMemory</i></c> from the callback to indicate that there is no more
 /// more memory for the parser to consume.
 ///
 /// @param [in] parser                      A pointer to a <c><i>RmtParser</i></c> structure that is requesting additional memory.
@@ -48,7 +49,7 @@ typedef struct RmtParserPosition
 /// A structure encapsulating the RMT format parser state.
 typedef struct RmtParser
 {
-    uint64_t start_timestamp;    ///< THe timestamp considered to the be the start of the trace, specified in RMT clocks.
+    uint64_t start_timestamp;    ///< The timestamp considered to the be the start of the trace, specified in RMT clocks.
     uint64_t current_timestamp;  ///< The current time in RMT clocks.
     int32_t  seen_timestamp;     ///< Set to non-zero if we have seen a <c><i>kRmtTokenTypeTimestamp</i></c> while parsing.
     uint32_t cpu_frequency;      ///< The CPU frequency (in clock ticks per second) of the machine where the RMT data was captured.
@@ -70,7 +71,7 @@ typedef struct RmtParser
     int32_t  major_version;  ///< The major version of the RMT format.
     int32_t  minor_version;  ///< The minor version of the RMT format.
     uint64_t thread_id;      ///< The thread ID of the CPU thread in the target application where the RMT data was collected from.
-    uint64_t process_id;     ///< THe process ID of the target application where the RMT data was collected from.
+    uint64_t process_id;     ///< The process ID of the target application where the RMT data was collected from.
     int32_t  stream_index;   ///< The index of the RMT stream within the RMT file.
 } RmtParser;
 
@@ -89,11 +90,11 @@ typedef struct RmtParser
 /// @param [in] thread_id                   The thread ID corresponding to the stream.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed because <c><i>rmt_parser</i></c> or <c><i>file_handle</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>rmt_parser</i></c> or <c><i>file_handle</i></c> being set to <c><i>NULL</i></c>.
 /// @retval
-/// RMT_ERROR_INVALID_SIZE              The operation failed because the stream_size is invalid.
+/// kRmtErrorInvalidSize                The operation failed because the stream_size is invalid.
 RmtErrorCode RmtParserInitialize(RmtParser* rmt_parser,
                                  FILE*      file_handle,
                                  int32_t    file_offset,
@@ -113,9 +114,9 @@ RmtErrorCode RmtParserInitialize(RmtParser* rmt_parser,
 /// @param [in]  out_parser_position        A pointer to a <c><i>RmtParserPosition</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed because <c><i>rmt_parser</i></c> or <c><i>out_parser_position</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>rmt_parser</i></c> or <c><i>out_parser_position</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtParserPosition* out_parser_position);
 
 /// Check if the RMT parser has finished.
@@ -132,9 +133,9 @@ bool RmtParserIsCompleted(RmtParser* rmt_parser);
 /// @param [in]  parser_position            A pointer to a <c><i>RmtParserPosition</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed because <c><i>rmt_parser</i></c> or <c><i>parser_position</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>rmt_parser</i></c> or <c><i>parser_position</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtParserSetPosition(RmtParser* rmt_parser, const RmtParserPosition* parser_position);
 
 /// Reset the RMT parser.
@@ -142,12 +143,12 @@ RmtErrorCode RmtParserSetPosition(RmtParser* rmt_parser, const RmtParserPosition
 /// @param [in] rmt_parser                  A pointer to a <c><i>RmtParser</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                              The operation completed successfully.
+/// kRmtOk                              The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER           The operation failed because <c><i>rmt_parser</i></c> being set to <c><i>NULL</i></c>.
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>rmt_parser</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtParserReset(RmtParser* rmt_parser);
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_PARSER_RMT_PARSER_

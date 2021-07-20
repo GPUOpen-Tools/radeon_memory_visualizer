@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Implementation of the virtual allocation list functions.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the virtual allocation list functions.
 //=============================================================================
 
 #include <math.h>
@@ -173,7 +174,7 @@ static RmtErrorCode AddAllocationToTree(RmtVirtualAllocationList* virtual_alloca
     const size_t pool_count       = virtual_allocation_list->allocation_interval_pool.allocated;
     virtual_allocation_list->root = InsertNode(virtual_allocation_list, virtual_allocation_list->root, gpu_address, size_in_4kb_pages, virtual_allocation);
     RMT_ASSERT(virtual_allocation_list->allocation_interval_pool.allocated == pool_count + 1);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 // destroy a resource from the acceleration structure.
@@ -182,7 +183,7 @@ static RmtErrorCode RemoveAllocationFromTree(RmtVirtualAllocationList* virtual_a
     const size_t pool_count       = virtual_allocation_list->allocation_interval_pool.allocated;
     virtual_allocation_list->root = DeleteNode(virtual_allocation_list, virtual_allocation_list->root, gpu_address);
     RMT_ASSERT(virtual_allocation_list->allocation_interval_pool.allocated == pool_count - 1);
-    return RMT_OK;
+    return kRmtOk;
 }
 
 uint64_t RmtVirtualAllocationGetSizeInBytes(const RmtVirtualAllocation* virtual_allocation)
@@ -219,10 +220,17 @@ uint64_t RmtVirtualAllocationGetTotalResourceMemoryInBytes(const RmtDataSnapshot
     int32_t          current_region_stack_top = 0;
 
     uint64_t total_resource_size = 0;
+
     for (int32_t current_resource_index = 0; current_resource_index < virtual_allocation->resource_count; ++current_resource_index)
     {
         const RmtResource* current_resource        = virtual_allocation->resources[current_resource_index];
         const size_t       current_resource_offset = current_resource->address - virtual_allocation->base_address;
+
+        // Ignore heaps.
+        if (current_resource->resource_type == kRmtResourceTypeHeap)
+        {
+            continue;
+        }
 
         if (current_region_stack_top == 0)
         {
@@ -243,8 +251,7 @@ uint64_t RmtVirtualAllocationGetTotalResourceMemoryInBytes(const RmtDataSnapshot
 
             // merge ranges.
             const size_t new_size = (current_resource_offset + current_resource->size_in_bytes) - region_stack[current_region_stack_top - 1].offset;
-            region_stack[current_region_stack_top - 1].offset = current_resource_offset;
-            region_stack[current_region_stack_top - 1].size   = new_size;
+            region_stack[current_region_stack_top - 1].size = RMT_MAXIMUM(new_size, region_stack[current_region_stack_top - 1].size);
         }
     }
 
@@ -341,10 +348,10 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
                                                 int32_t                   total_allocations)
 {
     RMT_ASSERT(virtual_allocation_list);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(buffer, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(buffer_size, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR(RmtVirtualAllocationListGetBufferSize(total_allocations, maximum_concurrent_resources) <= buffer_size, RMT_ERROR_INVALID_SIZE);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(buffer, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(buffer_size, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR(RmtVirtualAllocationListGetBufferSize(total_allocations, maximum_concurrent_resources) <= buffer_size, kRmtErrorInvalidSize);
 
     const size_t interval_size_in_bytes = (total_allocations * sizeof(RmtVirtualAllocationInterval));
 
@@ -371,7 +378,7 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
     virtual_allocation_list->root = NULL;
 
     memset(virtual_allocation_list->allocations_per_preferred_heap, 0, sizeof(virtual_allocation_list->allocations_per_preferred_heap));
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* virtual_allocation_list,
@@ -382,19 +389,19 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
                                                    RmtOwnerType              owner)
 {
     RMT_ASSERT(virtual_allocation_list);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(size_in_4kb_pages, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR((address >> 12) + size_in_4kb_pages < RMT_PAGE_TABLE_MAX_SIZE, RMT_ERROR_INVALID_SIZE);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count < virtual_allocation_list->total_allocations, RMT_ERROR_OUT_OF_MEMORY);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(size_in_4kb_pages, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR((address >> 12) + size_in_4kb_pages < RMT_PAGE_TABLE_MAX_SIZE, kRmtErrorInvalidSize);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count < virtual_allocation_list->total_allocations, kRmtErrorOutOfMemory);
 
     // check if this region overlaps an existing region
     const RmtVirtualAllocation* found_allocation = NULL;
     const RmtErrorCode          error_code       = RmtVirtualAllocationListGetAllocationForAddress(virtual_allocation_list, address, &found_allocation);
-    if (error_code == RMT_OK)
+    if (error_code == kRmtOk)
     {
         RMT_ASSERT((found_allocation->flags & kRmtAllocationDetailIsDead) != kRmtAllocationDetailIsDead);
     }
-    RMT_RETURN_ON_ERROR(error_code != RMT_OK, error_code);
+    RMT_RETURN_ON_ERROR(error_code != kRmtOk, error_code);
 
     const int32_t next_allocation_index = virtual_allocation_list->allocation_count++;
 
@@ -417,7 +424,7 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
     allocation_details->resource_count          = 0;
     allocation_details->next_resource_index     = 0;
 
-    for (int32_t current_heap_preference_index = 0; current_heap_preference_index < 4; ++current_heap_preference_index)
+    for (int32_t current_heap_preference_index = 0; current_heap_preference_index < RMT_NUM_HEAP_PREFERENCES; ++current_heap_preference_index)
     {
         allocation_details->heap_preferences[current_heap_preference_index] = preferences[current_heap_preference_index];
     }
@@ -429,20 +436,20 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
     const uint64_t size_in_bytes = (size_in_4kb_pages << 12);
     virtual_allocation_list->total_allocated_bytes += size_in_bytes;
     virtual_allocation_list->allocations_per_preferred_heap[allocation_details->heap_preferences[0]] += size_in_bytes;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtVirtualAllocationListRemoveAllocation(RmtVirtualAllocationList* virtual_allocation_list, RmtGpuAddress address)
 {
     RMT_ASSERT(virtual_allocation_list);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, RMT_ERROR_NO_ALLOCATION_FOUND);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, kRmtErrorNoAllocationFound);
 
     const RmtGpuAddress           hashed_address              = HashGpuAddress(address);
     RmtVirtualAllocationInterval* current_allocation_interval = FindAllocationIntervalByAddress(virtual_allocation_list, hashed_address);
     if (current_allocation_interval == nullptr)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     // mark the allocation as dead, the allocation will then be removed later on
@@ -464,7 +471,7 @@ RmtErrorCode RmtVirtualAllocationListRemoveAllocation(RmtVirtualAllocationList* 
     // remove efrom the tree
     RemoveAllocationFromTree(virtual_allocation_list, hashed_address);
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtVirtualAllocationListAddResourceReference(RmtVirtualAllocationList* virtual_allocation_list,
@@ -476,15 +483,15 @@ RmtErrorCode RmtVirtualAllocationListAddResourceReference(RmtVirtualAllocationLi
     RMT_UNUSED(queue);
 
     RMT_ASSERT(virtual_allocation_list);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, RMT_ERROR_NO_ALLOCATION_FOUND);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, kRmtErrorNoAllocationFound);
 
     // find the allocation index.
     const RmtGpuAddress           hashed_address = HashGpuAddress(address);
     RmtVirtualAllocationInterval* interval       = FindAllocationIntervalByAddress(virtual_allocation_list, hashed_address);
     if (interval == nullptr)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     // store the residency update on the details structure.
@@ -506,21 +513,21 @@ RmtErrorCode RmtVirtualAllocationListAddResourceReference(RmtVirtualAllocationLi
 
     current_details->last_residency_update = timestamp;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtVirtualAllocationListAddCpuMap(RmtVirtualAllocationList* virtual_allocation_list, uint64_t timestamp, RmtGpuAddress address)
 {
     RMT_ASSERT(virtual_allocation_list);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, RMT_ERROR_NO_ALLOCATION_FOUND);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, kRmtErrorNoAllocationFound);
 
     // find the allocation index.
     const RmtGpuAddress           hashed_address = HashGpuAddress(address);
     RmtVirtualAllocationInterval* interval       = FindAllocationIntervalByAddress(virtual_allocation_list, hashed_address);
     if (interval == nullptr)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     // store the residency update on the details structure.
@@ -530,21 +537,21 @@ RmtErrorCode RmtVirtualAllocationListAddCpuMap(RmtVirtualAllocationList* virtual
     current_details->last_cpu_map = timestamp;
     current_details->map_count++;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtVirtualAllocationListAddCpuUnmap(RmtVirtualAllocationList* virtual_allocation_list, uint64_t timestamp, RmtGpuAddress address)
 {
     RMT_ASSERT(virtual_allocation_list);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, RMT_ERROR_NO_ALLOCATION_FOUND);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list->allocation_count, kRmtErrorNoAllocationFound);
 
     // find the allocation index.
     const RmtGpuAddress           hashed_address = HashGpuAddress(address);
     RmtVirtualAllocationInterval* interval       = FindAllocationIntervalByAddress(virtual_allocation_list, hashed_address);
     if (interval == nullptr)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     // store the residency update on the details structure.
@@ -553,7 +560,7 @@ RmtErrorCode RmtVirtualAllocationListAddCpuUnmap(RmtVirtualAllocationList* virtu
     current_details->last_cpu_un_map = timestamp;
     current_details->map_count--;
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtVirtualAllocationListGetAllocationForAddress(const RmtVirtualAllocationList* virtual_allocation_list,
@@ -562,21 +569,21 @@ RmtErrorCode RmtVirtualAllocationListGetAllocationForAddress(const RmtVirtualAll
 {
     RMT_ASSERT(virtual_allocation_list);
     RMT_ASSERT(out_allocation);
-    RMT_RETURN_ON_ERROR(virtual_allocation_list, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_allocation, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_allocation, kRmtErrorInvalidPointer);
 
     // find the allocation interval.
     const RmtGpuAddress           hashed_address = HashGpuAddress(address);
     RmtVirtualAllocationInterval* interval       = FindAllocationIntervalByAddress(virtual_allocation_list, hashed_address);
     if (interval == nullptr)
     {
-        return RMT_ERROR_NO_ALLOCATION_FOUND;
+        return kRmtErrorNoAllocationFound;
     }
 
     // store the residency update on the details structure.
     RmtVirtualAllocation* current_details = interval->allocation;
     *out_allocation                       = current_details;
-    return RMT_OK;
+    return kRmtOk;
 }
 
 uint64_t RmtVirtualAllocationListGetTotalSizeInBytes(const RmtVirtualAllocationList* virtual_allocation_list)
@@ -692,7 +699,7 @@ RmtErrorCode RmtVirtualAllocationListCompact(RmtVirtualAllocationList* virtual_a
         virtual_allocation_list->allocation_count--;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }
 
 RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapshot*      snapshot,
@@ -700,9 +707,9 @@ RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapsho
                                                             uint64_t*                   out_bytes_per_backing_storage_type,
                                                             uint64_t*                   out_histogram_total)
 {
-    RMT_RETURN_ON_ERROR(virtual_allocation, RMT_ERROR_INVALID_POINTER);
-    RMT_RETURN_ON_ERROR(out_bytes_per_backing_storage_type, RMT_ERROR_INVALID_POINTER)
-    RMT_RETURN_ON_ERROR(out_histogram_total, RMT_ERROR_INVALID_POINTER);
+    RMT_RETURN_ON_ERROR(virtual_allocation, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(out_bytes_per_backing_storage_type, kRmtErrorInvalidPointer)
+    RMT_RETURN_ON_ERROR(out_histogram_total, kRmtErrorInvalidPointer);
 
     const uint64_t size_of_minimum_page = RmtGetPageSize(kRmtPageSize4Kb);
 
@@ -728,7 +735,7 @@ RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapsho
         RmtGpuAddress      physical_address = 0;
         const RmtErrorCode error_code = RmtPageTableGetPhysicalAddressForVirtualAddress(&snapshot->page_table, current_virtual_address, &physical_address);
 
-        if (error_code == RMT_OK)
+        if (error_code == kRmtOk)
         {
             // remove bytes from unmapped count.
             if (size <= out_bytes_per_backing_storage_type[kRmtResourceBackingStorageUnmapped])
@@ -753,5 +760,5 @@ RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapsho
         current_virtual_address += size;
     }
 
-    return RMT_OK;
+    return kRmtOk;
 }

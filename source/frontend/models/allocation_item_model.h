@@ -1,9 +1,11 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Header for an allocation item model. Used for the allocation list
-/// tables
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Header for an allocation item model.
+///
+/// Used for the allocation list tables.
+///
 //=============================================================================
 
 #ifndef RMV_MODELS_ALLOCATION_ITEM_MODEL_H_
@@ -16,39 +18,43 @@
 
 namespace rmv
 {
+    /// @brief A class to handle the model data associated with an allocation table.
     class AllocationItemModel : public QAbstractItemModel
     {
     public:
-        /// Constructor.
+        /// @brief Constructor.
         explicit AllocationItemModel(QObject* parent = nullptr);
 
-        /// Destructor.
-        ~AllocationItemModel();
+        /// @brief Destructor.
+        virtual ~AllocationItemModel();
 
-        /// Set the number of rows in the table.
-        /// \param rows The number of rows required.
+        /// @brief Set the number of rows in the table.
+        ///
+        /// @param [in] rows The number of rows required.
         void SetRowCount(int rows);
 
-        /// Set the number of columns in the table.
-        /// \param columns The number of columns required.
+        /// @brief Set the number of columns in the table.
+        ///
+        /// @param [in] columns The number of columns required.
         void SetColumnCount(int columns);
 
-        /// Add an allocation to the table.
-        /// \param snapshot The snapshot where the allocation data is located.
-        /// \param virtual_allocation The allocation to add.
+        /// @brief Add an allocation to the table.
+        ///
+        /// @param [in] snapshot           The snapshot where the allocation data is located.
+        /// @param [in] virtual_allocation The allocation to add.
         void AddAllocation(const RmtDataSnapshot* snapshot, const RmtVirtualAllocation* virtual_allocation);
 
         // QAbstractItemModel overrides. See Qt documentation for parameter and return values
-        QVariant      data(const QModelIndex& index, int role) const Q_DECL_OVERRIDE;
-        Qt::ItemFlags flags(const QModelIndex& index) const Q_DECL_OVERRIDE;
-        QVariant      headerData(int section, Qt::Orientation orientation, int role) const Q_DECL_OVERRIDE;
-        QModelIndex   index(int row, int column, const QModelIndex& parent) const Q_DECL_OVERRIDE;
-        QModelIndex   parent(const QModelIndex& index) const Q_DECL_OVERRIDE;
-        int           rowCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
-        int           columnCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
+        virtual QVariant      data(const QModelIndex& index, int role) const Q_DECL_OVERRIDE;
+        virtual Qt::ItemFlags flags(const QModelIndex& index) const Q_DECL_OVERRIDE;
+        virtual QVariant      headerData(int section, Qt::Orientation orientation, int role) const Q_DECL_OVERRIDE;
+        virtual QModelIndex   index(int row, int column, const QModelIndex& parent) const Q_DECL_OVERRIDE;
+        virtual QModelIndex   parent(const QModelIndex& index) const Q_DECL_OVERRIDE;
+        virtual int           rowCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
+        virtual int           columnCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
     private:
-        /// Data from the backend that needs caching for speed.
+        /// @brief Data from the backend that needs caching for speed.
         struct DataCache
         {
             DataCache()

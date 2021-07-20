@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a base pane class
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a base pane class.
 //=============================================================================
 
 #include "base_pane.h"
@@ -19,10 +19,6 @@ BasePane::~BasePane()
 void BasePane::OpenSnapshot(RmtDataSnapshot* snapshot)
 {
     Q_UNUSED(snapshot);
-}
-
-void BasePane::PaneSwitched()
-{
 }
 
 void BasePane::SwitchTimeUnits()

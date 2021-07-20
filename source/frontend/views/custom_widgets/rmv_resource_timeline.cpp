@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a resource timeline widget
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a resource timeline widget.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_resource_timeline.h"
@@ -57,7 +57,7 @@ void RMVResourceTimeline::paintEvent(QPaintEvent* event)
     painter.setPen(QPen(Qt::black, 1));
     painter.drawLine(r.left(), mid_y, r.right(), mid_y);
 
-    // Draw the resource events. Get the data from the model
+    // Draw the resource events. Get the data from the model.
     int                icon_size = r.height() * RMVResourceEventDelegate::kIconSizeFactor;
     int                width     = r.width() - icon_size;
     int                index     = 0;

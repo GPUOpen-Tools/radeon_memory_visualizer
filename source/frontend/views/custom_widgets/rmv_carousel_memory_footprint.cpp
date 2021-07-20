@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV's carousel memory footprint widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the carousel memory footprint widget.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_carousel_memory_footprint.h"
@@ -34,7 +34,7 @@ void RMVCarouselMemoryFootprint::paint(QPainter* painter, const QStyleOptionGrap
     DrawHorizontalBarComponent(painter, "Unbound virtual memory", kEdgeMargin, 170, bar_length, kBarWidth, data_.total_unused_memory, data_.max_memory, true);
 }
 
-void RMVCarouselMemoryFootprint::SetData(const RMVCarouselData& data)
+void RMVCarouselMemoryFootprint::SetData(const rmv::RMVCarouselData& data)
 {
     data_ = data.memory_footprint_data;
     update();

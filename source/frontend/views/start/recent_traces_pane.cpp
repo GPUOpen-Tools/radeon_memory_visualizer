@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of Recent Snapshots pane.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of Recent traces pane.
 //=============================================================================
 
 #include "views/start/recent_traces_pane.h"
@@ -12,41 +12,40 @@
 
 #include "qt_common/utils/scaling_manager.h"
 
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
+#include "managers/trace_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"
-#include "views/main_window.h"
 
 const static int     kRecentTraceSpacing            = 20;
 const static int     kRecentTracePaneMargin         = 10;
 const static int     kRecentTracesTextPixelFontSize = 14;
 const static QString kRecentTracesNoTracesString    = "There are no recently opened memory traces";
 
-RecentTracesPane::RecentTracesPane(MainWindow* parent)
+RecentTracesPane::RecentTracesPane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::RecentTracesPane)
-    , main_window_(parent)
     , vbox_layout_(nullptr)
     , no_traces_label_(nullptr)
 {
     ui_->setupUi(this);
 
-    // Set white background for this pane
+    // Set white background for this pane.
     rmv::widget_util::SetWidgetBackgroundColor(this, Qt::white);
 
-    // Set the background color
+    // Set the background color.
     QPalette palette;
-    palette.setColor(QPalette::Background, Qt::GlobalColor::transparent);
+    palette.setColor(QPalette::Window, Qt::GlobalColor::transparent);
     ui_->main_scroll_area_->setPalette(palette);
 
     scroll_area_widget_contents_ = new QWidget();
     scroll_area_widget_contents_->setPalette(palette);
     scroll_area_widget_contents_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    // when deleting a trace, the setupFileList signal is fired to force an update of the file list. This needs to be done
+    // When deleting a trace, the setupFileList signal is fired to force an update of the file list. This needs to be done
     // on a queuedConnection so that any signals/slots/signal mappers for the trace file widgets have been cleaned up since
     // they get recreated when setting up a new file list.
-    connect(this, &RecentTracesPane::FileListChanged, this, &RecentTracesPane::SetupFileList, Qt::QueuedConnection);
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::RecentFileListChanged, this, &RecentTracesPane::SetupFileList, Qt::QueuedConnection);
 
     SetupFileList();
 }
@@ -62,9 +61,9 @@ RecentTracesPane::~RecentTracesPane()
 
 void RecentTracesPane::SetupFileList()
 {
-    const QVector<RecentFileData>& files = RMVSettings::Get().RecentFiles();
+    const QVector<RecentFileData>& files = rmv::RMVSettings::Get().RecentFiles();
 
-    // Clear any previous recent trace widgets
+    // Clear any previous recent trace widgets.
     for (RecentTraceWidget* widget : trace_widgets_)
     {
         delete widget;
@@ -90,23 +89,23 @@ void RecentTracesPane::SetupFileList()
     vbox_layout_->setSpacing(kRecentTraceSpacing);
     vbox_layout_->setContentsMargins(kRecentTracePaneMargin, kRecentTracePaneMargin, kRecentTracePaneMargin, kRecentTracePaneMargin);
 
-    // If there are no recent traces to show, add a label stating so
+    // If there are no recent traces to show, add a label stating so.
     if (files.size() == 0)
     {
         no_traces_label_ = new QLabel(kRecentTracesNoTracesString);
 
-        // Set the fonts
+        // Set the fonts.
         QFont font;
         font.setPixelSize(ScalingManager::Get().Scaled(kRecentTracesTextPixelFontSize));
         font.setBold(true);
         font.setFamily(font.defaultFamily());
         no_traces_label_->setFont(font);
 
-        // Add this label to the vertical layout
+        // Add this label to the vertical layout.
         vbox_layout_->addWidget(no_traces_label_);
     }
 
-    // Create a widget for each recent file
+    // Create a widget for each recent file.
     for (int i = 0; i < files.size(); i++)
     {
         RecentTraceWidget* trace_widget = new RecentTraceWidget(this);
@@ -115,27 +114,26 @@ void RecentTracesPane::SetupFileList()
         vbox_layout_->addWidget(trace_widget);
         trace_widgets_.push_back(trace_widget);
 
-        // Set up the widget
+        // Set up the widget.
         trace_widget->SetRecentFileData(files[i]);
         trace_widget->show();
 
-        // Trigger a trace open when the trace widget is clicked
-        connect(trace_widget, &RecentTraceWidget::clicked, &MessageManager::Get(), &MessageManager::OpenTrace);
+        // Trigger a trace open when the trace widget is clicked.
+        connect(trace_widget, &RecentTraceWidget::clicked, &rmv::TraceManager::Get(), &rmv::TraceManager::LoadTrace);
         connect(trace_widget, &RecentTraceWidget::clickedDelete, this, &RecentTracesPane::DeleteTrace);
-        connect(trace_widget, &RecentTraceWidget::clickedDelete, main_window_, &MainWindow::SetupRecentTracesMenu);
     }
-    // Add a spacer at the bottom. The spacer item is owned by the layout so will be deleted when the layout is deleted
+    // Add a spacer at the bottom. The spacer item is owned by the layout so will be deleted when the layout is deleted.
     vbox_layout_->addSpacerItem(new QSpacerItem(10, 40, QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding));
     vbox_layout_->setSizeConstraint(QLayout::SetMinimumSize);
     ui_->main_scroll_area_->setWidget(scroll_area_widget_contents_);
 
-    // Set the vertical scrollbar to the top
+    // Set the vertical scrollbar to the top.
     ui_->main_scroll_area_->verticalScrollBar()->setMaximum(0);
 }
 
-void RecentTracesPane::DeleteTrace(QString path)
+void RecentTracesPane::DeleteTrace(const QString& path)
 {
-    RMVSettings::Get().RemoveRecentFile(path);
-    RMVSettings::Get().SaveSettings();
-    emit FileListChanged();
+    rmv::RMVSettings::Get().RemoveRecentFile(path);
+    rmv::RMVSettings::Get().SaveSettings();
+    emit RecentFileDeleted();
 }

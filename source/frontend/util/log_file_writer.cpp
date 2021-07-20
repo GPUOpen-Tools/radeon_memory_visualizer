@@ -1,9 +1,11 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of the LogFileWriter. The LogFileWriter facilitates
-/// writing of log messages to a log file.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the LogFileWriter.
+///
+/// The LogFileWriter facilitates writing of log messages to a log file.
+///
 //=============================================================================
 
 #include "util/log_file_writer.h"
@@ -23,7 +25,7 @@
 
 namespace rmv
 {
-    // LogFileWriter instance
+    // LogFileWriter instance.
     LogFileWriter* LogFileWriter::instance_ = nullptr;
 
     LogFileWriter::LogFileWriter()
@@ -33,7 +35,7 @@ namespace rmv
         : log_level_(kError)
 #endif
     {
-        // Delete the log file from the previous instance
+        // Delete the log file from the previous instance.
         QFile::remove(GetLogFileLocation());
     }
 
@@ -51,23 +53,23 @@ namespace rmv
 
     void LogFileWriter::WriteLogMessage(const char* log_message)
     {
-        // Lock the mutex before writing out the log to the file
-        // The mutex gets released when this method returns
+        // Lock the mutex before writing out the log to the file.
+        // The mutex gets released when this method returns.
         QMutexLocker locker(&mutex_);
 
-        // Get the file name and location
+        // Get the file name and location.
         QFile file(GetLogFileLocation());
 
-        // Open the file
+        // Open the file.
         if (file.open(QIODevice::WriteOnly | QIODevice::Append))
         {
-            // Write the data to the file
+            // Write the data to the file.
             file.write(log_message);
 
-            // Add a new line to the file
+            // Add a new line to the file.
             file.write("\r\n");
 
-            // Now close the file
+            // Now close the file.
             file.close();
         }
     }
@@ -91,10 +93,10 @@ namespace rmv
     {
         QString log_file = "";
 
-        // Get file location
+        // Get file location.
         log_file = rmv_util::GetFileLocation();
 
-        // Add the file name
+        // Add the file name.
         log_file.append("/RMVLogFile.txt");
 
         return log_file;

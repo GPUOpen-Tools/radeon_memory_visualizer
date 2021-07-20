@@ -1,10 +1,13 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for the Resource properties model. This is a model
-/// to go with a QTableView showing the properties for each type of resource.
-/// The table will be populated with properties specific to a resource type.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the Resource properties model.
+///
+/// This is a model to go with a QTableView showing the properties for each
+/// type of resource. The table will be populated with properties specific to
+/// a resource type.
+///
 //=============================================================================
 
 #include "models/snapshot/resource_properties_model.h"
@@ -18,7 +21,7 @@
 #include "rmt_util.h"
 #include "rmt_virtual_allocation_list.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -71,17 +74,16 @@ namespace rmv
 
     int32_t ResourcePropertiesModel::UpdateTable(RmtResourceIdentifier resource_identifier)
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        int                 row_index     = 0;
+        int row_index = 0;
 
-        if (trace_manager.DataSetValid())
+        if (TraceManager::Get().DataSetValid())
         {
-            const RmtDataSnapshot* snapshot = trace_manager.GetOpenSnapshot();
+            const RmtDataSnapshot* snapshot = SnapshotManager::Get().GetOpenSnapshot();
             if (snapshot != nullptr)
             {
                 const RmtResource* resource   = nullptr;
                 const RmtErrorCode error_code = RmtResourceListGetResourceByResourceId(&snapshot->resource_list, resource_identifier, &resource);
-                if (error_code == RMT_OK)
+                if (error_code == kRmtOk)
                 {
                     table_model_->setRowCount(kMaxProperties);
 
@@ -139,6 +141,9 @@ namespace rmv
                         row_index = AddCommandAllocatorTableData(resource, row_index);
                         break;
 
+                    case kRmtResourceTypeIndirectCmdGenerator:
+                    case kRmtResourceTypeMotionEstimator:
+                    case kRmtResourceTypeTimestamp:
                     default:
                         break;
                     }
@@ -150,7 +155,7 @@ namespace rmv
         return row_index;
     }
 
-    void ResourcePropertiesModel::SetupResourceRow(QString name, QString value, int row)
+    void ResourcePropertiesModel::SetupResourceRow(const QString& name, const QString& value, int row)
     {
         table_model_->setData(table_model_->index(row, kResourcePropertyName), name);
         table_model_->setData(table_model_->index(row, kResourcePropertyValue), value);
@@ -341,5 +346,4 @@ namespace rmv
                          row_index++);
         return row_index;
     }
-
 }  // namespace rmv

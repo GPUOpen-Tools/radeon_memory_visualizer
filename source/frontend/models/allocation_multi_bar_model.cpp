@@ -1,12 +1,14 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for the allocation multi bar model class. This model
-/// derives from the allocation bar base class and contains additional
-/// support for displays with multiple allocations as seen in the allocation
-/// overview pane. These allocation are rendered using
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the allocation multi bar model class.
+///
+/// This model derives from the allocation bar base class and contains
+/// additional support for displays with multiple allocations as seen in the
+/// allocation overview pane. These allocation are rendered using
 /// RMVAllocationBar objects.
+///
 //=============================================================================
 
 #include "models/allocation_multi_bar_model.h"
@@ -16,38 +18,48 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 
+#include "managers/trace_manager.h"
 #include "models/snapshot/allocation_overview_model.h"
-#include "models/trace_manager.h"
 #include "util/string_util.h"
 
 namespace rmv
 {
-    // Compare functor used to sort allocations.
-    // Handles the compare functions for all the "sort by" modes used by the allocation overview pane.
-    // Also handles ascending and descending ordering.
-    // This has the advantage of being able to do the whole comparison within a single 'function call'
-    // rather than having several static comparison functions
+    /// @brief Compare functor used to sort allocations.
+    ///
+    /// Handles the compare functions for all the "sort by" modes used by the allocation overview pane.
+    /// Also handles ascending and descending ordering.
+    /// This has the advantage of being able to do the whole comparison within a single 'function call'
+    /// rather than having several static comparison functions.
     class SortComparator
     {
     public:
-        /// Constructor
-        /// \param sortMode The sort mode required.
-        /// \param ascending If true, sort ascending, Otherwise descending.
+        /// @brief Constructor.
+        ///
+        /// @param [in] sort_mode The sort mode required.
+        /// @param [in] ascending If true, sort ascending, Otherwise descending.
         SortComparator(AllocationOverviewModel::SortMode sort_mode, bool ascending)
             : sort_mode_(sort_mode)
             , ascending_(ascending)
         {
         }
 
-        /// Overloaded () operator which does the actual comparisons. This gets called by std::sort.
-        /// \param block1 Pointer to first RmtVirtualAllocation to compare.
-        /// \param block2 Pointer to second RmtVirtualAllocation to compare.
+        /// @brief Destructor.
+        ~SortComparator()
+        {
+        }
+
+        /// @brief Overloaded () operator which does the actual comparisons.
+        ///
+        /// This gets called by std::sort.
+        ///
+        /// @param [in] virtual_allocation_a Pointer to first RmtVirtualAllocation to compare.
+        /// @param [in] virtual_allocation_b Pointer to second RmtVirtualAllocation to compare.
         bool operator()(const RmtVirtualAllocation* virtual_allocation_a, const RmtVirtualAllocation* virtual_allocation_b) const
         {
             uint64_t value_a = 0;
             uint64_t value_b = 0;
 
-            // decide which sort mode to use and calculate the comparison arguments
+            // Decide which sort mode to use and calculate the comparison arguments.
             switch (sort_mode_)
             {
             case AllocationOverviewModel::kSortModeAllocationID:
@@ -76,12 +88,12 @@ namespace rmv
                 break;
 
             default:
-                // Should not get here
+                // Should not get here.
                 RMT_ASSERT_MESSAGE(false, "Allocation overview pane: Invalid sort mode.");
                 break;
             }
 
-            // decide on whether ascending or descending sort is required and return the appropriate result
+            // Decide on whether ascending or descending sort is required and return the appropriate result.
             if (ascending_)
             {
                 return value_a < value_b;
@@ -173,11 +185,9 @@ namespace rmv
 
     void MultiAllocationBarModel::ApplyAllocationFilters(const QString& filter_text, const bool* heap_array_flags, int sort_mode, bool ascending)
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-
-        if (trace_manager.DataSetValid())
+        if (TraceManager::Get().DataSetValid())
         {
-            const RmtDataSnapshot*          open_snapshot    = trace_manager.GetOpenSnapshot();
+            const RmtDataSnapshot*          open_snapshot    = SnapshotManager::Get().GetOpenSnapshot();
             const RmtVirtualAllocationList* allocation_list  = &open_snapshot->virtual_allocation_list;
             int32_t                         allocation_count = allocation_list->allocation_count;
 

@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief Definitions of the RMT format.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definitions of the RMT format.
 //=============================================================================
 
 #ifndef RMV_PARSER_RMT_FORMAT_H_
@@ -23,7 +24,10 @@
 /// There are only 3 bits for the pool size count, so that sets the max number.
 #define RMT_MAX_POOLS (1ull << 3)
 
-#ifdef __cpluplus
+/// There are 4 preferred heaps.
+#define RMT_NUM_HEAP_PREFERENCES (4)
+
+#ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
 
@@ -353,6 +357,8 @@ typedef enum RmtVideoDecoderType
     kRmtVideoDecoderTypeVP9       = 8,   ///< Decoder type VP9.
     kRmtVideoDecoderTypeHevC10Bit = 9,   ///< Decoder type HEVC 10bit.
     kRmtVideoDecoderTypeVP910Bit  = 10,  ///< Decoder type VP 910bit.
+    kRmtVideoDecoderTypeAV1       = 11,  ///< Decoder type AV1.
+    kRmtVideoDecoderTypeAV1_12Bit = 12,  ///< Decoder type AV1_12BIT.
 } RmtVideoDecoderType;
 
 /// An enumeration of video encoder types
@@ -545,6 +551,8 @@ typedef enum RmtPipelineStageBits
     kRmtPipelineStageMaskVs = (1 << 3),  ///< The pipeline ran on the VS stage.
     kRmtPipelineStageMaskGs = (1 << 4),  ///< The pipeline ran on the GS stage.
     kRmtPipelineStageMaskCs = (1 << 5),  ///< The pipeline ran on the CS stage.
+    kRmtPipelineStageMaskTs = (1 << 6),  ///< The pipeline ran on the TS stage.
+    kRmtPipelineStageMaskMs = (1 << 7)   ///< The pipeline ran on the MS stage.
 } RmtPipelineStageBits;
 
 /// An enumeration of all pipeline creation flags.
@@ -826,11 +834,11 @@ typedef struct RmtTokenCpuMap
 /// A structure encapsulating a time delta.
 typedef struct RmtTokenVirtualAllocate
 {
-    RmtTokenCommon common;           ///< Fields common to all tokens.
-    RmtGpuAddress  virtual_address;  ///< The virtual address that was allocated.
-    uint64_t       size_in_bytes;    ///< The size (in bytes) of the allocation.
-    RmtOwnerType   owner_type;       ///< The owner of the allocation.
-    RmtHeapType    preference[4];    ///< An ordered list of heap preferences for the allocation.
+    RmtTokenCommon common;                                ///< Fields common to all tokens.
+    RmtGpuAddress  virtual_address;                       ///< The virtual address that was allocated.
+    uint64_t       size_in_bytes;                         ///< The size (in bytes) of the allocation.
+    RmtOwnerType   owner_type;                            ///< The owner of the allocation.
+    RmtHeapType    preference[RMT_NUM_HEAP_PREFERENCES];  ///< An ordered list of heap preferences for the allocation.
 } RmtTokenVirtualAllocate;
 
 /// A structure encapsulating a resource description.
@@ -904,7 +912,7 @@ typedef struct RmtToken
 
 } RmtToken;
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RMV_PARSER_RMT_FORMAT_H_

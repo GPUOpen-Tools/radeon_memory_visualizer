@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a single heap in the heap overview pane.
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a single heap in the heap overview pane.
 //=============================================================================
 
 #include "views/snapshot/heap_overview_heap_layout.h"
@@ -10,13 +10,11 @@
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "rmt_data_snapshot.h"
-
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
+#include "models/colorizer.h"
 #include "settings/rmv_settings.h"
 #include "util/string_util.h"
 #include "util/widget_util.h"
-#include "views/colorizer.h"
 
 HeapOverviewHeapLayout::HeapOverviewHeapLayout(QWidget* parent)
     : QWidget(parent)
@@ -28,10 +26,10 @@ HeapOverviewHeapLayout::HeapOverviewHeapLayout(QWidget* parent)
     ui_->setupUi(this);
 
     QPalette donut_palette = ui_->resource_donut_->palette();
-    donut_palette.setColor(QPalette::ColorRole::Background, Qt::white);
+    donut_palette.setColor(QPalette::ColorRole::Window, Qt::white);
     ui_->resource_donut_->setPalette(donut_palette);
 
-    // set up the resource legends
+    // Set up the resource legends.
     resource_legends_views_[0] = ui_->legends_resource_1_;
     resource_legends_views_[1] = ui_->legends_resource_2_;
     resource_legends_views_[2] = ui_->legends_resource_3_;
@@ -71,7 +69,7 @@ void HeapOverviewHeapLayout::Initialize(RmtHeapType heap)
     model_->InitializeModel(ui_->content_mean_allocation_, rmv::kHeapOverviewMeanAllocation, "text");
 }
 
-int HeapOverviewHeapLayout::DonutSectionWidth()
+int HeapOverviewHeapLayout::GetDonutSectionWidth() const
 {
     int width = ui_->donut_widget_->sizeHint().width();
     return width;
@@ -124,7 +122,7 @@ void HeapOverviewHeapLayout::Update()
             uint64_t             value = resource_data[(i * 2) + 1];
 
             ui_->resource_donut_->SetIndexValue(i, value);
-            const QColor& color = Colorizer::GetResourceUsageColor(type);
+            const QColor& color = rmv::Colorizer::GetResourceUsageColor(type);
             ui_->resource_donut_->SetIndexColor(i, color);
             resource_legends_scenes_[i]->AddColorLegendItem(color, rmv::string_util::GetResourceUsageString(type));
         }
@@ -132,24 +130,24 @@ void HeapOverviewHeapLayout::Update()
         if (num_other > 0)
         {
             ui_->resource_donut_->SetIndexValue(num_segments - 1, num_other);
-            ui_->resource_donut_->SetIndexColor(num_segments - 1, RMVSettings::Get().GetColorResourceFreeSpace());
-            resource_legends_scenes_[num_segments - 1]->AddColorLegendItem(RMVSettings::Get().GetColorResourceFreeSpace(), "Other");
+            ui_->resource_donut_->SetIndexColor(num_segments - 1, rmv::RMVSettings::Get().GetColorResourceFreeSpace());
+            resource_legends_scenes_[num_segments - 1]->AddColorLegendItem(rmv::RMVSettings::Get().GetColorResourceFreeSpace(), "Other");
         }
     }
     else
     {
         ui_->resource_donut_->SetNumSegments(1);
         ui_->resource_donut_->SetIndexValue(0, 1);
-        ui_->resource_donut_->SetIndexColor(0, RMVSettings::Get().GetColorResourceFreeSpace());
+        ui_->resource_donut_->SetIndexColor(0, rmv::RMVSettings::Get().GetColorResourceFreeSpace());
     }
 
-    // set the view size to match the scene size so the legends appear left-justified
+    // Set the view size to match the scene size so the legends appear left-justified.
     for (int i = 0; i < kNumResourceLegends; i++)
     {
         resource_legends_views_[i]->setFixedSize(resource_legends_scenes_[i]->itemsBoundingRect().size().toSize());
     }
 
-    // Get memory parameters from the model
+    // Get memory parameters from the model.
     uint64_t                     total_physical_size                      = 0;
     uint64_t                     total_virtual_memory_requested           = 0;
     uint64_t                     total_bound_virtual_memory               = 0;
@@ -164,7 +162,7 @@ void HeapOverviewHeapLayout::Update()
                                 total_physical_mapped_by_other_processes,
                                 subscription_status);
 
-    // calc max size
+    // Calc max size.
     uint64_t max_size = total_physical_mapped_by_process + total_physical_mapped_by_other_processes;
     if (total_virtual_memory_requested > max_size)
     {
@@ -179,13 +177,13 @@ void HeapOverviewHeapLayout::Update()
         max_size = total_bound_virtual_memory;
     }
 
-    // Apply memory parameters to the memory bars
+    // Apply memory parameters to the memory bars.
     ui_->bar_requested_->SetParameters(total_virtual_memory_requested, 0, max_size, true, subscription_status);
     ui_->bar_bound_->SetParameters(total_bound_virtual_memory, 0, max_size, false, subscription_status);
     ui_->bar_total_size_->SetParameters(total_physical_size, 0, max_size, false, subscription_status);
     ui_->bar_used_->SetParameters(total_physical_mapped_by_process, total_physical_mapped_by_other_processes, max_size, false, subscription_status);
 
-    // update the various UI elements
+    // Update the various UI elements.
     ui_->bar_requested_->update();
     ui_->bar_bound_->update();
     ui_->bar_total_size_->update();

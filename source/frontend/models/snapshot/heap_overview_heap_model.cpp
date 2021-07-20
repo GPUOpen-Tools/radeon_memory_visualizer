@@ -1,9 +1,9 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a model for a heap layout for the Heap Overview
-/// pane
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a model for a heap layout for the Heap Overview
+/// pane.
 //=============================================================================
 
 #include "models/snapshot/heap_overview_heap_model.h"
@@ -14,8 +14,8 @@
 #include "rmt_data_set.h"
 #include "rmt_print.h"
 
+#include "managers/trace_manager.h"
 #include "models/resource_sorter.h"
-#include "models/trace_manager.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -84,14 +84,14 @@ namespace rmv
 
         ResetModelValues();
 
-        // update global data
+        // Update global data.
         SetModelData(kHeapOverviewTitle, RmtGetHeapTypeNameFromHeapType(heap_));
         SetModelData(kHeapOverviewDescription, kHeapDescriptions[heap_]);
 
-        // call the backend to get the segment data
+        // Call the backend to get the segment data.
         RmtDataSnapshotGetSegmentStatus(snapshot, heap_, &segment_status_);
 
-        // update subscription warning
+        // Update subscription warning.
         RmtSegmentSubscriptionStatus status = RmtSegmentStatusGetOversubscribed(&segment_status_);
         if (status == kRmtSegmentSubscriptionStatusOverLimit)
         {
@@ -102,7 +102,7 @@ namespace rmv
             SetModelData(kHeapOverviewWarningText, kWarningHeader + kWarningCloseToOverSubscribed);
         }
 
-        // update summary data
+        // Update summary data.
         if ((segment_status_.flags & kRmtSegmentStatusFlagVram) != 0)
         {
             SetModelData(kHeapOverviewLocation, "Video memory");
@@ -140,7 +140,7 @@ namespace rmv
     {
         const uint64_t* physical_bytes_per_resource_usage = segment_status_.physical_bytes_per_resource_usage;
 
-        // add all resource totals to the sorter and sort
+        // Add all resource totals to the sorter and sort.
         ResourceSorter sorter;
         for (int i = 0; i < kRmtResourceUsageTypeCount; i++)
         {
@@ -148,7 +148,7 @@ namespace rmv
         }
         sorter.Sort();
 
-        // return the most abundant resources
+        // Return the most abundant resources.
         int resource_count = 0;
         for (resource_count = 0; resource_count < num_resources; resource_count++)
         {
@@ -161,7 +161,7 @@ namespace rmv
             *resource_info++ = value;
         }
 
-        // get what's left as a single value
+        // Get what's left as a single value.
         *other_value = sorter.GetRemainder(num_resources);
 
         return resource_count;
@@ -169,14 +169,12 @@ namespace rmv
 
     const RmtDataSnapshot* HeapOverviewHeapModel::GetSnapshot() const
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return nullptr;
         }
 
-        const RmtDataSnapshot* open_snapshot = trace_manager.GetOpenSnapshot();
-        const RmtDataSnapshot* snapshot      = open_snapshot;
+        const RmtDataSnapshot* snapshot = SnapshotManager::Get().GetOpenSnapshot();
         RMT_ASSERT(snapshot != nullptr);
         return snapshot;
     }

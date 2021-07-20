@@ -125,7 +125,7 @@
             </size>
            </property>
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#5a5a5a;&quot;&gt;To view a snapshot:&lt;br/&gt;1. Go to the TIMELINE tab.&lt;br/&gt;2. Right click on the timeline and select 'add snaphot'.&lt;br/&gt;3. Double-click the snapshot from the timeline or the table to view it.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#5a5a5a;&quot;&gt;To view a snapshot:&lt;br/&gt;1. Go to the TIMELINE tab.&lt;br/&gt;2. Mouse over a position on the timeline containing 1 or more resources.&lt;br/&gt;3. Right click on the timeline and select 'add snaphot'.&lt;br/&gt;4. Double-click the snapshot from the timeline or the table to view it.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

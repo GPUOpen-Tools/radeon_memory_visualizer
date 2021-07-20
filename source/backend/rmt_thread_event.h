@@ -1,7 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2019-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author
-/// \brief
+// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of platform-specific thread events.
 //=============================================================================
 
 #ifndef RMV_BACKEND_RMT_THREAD_EVENT_H_
@@ -30,11 +31,11 @@ typedef struct RmtThreadEvent
 /// @param [in]     name                        The name of the thread event.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtThreadEventCreate(RmtThreadEvent* thread_event, bool initial_value, bool manual_reset, const char* name);
 
@@ -43,11 +44,11 @@ RmtErrorCode RmtThreadEventCreate(RmtThreadEvent* thread_event, bool initial_val
 /// @param [in]     thread_event                A pointer to a <c><i>RmtThreadEvent</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtThreadEventSignal(RmtThreadEvent* thread_event);
 
@@ -56,11 +57,11 @@ RmtErrorCode RmtThreadEventSignal(RmtThreadEvent* thread_event);
 /// @param [in]     thread_event                A pointer to a <c><i>RmtThreadEvent</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtThreadEventWait(RmtThreadEvent* thread_event);
 
@@ -69,11 +70,11 @@ RmtErrorCode RmtThreadEventWait(RmtThreadEvent* thread_event);
 /// @param [in]     thread_event                A pointer to a <c><i>RmtThreadEvent</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtThreadEventReset(RmtThreadEvent* thread_event);
 
@@ -82,11 +83,11 @@ RmtErrorCode RmtThreadEventReset(RmtThreadEvent* thread_event);
 /// @param [in]     thread_event                A pointer to a <c><i>RmtThreadEvent</i></c> structure.
 ///
 /// @retval
-/// RMT_OK                                      The operation completed successfully.
+/// kRmtOk                                      The operation completed successfully.
 /// @retval
-/// RMT_ERROR_INVALID_POINTER                   The parameter <c><i>threadEvent</i></c> was NULL.
+/// kRmtErrorInvalidPointer                     The parameter <c><i>threadEvent</i></c> was NULL.
 /// @retval
-/// RMT_ERROR_PLATFORM_FUNCTION_FAILED          A platform-specific function failed.
+/// kRmtErrorPlatformFunctionFailed             A platform-specific function failed.
 ///
 RmtErrorCode RmtThreadEventDestroy(RmtThreadEvent* thread_event);
 

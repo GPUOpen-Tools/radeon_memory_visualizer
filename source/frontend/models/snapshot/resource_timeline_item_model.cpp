@@ -1,9 +1,11 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for a resource timeline item model. Used for the
-/// resource timeline table in the resource details pane
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for a resource timeline item model.
+///
+/// Used for the resource timeline table in the resource details pane.
+///
 //=============================================================================
 
 #include "models/snapshot/resource_timeline_item_model.h"
@@ -13,7 +15,7 @@
 #include "rmt_resource_list.h"
 #include "rmt_util.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "util/time_util.h"
 
 namespace rmv
@@ -63,15 +65,15 @@ namespace rmv
 
         int row = index.row();
 
-        // set up data for snapshot entry
+        // Set up data for snapshot entry.
         uint64_t                    timestamp  = snapshot_timestamp_;
         RmtResourceHistoryEventType event_type = kRmtResourceHistoryEventSnapshotTaken;
         int                         row_index  = row;
 
         if (row != snapshot_table_index_)
         {
-            // if not snapshot and after the snapshot position, row index in the history data is
-            // 1 less than the table row since the snapshot position has been added to the table
+            // If not snapshot and after the snapshot position, row index in the history data is
+            // 1 less than the table row since the snapshot position has been added to the table.
             if (row > snapshot_table_index_)
             {
                 row_index = row - 1;
@@ -110,7 +112,7 @@ namespace rmv
                 break;
             }
         }
-        else if (role == Qt::TextColorRole)
+        else if (role == Qt::ForegroundRole)
         {
             switch (index.column())
             {

@@ -1,9 +1,11 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation for an allocation item model. Used for the allocation
-///  list tables
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for an allocation item model.
+///
+/// Used for the allocation list tables.
+///
 //=============================================================================
 
 #include "models/allocation_item_model.h"
@@ -12,8 +14,8 @@
 #include "rmt_print.h"
 #include "rmt_util.h"
 
+#include "managers/trace_manager.h"
 #include "models/snapshot/allocation_explorer_model.h"
-#include "models/trace_manager.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -141,6 +143,33 @@ namespace rmv
                 return QVariant::fromValue<qulonglong>(cache.host_bytes);
             case kVirtualAllocationColumnUnmappedPercentage:
                 return QVariant::fromValue<qulonglong>(cache.unmapped_bytes);
+
+            default:
+                break;
+            }
+        }
+        else if (role == Qt::ToolTipRole)
+        {
+            switch (index.column())
+            {
+            case kVirtualAllocationColumnAllocationSize:
+                return rmv::string_util::LocalizedValueBytes(cache.allocation_size);
+            case kVirtualAllocationColumnBound:
+                return rmv::string_util::LocalizedValueBytes(cache.bound_size);
+            case kVirtualAllocationColumnUnbound:
+                return rmv::string_util::LocalizedValueBytes(cache.unbound_size);
+            case kVirtualAllocationColumnAverageResourceSize:
+                return rmv::string_util::LocalizedValueBytes(cache.avg_resource_size);
+            case kVirtualAllocationColumnResourceSizeStdDev:
+                return rmv::string_util::LocalizedValueBytes(cache.std_dev_resource_size);
+            case kVirtualAllocationColumnInvisiblePercentage:
+                return rmv::string_util::LocalizedValueBytes(cache.invisible_bytes);
+            case kVirtualAllocationColumnLocalPercentage:
+                return rmv::string_util::LocalizedValueBytes(cache.local_bytes);
+            case kVirtualAllocationColumnSystemPercentage:
+                return rmv::string_util::LocalizedValueBytes(cache.host_bytes);
+            case kVirtualAllocationColumnUnmappedPercentage:
+                return rmv::string_util::LocalizedValueBytes(cache.unmapped_bytes);
 
             default:
                 break;

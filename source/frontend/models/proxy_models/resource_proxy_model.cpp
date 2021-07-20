@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a proxy filter that processes multiple columns.
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a proxy filter that processes multiple columns.
 //=============================================================================
 
 #include "models/proxy_models/resource_proxy_model.h"
@@ -63,9 +63,46 @@ namespace rmv
             return false;
         }
 
-        if (FilterSearchString(source_row, source_parent) == false)
+        // Apply the range-based searching to the virtual address and resource size.
+        // Only fail if the search string is outside the address range.
+        bool found_range = false;
+
+        // Convert search string to int64_t. Try decimal first and if that doesn't work, try hex.
+        bool     ok      = false;
+        uint64_t address = search_filter_.toULongLong(&ok, 10);
+        if (!ok)
         {
-            return false;
+            address = search_filter_.toULongLong(&ok, 16);
+        }
+
+        if (ok)
+        {
+            const QModelIndex& virtual_address_index = sourceModel()->index(source_row, kResourceColumnVirtualAddress, source_parent);
+            const QModelIndex& size_index            = sourceModel()->index(source_row, kResourceColumnSize, source_parent);
+            if (virtual_address_index.column() == kResourceColumnVirtualAddress && size_index.column() == kResourceColumnSize)
+            {
+                bool va_ok   = false;
+                bool size_ok = false;
+                // Get the virtual address data from the table user role so it doesn't have to be converted from a string.
+                uint64_t virtual_address = virtual_address_index.data(Qt::UserRole).toULongLong(&va_ok);
+                uint64_t size            = size_index.data(Qt::UserRole).toULongLong(&size_ok);
+                if (size_ok && va_ok && size)
+                {
+                    if (address >= virtual_address && address < (virtual_address + size))
+                    {
+                        found_range = true;
+                    }
+                }
+            }
+        }
+
+        // Range search not found, so just do the usual text search.
+        if (found_range == false)
+        {
+            if (FilterSearchString(source_row, source_parent) == false)
+            {
+                return false;
+            }
         }
 
         // Apply the preferred heap filter.

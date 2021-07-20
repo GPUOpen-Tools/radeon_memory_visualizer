@@ -1,8 +1,8 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of a delta display widget
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a delta display widget.
 //=============================================================================
 
 #include "views/custom_widgets/rmv_delta_display_widget.h"
@@ -120,9 +120,9 @@ void RMVDeltaDisplayWidget::UpdateDataValueNum(int64_t value)
     update();
 }
 
-void RMVDeltaDisplayWidget::UpdateDataValueStr(const QString& str)
+void RMVDeltaDisplayWidget::UpdateDataValueString(const QString& string)
 {
-    config_.value_string = str;
+    config_.value_string = string;
 
     update();
 }

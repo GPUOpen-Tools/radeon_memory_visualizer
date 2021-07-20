@@ -1,18 +1,15 @@
 //=============================================================================
-/// Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Implementation of RMV's device configuration pane.
+// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of the device configuration pane.
 //=============================================================================
 
 #include "views/timeline/device_configuration_pane.h"
 
 #include "qt_common/utils/qt_util.h"
 
-#include "rmt_adapter_info.h"
-#include "rmt_data_set.h"
-
-#include "models/message_manager.h"
+#include "managers/message_manager.h"
 #include "util/widget_util.h"
 
 DeviceConfigurationPane::DeviceConfigurationPane(QWidget* parent)
@@ -21,16 +18,16 @@ DeviceConfigurationPane::DeviceConfigurationPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    // Set white background for this pane
+    // Set white background for this pane.
     rmv::widget_util::SetWidgetBackgroundColor(this, Qt::white);
 
-    // Set mouse cursor to pointing hand cursor for various widgets
+    // Set mouse cursor to pointing hand cursor for various widgets.
     ui_->button_copy_to_clipboard_->setCursor(Qt::PointingHandCursor);
 
-    // hide the copy to clipboard button until it's implemented
+    // Hide the copy to clipboard button until it's implemented.
     ui_->button_copy_to_clipboard_->hide();
 
-    // hide the CPU info for now
+    // Hide the CPU info for now.
     ui_->label_title_system_->hide();
     ui_->label_processor_brand_->hide();
     ui_->content_processor_brand_->hide();

@@ -1,17 +1,18 @@
 //=============================================================================
-/// Copyright (c) 2018-2020 Advanced Micro Devices, Inc. All rights reserved.
-/// \author AMD Developer Tools Team
-/// \file
-/// \brief  Model implementation for Heap Delta pane
+// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the Snapshot Delta model.
 //=============================================================================
 
 #include "models/compare/snapshot_delta_model.h"
 
+#include "rmt_assert.h"
 #include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 
-#include "models/trace_manager.h"
+#include "managers/trace_manager.h"
 #include "views/custom_widgets/rmv_carousel.h"
 
 namespace rmv
@@ -40,31 +41,32 @@ namespace rmv
 
     bool SnapshotDeltaModel::Update()
     {
-        const TraceManager& trace_manager = TraceManager::Get();
-        if (!trace_manager.DataSetValid())
+        if (!TraceManager::Get().DataSetValid())
         {
             return false;
         }
 
-        base_snapshot_ = trace_manager.GetComparedSnapshot(base_index_);
-        diff_snapshot_ = trace_manager.GetComparedSnapshot(diff_index_);
+        const SnapshotManager& snapshot_manager = SnapshotManager::Get();
+        base_snapshot_                          = snapshot_manager.GetCompareSnapshot(base_index_);
+        diff_snapshot_                          = snapshot_manager.GetCompareSnapshot(diff_index_);
 
         if (base_snapshot_ == nullptr || diff_snapshot_ == nullptr)
         {
             return false;
         }
+        RMT_ASSERT(base_snapshot_->snapshot_point != diff_snapshot_->snapshot_point);
 
-        SetModelData(kHeapDeltaCompareBaseName, trace_manager.GetCompareSnapshotName(base_index_));
-        SetModelData(kHeapDeltaCompareDiffName, trace_manager.GetCompareSnapshotName(diff_index_));
+        SetModelData(kHeapDeltaCompareBaseName, snapshot_manager.GetCompareSnapshotName(base_index_));
+        SetModelData(kHeapDeltaCompareDiffName, snapshot_manager.GetCompareSnapshotName(diff_index_));
 
         return true;
     }
 
     bool SnapshotDeltaModel::SwapSnapshots()
     {
-        int temp    = diff_index_;
-        diff_index_ = base_index_;
-        base_index_ = temp;
+        CompareSnapshots temp = diff_index_;
+        diff_index_           = base_index_;
+        base_index_           = temp;
 
         return Update();
     }
@@ -74,12 +76,12 @@ namespace rmv
         carousel->UpdateModel(base_snapshot_, diff_snapshot_);
     }
 
-    const char* SnapshotDeltaModel::GetHeapName(int32_t heap_index)
+    const char* SnapshotDeltaModel::GetHeapName(int32_t heap_index) const
     {
         return RmtGetHeapTypeNameFromHeapType((RmtHeapType)heap_index);
     }
 
-    bool SnapshotDeltaModel::GetHeapDelta(RmtDataSnapshot* snapshot, RmtHeapType heap_type, HeapDeltaData& delta_data)
+    bool SnapshotDeltaModel::GetHeapDelta(RmtDataSnapshot* snapshot, RmtHeapType heap_type, HeapDeltaData& delta_data) const
     {
         bool success = false;
 
@@ -101,7 +103,7 @@ namespace rmv
                     {
                         total_allocated += RmtVirtualAllocationGetSizeInBytes(virtual_allocation);
 
-                        // accumulate in here
+                        // Accumulate in here.
                         delta_data.allocation_count++;
                         delta_data.resource_count += virtual_allocation->resource_count;
                         delta_data.total_allocated_and_bound += RmtVirtualAllocationGetTotalResourceMemoryInBytes(snapshot, virtual_allocation);
@@ -117,7 +119,7 @@ namespace rmv
         return success;
     }
 
-    bool SnapshotDeltaModel::CalcPerHeapDelta(RmtHeapType heap_type, HeapDeltaData& out_delta_data)
+    bool SnapshotDeltaModel::CalcPerHeapDelta(RmtHeapType heap_type, HeapDeltaData& out_delta_data) const
     {
         if (TraceManager::Get().DataSetValid())
         {

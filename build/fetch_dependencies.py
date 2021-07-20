@@ -1,7 +1,7 @@
-#! /usr/bin/python
+#! python3
 # Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
 #
-# Script to fetch all external git and/or downloable dependencies needed to build the project
+# Script to fetch all external git and/or downloadable dependencies needed to build the project
 #
 #   fetch_dependencies.py (--internal)
 #
@@ -26,82 +26,82 @@ except ImportError:
     import urllib
 
 # to allow the script to be run from anywhere - not just the cwd - store the absolute path to the script file
-scriptRoot = os.path.dirname(os.path.realpath(__file__))
+script_root = os.path.dirname(os.path.realpath(__file__))
 
 # also store the basename of the file
-scriptName = os.path.basename(__file__)
+script_name = os.path.basename(__file__)
 
 # Print a message to the console with appropriate pre-amble
-def logPrint(message):
-    print ("\n" + scriptName + ": " + message)
+def log_print(message):
+    print ("\n" + script_name + ": " + message)
     sys.stdout.flush()
 
 # add script root to support import of URL and git maps
-sys.path.append(scriptRoot)
-from dependency_map import gitMapping
+sys.path.append(script_root)
+from dependency_map import git_mapping
 
 # Clone or update a git repo
-def updateGitDependencies(gitMapping, update):
-    for gitRepo in gitMapping:
+def update_git_dependencies(git_mapping, update):
+    for git_repo in git_mapping:
         # add script directory to path
-        tmppath = os.path.join(scriptRoot, gitMapping[gitRepo][0])
+        tmp_path = os.path.join(script_root, git_mapping[git_repo][0])
 
         # clean up path, collapsing any ../ and converting / to \ for Windows
-        path = os.path.normpath(tmppath)
+        path = os.path.normpath(tmp_path)
 
         # required commit
-        reqdCommit = gitMapping[gitRepo][1]
+        reqd_commit = git_mapping[git_repo][1]
 
-        doCheckout = False
+        do_checkout = False
         if not os.path.isdir(path):
             # directory doesn't exist - clone from git
-            logPrint("Directory %s does not exist, using 'git clone' to get latest from %s" % (path, gitRepo))
-            p = subprocess.Popen((["git", "clone", gitRepo ,path]), stderr=subprocess.STDOUT)
+            log_print("Directory %s does not exist, using 'git clone' to get latest from %s" % (path, git_repo))
+            p = subprocess.Popen((["git", "clone", git_repo ,path]), stderr=subprocess.STDOUT)
             p.wait()
             if(p.returncode == 0):
-                doCheckout = True
+                do_checkout = True
             else:
-                logPrint("git clone failed with return code: %d" % p.returncode)
+                log_print("git clone failed with return code: %d" % p.returncode)
                 return False
         elif update == True:
             # directory exists and update requested - get latest from git
-            logPrint("Directory %s exists, using 'git fetch --tags' to get latest from %s" % (path, gitRepo))
+            log_print("Directory %s exists, using 'git fetch --tags' to get latest from %s" % (path, git_repo))
             p = subprocess.Popen((["git", "fetch", "--tags"]), cwd=path, stderr=subprocess.STDOUT)
             p.wait()
             if(p.returncode == 0):
-                doCheckout = True
+                do_checkout = True
             else:
-                logPrint("git fetch failed with return code: %d" % p.returncode)
+                log_print("git fetch failed with return code: %d" % p.returncode)
                 return False
         else:
             # Directory exists and update not requested
-            logPrint("Git Dependency %s found and not updated" % gitRepo)
+            log_print("Git Dependency %s found and not updated" % git_repo)
 
-        if doCheckout == True:
-            logPrint("Checking out required commit: %s" % reqdCommit)
-            p = subprocess.Popen((["git", "checkout", reqdCommit]), cwd=path, stderr=subprocess.STDOUT)
+        if do_checkout == True:
+            log_print("Checking out required commit: %s" % reqd_commit)
+            p = subprocess.Popen((["git", "checkout", reqd_commit]), cwd=path, stderr=subprocess.STDOUT)
             p.wait()
             if(p.returncode != 0):
-                logPrint("git checkout failed with return code: %d" % p.returncode)
+                log_print("git checkout failed with return code: %d" % p.returncode)
                 return False
-            logPrint("Ensuring any branch is on the head using git pull --ff-only origin %s" % reqdCommit)
-            p = subprocess.Popen((["git", "pull", "--ff-only", "origin", reqdCommit]), cwd=path, stderr=subprocess.STDOUT)
+            log_print("Ensuring any branch is on the head using git pull --ff-only origin %s" % reqd_commit)
+            p = subprocess.Popen((["git", "pull", "--ff-only", "origin", reqd_commit]), cwd=path, stderr=subprocess.STDOUT)
             p.wait()
             if(p.returncode != 0):
-                logPrint("git merge failed with return code: %d" % p.returncode)
+                log_print("git merge failed with return code: %d" % p.returncode)
                 return False
 
     return True
 
 # Main body of update functionality
-def doFetchDependencies(update, internal):
+def do_fetch_dependencies(update, internal):
     # Print git version being used
-    gitCmd = ["git", "--version"]
-    gitOutput = subprocess.check_output(gitCmd, stderr=subprocess.STDOUT)
-    logPrint("%s" % gitOutput)
+    git_cmd = ["git", "--version"]
+    git_output = subprocess.check_output(git_cmd, stderr=subprocess.STDOUT)
+    log_print("%s" % git_output)
 
     # Update all git dependencies
-    if updateGitDependencies(gitMapping, update):
+    if update_git_dependencies(git_mapping, update):
         return True
     else:
         return False
@@ -114,4 +114,4 @@ if __name__ == '__main__':
     parser.add_argument("--internal", action="store_true", help="fetch dependencies required for internal builds of the tool (only used within AMD")
     args = parser.parse_args()
 
-    doFetchDependencies(True, args.internal)
+    do_fetch_dependencies(True, args.internal)
