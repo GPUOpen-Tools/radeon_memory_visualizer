@@ -9,6 +9,9 @@ by size using the "**Filter by size**" slider to the right of the search box.
 Clicking on an allocation will show it in the graphic below, along with a
 representation of all of the resources in the selected allocation.
 
+Mousing over a memory size cell in either table will display a tooltip showing
+the number of bytes.
+
 .. image:: media/snapshot/allocation_explorer_1.png
 
 The coloring can be changed using the "**color by ..**" combo box above the

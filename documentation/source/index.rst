@@ -237,4 +237,4 @@ Microsoft is a registered trademark of Microsoft Corporation in the US and other
 Windows is a registered trademark of Microsoft Corporation in the US and other jurisdictions.
 
 
-© 2020 Advanced Micro Devices, Inc. All rights reserved.
+© 2018-2021 Advanced Micro Devices, Inc. All rights reserved.

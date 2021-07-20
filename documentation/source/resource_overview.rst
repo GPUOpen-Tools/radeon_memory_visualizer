@@ -10,6 +10,16 @@ or preferred heap for example).
 
 .. image:: media/snapshot/resource_overview_1.png
 
+Mousing over the resources will darken the resource under the mouse, and a
+tooltip will show pertinent information for the resource. If resources appear
+very small on the screen, the **Filter by size** slider bar can be used to
+filter out very large or very small resources.
+
+Clicking on a resource will show details about it at the bottom of the pane,
+including various attributes and where the selected resource lies in its
+corresponding allocation. Most of this information is now available in the
+tooltip.
+
 The preferred heap drop down list allows you to select resources you want to
 include in the resource view according to which heap was the preferred container
 for the resource at the time the resource was created. You can do this by
@@ -55,10 +65,6 @@ Virtual
 There are also 3 slicing combo boxes. These allow you to group resources by some
 attribute. The first slicing mode applies to all the resources. The other 2 slicing
 modes are applied to the groups set up by the previous slicing mode.
-
-Clicking on a resource will show details about it at the bottom of the pane,
-including various attributes and where the selected resource lies in its
-corresponding allocation.
 
 The screenshot below shows slicing and coloring resources depending whether they
 are in the preferred heap. You can tell instantly if resources are where you'd

@@ -24,7 +24,7 @@ the memory type is oversubscibed or is close to being oversubscribed.
 The 'total size' bar shows the total amount of physical memory in the heap.
 
 The 'used' bar shows how much memory the application is using in dark gray.
-The lighter gray to the right indicates the total amound of memory used by all
+The lighter gray to the right indicates the total amount of memory used by all
 processes in the system.
 
 The middle column shows a series of statistics for the heap memory type, such
