@@ -37,7 +37,7 @@ Supported graphics APIs, RDNA and GCN hardware, and operating systems
 
 \ **Supported Operating Systems**
 
--  Windows® 10 only (version 1903 or higher recommended)
+-  Windows® 10/11
 
 Radeon Memory Visualizer - Quick Start
 ======================================
@@ -204,6 +204,17 @@ https://www.lunarg.com/wp-content/uploads/2018/05/Vulkan-Debug-Utils_05_18_v1.pd
 
 specifically the section "Naming Objects"
 
+DirectX 12 resource naming
+--------------------------
+Memory traces for DirectX applications captured with the Radeon Developer Panel
+can include unique names for image-based resources.  Names can be assigned to
+DirectX resources using the ID3D12Object::SetName() method.  Calling the SetName()
+method results in ETW (Event Tracing for Windows) events being emitted and picked
+up by the Panel.  This resource naming information is then included in the RMV trace
+file.
+
+For more information, please review the Microsoft DirectX 12 documentation.
+
 Viewing resource names
 ----------------------
 The resource names will show up in the RMV UI in the resource list pane, for example:
@@ -237,4 +248,4 @@ Microsoft is a registered trademark of Microsoft Corporation in the US and other
 Windows is a registered trademark of Microsoft Corporation in the US and other jurisdictions.
 
 
-© 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+© 2018-2022 Advanced Micro Devices, Inc. All rights reserved.

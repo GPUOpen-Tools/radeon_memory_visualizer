@@ -35,7 +35,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 
 ## Supported OS's and API's
 
-### Windows® 10 only (version 1903 or higher recommended)
+### Windows® 10/11
 * DirectX12
 * Vulkan
 
@@ -111,4 +111,4 @@ CMake is a registered trademark of Kitware, Inc.
 Qt and the Qt logo are registered trademarks of the Qt Company Ltd and/or its subsidiaries worldwide.
 
 
-© 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+© 2020-2022 Advanced Micro Devices, Inc. All rights reserved.

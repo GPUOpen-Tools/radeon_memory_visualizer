@@ -23,9 +23,21 @@ the memory type is oversubscibed or is close to being oversubscribed.
 
 The 'total size' bar shows the total amount of physical memory in the heap.
 
-The 'used' bar shows how much memory the application is using in dark gray.
-The lighter gray to the right indicates the total amount of memory used by all
-processes in the system.
+The "Requested" bar shows how much memory the application has requested. This
+should give an indication of the memory footprint of the application.
+Memory requests typically request virtual memory under the hood and it is up
+to the driver to make sure that virtual memory is mapped to physical memory
+when and where appropriate.
+
+The "Bound" bar shows how much memory has been bound to resources. If there is
+substantially more requested memory than bound memory, it may indicate that
+memory has been requested but is not actually being used by the application.
+
+The "Committed" bar shows how much memory has been mapped to physical memory.
+If the amount of committed memory is substantially less than the amount of
+memory requested, it may indicate that there are other tasks running on the
+system that are consuming memory or the application itself is using more
+memory than is physically available.
 
 The middle column shows a series of statistics for the heap memory type, such
 as where the memory resides (in system or video memory), whether it is mapped
