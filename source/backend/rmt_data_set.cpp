@@ -5,8 +5,11 @@
 /// @brief  Implementation of functions for working with a data set.
 //=============================================================================
 
-#include <string.h>  // for memcpy()
+#include <map>
+#include <set>
 #include <stdlib.h>  // for malloc() / free()
+#include <string>
+#include <string.h>  // for memcpy()
 #include <time.h>
 
 #include "rmt_data_set.h"
@@ -22,11 +25,115 @@
 
 #ifndef _WIN32
 #include "linux/safe_crt.h"
+#include <fstream>
 #include <stddef.h>  // for offsetof macro.
+#include <unistd.h>
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+
+// Determine if a file is read only.
+static bool IsFileReadOnly(const char* file_path)
+{
+#ifdef _WIN32
+    DWORD file_attributes = GetFileAttributes(file_path);
+    return ((file_attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY);
+#else
+    // Test to see if the file is writable.
+    // The access() function will return 0 if successful, -1 on failure.
+    return access(file_path, W_OK) == -1;
+#endif
+}
+
+// Portable copy file function.
+static bool CopyTraceFile(const char* existing_file_path, const char* new_file_path)
+{
+#ifdef _WIN32
+    return CopyFile(existing_file_path, new_file_path, FALSE);
+#else
+    std::ifstream source_stream(existing_file_path, std::ios::binary);
+    std::ofstream destination_stream(new_file_path, std::ios::binary);
+
+    destination_stream << source_stream.rdbuf();
+    bool result = destination_stream.good();
+    return result;
+#endif
+}
+
+// Portable move file function.
+static bool MoveTraceFile(const char* existing_file_path, const char* new_file_path)
+{
+#ifdef _WIN32
+    return MoveFileEx(existing_file_path, new_file_path, MOVEFILE_REPLACE_EXISTING);
+#else
+    bool result = false;
+    if (CopyTraceFile(existing_file_path, new_file_path))
+    {
+        result = remove(existing_file_path);
+    }
+
+    return result;
+#endif
+}
+
+static void CopyString(char* destination, size_t size_in_bytes, char const* source, size_t max_count)
+{
+#ifndef _WIN32
+    strncpy(destination, source, std::min(size_in_bytes, max_count));
+#else
+    strncpy_s(destination, size_in_bytes, source, max_count);
+#endif  // _WIN32
+}
+
+struct RmtResourceNameData
+{
+    RmtResourceIdentifier resource_id;
+    std::string           name;
+};
+
+// Map used to associate correlation IDs with Resource IDs.
+static std::map<RmtCorrelationIdentifier, RmtResourceIdentifier> resource_correlation_lookup_map;
+
+// Map used to look up resource name data.
+static std::map<RmtCorrelationIdentifier, RmtResourceNameData> resource_name_lookup_map;
+
+// Map used to lookup unique resource ID hash using the original resource ID as the key.
+static std::map<RmtResourceIdentifier, RmtResourceIdentifier> unique_resource_id_lookup_map;
+
+// A list of implicit resources to be removed from a snapshot.
+static std::set<RmtResourceIdentifier> implicit_resource_list;
+
+// A flag used to indicate that the list of implicit resources has been created.
+// This list is created when the trace is first parsed and the timeline is built.
+// The list is used when parsing the trace for building snapshots.
+static bool implicit_resource_list_created = false;
+
+// Replaces original resource IDs in lookup maps with the unique resource ID hash values generated when resource objects are created.
+void UpdateResourceNameIds()
+{
+    for (auto& resource_name_data : resource_name_lookup_map)
+    {
+        RmtCorrelationIdentifier correlation_identifier               = resource_name_data.first;
+        auto                     resource_correlation_lookup_iterator = resource_correlation_lookup_map.find(correlation_identifier);
+        if (resource_correlation_lookup_iterator != resource_correlation_lookup_map.end())
+        {
+            // Take the unique resource IDs from the correlation USERDATA tokens and copy them to the resource name data.
+            resource_name_data.second.resource_id = resource_correlation_lookup_iterator->second;
+        }
+
+        // Update original resource IDs to unique resource IDs.
+        auto unique_resource_id_iterator = unique_resource_id_lookup_map.find(resource_name_data.second.resource_id);
+        if (unique_resource_id_iterator != unique_resource_id_lookup_map.end())
+        {
+            if (resource_correlation_lookup_iterator != resource_correlation_lookup_map.end())
+            {
+                resource_correlation_lookup_iterator->second = unique_resource_id_iterator->second;
+            }
+            resource_name_data.second.resource_id = unique_resource_id_iterator->second;
+        }
+    }
+}
 
 // this buffer is used by the parsers to read chunks of data into RAM for processing. The larger this
 // buffer the better the parsing performance, but the larger the memory footprint.
@@ -242,6 +349,15 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
         // Depending on the type of chunk, handle pre-processing it.
         switch (current_file_chunk->chunk_identifier.chunk_type)
         {
+        case kRmtFileChunkTypeAsicInfo:
+            break;
+
+        case kRmtFileChunkTypeApiInfo:
+            break;
+
+        case kRmtFileChunkTypeSystemInfo:
+            break;
+
         case kRmtFileChunkTypeRmtData:
             error_code = ParseRmtDataChunk(data_set, current_file_chunk);
             RMT_ASSERT(error_code == kRmtOk);
@@ -510,6 +626,22 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
     return kRmtOk;
 }
 
+// Verify that a string contains only valid characters.
+static bool IsValidTextString(const char* text, size_t length)
+{
+    int character_position = 0;
+    while ((character_position < length) && (text[character_position] != '\0'))
+    {
+        if ((text[character_position] <= 0x1f) || text[character_position] == 0x7f)
+        {
+            return false;
+        }
+        character_position++;
+    }
+
+    return true;
+}
+
 // consume next RMT token for snapshot generation.
 static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* current_token, RmtDataSnapshot* out_snapshot)
 {
@@ -579,16 +711,39 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     {
         if (current_token->userdata_token.userdata_type == kRmtUserdataTypeName)
         {
-            RmtResource* found_resource = NULL;
-            error_code                  = RmtResourceListGetResourceByResourceId(
-                &out_snapshot->resource_list, current_token->userdata_token.resource_identifer, (const RmtResource**)&found_resource);
-            if (error_code == kRmtOk)
-            {
-                memcpy(found_resource->name,
-                       current_token->userdata_token.payload,
-                       RMT_MINIMUM(current_token->userdata_token.size_in_bytes, RMT_MAXIMUM_NAME_LENGTH));
-            }
+            char name[RMT_MAXIMUM_NAME_LENGTH];
+
+            // Calculate the size of the resource name string.  Subtract the size of the ID in the Name USERDATA token and one byte for the termination character to get the name length.
+            int  name_length = RMT_MINIMUM(current_token->userdata_token.size_in_bytes - (sizeof(uint32_t)), RMT_MAXIMUM_NAME_LENGTH);
+
+            memcpy(name, current_token->userdata_token.payload_cache, name_length);
+            // Check for invalid characters.  Invalid characters may indicate a parsing issue.
+            RMT_ASSERT(IsValidTextString(name, name_length));
+
+            name[name_length-1]           = 0;
+
+            // If a matching resource isn't found, attempt to match later using the correlation ID.
+            RmtResourceNameData resource_name_data;
+            resource_name_data.name                                                        = name;
+            resource_name_data.resource_id                                                 = current_token->userdata_token.resource_identifier;
+            resource_name_lookup_map[current_token->userdata_token.correlation_identifier] = resource_name_data;
+
+            current_token->userdata_token.payload_cache = nullptr;
         }
+        else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeCorrelation)
+        {
+            // store values in lookup map.
+            resource_correlation_lookup_map[current_token->userdata_token.correlation_identifier] = current_token->userdata_token.resource_identifier;
+        }
+        else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeMarkImplicitResource)
+        {
+#ifdef _IMPLICIT_RESOURCE_LOGGING
+            if (implicit_resource_list_created == false)
+            {
+                RmtPrint("ProcessTokenForSnapshot() - add implicit resource: %lld", current_token->userdata_token.resource_identifier);
+#endif  // _IMPLICIT_RESOURCE_LOGGING
+                implicit_resource_list.insert(current_token->userdata_token.resource_identifier);
+            }
 
 #ifdef PRINT_TOKENS
 #endif
@@ -654,7 +809,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 resource_create_token.resource_identifier = matching_resource->identifier;
                 resource_create_token.owner_type          = matching_resource->owner_type;
                 resource_create_token.commit_type         = matching_resource->commit_type;
-                resource_create_token.resource_type       = kRmtResourceTypeCommandAllocator;
+                resource_create_token.resource_type = kRmtResourceTypeCommandAllocator;
                 memcpy(&resource_create_token.common, &current_token->common, sizeof(RmtTokenCommon));
                 memcpy(&resource_create_token.command_allocator, &matching_resource->command_allocator, sizeof(RmtResourceDescriptionCommandAllocator));
 
@@ -736,17 +891,27 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeResourceCreate:
     {
+        // For testing purposes, define _DISABLE_IMPLICIT_RESOURCE_FILTERING to prevent implicitly created resource from being removed.
+#ifndef _DISABLE_IMPLICIT_RESOURCE_FILTERING
+        if ((!implicit_resource_list_created) ||
+            implicit_resource_list.find(current_token->resource_create_token.original_resource_identifier) == implicit_resource_list.end())
+#endif  // _DISABLE_IMPLICIT_RESOURCE_FILTERING
+        {
 #ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf,
-                  "%lld - RESOURCE_CREATE - %lld %d",
-                  current_token->common.timestamp,
-                  current_token->resource_create_token.resource_identifier,
-                  current_token->resource_create_token.resource_type);
+            char buf[128];
+            sprintf_s(buf,
+                      "%lld - RESOURCE_CREATE - %lld %d",
+                      current_token->common.timestamp,
+                      current_token->resource_create_token.resource_identifier,
+                      current_token->resource_create_token.resource_type);
 #endif
+            error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &current_token->resource_create_token);
 
-        error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &current_token->resource_create_token);
-        RMT_ASSERT(error_code == kRmtOk);
+            RMT_ASSERT(error_code == kRmtOk);
+
+            unique_resource_id_lookup_map[current_token->resource_create_token.original_resource_identifier] =
+                current_token->resource_create_token.resource_identifier;
+        }
 
 #ifdef PRINT_TOKENS
         if (error_code != kRmtOk)
@@ -803,10 +968,7 @@ static void CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary
     {
         return;
     }
-#ifdef _WIN32
-    // On Windows, filesystem metadata updates are atomic. Therefore, if we
-    // rename the temporary file we created during initialize to the original,
-    // we should gaurntee we always safely have a valid RMT file.
+
     if (data_set->file_handle != nullptr)
     {
         fflush((FILE*)data_set->file_handle);
@@ -816,15 +978,15 @@ static void CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary
 
     if (remove_temporary)
     {
-        bool success = MoveFileEx(data_set->temporary_file_path, data_set->file_path, MOVEFILE_REPLACE_EXISTING);
+        bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
         RMT_ASSERT(success);
     }
     else
     {
         // for a mirror without remove, we need to recopy the temp
-        bool success = MoveFileEx(data_set->temporary_file_path, data_set->file_path, MOVEFILE_REPLACE_EXISTING);
+        bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
         RMT_ASSERT(success);
-        success = CopyFile(data_set->file_path, data_set->temporary_file_path, FALSE);
+        success = CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
         RMT_ASSERT(success);
 
         data_set->file_handle = NULL;
@@ -832,23 +994,6 @@ static void CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary
         RMT_ASSERT(data_set->file_handle);
         RMT_ASSERT(error_no == 0);
     }
-#else
-    RMT_UNUSED(remove_temporary);
-    // If we want this on Linux implement it here.
-#endif
-}
-
-// Is the 'path' file read only
-static bool IsFileReadOnly(const char* path)
-{
-#ifdef _WIN32
-    DWORD file_attributes = GetFileAttributes(path);
-    return ((file_attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY);
-#else
-    RMT_UNUSED(path);
-    // Linux implementation
-    return false;
-#endif
 }
 
 // initialize the data set by reading the header chunks, and setting up the streams.
@@ -875,14 +1020,9 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     else
     {
         // copy the entire input file to a temporary.
-#ifdef _WIN32
-        strcat_s(data_set->temporary_file_path, ".bak");
-        CopyFile(data_set->file_path, data_set->temporary_file_path, FALSE);
-#else
-        // If we want to implement similar safety for linux. Then we should copy the file here.
-        // instead we just copy the file name into the temporary path, and operate directly on
-        // the raw file.
-#endif
+        strcat_s(data_set->temporary_file_path, sizeof(data_set->temporary_file_path), ".bak");
+        CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
+
         // Load the data from the RMT file.
         error_no = fopen_s((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+");
         if ((data_set->file_handle == nullptr) || error_no != 0)
@@ -1019,6 +1159,11 @@ static int32_t UpdateSeriesValuesFromCurrentSnapshot(const RmtDataSnapshot* curr
     }
     break;
 
+    case kRmtDataTimelineTypePageSize:
+    {
+    }
+    break;
+
     case kRmtDataTimelineTypeCommitted:
     {
         for (int32_t current_heap_type_index = 0; current_heap_type_index < kRmtHeapTypeCount; ++current_heap_type_index)
@@ -1067,6 +1212,11 @@ static int32_t UpdateSeriesValuesFromCurrentSnapshot(const RmtDataSnapshot* curr
     }
     break;
 
+    case kRmtDataTimelineTypePaging:
+    {
+    }
+    break;
+
     case kRmtDataTimelineTypeVirtualMemory:
     {
         for (int32_t current_heap_type_index = 0; current_heap_type_index < kRmtHeapTypeCount; ++current_heap_type_index)
@@ -1074,6 +1224,11 @@ static int32_t UpdateSeriesValuesFromCurrentSnapshot(const RmtDataSnapshot* curr
             const uint64_t heap_type_count = current_snapshot->virtual_allocation_list.allocations_per_preferred_heap[current_heap_type_index];
             out_timeline->series[current_heap_type_index].levels[0].values[value_index] = heap_type_count;
         }
+    }
+    break;
+
+    case kRmtDataTimelineTypeResourceNonPreferred:
+    {
     }
     break;
 
@@ -1131,6 +1286,10 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 {
     RMT_ASSERT(data_set);
 
+    // Reset the list of implicitly created resources.
+    implicit_resource_list.clear();
+    implicit_resource_list_created = false;
+
     // Allocate temporary snapshot.
     RmtDataSnapshot* temp_snapshot = (RmtDataSnapshot*)PerformAllocation(data_set, sizeof(RmtDataSnapshot), alignof(RmtDataSnapshot));
     RMT_ASSERT(temp_snapshot);
@@ -1149,6 +1308,11 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     // initialize the process map.
     error_code = RmtProcessMapInitialize(&temp_snapshot->process_map);
     RMT_ASSERT(error_code == kRmtOk);
+
+    // Initialize resource lookup maps.
+    resource_correlation_lookup_map.clear();
+    resource_name_lookup_map.clear();
+    unique_resource_id_lookup_map.clear();
 
     // Special case:
     // for timeline type of process, we have to first fill the 0th value of level 0
@@ -1196,7 +1360,7 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     // clean up temporary structures we allocated to construct the timeline.
     RmtDataSnapshotDestroy(temp_snapshot);
     PerformFree(data_set, temp_snapshot);
-
+    implicit_resource_list_created = true;
     return kRmtOk;
 }
 
@@ -1590,6 +1754,20 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     SnapshotGeneratorCalculateCommitType(out_snapshot);
     SnapshotGeneratorAllocateRegionStack(out_snapshot);
     SnapshotGeneratorCalculateSnapshotPointSummary(out_snapshot, snapshot_point);
+
+    // Update the lookup maps to use unique resource ID hash values.
+    UpdateResourceNameIds();
+
+    for (const auto& name_token_item : resource_name_lookup_map)
+    {
+        RmtResourceIdentifier resource_identifier = name_token_item.second.resource_id;
+        RmtResource*          found_resource      = NULL;
+        error_code = RmtResourceListGetResourceByResourceId(&out_snapshot->resource_list, resource_identifier, (const RmtResource**)&found_resource);
+        if (error_code == kRmtOk)
+        {
+            CopyString(found_resource->name, sizeof(found_resource->name), name_token_item.second.name.c_str(), name_token_item.second.name.length());
+        }
+    }
     return kRmtOk;
 }
 

@@ -69,6 +69,9 @@ typedef enum RmtPageTableController
 /// A typedef for a resource identifier.
 typedef uint64_t RmtResourceIdentifier;
 
+/// A typedef for a resource correlation ID.
+typedef uint64_t RmtCorrelationIdentifier;
+
 /// A typedef for a queue.
 typedef uint64_t RmtQueue;
 

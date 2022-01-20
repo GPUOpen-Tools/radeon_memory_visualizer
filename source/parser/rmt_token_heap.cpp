@@ -7,6 +7,7 @@
 
 #include "rmt_token_heap.h"
 #include "rmt_platform.h"
+#include <rmt_print.h>
 #include "rmt_format.h"
 #include "rmt_parser.h"
 #include "rmt_assert.h"
@@ -334,14 +335,21 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
     {
         switch (out_token->type)
         {
+        case kRmtTokenTypeTimeDelta:
+        {
+            break;
+        }
+
         case kRmtTokenTypeResourceCreate:
         {
             // When we see a new resource create, we want to create a new map node which will generate a unique resource ID based on our driver
             // provided ID.
+            out_token->resource_create_token.original_resource_identifier = out_token->resource_create_token.resource_identifier;
             uint64_t              base_driver_id                 = HashId(out_token->resource_create_token.resource_identifier);
             RmtResourceIdentifier unique_id                      = 0;
             token_heap->map_root                                 = InsertNode(token_heap->allocator, token_heap->map_root, base_driver_id, &unique_id);
             out_token->resource_create_token.resource_identifier = unique_id;
+
             break;
         }
         case kRmtTokenTypeResourceBind:
@@ -361,15 +369,21 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
 
         case kRmtTokenTypeUserdata:
         {
-            if (out_token->userdata_token.userdata_type != kRmtUserdataTypeName)
+            // If an associated ResourceCreate token has been parsed, update the UserData tokens's resource ID to match the
+            // unique ID that was generated.
+
+            switch (out_token->userdata_token.userdata_type)
+            {
+            case kRmtUserdataTypeName:
+            case kRmtUserdataTypeCorrelation:
+            case kRmtUserdataTypeMarkImplicitResource:
             {
                 break;
             }
 
-            const uint64_t     base_driver_id            = HashId(out_token->userdata_token.resource_identifer);
-            ResourceIdMapNode* node                      = FindResourceNode(token_heap->map_root, base_driver_id);
-            out_token->userdata_token.resource_identifer = node != nullptr ? node->unique_id : base_driver_id;
-            break;
+            default:
+                break;
+            }
         }
 
         default:
@@ -382,6 +396,7 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
     // will ensure there is always 1 token from each stream with outstanding tokens available in the
     // heap for consideration.
     RmtToken* next_token_from_stream = &token_heap->buffer[out_token->common.stream_index];
+    *next_token_from_stream          = {};
     error_code                       = RmtParserAdvance(&token_heap->parsers[out_token->common.stream_index], next_token_from_stream, NULL);
     if (error_code == kRmtOk)
     {

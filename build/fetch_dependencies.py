@@ -65,8 +65,8 @@ def update_git_dependencies(git_mapping, update):
                 return False
         elif update == True:
             # directory exists and update requested - get latest from git
-            log_print("Directory %s exists, using 'git fetch --tags' to get latest from %s" % (path, git_repo))
-            p = subprocess.Popen((["git", "fetch", "--tags"]), cwd=path, stderr=subprocess.STDOUT)
+            log_print("Directory %s exists, using 'git fetch --tags -f' to get latest from %s" % (path, git_repo))
+            p = subprocess.Popen((["git", "fetch", "--tags", "-f"]), cwd=path, stderr=subprocess.STDOUT)
             p.wait()
             if(p.returncode == 0):
                 do_checkout = True

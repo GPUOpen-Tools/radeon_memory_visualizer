@@ -112,8 +112,8 @@ namespace rmv
         static const QString kTraceHelpFile       = "/docs/help/rdp/html/index.html";
         static const QString kRmvHelpFile         = "/docs/help/rmv/html/index.html";
         static const QString kRmvLicenseFile      = "/License.txt";
-        static const QString kSampleTraceLocation = "/samples/sampleTrace" + kTraceFileExtension;
-        static const QString kFileOpenFileTypes   = "RMV trace files (*.rmv);;All files (*)";
+        static const QString kSampleTraceLocation = "/samples/sample_trace" + kTraceFileExtension;
+        static const QString kFileOpenFileTypes   = "RMV trace files (*.rmv)";
         static const QString kMissingRmvTrace     = "Missing RMV sample trace: ";
         static const QString kMissingRmvHelpFile  = "Missing RMV help file: ";
 

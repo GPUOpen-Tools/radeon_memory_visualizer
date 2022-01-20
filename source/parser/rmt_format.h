@@ -58,10 +58,12 @@ typedef enum RmtTokenType
 /// An enumeration of user data types.
 typedef enum RmtUserdataType
 {
-    kRmtUserdataTypeName     = 0,  ///< The user data contains a string which is relevant to the following sequence of tokens.
-    kRmtUserdataTypeSnapshot = 1,  ///< The user data contains a string which names a specific momemnt in time.
-    kRmtUserdataTypeBinary   = 2,  ///< The user data contains a blind binary payload.
-    kRmtUserdataTypeReserved = 3   ///< Reserved for future expansion.
+    kRmtUserdataTypeName                 = 0,  ///< The user data contains a string which is relevant to the following sequence of tokens.
+    kRmtUserdataTypeSnapshot             = 1,  ///< The user data contains a string which names a specific momemnt in time.
+    kRmtUserdataTypeBinary               = 2,  ///< The user data contains a blind binary payload.
+    kRmtUserdataTypeReserved             = 3,  ///< Reserved for future expansion.
+    kRmtUserdataTypeCorrelation          = 4,  ///< The user data contains 2 32-bit handles for matching resource names to DX12 resources.
+    kRmtUserdataTypeMarkImplicitResource = 5   ///< The user data contains a 32-bit resource ID that should be filtered because it was created implicitly.
 } RmtUserdataType;
 
 /// An enumeration of miscellaenous events.
@@ -775,11 +777,15 @@ typedef struct RmtTokenPageTableUpdate
 /// A structure encapsulating user data.
 typedef struct RmtTokenUserdata
 {
-    RmtTokenCommon        common;              ///< Fields common to all tokens.
-    RmtUserdataType       userdata_type;       ///< The type of the user data in the payload.
-    int32_t               size_in_bytes;       ///< The size (in bytes) of the payload. The largest we can encode is 1MB.
-    const void*           payload;             ///< The payload of the user data.
-    RmtResourceIdentifier resource_identifer;  ///< The resource identifer, only valid when usedataType is RMT_USERDATA_TYPE_NAME.
+    RmtTokenCommon  common;         ///< Fields common to all tokens.
+    RmtUserdataType userdata_type;  ///< The type of the user data in the payload.
+    int32_t         size_in_bytes;  ///< The size (in bytes) of the payload. The largest we can encode is 1MB.
+    uint8_t*        payload_cache;  ///< Pointer to the payload of the user data.  This must be deleted when parsing of the token completes.
+
+    RmtResourceIdentifier
+        resource_identifier;  ///< The identifier used to match a name to a non-DX resource, only valid when usedataType is RMT_USERDATA_TYPE_NAME.
+    RmtCorrelationIdentifier correlation_identifier;        ///< The identifier used to match correlation ID for DX traces.
+    RmtResourceIdentifier    original_resource_identifier;  ///< The Original Resource ID contained in the RESOURCE_CREATE token.
 } RmtTokenUserdata;
 
 /// A structure encapsulating misc data.
@@ -844,9 +850,11 @@ typedef struct RmtTokenVirtualAllocate
 /// A structure encapsulating a resource description.
 typedef struct RmtTokenResourceCreate
 {
-    RmtTokenCommon        common;               ///< Fields common to all tokens.
-    RmtResourceIdentifier resource_identifier;  ///< A unique identifier for the resource.
-    RmtOwnerType          owner_type;           ///< The part of the software stack creating this resource.
+    RmtTokenCommon           common;                        ///< Fields common to all tokens.
+    RmtResourceIdentifier    resource_identifier;           ///< A unique identifier for the resource.
+    RmtResourceIdentifier    original_resource_identifier;  ///< The original resource ID included in the Token's payload.
+    RmtCorrelationIdentifier correlation_identifier;        ///< The Resource Name USERDATA correlation ID (set to 0 if unused).
+    RmtOwnerType             owner_type;                    ///< The part of the software stack creating this resource.
     //RmtOwnerCategory              owner_category;                 ///< The owner category.
     RmtCommitType   commit_type;    ///< The type of commitment reqeuired for this resource.
     RmtResourceType resource_type;  ///< The resource type.
@@ -858,15 +866,15 @@ typedef struct RmtTokenResourceCreate
         RmtResourceDescriptionBuffer   buffer;     ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBuffer</i></c>.
         RmtResourceDescriptionGpuEvent gpu_event;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeGpuEvent</i></c>.
         RmtResourceDescriptionBorderColorPalette
-                                               border_color_palette;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBorderColorPalette</i></c>.
-        RmtResourceDescriptionPerfExperiment   perf_experiment;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePerfExperiment</i></c>.
-        RmtResourceDescriptionQueryHeap        query_heap;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeQueryHeap</i></c>.
-        RmtResourceDescriptionPipeline         pipeline;           ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePipeline</i></c>.
-        RmtResourceDescriptionVideoDecoder     video_decoder;      ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoDecoder</i></c>.
-        RmtResourceDescriptionVideoEncoder     video_encoder;      ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoEncoder</i></c>.
-        RmtResourceDescriptionHeap             heap;               ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeHeap</i></c>.
-        RmtResourceDescriptionDescriptorHeap   descriptor_heap;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorHeap</i></c>.
-        RmtResourceDescriptionDescriptorPool   descriptor_pool;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorPool</i></c>.
+            border_color_palette;                                ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBorderColorPalette</i></c>.
+        RmtResourceDescriptionPerfExperiment   perf_experiment;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePerfExperiment</i></c>.
+        RmtResourceDescriptionQueryHeap        query_heap;       ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeQueryHeap</i></c>.
+        RmtResourceDescriptionPipeline         pipeline;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePipeline</i></c>.
+        RmtResourceDescriptionVideoDecoder     video_decoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoDecoder</i></c>.
+        RmtResourceDescriptionVideoEncoder     video_encoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoEncoder</i></c>.
+        RmtResourceDescriptionHeap             heap;             ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeHeap</i></c>.
+        RmtResourceDescriptionDescriptorHeap   descriptor_heap;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorHeap</i></c>.
+        RmtResourceDescriptionDescriptorPool   descriptor_pool;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorPool</i></c>.
         RmtResourceDescriptionCommandAllocator command_allocator;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeCommandAllocator</i></c>.
         RmtResourceDescriptionMiscInternal     misc_internal;      ///< Valid when <c><i>resourceType</i></c> is <c><i>RMT_RESOURCE_TYPE_MISC_INTERNAL</i></c>.
     };
@@ -886,9 +894,35 @@ typedef struct RmtTokenResourceDestroy
     RmtResourceIdentifier resource_identifier;  ///< A unique identifier for the resource being unbound.
 } RmtTokenResourceUnbind;
 
+/// @brief Allocate memory for the USERDATA token payload cache.
+///
+/// @param [in] size The number of bytes to allocate.
+///
+/// @return A pointer to the allocated memory.
+uint8_t* AllocatePayloadCache(size_t size);
+
+/// @brief Deallocate memory previously allocated for the USERDATA token payload cache.
+///
+/// @param [in] payload_cache A pointer to the memory to be deallocated.
+///
+/// @return The number of rows.
+void DeallocatePayloadCache(uint8_t* payload_cache);
+
 /// A structure encapsulating the token.
 typedef struct RmtToken
 {
+    /// @brief RmtToken destructor.
+    ~RmtToken()
+    {
+        if ((type == kRmtTokenTypeUserdata) && (userdata_token.userdata_type == kRmtUserdataTypeName))
+        {
+            // Deallocate cached payload data if the token type is a Name USERDATA token.
+            DeallocatePayloadCache(userdata_token.payload_cache);
+            userdata_token.payload_cache = nullptr;
+            userdata_token.size_in_bytes = 0;
+        }
+    };
+
     RmtTokenType type;  ///< The type of the RMT token.
 
     union

@@ -84,7 +84,7 @@ namespace rmv
         /// @brief Get the full path to the trace file.
         ///
         /// @return The trace path.
-        QString GetTracePath() const;
+        const QString& GetTracePath() const;
 
         /// @brief Is the data set valid, meaning does it contain a valid trace.
         ///

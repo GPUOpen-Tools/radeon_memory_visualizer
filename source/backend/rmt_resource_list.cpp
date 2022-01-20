@@ -36,6 +36,11 @@ RmtResourceUsageType RmtResourceGetUsageType(const RmtResource* resource)
             return kRmtResourceUsageTypeIndexBuffer;
         }
 
+        if (resource->buffer.usage_flags == kRmtBufferUsageFlagRayTracing)
+        {
+            return kRmtResourceUsageTypeRayTracingBuffer;
+        }
+
         return kRmtResourceUsageTypeBuffer;
         break;
 
@@ -362,12 +367,12 @@ static RmtResourceIdNode* FindResourceNode(RmtResourceIdNode* root, RmtResourceI
         return NULL;
     }
 
-    if (root->identifer == resource_identifier)
+    if (root->identifier == resource_identifier)
     {
         return root;
     }
 
-    if (resource_identifier < root->identifer)
+    if (resource_identifier < root->identifier)
     {
         return FindResourceNode(root->left, resource_identifier);
     }
@@ -382,7 +387,7 @@ static RmtResourceIdNode* InsertNode(RmtResourceList* resource_list, RmtResource
     {
         // create a new node
         RmtResourceIdNode* new_node = (RmtResourceIdNode*)RmtPoolAllocate(&resource_list->resource_id_node_pool);
-        new_node->identifer         = resource_identifier;
+        new_node->identifier         = resource_identifier;
         new_node->resource          = resource;
         new_node->left              = NULL;
         new_node->right             = NULL;
@@ -392,11 +397,11 @@ static RmtResourceIdNode* InsertNode(RmtResourceList* resource_list, RmtResource
         return new_node;
     }
 
-    if (resource_identifier < node->identifer)
+    if (resource_identifier < node->identifier)
     {
         node->left = InsertNode(resource_list, node->left, resource_identifier, resource);
     }
-    else if (resource_identifier > node->identifer)
+    else if (resource_identifier > node->identifier)
     {
         node->right = InsertNode(resource_list, node->right, resource_identifier, resource);
     }
@@ -416,11 +421,11 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         return node;
     }
 
-    if (resource_identifier < node->identifer)
+    if (resource_identifier < node->identifier)
     {
         node->left = DeleteNode(resource_list, node->left, resource_identifier);
     }
-    else if (resource_identifier > node->identifer)
+    else if (resource_identifier > node->identifier)
     {
         node->right = DeleteNode(resource_list, node->right, resource_identifier);
     }
@@ -429,7 +434,7 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         if (node->left == nullptr)
         {
             RmtResourceIdNode* child = node->right;
-            node->identifer          = 0;
+            node->identifier          = 0;
             node->left               = NULL;
             node->right              = NULL;
             RmtPoolFree(&resource_list->resource_id_node_pool, node);
@@ -438,7 +443,7 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         if (node->right == nullptr)
         {
             RmtResourceIdNode* child = node->left;
-            node->identifer          = 0;
+            node->identifier          = 0;
             node->left               = NULL;
             node->right              = NULL;
             RmtPoolFree(&resource_list->resource_id_node_pool, node);
@@ -446,7 +451,7 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         }
 
         RmtResourceIdNode* smallest_child = GetSmallestNode(node->right);
-        node->identifer                   = smallest_child->identifer;
+        node->identifier                   = smallest_child->identifier;
 
         // update payload pointers.
         RMT_ASSERT(node->resource);
@@ -455,16 +460,16 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         node->resource->id_node = node;
 
         // now delete the node we just moved.
-        node->right = DeleteNode(resource_list, node->right, smallest_child->identifer);
+        node->right = DeleteNode(resource_list, node->right, smallest_child->identifier);
     }
 
     return node;
 }
 
 // search the acceleration structure for a resource.
-static RmtResource* FindResourceById(const RmtResourceList* resource_list, RmtResourceIdentifier resource_identifer)
+static RmtResource* FindResourceById(const RmtResourceList* resource_list, RmtResourceIdentifier resource_identifier)
 {
-    RmtResourceIdNode* found_node = FindResourceNode(resource_list->root, resource_identifer);
+    RmtResourceIdNode* found_node = FindResourceNode(resource_list->root, resource_identifier);
     if (found_node == nullptr)
     {
         return NULL;
@@ -483,10 +488,10 @@ static RmtErrorCode AddResourceToTree(RmtResourceList* resource_list, RmtResourc
 }
 
 // destroy a resource from the acceleration structure.
-static RmtErrorCode RemoveResourceFromTree(RmtResourceList* resource_list, RmtResourceIdentifier resource_identifer)
+static RmtErrorCode RemoveResourceFromTree(RmtResourceList* resource_list, RmtResourceIdentifier resource_identifier)
 {
     const size_t pool_count = resource_list->resource_id_node_pool.allocated;
-    resource_list->root     = DeleteNode(resource_list, resource_list->root, resource_identifer);
+    resource_list->root     = DeleteNode(resource_list, resource_list->root, resource_identifier);
     RMT_ASSERT(resource_list->resource_id_node_pool.allocated == pool_count - 1);
     return kRmtOk;
 }

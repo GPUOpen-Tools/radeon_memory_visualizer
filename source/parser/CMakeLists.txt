@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.10)
 project(RmvParser)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -20,6 +20,7 @@ set( SOURCES
     "rmt_error.h"
     "rmt_file_format.h"
     "rmt_file_format.cpp"
+    "rmt_format.cpp"
     "rmt_format.h"
     "rmt_parser.cpp"
     "rmt_parser.h"

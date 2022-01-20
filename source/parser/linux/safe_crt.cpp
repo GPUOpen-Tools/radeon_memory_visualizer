@@ -7,6 +7,7 @@
 
 #if !defined(_WIN32)
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,6 +15,33 @@
 
 #include "safe_crt.h"
 #include "../parser/rmt_util.h"
+
+static errno_t validate_string_params(char* destination, size_t size, const char* source)
+{
+    errno_t result = 0;
+
+    if (destination == nullptr)
+    {
+        result = EINVAL;
+    }
+    else if (source == nullptr)
+    {
+        destination[0] = '\0';
+        result = EINVAL;
+    }
+    else if (size == 0)
+    {
+        result = ERANGE;
+
+    }
+    else if (strlen(source) > size)
+    {
+        destination[0] = '\0';
+        result = ERANGE;
+    }
+
+    return result;
+}
 
 errno_t fopen_s(FILE** file, const char* filename, const char* mode)
 {
@@ -56,22 +84,47 @@ int fprintf_s(FILE* stream, const char* format, ...)
 
 size_t fread_s(void* buffer, size_t buffer_size, size_t element_size, size_t count, FILE* stream)
 {
-    RMT_UNUSED(count);
+    if ((element_size * count) > buffer_size)
+    {
+        return 0;
+    }
+
     return fread(buffer, element_size, buffer_size, stream);
 }
 
 errno_t strcpy_s(char* destination, size_t size, const char* source)
 {
-    RMT_UNUSED(size);
-    strcpy(destination, source);
-    return 0;
+    errno_t result = validate_string_params(destination, size, source);
+
+    if (result == 0)
+    {
+        if (strncpy(destination, source, size) == nullptr)
+        {
+            result = ERANGE;
+        }
+    }
+
+    assert(result == 0);
+
+    return result;
 }
 
 errno_t strcat_s(char* destination, size_t size, const char* source)
 {
-    RMT_UNUSED(size);
-    strcat(destination, source);
-    return 0;
+    errno_t result = validate_string_params(destination, size, source);
+
+    if (result == 0)
+    {
+        if (strncat(destination, source, size) == nullptr)
+        {
+            result = ERANGE;
+        }
+    }
+
+    assert(result == 0);
+
+    return result;
 }
+
 
 #endif  // !_WIN32

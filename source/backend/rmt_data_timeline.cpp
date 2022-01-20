@@ -83,11 +83,27 @@ static void CreateHistogramJob(int32_t thread_id, int32_t index, void* input)
     const uint64_t start_timestamp = input_parameters->start_timestamp + (input_parameters->bucket_width_in_cycles * index);
     const uint64_t end_timestamp   = start_timestamp + input_parameters->bucket_width_in_cycles;
     RMT_UNUSED(end_timestamp);
-    const int32_t value_index = RmtDataSetGetSeriesIndexForTimestamp(NULL, start_timestamp);
+    int32_t       value_index = RmtDataSetGetSeriesIndexForTimestamp(NULL, start_timestamp);
     const int32_t level_index = 0;
 
     for (int32_t current_series_index = 0; current_series_index < input_parameters->timeline->series_count; ++current_series_index)
     {
+        const int32_t value_count = input_parameters->timeline->series[current_series_index].levels[level_index].value_count;
+        if (value_count == 0)
+        {
+            return;
+        }
+
+        if (value_index >= value_count)
+        {
+            value_index = value_count - 1;
+        }
+
+        if (value_index < 0)
+        {
+            value_index = 0;
+        }
+
         const uint64_t current_value = input_parameters->timeline->series[current_series_index].levels[level_index].values[value_index];
 
         const int32_t bucket_index = RmtDataTimelineHistogramGetIndex(input_parameters->out_timeline_histogram, index, current_series_index);

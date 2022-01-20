@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.10)
 project(RmvBackend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

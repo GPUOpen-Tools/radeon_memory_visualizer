@@ -121,6 +121,9 @@ namespace rmv
         case kRmtResourceUsageTypeIndexBuffer:
             out = rmv::RMVSettings::Get().GetColorResourceIndexBuffer();
             break;
+        case kRmtResourceUsageTypeRayTracingBuffer:
+            out = rmv::RMVSettings::Get().GetColorResourceRayTracingBuffer();
+            break;
         case kRmtResourceUsageTypeUav:
             out = rmv::RMVSettings::Get().GetColorResourceUAV();
             break;

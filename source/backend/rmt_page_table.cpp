@@ -241,12 +241,6 @@ RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
     // For a regular mapping operation these must be valid.
     RMT_ASSERT(size_in_pages > 0);
 
-    // NOTE: process filtering, driver doesn't seem to be producing >1 process currently?
-    if (process_id <= 1)
-    {
-        return kRmtOk;
-    }
-
     // Calculate the number of 4KiB pages we require.
     const uint64_t page_size_4kib   = RmtGetPageSize(kRmtPageSize4Kb);
     const uint64_t size_of_page     = RmtGetPageSize(page_size);

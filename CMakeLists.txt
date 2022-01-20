@@ -163,5 +163,5 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${BUILD_ROOT}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_ROOT}/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sampleTrace.rmv  ${BUILD_ROOT}/samples/.
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sampleTrace.rmv  ${BUILD_ROOT}/samples/sample_trace.rmv
 )

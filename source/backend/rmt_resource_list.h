@@ -42,20 +42,21 @@ typedef enum RmtResourceFlagBits
 /// An enumeration of asbtract usage types.
 typedef enum RmtResourceUsageType
 {
-    kRmtResourceUsageTypeUnknown,         ///< The resource usage type is unknown.
-    kRmtResourceUsageTypeDepthStencil,    ///< The resource is a depth/stencil buffer.
-    kRmtResourceUsageTypeRenderTarget,    ///< The resource is a color target.
-    kRmtResourceUsageTypeTexture,         ///< The resource is a texture.
-    kRmtResourceUsageTypeVertexBuffer,    ///< The resource is a vertex buffer.
-    kRmtResourceUsageTypeIndexBuffer,     ///< The resource is an index buffer.
-    kRmtResourceUsageTypeUav,             ///< The resource is an unordered access view.
-    kRmtResourceUsageTypeShaderPipeline,  ///< The resource is a shader pipeline.
-    kRmtResourceUsageTypeCommandBuffer,   ///< The resource is a command buffer.
-    kRmtResourceUsageTypeHeap,            ///< The resource is a memory heap.
-    kRmtResourceUsageTypeDescriptors,     ///< The resource is a descroptor heap/pool.
-    kRmtResourceUsageTypeBuffer,          ///< The resource is a buffer.
-    kRmtResourceUsageTypeGpuEvent,        ///< The resource is a GPU event.
-    kRmtResourceUsageTypeFree,            ///< An additional type to represent memory that is allocated, but not bound to something.
+    kRmtResourceUsageTypeUnknown,           ///< The resource usage type is unknown.
+    kRmtResourceUsageTypeDepthStencil,      ///< The resource is a depth/stencil buffer.
+    kRmtResourceUsageTypeRenderTarget,      ///< The resource is a color target.
+    kRmtResourceUsageTypeTexture,           ///< The resource is a texture.
+    kRmtResourceUsageTypeVertexBuffer,      ///< The resource is a vertex buffer.
+    kRmtResourceUsageTypeIndexBuffer,       ///< The resource is an index buffer.
+    kRmtResourceUsageTypeRayTracingBuffer,  ///< The resource is a ray tracing-related buffer (ie BVH).
+    kRmtResourceUsageTypeUav,               ///< The resource is an unordered access view.
+    kRmtResourceUsageTypeShaderPipeline,    ///< The resource is a shader pipeline.
+    kRmtResourceUsageTypeCommandBuffer,     ///< The resource is a command buffer.
+    kRmtResourceUsageTypeHeap,              ///< The resource is a memory heap.
+    kRmtResourceUsageTypeDescriptors,       ///< The resource is a descriptor heap/pool.
+    kRmtResourceUsageTypeBuffer,            ///< The resource is a buffer.
+    kRmtResourceUsageTypeGpuEvent,          ///< The resource is a GPU event.
+    kRmtResourceUsageTypeFree,              ///< An additional type to represent memory that is allocated, but not bound to something.
     kRmtResourceUsageTypeInternal,
 
     // Add above this.
@@ -163,10 +164,10 @@ int32_t RmtResourceGetAliasCount(const RmtResource* resource);
 /// A structure for fast searching by resource ID.
 typedef struct RmtResourceIdNode
 {
-    RmtResourceIdentifier identifer;  ///< The guid to search on.
-    RmtResource*          resource;   ///< A pointer to a <c><i>RmtResource</i></c> structure containing the resource payload.
-    RmtResourceIdNode*    left;       ///< A pointer to a <c><i>RmtResourceNodeId</i></c> structure that is the left child of this node.
-    RmtResourceIdNode*    right;      ///< A pointer to a <c><i>RmtResourceNodeId</i></c> structure that is the right child of this node.
+    RmtResourceIdentifier identifier;  ///< The guid to search on.
+    RmtResource*          resource;    ///< A pointer to a <c><i>RmtResource</i></c> structure containing the resource payload.
+    RmtResourceIdNode*    left;        ///< A pointer to a <c><i>RmtResourceNodeId</i></c> structure that is the left child of this node.
+    RmtResourceIdNode*    right;       ///< A pointer to a <c><i>RmtResourceNodeId</i></c> structure that is the right child of this node.
 } RmtResourceIdNode;
 
 /// A structure encapsulating a list of allocations.

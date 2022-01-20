@@ -36,6 +36,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     button_group_.addButton(ui_->button_resource_texture_, kSettingThemesAndColorsResourceTexture);
     button_group_.addButton(ui_->button_resource_vertex_buffer_, kSettingThemesAndColorsResourceVertexBuffer);
     button_group_.addButton(ui_->button_resource_index_buffer_, kSettingThemesAndColorsResourceIndexBuffer);
+    button_group_.addButton(ui_->button_resource_ray_tracing_buffer_, kSettingThemesAndColorsResourceRayTracingBuffer);
     button_group_.addButton(ui_->button_resource_uav_, kSettingThemesAndColorsResourceUav);
     button_group_.addButton(ui_->button_resource_shader_pipeline_, kSettingThemesAndColorsResourceShaderPipeline);
     button_group_.addButton(ui_->button_resource_command_buffer_, kSettingThemesAndColorsResourceCommandBuffer);
@@ -242,6 +243,7 @@ void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
     case kSettingThemesAndColorsResourceTexture:
     case kSettingThemesAndColorsResourceVertexBuffer:
     case kSettingThemesAndColorsResourceIndexBuffer:
+    case kSettingThemesAndColorsResourceRayTracingBuffer:
     case kSettingThemesAndColorsResourceUav:
     case kSettingThemesAndColorsResourceShaderPipeline:
     case kSettingThemesAndColorsResourceCommandBuffer:
@@ -297,6 +299,7 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
     case kSettingThemesAndColorsResourceTexture:
     case kSettingThemesAndColorsResourceVertexBuffer:
     case kSettingThemesAndColorsResourceIndexBuffer:
+    case kSettingThemesAndColorsResourceRayTracingBuffer:
     case kSettingThemesAndColorsResourceUav:
     case kSettingThemesAndColorsResourceShaderPipeline:
     case kSettingThemesAndColorsResourceCommandBuffer:

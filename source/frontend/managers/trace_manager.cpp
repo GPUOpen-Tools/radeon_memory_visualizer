@@ -311,7 +311,12 @@ namespace rmv
         QFileInfo trace_file(trace_path);
         if (trace_file.exists() && trace_file.isFile())
         {
-            may_load = true;
+            const QString extension = trace_path.mid(trace_path.lastIndexOf("."), trace_path.length());
+
+            if (extension.compare(rmv::text::kTraceFileExtension, Qt::CaseInsensitive) == 0)
+            {
+                may_load = true;
+            }
         }
 
         return may_load;
@@ -334,9 +339,9 @@ namespace rmv
         return default_exe_name;
     }
 
-    QString TraceManager::GetTracePath() const
+    const QString& TraceManager::GetTracePath() const
     {
-        return active_trace_path_.mid(active_trace_path_.lastIndexOf("/") + 1, active_trace_path_.length());
+        return active_trace_path_;
     }
 
     bool TraceManager::DataSetValid() const

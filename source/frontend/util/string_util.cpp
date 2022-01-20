@@ -158,6 +158,9 @@ QString rmv::string_util::GetResourceUsageString(RmtResourceUsageType usage_type
     case kRmtResourceUsageTypeIndexBuffer:
         out = "Index buffer";
         break;
+    case kRmtResourceUsageTypeRayTracingBuffer:
+        out = "Ray tracing";
+        break;
     case kRmtResourceUsageTypeUav:
         out = "UAV";
         break;

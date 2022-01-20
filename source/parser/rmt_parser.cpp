@@ -5,10 +5,15 @@
 /// @brief  Implementation of functions for parsing RMT data.
 //=============================================================================
 
+#include <string.h>  // for memcpy()
+
 #include "rmt_parser.h"
+#include <rmt_print.h>
 #include "rmt_format.h"
 #include "rmt_util.h"
 #include "rmt_assert.h"
+#include "rmt_token_heap.h"
+
 
 // size in bytes of each token.
 #define RMT_TOKEN_SIZE_TIMESTAMP (96 / 8)           ///< Timestamp Token Size, in bytes
@@ -496,19 +501,51 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, 0);
     out_userdata_token->userdata_type = (RmtUserdataType)((payload_length & 0xf00) >> 8);
     out_userdata_token->size_in_bytes = (payload_length >> 12) & 0xfffff;
-    out_userdata_token->payload       = (void*)((uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + sizeof(uint32_t));
 
-    // read the resource ID.
+    // If the payload extends beyond the end of the buffer, return an end of file error.  Processing of tokens will continue.
+    RMT_RETURN_ON_ERROR((rmt_parser->stream_current_offset + (sizeof(uint8_t) * out_userdata_token->size_in_bytes) <= rmt_parser->stream_size), kRmtEof);
+
+    void* payload                     = (void*)((uintptr_t)rmt_parser->file_buffer + rmt_parser->file_buffer_offset + sizeof(uint32_t));
+    out_userdata_token->payload_cache = nullptr;
+
     if (out_userdata_token->size_in_bytes > 4 && out_userdata_token->userdata_type == kRmtUserdataTypeName)
     {
-        const uintptr_t             resource_id_address = ((uintptr_t)out_userdata_token->payload) + (out_userdata_token->size_in_bytes - 4);
+        // Allocate memory for the payload cache.  This will be deleted by the token destructor.
+        out_userdata_token->payload_cache = AllocatePayloadCache(out_userdata_token->size_in_bytes);
+        memcpy(out_userdata_token->payload_cache, payload, out_userdata_token->size_in_bytes);
+
+        const uintptr_t id_address = ((uintptr_t)payload) + (out_userdata_token->size_in_bytes - 4);
+        const uint32_t  id_value   = *((uint32_t*)id_address);
+
+        // Handle DX12 trace.
+        const RmtCorrelationIdentifier correlation_identifier = (RmtCorrelationIdentifier)id_value;
+        out_userdata_token->correlation_identifier            = correlation_identifier;
+
+        // Handle Vulkan trace.
+        const RmtResourceIdentifier resource_identifier = (RmtResourceIdentifier)id_value;
+        out_userdata_token->resource_identifier         = resource_identifier;
+    }
+    else if (out_userdata_token->size_in_bytes == 8 && out_userdata_token->userdata_type == kRmtUserdataTypeCorrelation)
+    {
+        const uintptr_t             resource_id_address = ((uintptr_t)payload) + (out_userdata_token->size_in_bytes - 8);
         const uint32_t              resource_id_value   = *((uint32_t*)resource_id_address);
         const RmtResourceIdentifier resource_identifier = (RmtResourceIdentifier)resource_id_value;
-        out_userdata_token->resource_identifer          = resource_identifier;
+
+        const uintptr_t                correlation_id_address = ((uintptr_t)payload) + (out_userdata_token->size_in_bytes - 4);
+        const uint32_t                 correlation_id_value   = *((uint32_t*)correlation_id_address);
+        const RmtCorrelationIdentifier correlation_identifier = (RmtCorrelationIdentifier)correlation_id_value;
+        out_userdata_token->resource_identifier               = resource_identifier;
+        out_userdata_token->correlation_identifier            = correlation_identifier;
     }
-    else
+    else if (out_userdata_token->userdata_type == kRmtUserdataTypeMarkImplicitResource)
     {
-        out_userdata_token->resource_identifer = 0;
+        const uintptr_t             resource_id_address = (reinterpret_cast<uintptr_t>(payload) + (out_userdata_token->size_in_bytes - sizeof(int32_t)));
+        const uint32_t              resource_id_value   = *(reinterpret_cast<uint32_t*>(resource_id_address));
+        const RmtResourceIdentifier resource_identifier = static_cast<RmtResourceIdentifier>(resource_id_value);
+        out_userdata_token->resource_identifier         = resource_identifier;
+#ifdef _IMPLICIT_RESOURCE_LOGGING
+        RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx", out_userdata_token->resource_identifier);
+#endif  // _IMPLICIT_RESOURCE_LOGGING
     }
 
     return kRmtOk;

@@ -54,6 +54,7 @@ enum RMVSettingID
     kSettingThemesAndColorsResourceTexture,
     kSettingThemesAndColorsResourceVertexBuffer,
     kSettingThemesAndColorsResourceIndexBuffer,
+    kSettingThemesAndColorsResourceRayTracingBuffer,
     kSettingThemesAndColorsResourceUav,
     kSettingThemesAndColorsResourceShaderPipeline,
     kSettingThemesAndColorsResourceCommandBuffer,
@@ -375,6 +376,11 @@ namespace rmv
         ///
         /// @return The color value of this resource.
         QColor GetColorResourceIndexBuffer() const;
+
+        /// @brief Get kSettingThemesAndColorsResourceRayTracingBuffer from the settings.
+        ///
+        /// @return The color value of this resource.
+        QColor GetColorResourceRayTracingBuffer() const;
 
         /// @brief Get kSettingThemesAndColorsResourceUav from the settings.
         ///

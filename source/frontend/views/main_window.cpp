@@ -844,7 +844,7 @@ void MainWindow::UpdateTitlebar()
 
     if (trace_manager.DataSetValid())
     {
-        const QString file_name = trace_manager.GetTracePath();
+        const QString& file_name = trace_manager.GetTracePath();
 
         if (pane_manager_.GetMainPaneFromPane(pane_manager_.GetCurrentPane()) == rmv::kMainPaneSnapshot)
         {

@@ -204,20 +204,21 @@ namespace rmv
         default_settings_[kSettingThemesAndColorsSnapshotGenerated] = {"SnapshotGeneratedColor", "14"};
         default_settings_[kSettingThemesAndColorsSnapshotVma]       = {"SnapshotVmaColor", "15"};
 
-        default_settings_[kSettingThemesAndColorsResourceDsBuffer]       = {"ResourceDSBufferColor", "28"};
-        default_settings_[kSettingThemesAndColorsResourceRenderTarget]   = {"ResourceRenderTargetBufferColor", "8"};
-        default_settings_[kSettingThemesAndColorsResourceTexture]        = {"ResourceTextureBufferColor", "3"};
-        default_settings_[kSettingThemesAndColorsResourceVertexBuffer]   = {"ResourceVertexBufferColor", "0"};
-        default_settings_[kSettingThemesAndColorsResourceIndexBuffer]    = {"ResourceIndexBufferColor", "16"};
-        default_settings_[kSettingThemesAndColorsResourceUav]            = {"ResourceUAVColor", "21"};
-        default_settings_[kSettingThemesAndColorsResourceShaderPipeline] = {"ResourceShaderPipelineColor", "18"};
-        default_settings_[kSettingThemesAndColorsResourceCommandBuffer]  = {"ResourceCommandBufferColor", "13"};
-        default_settings_[kSettingThemesAndColorsResourceHeap]           = {"ResourceHeapColor", "30"};
-        default_settings_[kSettingThemesAndColorsResourceDescriptors]    = {"ResourceDescriptorsColor", "9"};
-        default_settings_[kSettingThemesAndColorsResourceBuffer]         = {"ResourceBufferColor", "22"};
-        default_settings_[kSettingThemesAndColorsResourceGpuEvent]       = {"ResourceGPUEventColor", "19"};
-        default_settings_[kSettingThemesAndColorsResourceFreeSpace]      = {"ResourceFreeSpaceColor", "24"};
-        default_settings_[kSettingThemesAndColorsResourceInternal]       = {"ResourceInternalColor", "31"};
+        default_settings_[kSettingThemesAndColorsResourceDsBuffer]         = {"ResourceDSBufferColor", "28"};
+        default_settings_[kSettingThemesAndColorsResourceRenderTarget]     = {"ResourceRenderTargetBufferColor", "8"};
+        default_settings_[kSettingThemesAndColorsResourceTexture]          = {"ResourceTextureBufferColor", "3"};
+        default_settings_[kSettingThemesAndColorsResourceVertexBuffer]     = {"ResourceVertexBufferColor", "0"};
+        default_settings_[kSettingThemesAndColorsResourceIndexBuffer]      = {"ResourceIndexBufferColor", "16"};
+        default_settings_[kSettingThemesAndColorsResourceRayTracingBuffer] = {"ResourceRayTracingBufferColor", "26"};
+        default_settings_[kSettingThemesAndColorsResourceUav]              = {"ResourceUAVColor", "21"};
+        default_settings_[kSettingThemesAndColorsResourceShaderPipeline]   = {"ResourceShaderPipelineColor", "18"};
+        default_settings_[kSettingThemesAndColorsResourceCommandBuffer]    = {"ResourceCommandBufferColor", "13"};
+        default_settings_[kSettingThemesAndColorsResourceHeap]             = {"ResourceHeapColor", "30"};
+        default_settings_[kSettingThemesAndColorsResourceDescriptors]      = {"ResourceDescriptorsColor", "9"};
+        default_settings_[kSettingThemesAndColorsResourceBuffer]           = {"ResourceBufferColor", "22"};
+        default_settings_[kSettingThemesAndColorsResourceGpuEvent]         = {"ResourceGPUEventColor", "19"};
+        default_settings_[kSettingThemesAndColorsResourceFreeSpace]        = {"ResourceFreeSpaceColor", "24"};
+        default_settings_[kSettingThemesAndColorsResourceInternal]         = {"ResourceInternalColor", "31"};
 
         default_settings_[kSettingThemesAndColorsDeltaIncrease] = {"DeltaIncreaseColor", "31"};
         default_settings_[kSettingThemesAndColorsDeltaDecrease] = {"DeltaDecreaseColor", "9"};
@@ -512,6 +513,7 @@ namespace rmv
         SetToDefaultValue(kSettingThemesAndColorsResourceTexture);
         SetToDefaultValue(kSettingThemesAndColorsResourceVertexBuffer);
         SetToDefaultValue(kSettingThemesAndColorsResourceIndexBuffer);
+        SetToDefaultValue(kSettingThemesAndColorsResourceRayTracingBuffer);
         SetToDefaultValue(kSettingThemesAndColorsResourceUav);
         SetToDefaultValue(kSettingThemesAndColorsResourceShaderPipeline);
         SetToDefaultValue(kSettingThemesAndColorsResourceCommandBuffer);
@@ -610,6 +612,11 @@ namespace rmv
     QColor RMVSettings::GetColorResourceIndexBuffer() const
     {
         return GetColorValue(kSettingThemesAndColorsResourceIndexBuffer);
+    }
+
+    QColor RMVSettings::GetColorResourceRayTracingBuffer() const
+    {
+        return GetColorValue(kSettingThemesAndColorsResourceRayTracingBuffer);
     }
 
     QColor RMVSettings::GetColorResourceUAV() const
