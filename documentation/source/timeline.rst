@@ -110,8 +110,9 @@ time and returning back to the **Snapshot generation** will now show the table
 fully populated for the selected snapshot.
 
 Right-clicking on a snapshot in the table will show a context menu allowing the snapshot
-to be renamed or deleted. Snapshots are saved back to the trace file so they can be
-viewed at a later date.
+to be renamed or deleted. Snapshots can be renamed using any printable ASCII character,
+including spaces. Snapshot names are limited to 32 characters. Snapshots are saved back
+to the trace file so they can be viewed at a later date.
 
 Two or more snapshots can be selected in the table by holding down the shift key to
 select a range of snapshots or pressing Ctrl to select individual snapshots.

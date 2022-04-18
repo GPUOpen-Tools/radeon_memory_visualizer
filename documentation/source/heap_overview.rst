@@ -7,10 +7,24 @@ using and where that memory is allocated. It can be used to very quickly
 determine if the application is using too much memory of a certain type
 and if the correct memory type is being used where it should be.
 
+RMV is able to detect if a memory trace was taken from a system with
+Smart Access Memory (SAM) enabled. SAM gives the CPU direct access to
+all available video memory. More information on SAM can be found in the
+GPUOpen article, "How to get the most out of Smart Access Memory" located
+at https://gpuopen.com/learn/get-the-most-out-of-smart-access-memory/
+
+The top line of the Heap overview pane indicates if SAM is enabled or
+disabled.
+
+When SAM is disabled, the display is split into 3 sections, one section per
+heap type. There is a brief description of the use for each heap.
+
 .. image:: media/snapshot/heap_overview_1.png
 
-The display is split into 3 sections, one section per heap type. There is
-a brief description of the use for each heap.
+When SAM is enabled, the section for the invisible heap is not shown since
+all memory is visible to the CPU.
+
+.. image:: media/snapshot/heap_overview_2.png
 
 On the left is the amount of memory used for each heap type as a series
 of bar graphs:
