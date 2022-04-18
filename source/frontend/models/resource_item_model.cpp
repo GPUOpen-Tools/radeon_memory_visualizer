@@ -248,6 +248,7 @@ namespace rmv
                 return "Unmapped";
             case kResourceColumnUsage:
                 return "Usage";
+
             default:
                 break;
             }

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model for a heap layout for the Heap Overview
@@ -20,6 +20,10 @@
 
 namespace rmv
 {
+    static const QString kSamStatusText   = " (Smart Access Memory is ";
+    static const QString kSamEnabledText  = "enabled)";
+    static const QString kSamDisabledText = "disabled)";
+
     static const QString kHeapDescriptions[kRmtHeapTypeCount] = {
         QString("This heap is in local (video) memory. It is mappable by the CPU, but does not use the CPU cache."),
         QString("This heap is in local (video) memory. It is not mappable by the CPU."),
@@ -85,6 +89,16 @@ namespace rmv
         ResetModelValues();
 
         // Update global data.
+        if (heap_ == kRmtHeapTypeLocal)
+        {
+            QString sam_status_string = kSamStatusText + (IsSAMSupported() ? kSamEnabledText : kSamDisabledText);
+            SetModelData(kHeapOverviewSamStatus, sam_status_string);
+        }
+        else
+        {
+            SetModelData(kHeapOverviewSamStatus, "");
+        }
+
         SetModelData(kHeapOverviewTitle, RmtGetHeapTypeNameFromHeapType(heap_));
         SetModelData(kHeapOverviewDescription, kHeapDescriptions[heap_]);
 
@@ -178,4 +192,15 @@ namespace rmv
         RMT_ASSERT(snapshot != nullptr);
         return snapshot;
     }
+
+    bool HeapOverviewHeapModel::IsSAMSupported()
+    {
+        return TraceManager::Get().GetDataSet()->sam_enabled;
+    }
+
+    RmtHeapType HeapOverviewHeapModel::GetHeapType() const
+    {
+        return heap_;
+    }
+
 }  // namespace rmv

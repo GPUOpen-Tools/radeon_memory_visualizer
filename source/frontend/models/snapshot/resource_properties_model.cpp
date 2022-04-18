@@ -346,4 +346,5 @@ namespace rmv
                          row_index++);
         return row_index;
     }
+
 }  // namespace rmv

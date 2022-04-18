@@ -35,6 +35,11 @@ public:
     /// @brief Destructor.
     virtual ~WelcomePane();
 
+    /// @brief Overridden window show event.
+    ///
+    /// @param [in] event The show event object.
+    virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
+
 private slots:
     /// @brief Setup the list of recent files.
     ///

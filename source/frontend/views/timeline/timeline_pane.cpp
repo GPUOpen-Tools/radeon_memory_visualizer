@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Timeline pane.
@@ -587,6 +587,7 @@ void TimelinePane::resizeEvent(QResizeEvent* event)
     {
         model_->UpdateMemoryGraph(ui_->timeline_view_->ViewableStartClk(), ui_->timeline_view_->ViewableEndClk());
     }
+    UpdateTableDisplay();
     QWidget::resizeEvent(event);
 }
 
@@ -711,7 +712,14 @@ void TimelinePane::UpdateTableDisplay()
 {
     int index = (model_->RowCount() == 0) ? 0 : 1;
     ui_->snapshot_table_valid_switch_->setCurrentIndex(index);
-
+    ui_->snapshot_table_view_->setFocus();
+    const QAbstractItemModel* source_model = model_->GetProxyModel()->sourceModel();
+    if (source_model != nullptr)
+    {
+        // Find the index of the added snapshot and select it in the table.
+        QModelIndex selection_index = source_model->index(model_->RowCount() - 1, 0);
+        ui_->snapshot_table_view_->selectRow(model_->GetProxyModel()->mapFromSource(selection_index).row());
+    }
     SetMaximumSnapshotTableHeight();
 }
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the virtual allocation list functions.
@@ -386,7 +386,8 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
                                                    RmtGpuAddress             address,
                                                    int32_t                   size_in_4kb_pages,
                                                    const RmtHeapType         preferences[4],
-                                                   RmtOwnerType              owner)
+                                                   RmtOwnerType              owner,
+                                                   bool                      sam_enabled)
 {
     RMT_ASSERT(virtual_allocation_list);
     RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
@@ -426,7 +427,16 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
 
     for (int32_t current_heap_preference_index = 0; current_heap_preference_index < RMT_NUM_HEAP_PREFERENCES; ++current_heap_preference_index)
     {
-        allocation_details->heap_preferences[current_heap_preference_index] = preferences[current_heap_preference_index];
+        // Note: This workaround handles the case where the driver incorrectly uses the invisible heap for allocations when SAM is enabled.
+        // These allocations are changed to local heap since the invisible heap is not used with SAM.
+        if (sam_enabled && (preferences[current_heap_preference_index] == RmtHeapType::kRmtHeapTypeInvisible))
+        {
+            allocation_details->heap_preferences[current_heap_preference_index] = RmtHeapType::kRmtHeapTypeLocal;
+        }
+        else
+        {
+            allocation_details->heap_preferences[current_heap_preference_index] = preferences[current_heap_preference_index];
+        }
     }
 
     // fill out the allocation interval

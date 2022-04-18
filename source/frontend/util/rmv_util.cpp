@@ -97,6 +97,24 @@ QString rmv_util::GetFileLocation()
     return file_location;
 }
 
+bool rmv_util::TraceValidToLoad(const QString& trace_path)
+{
+    bool may_load = false;
+
+    QFileInfo trace_file(trace_path);
+    if (trace_file.exists() && trace_file.isFile())
+    {
+        const QString extension = trace_path.mid(trace_path.lastIndexOf("."), trace_path.length());
+
+        if (extension.compare(rmv::text::kTraceFileExtension, Qt::CaseInsensitive) == 0)
+        {
+            may_load = true;
+        }
+    }
+
+    return may_load;
+}
+
 QColor rmv_util::GetSnapshotStateColor(SnapshotState state)
 {
     QColor out = Qt::black;

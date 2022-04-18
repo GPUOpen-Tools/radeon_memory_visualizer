@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a model for a heap layout for the Heap Overview pane.
@@ -21,6 +21,7 @@ namespace rmv
         // global widgets
         kHeapOverviewTitle,
         kHeapOverviewDescription,
+        kHeapOverviewSamStatus,
 
         // bar graph widgets (first column)
         kHeapOverviewWarningText,
@@ -86,6 +87,17 @@ namespace rmv
                                  uint64_t&                     total_physical_mapped_by_process,
                                  uint64_t&                     total_physical_mapped_by_other_processes,
                                  RmtSegmentSubscriptionStatus& subscription_status) const;
+
+
+        /// @brief Determines SAM (Smart Memory Access) was enabled when the memory trace was taken.
+        ///
+        /// @return If SAM is enabled, returns true, otherwise returns false.
+        static bool IsSAMSupported();
+
+        /// @brief Retrieves the heap type for this model.
+        ///
+        /// @return The model's heap type.
+        RmtHeapType GetHeapType() const;
 
     private:
         /// @brief Initialize blank data for the model.

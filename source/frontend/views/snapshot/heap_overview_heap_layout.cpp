@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a single heap in the heap overview pane.
@@ -7,7 +7,6 @@
 
 #include "views/snapshot/heap_overview_heap_layout.h"
 
-#include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
@@ -56,6 +55,7 @@ void HeapOverviewHeapLayout::Initialize(RmtHeapType heap)
 
     model_->InitializeModel(ui_->title_label_, rmv::kHeapOverviewTitle, "text");
     model_->InitializeModel(ui_->title_description_, rmv::kHeapOverviewDescription, "text");
+    model_->InitializeModel(ui_->sam_status_label_, rmv::kHeapOverviewSamStatus, "text");
 
     model_->InitializeModel(ui_->warning_message_, rmv::kHeapOverviewWarningText, "text");
 
@@ -95,6 +95,16 @@ void HeapOverviewHeapLayout::Update()
     if (model_ != nullptr)
     {
         model_->Update();
+    }
+
+    // Hide the invisible heap if SAM is enabled.
+    if ((model_->GetHeapType() == kRmtHeapTypeInvisible) && (model_->IsSAMSupported()))
+    {
+        setVisible(false);
+    }
+    else
+    {
+        setVisible(true);
     }
 
     bool show_warning_message = model_->ShowSubscriptionWarning();

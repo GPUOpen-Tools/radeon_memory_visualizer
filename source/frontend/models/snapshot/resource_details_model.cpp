@@ -376,6 +376,12 @@ namespace rmv
         int32_t  event_count     = timeline_model_->rowCount();
         uint64_t start_timestamp = resource_history_.events[0].timestamp;
         uint64_t end_timestamp   = resource_history_.events[resource_history_.event_count - 1].timestamp;
+
+        if ((snapshot_timestamp < UINT64_MAX) && (end_timestamp < snapshot_timestamp))
+        {
+            end_timestamp = snapshot_timestamp;
+        }
+
         double   duration        = end_timestamp - start_timestamp;
 
         if (index < 0 || index >= event_count)

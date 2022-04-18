@@ -15,10 +15,10 @@
 #define RMV_BUILD_SUFFIX ""                      ///< The build suffix to apply to the product name.(alpha, beta etc.)
 
 #define RMV_MAJOR_VERSION 1                 ///< major version number.
-#define RMV_MINOR_VERSION 3                 ///< minor version number.
+#define RMV_MINOR_VERSION 4                 ///< minor version number.
 #define RMV_BUGFIX_NUMBER 0                 ///< bugfix number.
 #define RMV_BUILD_NUMBER 0                  ///< build number.
-#define RMV_BUILD_DATE_STRING "01/20/2022"  ///< build date string.
+#define RMV_BUILD_DATE_STRING "04/21/2022"  ///< build date string.
 #define RMV_BUILD_CURRENT_YEAR 2022         ///< The current year.
 
 #define RMV_COPYRIGHT_STRING "Copyright (C) 2018-" STRINGIFY_VALUE(RMV_BUILD_CURRENT_YEAR) " Advanced Micro Devices, Inc. All rights reserved."

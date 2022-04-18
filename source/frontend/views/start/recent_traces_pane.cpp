@@ -10,6 +10,7 @@
 #include <QScrollArea>
 #include <QScrollBar>
 
+#include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
@@ -121,6 +122,7 @@ void RecentTracesPane::SetupFileList()
         // Trigger a trace open when the trace widget is clicked.
         connect(trace_widget, &RecentTraceWidget::clicked, &rmv::TraceManager::Get(), &rmv::TraceManager::LoadTrace);
         connect(trace_widget, &RecentTraceWidget::clickedDelete, this, &RecentTracesPane::DeleteTrace);
+        connect(trace_widget, &RecentTraceWidget::OpenFileLocationFailed, this, &RecentTracesPane::HandleTraceNotFoundError);
     }
     // Add a spacer at the bottom. The spacer item is owned by the layout so will be deleted when the layout is deleted.
     vbox_layout_->addSpacerItem(new QSpacerItem(10, 40, QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding));
@@ -136,4 +138,10 @@ void RecentTracesPane::DeleteTrace(const QString& path)
     rmv::RMVSettings::Get().RemoveRecentFile(path);
     rmv::RMVSettings::Get().SaveSettings();
     emit RecentFileDeleted();
+}
+
+void RecentTracesPane::HandleTraceNotFoundError(const QString path)
+{
+    const QString text = rmv::text::kOpenRecentTraceStart + path + rmv::text::kOpenRecentTraceEnd;
+    QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
 }

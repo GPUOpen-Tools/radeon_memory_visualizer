@@ -16,15 +16,17 @@ const char* RmtAdapterInfoGetVideoMemoryType(const RmtAdapterInfo* adapter_info)
     {
     case kRmtAdapterInfoMemoryTypeUnknown:
         return "Unknown";
-    case kRmtAdapterInfoMemoryTypeDdR2:
+    case kRmtAdapterInfoMemoryTypeDdr2:
         return "DDR2";
-    case kRmtAdapterInfoMemoryTypeDdR3:
+    case kRmtAdapterInfoMemoryTypeDdr3:
         return "DDR3";
-    case kRmtAdapterInfoMemoryTypeDdR4:
+    case kRmtAdapterInfoMemoryTypeDdr4:
         return "DDR4";
-    case kRmtAdapterInfoMemoryTypeGddR5:
+    case kRmtAdapterInfoMemoryTypeDdr5:
+        return "DDR5";
+    case kRmtAdapterInfoMemoryTypeGddr5:
         return "GDDR5";
-    case kRmtAdapterInfoMemoryTypeGddR6:
+    case kRmtAdapterInfoMemoryTypeGddr6:
         return "GDDR6";
     case kRmtAdapterInfoMemoryTypeHbm:
         return "HBM";
@@ -32,6 +34,10 @@ const char* RmtAdapterInfoGetVideoMemoryType(const RmtAdapterInfo* adapter_info)
         return "HBM2";
     case kRmtAdapterInfoMemoryTypeHbm3:
         return "HBM3";
+    case kRmtAdapterInfoMemoryTypeLpddr4:
+        return "LPDDR4";
+    case kRmtAdapterInfoMemoryTypeLpddr5:
+        return "LPDDR5";
 
     default:
         return "";

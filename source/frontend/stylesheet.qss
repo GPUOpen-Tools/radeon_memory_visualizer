@@ -81,7 +81,7 @@ ScaledTabWidget > QTabBar::tab:!selected:hover {
     background-color: rgb(237, 246, 255)
 }
 
-ScaledLabel, ScaledPushButton, QLabel, QPushButton
+ScaledLabel, ScaledPushButton, QLabel
 {
     font-size: 9.75pt;
 }
@@ -209,14 +209,14 @@ WelcomePane QLabel, ScaledLabel
 /* About Pane
 /*************************************/
 
-AboutPane QPushButton
+AboutPane ScaledPushButton
 {
     color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
 
-AboutPane QPushButton:hover
+AboutPane ScaledPushButton:hover
 {
     color: rgb(255, 128, 0);
 }

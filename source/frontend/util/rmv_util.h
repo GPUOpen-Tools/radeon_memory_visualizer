@@ -41,6 +41,13 @@ namespace rmv_util
     /// @return The location of the settings and log file.
     QString GetFileLocation();
 
+    /// @brief Return whether a trace may be loaded.
+    ///
+    /// @param [in] trace_path The path to the trace.
+    ///
+    /// @return true if we may attempt an actual trace load, false otherwise.
+    bool TraceValidToLoad(const QString& trace_path);
+
     /// @brief Get the text color that works best displayed on top of a given background color.
     ///
     /// Make the light color off-white so it can be seen against the white background.

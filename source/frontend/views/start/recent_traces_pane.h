@@ -36,7 +36,7 @@ signals:
     /// @brief A file in the recent file list was deleted.
     void RecentFileDeleted();
 
-public slots:
+private slots:
     /// @brief Set up the list of recent traces in the UI.
     void SetupFileList();
 
@@ -46,6 +46,11 @@ public slots:
     ///
     /// @param [in] path The path to the trace file.
     void DeleteTrace(const QString& path);
+
+    /// Slot to display an error message when a trace is not found.
+    ///
+    /// @param [in] path The path of the trace that wasn't found.
+    void HandleTraceNotFoundError(const QString path);
 
 private:
     Ui::RecentTracesPane* ui_;  ///< Pointer to the Qt UI design.

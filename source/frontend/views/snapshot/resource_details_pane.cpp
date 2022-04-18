@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource details pane.
@@ -65,12 +65,15 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
     // The properties table is a small one, so resize this based on contents of every row (ie: setting precision to -1),
     // and add a 20 pixel padding after cell contents.
     ui_->resource_properties_table_view_->SetColumnPadding(20);
-    ui_->resource_properties_table_view_->horizontalHeader()->setResizeContentsPrecision(-1);
-    ui_->resource_properties_table_view_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
+
+    // Enable word wrapping in the properties table.  A fixed column width is used to determine where text should be wrapped.
+    ui_->resource_properties_table_view_->setWordWrap(true);
+    ui_->resource_properties_table_view_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
+    ui_->resource_properties_table_view_->SetColumnWidthEms(1, 35);
+    ui_->resource_properties_table_view_->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
+
     ui_->resource_properties_table_view_->horizontalHeader()->setSectionsClickable(true);
     ui_->resource_properties_table_view_->horizontalHeader()->setStretchLastSection(false);
-    ui_->resource_properties_table_view_->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
-    ui_->resource_properties_table_view_->verticalHeader()->setResizeContentsPrecision(1);
 
     model_->InitializeTimelineTableModel(ui_->resource_timeline_table_view_, 0, rmv::kResourceHistoryCount);
 
@@ -287,9 +290,6 @@ void ResourceDetailsPane::Refresh()
             ui_->warning_widget_->show();
         }
     }
-
-    // Make sure the properties table can display the contents.
-    ui_->resource_properties_table_view_->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 
     SetMaximumTimelineTableHeight();
 }

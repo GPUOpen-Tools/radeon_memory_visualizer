@@ -1,12 +1,12 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
 //=============================================================================
 
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <stdlib.h>  // for malloc() / free()
 #include <string>
 #include <string.h>  // for memcpy()
@@ -102,7 +102,10 @@ static std::map<RmtCorrelationIdentifier, RmtResourceNameData> resource_name_loo
 static std::map<RmtResourceIdentifier, RmtResourceIdentifier> unique_resource_id_lookup_map;
 
 // A list of implicit resources to be removed from a snapshot.
-static std::set<RmtResourceIdentifier> implicit_resource_list;
+static std::unordered_set<RmtResourceIdentifier> implicit_resource_list;
+
+// The set of created resources at any point in time.
+static std::unordered_set<RmtResourceIdentifier> created_resources;
 
 // A flag used to indicate that the list of implicit resources has been created.
 // This list is created when the trace is first parsed and the timeline is built.
@@ -407,6 +410,22 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
     return kRmtOk;
 }
 
+// Check for SAM (Smart access memory) support.
+//
+// Without SAM support, the local memory size is 256MB. If SAM is enabled, the local memory
+// will be the total GPU memory. In addition, the invisible memory available will be 0 bytes.
+static void CheckForSAMSupport(RmtDataSet* data_set)
+{
+    if (data_set->segment_info[kRmtHeapTypeInvisible].size == 0)
+    {
+        data_set->sam_enabled = true;
+    }
+    else
+    {
+        data_set->sam_enabled = false;
+    }
+}
+
 static void BuildDataProfileParseUserdata(RmtDataSet* data_set, const RmtToken* current_token)
 {
     RMT_ASSERT(current_token->type == kRmtTokenTypeUserdata);
@@ -459,10 +478,13 @@ static void BuildDataProfileParseResourceCreate(RmtDataSet* data_set, const RmtT
 {
     RMT_ASSERT(current_token->type == kRmtTokenTypeResourceCreate);
 
+    // Add this resource to the list of created resources, and keep track of the maximum number of concurrent resources.
+    created_resources.insert(current_token->resource_create_token.resource_identifier);
+    data_set->data_profile.max_concurrent_resources =
+        RMT_MAXIMUM(data_set->data_profile.max_concurrent_resources, static_cast<int32_t>(created_resources.size()));
+
     data_set->data_profile.current_resource_count++;
     data_set->data_profile.total_resource_count++;
-    data_set->data_profile.max_concurrent_resources =
-        RMT_MAXIMUM(data_set->data_profile.max_concurrent_resources, data_set->data_profile.current_resource_count);
 
     // Add one to the allocation count if the resource being created is a shareable image, since we might need to create a dummy allocation token
     // if we don't see one in the token stream.
@@ -480,6 +502,11 @@ static void BuildDataProfileParseResourceDestroy(RmtDataSet* data_set, const Rmt
 {
     RMT_ASSERT(current_token->type == kRmtTokenTypeResourceDestroy);
 
+    // Only remove the resource from list of created resources if it has previously been created.
+    if (created_resources.find(current_token->resource_create_token.resource_identifier) != created_resources.end())
+    {
+        created_resources.erase(current_token->resource_create_token.resource_identifier);
+    }
     data_set->data_profile.current_resource_count--;
 }
 
@@ -498,6 +525,8 @@ static RmtErrorCode BuildDataProfile(RmtDataSet* data_set)
     {
         RmtProcessMapAddProcess(&data_set->process_map, data_set->process_start_info[current_process_start_index].process_id);
     }
+
+    created_resources.clear();
 
     // if the heap has something there, then add it.
     while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
@@ -541,6 +570,8 @@ static RmtErrorCode BuildDataProfile(RmtDataSet* data_set)
             break;
         }
     }
+
+    created_resources.clear();
 
     data_set->cpu_frequency = data_set->streams[0].cpu_frequency;
 
@@ -587,7 +618,7 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
 
     // Initialize the virtual allocation list.
     const size_t virtual_allocation_buffer_size =
-        RmtVirtualAllocationListGetBufferSize(data_set->data_profile.total_virtual_allocation_count, data_set->data_profile.max_concurrent_resources + 200);
+        RmtVirtualAllocationListGetBufferSize(data_set->data_profile.total_virtual_allocation_count, data_set->data_profile.max_concurrent_resources);
     if (virtual_allocation_buffer_size > 0)
     {
         out_snapshot->virtual_allocation_buffer = PerformAllocation(data_set, virtual_allocation_buffer_size, sizeof(uint32_t));
@@ -597,14 +628,14 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
                                                                            out_snapshot->virtual_allocation_buffer,
                                                                            virtual_allocation_buffer_size,
                                                                            data_set->data_profile.max_virtual_allocation_count,
-                                                                           data_set->data_profile.max_concurrent_resources + 200,
+                                                                           data_set->data_profile.max_concurrent_resources,
                                                                            data_set->data_profile.total_virtual_allocation_count);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
 
     // create the resource list.
-    const size_t resource_list_buffer_size = RmtResourceListGetBufferSize(data_set->data_profile.max_concurrent_resources + 200);
+    const size_t resource_list_buffer_size = RmtResourceListGetBufferSize(data_set->data_profile.max_concurrent_resources);
     if (resource_list_buffer_size > 0)
     {
         out_snapshot->resource_list_buffer = PerformAllocation(data_set, resource_list_buffer_size, sizeof(uint32_t));
@@ -614,7 +645,7 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
                                                                   out_snapshot->resource_list_buffer,
                                                                   resource_list_buffer_size,
                                                                   &out_snapshot->virtual_allocation_list,
-                                                                  data_set->data_profile.max_concurrent_resources + 200);
+                                                                  data_set->data_profile.max_concurrent_resources);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
@@ -793,12 +824,15 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                                current_token->resource_bind_token.virtual_address,
                                                                (int32_t)(current_token->resource_bind_token.size_in_bytes >> 12),
                                                                kDummyHeapPref,
-                                                               RmtOwnerType::kRmtOwnerTypeClientDriver);
+                                                               RmtOwnerType::kRmtOwnerTypeClientDriver,
+                                                               data_set->sam_enabled);
         }
         else if (error_code == kRmtErrorResourceAlreadyBound)
         {
-            // duplicate the command allocator resource we have at this resource ID this is because command allocators are
-            // bound to multiple chunks of virtual address space simultaneously.
+            // Handle the case where the resource is already bound to a virtual memory allocation.
+            // This can occur for command allocators which can be bound to multiple chunks of virtual
+            // address space simultaneously or buffer resources already bound to an allocation.  These
+            // resources are implicitly destroyed, created again and bound to a different allocation.
             const RmtResource* matching_resource = NULL;
             error_code                           = RmtResourceListGetResourceByResourceId(
                 &out_snapshot->resource_list, current_token->resource_bind_token.resource_identifier, &matching_resource);
@@ -809,16 +843,32 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 resource_create_token.resource_identifier = matching_resource->identifier;
                 resource_create_token.owner_type          = matching_resource->owner_type;
                 resource_create_token.commit_type         = matching_resource->commit_type;
-                resource_create_token.resource_type = kRmtResourceTypeCommandAllocator;
+                resource_create_token.resource_type = matching_resource->resource_type;
                 memcpy(&resource_create_token.common, &current_token->common, sizeof(RmtTokenCommon));
-                memcpy(&resource_create_token.command_allocator, &matching_resource->command_allocator, sizeof(RmtResourceDescriptionCommandAllocator));
 
-                // Create the resource.
+                switch (matching_resource->resource_type)
+                {
+                case kRmtResourceTypeCommandAllocator:
+                    memcpy(&resource_create_token.command_allocator, &matching_resource->command_allocator, sizeof(RmtResourceDescriptionCommandAllocator));
+                    break;
+
+                case kRmtResourceTypeBuffer:
+                    memcpy(&resource_create_token.buffer, &matching_resource->buffer, sizeof(RmtResourceDescriptionBuffer));
+                    break;
+
+                default:
+                    // Unexpected resource type.
+                    RMT_ASSERT_FAIL("Re-binding is only supported for buffer and command allocator resource types");
+                    break;
+                }
+
+                // Create the resource.  Since the resource already exists, the Create operation will implicitly destroy it first.
                 error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &resource_create_token);
                 RMT_ASSERT(error_code == kRmtOk);
 
                 if (!(current_token->resource_bind_token.is_system_memory && current_token->resource_bind_token.virtual_address == 0))
                 {
+                    // Re-bind the resource to its new virtual memory allocation.
                     error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
                     RMT_ASSERT(error_code == kRmtOk);
                 }
@@ -826,7 +876,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         }
 
         RMT_ASSERT(error_code == kRmtOk);
-        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+        // RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
@@ -877,13 +927,13 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                  current_token->virtual_allocate_token.virtual_address,
                  current_token->virtual_allocate_token.size_in_bytes);
 #endif
-
         error_code = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
                                                            current_token->common.timestamp,
                                                            current_token->virtual_allocate_token.virtual_address,
                                                            (int32_t)(current_token->virtual_allocate_token.size_in_bytes >> 12),
                                                            current_token->virtual_allocate_token.preference,
-                                                           current_token->virtual_allocate_token.owner_type);
+                                                           current_token->virtual_allocate_token.owner_type,
+                                                           data_set->sam_enabled);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
@@ -1063,6 +1113,8 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     RmtErrorCode error_code = ParseChunks(data_set);
     RMT_ASSERT(error_code == kRmtOk);
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+
+    CheckForSAMSupport(data_set);
 
     // construct the data profile for subsequent data parsing.
     error_code = BuildDataProfile(data_set);

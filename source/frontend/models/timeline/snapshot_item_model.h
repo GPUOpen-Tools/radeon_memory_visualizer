@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a snapshot item model.
@@ -53,6 +53,13 @@ namespace rmv
         ///
         /// @param [in] columns The number of columns required.
         void SetColumnCount(int columns);
+
+        /// @brief Set the column to be edited.
+        ///
+        /// @param [in] index The row/column that has focus.
+        ///
+        /// @return The updated index with the column to be edited.
+        virtual QModelIndex buddy(const QModelIndex& index) const;
 
         // QAbstractItemModel overrides. See Qt documentation for parameter and return values.
         virtual bool          setData(const QModelIndex& index, const QVariant& value, int role) Q_DECL_OVERRIDE;

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for parsing RMT data.
@@ -678,7 +678,7 @@ static RmtErrorCode ParseVirtualAllocate(RmtParser* rmt_parser, const uint16_t t
     // Handle flattening of GART_CACHABLE and GART_USWC.
     for (int32_t current_heap_index = 0; current_heap_index < RMT_NUM_HEAP_PREFERENCES; ++current_heap_index)
     {
-        if (out_virtual_allocate->preference[current_heap_index] == 3)
+        if (out_virtual_allocate->preference[current_heap_index] == kRmtHeapTypeNone)
         {
             out_virtual_allocate->preference[current_heap_index] = kRmtHeapTypeSystem;
         }

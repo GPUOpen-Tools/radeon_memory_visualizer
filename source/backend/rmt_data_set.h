@@ -60,6 +60,7 @@ typedef struct RmtDataSet
     void*  file_handle;                                 ///< The handle to the RMT file (operates on the temporary).
     size_t file_size_in_bytes;                          ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
     bool   read_only;                                   ///< Whether the dataset is loaded as read-only.
+    bool   sam_enabled;                                 ///< Whether the dataset is SAM (smart access memory) enabled.
     time_t create_time;                                 ///< The time the trace was created.
 
     RmtDataSetAllocationFunc allocate_func;  ///< Allocate memory function pointer.

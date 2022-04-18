@@ -56,6 +56,24 @@ AboutPane::~AboutPane()
 {
 }
 
+void AboutPane::showEvent(QShowEvent* event)
+{
+    Q_UNUSED(event);
+
+    // Get the file info.
+    QFileInfo file_info(QCoreApplication::applicationDirPath() + rmv::text::kTraceHelpFile);
+
+    // Check to see if the file is not a directory and that it exists.
+    if (file_info.isFile() && file_info.exists())
+    {
+        ui_->open_getting_started_button_->show();
+    }
+    else
+    {
+        ui_->open_getting_started_button_->hide();
+    }
+}
+
 void AboutPane::InitButton(ScaledPushButton* button)
 {
     button->setCursor(Qt::PointingHandCursor);

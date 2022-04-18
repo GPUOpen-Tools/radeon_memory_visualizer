@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a snapshot item model.
@@ -41,6 +41,13 @@ namespace rmv
     void SnapshotItemModel::SetColumnCount(int columns)
     {
         num_columns_ = columns;
+    }
+
+    QModelIndex SnapshotItemModel::buddy(const QModelIndex& current_index) const
+    {
+        // Only the snapshot name is editable.  If another column in the table is selected, switch editing to the name column.
+        QModelIndex new_index = createIndex(current_index.row(), kSnapshotTimelineColumnName, current_index.internalPointer());
+        return new_index;
     }
 
     bool SnapshotItemModel::setData(const QModelIndex& index, const QVariant& value, int role)
@@ -208,11 +215,10 @@ namespace rmv
 
     Qt::ItemFlags SnapshotItemModel::flags(const QModelIndex& index) const
     {
-        if (index.column() == kSnapshotTimelineColumnName)
-        {
-            return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
-        }
-        return QAbstractItemModel::flags(index);
+        // Enable editing for all columns.
+        // Editing is redirected to the snapshot name column if any other column has focus.
+        // See SnapshotItemModel::buddy() method.
+        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
     }
 
     QVariant SnapshotItemModel::headerData(int section, Qt::Orientation orientation, int role) const

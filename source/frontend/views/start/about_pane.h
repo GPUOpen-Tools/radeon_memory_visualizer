@@ -32,6 +32,11 @@ public:
     /// @brief Destructor.
     virtual ~AboutPane();
 
+    /// @brief Overridden window show event.
+    ///
+    /// @param [in] event The show event object.
+    virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
+
 private slots:
     /// @brief Open RMV help file.
     ///

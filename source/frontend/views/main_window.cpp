@@ -546,8 +546,19 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)
     {
         if (event->mimeData()->hasUrls())
         {
-            event->setDropAction(Qt::LinkAction);
-            event->accept();
+            const uint32_t num_urls = event->mimeData()->urls().size();
+
+            for (uint32_t i = 0; i < num_urls; i++)
+            {
+                const QString potential_trace_path = event->mimeData()->urls().at(i).toLocalFile();
+
+                // Check if the file is valid while dragging it into the window to show the symbol of interdiction for invalid files.
+                if (rmv_util::TraceValidToLoad(potential_trace_path) == true)
+                {
+                    event->setDropAction(Qt::LinkAction);
+                    event->accept();
+                }
+            }
         }
     }
 }

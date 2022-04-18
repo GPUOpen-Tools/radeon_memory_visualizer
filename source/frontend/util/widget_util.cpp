@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a number of widget utilities.
@@ -9,6 +9,7 @@
 //=============================================================================
 
 #include <QHeaderView>
+#include <QScrollBar>
 
 #include "qt_common/utils/scaling_manager.h"
 
@@ -110,9 +111,15 @@ namespace rmv
         // Calculate the maximum height the table needs to be.
         // Note the frame width is the gap between the frame and the surrounded
         // widget; there is no frame height since it's the same as the frame width.
-        int row_height    = table_view->rowHeight(0);
-        int header_height = table_view->horizontalHeader()->height();
-        int frame_width   = 2 * table_view->frameWidth();
-        return (row_count * row_height) + header_height + frame_width;
+        int         row_height            = table_view->rowHeight(0);
+        int         header_height         = table_view->horizontalHeader()->height();
+        int         frame_width           = 2 * table_view->frameWidth();
+        int         scroll_bar_height     = 0;
+        QScrollBar* horizontal_scroll_bar = table_view->horizontalScrollBar();
+        if (horizontal_scroll_bar != nullptr)
+        {
+            scroll_bar_height = horizontal_scroll_bar->height();
+        }
+        return (row_count * row_height) + header_height + frame_width + scroll_bar_height;
     }
 }  // namespace rmv

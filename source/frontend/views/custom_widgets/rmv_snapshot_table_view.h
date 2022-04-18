@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the snapshot table view.
@@ -13,6 +13,7 @@
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_SNAPSHOT_TABLE_VIEW_H_
 
 #include "views/custom_widgets/rmv_clickable_table_view.h"
+#include "views/delegates/rmv_snapshot_name_delegate.h"
 
 /// @brief Class declaration for the Snapshot table view.
 class RMVSnapshotTableView : public RMVClickableTableView
@@ -35,6 +36,9 @@ protected:
     /// @param [in] selected   The items selected.
     /// @param [in] deselected The items deselected.
     void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) Q_DECL_OVERRIDE;
+
+private:
+    RMVSnapshotNameDelegate snapshot_name_delegate_;  ///< The delegate that handles editing of snapshot names for the snapshot table.
 
 signals:
     /// @brief Signal the table selection has changed.

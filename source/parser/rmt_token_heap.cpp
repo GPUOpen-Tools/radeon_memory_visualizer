@@ -349,7 +349,6 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
             RmtResourceIdentifier unique_id                      = 0;
             token_heap->map_root                                 = InsertNode(token_heap->allocator, token_heap->map_root, base_driver_id, &unique_id);
             out_token->resource_create_token.resource_identifier = unique_id;
-
             break;
         }
         case kRmtTokenTypeResourceBind:

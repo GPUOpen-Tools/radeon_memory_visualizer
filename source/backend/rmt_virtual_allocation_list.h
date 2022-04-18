@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for managing a virtual allocation list.
@@ -218,6 +218,7 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
 /// @param [in] size_in_4kb_pages                       The size of the allocation.
 /// @param [in] preferences                             An array of preferred heaps for the allocation.
 /// @param [in] owner                                   The owner of the allocation.
+/// @param [in] sam_enabled                             If true, indicates Smart Access Memory is enabled.
 ///
 /// @retval
 /// kRmtOk                          The operation completed successfully.
@@ -230,7 +231,8 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
                                                    RmtGpuAddress             address,
                                                    int32_t                   size_in_4kb_pages,
                                                    const RmtHeapType         preferences[4],
-                                                   RmtOwnerType              owner);
+                                                   RmtOwnerType              owner,
+                                                   bool                      sam_enabled);
 
 /// Remove an allocation from the list.
 ///

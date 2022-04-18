@@ -140,88 +140,85 @@ namespace rmv
     {
         bool result = false;
 
-        if (ReadyToLoadTrace())
+        if (TraceValidToLoad(path) == true)
         {
-            if (TraceValidToLoad(path) == true)
+            QFileInfo trace_file(path);
+
+            if (!path.isEmpty() && trace_file.exists())
             {
-                QFileInfo trace_file(path);
-
-                if (!path.isEmpty() && trace_file.exists())
+                // Nothing loaded, so load.
+                if (!DataSetValid() && ReadyToLoadTrace())
                 {
-                    // Nothing loaded, so load.
-                    if (!DataSetValid())
+                    // Save the file location for future reference.
+                    RMVSettings::Get().SetLastFileOpenLocation(path);
+
+                    // Set up callback for when loading thread is done.
+                    connect(this, &TraceManager::TraceLoadThreadFinished, this, &TraceManager::FinalizeTraceLoading);
+
+                    loading_thread = new LoadingThread(path);
+                    loading_thread->start();
+
+                    result = true;
+                }
+
+                // Fire up a new instance if desired trace is different than current.
+                else if (SameTrace(trace_file) == false)
+                {
+                    // Attempt to open a new instance of RMV using the selected trace file as an argument.
+                    const QString executable_name = qApp->applicationDirPath() + GetDefaultExeName();
+
+                    // If the RMV executable does not exist, put up a message box.
+                    QFileInfo file(executable_name);
+                    if (file.exists())
                     {
-                        // Save the file location for future reference.
-                        RMVSettings::Get().SetLastFileOpenLocation(path);
-
-                        // Set up callback for when loading thread is done.
-                        connect(this, &TraceManager::TraceLoadThreadFinished, this, &TraceManager::FinalizeTraceLoading);
-
-                        loading_thread = new LoadingThread(path);
-                        loading_thread->start();
-
-                        result = true;
-                    }
-
-                    // Fire up a new instance if desired trace is different than current.
-                    else if (SameTrace(trace_file) == false)
-                    {
-                        // Attempt to open a new instance of RMV using the selected trace file as an argument.
-                        const QString executable_name = qApp->applicationDirPath() + GetDefaultExeName();
-
-                        // If the RMV executable does not exist, put up a message box.
-                        QFileInfo file(executable_name);
-                        if (file.exists())
+                        QProcess* process = new QProcess(this);
+                        if (process != nullptr)
                         {
-                            QProcess* process = new QProcess(this);
-                            if (process != nullptr)
+                            QStringList arguments;
+                            arguments << path;
+
+                            bool process_result = process->startDetached(executable_name, arguments);
+
+                            if (!process_result)
                             {
-                                QStringList arguments;
-                                arguments << path;
-
-                                bool process_result = process->startDetached(executable_name, arguments);
-
-                                if (!process_result)
-                                {
-                                    // The selected trace file is missing on the disk so display a message box stating so.
-                                    const QString text = rmv::text::kOpenRecentTraceStart + trace_file.fileName() + rmv::text::kOpenRecentTraceEnd;
-                                    QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
-                                }
+                                // The selected trace file is missing on the disk so display a message box stating so.
+                                const QString text = rmv::text::kOpenRecentTraceStart + trace_file.fileName() + rmv::text::kOpenRecentTraceEnd;
+                                QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
                             }
                         }
-                        else
-                        {
-                            // If the executable does not exist, put up a message box.
-                            const QString text = executable_name + " does not exist";
-                            QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
-                        }
                     }
-                    else  // Reload the same file.
+                    else
                     {
-                        emit TraceClosed();
-
-                        // Set up callback for when loading thread is done.
-                        connect(this, &TraceManager::TraceLoadThreadFinished, this, &TraceManager::FinalizeTraceLoading);
-
-                        loading_thread = new LoadingThread(path);
-                        loading_thread->start();
-
-                        result = true;
+                        // If the executable does not exist, put up a message box.
+                        const QString text = executable_name + " does not exist";
+                        QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
                     }
                 }
-                else
+                else  // Reload the same file.
                 {
-                    // The selected trace file is missing on the disk so display a message box stating so.
-                    QString text = rmv::text::kOpenRecentTraceStart + trace_file.fileName() + rmv::text::kOpenRecentTraceEnd;
-                    QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
+                    emit TraceClosed();
+
+                    // Set up callback for when loading thread is done.
+                    connect(this, &TraceManager::TraceLoadThreadFinished, this, &TraceManager::FinalizeTraceLoading);
+
+                    loading_thread = new LoadingThread(path);
+                    loading_thread->start();
+
+                    result = true;
                 }
             }
             else
             {
                 // The selected trace file is missing on the disk so display a message box stating so.
-                const QString text = rmv::text::kOpenRecentTraceStart + path + rmv::text::kOpenRecentTraceEnd;
+                const QString text = rmv::text::kOpenRecentTraceStart + trace_file.fileName() + rmv::text::kOpenRecentTraceEnd;
                 QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
             }
+        }
+        else
+        {
+            // The selected trace file is missing on the disk so display a message box stating so.
+            const QString text = rmv::text::kOpenRecentTraceStart + path + rmv::text::kOpenRecentTraceEnd;
+            QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
         }
 
         if (result == true)
