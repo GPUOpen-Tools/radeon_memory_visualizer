@@ -39,6 +39,11 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 * DirectX12
 * Vulkan
 
+## Required hardware for SAM (Smart access memory) support
+* AMD Radeon RX 6000 series
+* AMD Ryzen 5000 series processors
+* AMD Ryzen 3000 series processors (except for the Ryzen 5 3400G and Ryzen 3 3200G)
+
 ## Build instructions
 
 ### Download Source code
