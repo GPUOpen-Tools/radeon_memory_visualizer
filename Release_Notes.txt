@@ -1,10 +1,11 @@
-Radeon™ Memory Visualizer V1.3 01-20-2022
+Radeon™ Memory Visualizer V1.4 04-21-2022
 -----------------------------------------
 
-V1.3 Changes
+V1.4 Changes
 ------------------------------------
-1) DX12 Resource naming.
-2) Bugs/stability fixes.
+1) Support added for traces taken from systems with LPDDR4/5 & DDR5 memory.
+2) Support for traces taken with Smart Access Memory (SAM) enabled.
+3) Bugs/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -21,6 +22,11 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.3 Changes
+------------------------------------
+1) DX12 Resource naming.
+2) Bugs/stability fixes.
 
 V1.2 Changes
 ------------------------------------
