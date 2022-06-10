@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Functions working on a snapshot.
@@ -104,7 +104,7 @@ RmtErrorCode RmtDataSnapshotDumpJsonToFile(const RmtDataSnapshot* snapshot, cons
 static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const RmtResource* resource, RmtResourceHistory* out_resource_history)
 {
     // Reset the RMT stream parsers ready to load the data.
-    RmtStreamMergerReset(&data_set->stream_merger);
+    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
 
     while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {

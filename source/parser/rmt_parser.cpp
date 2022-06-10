@@ -1499,7 +1499,7 @@ bool RmtParserIsCompleted(RmtParser* rmt_parser)
     return error_code != kRmtOk;
 }
 
-RmtErrorCode RmtParserReset(RmtParser* rmt_parser)
+RmtErrorCode RmtParserReset(RmtParser* rmt_parser, FILE* file_handle)
 {
     RMT_RETURN_ON_ERROR(rmt_parser, kRmtErrorInvalidPointer);
 
@@ -1507,6 +1507,7 @@ RmtErrorCode RmtParserReset(RmtParser* rmt_parser)
     rmt_parser->start_timestamp       = 0;
     rmt_parser->stream_current_offset = 0;
     rmt_parser->seen_timestamp        = 0;
+    rmt_parser->file_handle           = file_handle;
 
     // initialize time-related values.
     rmt_parser->current_timestamp = 0;

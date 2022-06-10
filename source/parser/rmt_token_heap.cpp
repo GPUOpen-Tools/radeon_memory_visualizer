@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a priority queue data structure.
@@ -136,7 +136,7 @@ static RmtErrorCode Peek(RmtStreamMerger* token_heap, RmtToken* out_token)
     RMT_ASSERT(token_heap);
     RMT_ASSERT(out_token);
 
-    memcpy(out_token, (const void*)token_heap->tokens[0], sizeof(RmtToken));
+    *out_token = *token_heap->tokens[0];
     return kRmtOk;
 }
 
@@ -188,7 +188,7 @@ static RmtErrorCode Insert(RmtStreamMerger* token_heap, RmtToken* token)
     return kRmtOk;
 }
 
-RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* stream_parsers, int32_t stream_parser_count)
+RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* stream_parsers, int32_t stream_parser_count, FILE* file_handle)
 {
     RMT_RETURN_ON_ERROR(token_heap, kRmtErrorInvalidPointer);
     RMT_RETURN_ON_ERROR(stream_parser_count, kRmtErrorInvalidSize);
@@ -199,11 +199,11 @@ RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* s
     token_heap->parsers                 = stream_parsers;
     token_heap->minimum_start_timestamp = UINT64_MAX;
 
-    RmtStreamMergerReset(token_heap);
+    RmtStreamMergerReset(token_heap, file_handle);
     return kRmtOk;
 }
 
-RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap)
+RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap, FILE* file_handle)
 {
     RMT_RETURN_ON_ERROR(token_heap, kRmtErrorInvalidPointer);
 
@@ -212,7 +212,7 @@ RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap)
     for (int32_t current_rmt_stream_index = 0; current_rmt_stream_index < token_heap->parser_count; ++current_rmt_stream_index)
     {
         // reset each parser.
-        RmtErrorCode error_code = RmtParserReset(&token_heap->parsers[current_rmt_stream_index]);
+        RmtErrorCode error_code = RmtParserReset(&token_heap->parsers[current_rmt_stream_index], file_handle);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
         // insert first token of each parser
@@ -349,6 +349,7 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
             RmtResourceIdentifier unique_id                      = 0;
             token_heap->map_root                                 = InsertNode(token_heap->allocator, token_heap->map_root, base_driver_id, &unique_id);
             out_token->resource_create_token.resource_identifier = unique_id;
+
             break;
         }
         case kRmtTokenTypeResourceBind:

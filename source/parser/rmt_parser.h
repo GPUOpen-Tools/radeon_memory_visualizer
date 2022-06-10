@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Core parsing code for RMT data.
@@ -141,12 +141,13 @@ RmtErrorCode RmtParserSetPosition(RmtParser* rmt_parser, const RmtParserPosition
 /// Reset the RMT parser.
 ///
 /// @param [in] rmt_parser                  A pointer to a <c><i>RmtParser</i></c> structure.
+/// @param [in] file_handle                 The file handle for the memory trace.
 ///
 /// @retval
 /// kRmtOk                              The operation completed successfully.
 /// @retval
 /// kRmtErrorInvalidPointer             The operation failed because <c><i>rmt_parser</i></c> being set to <c><i>NULL</i></c>.
-RmtErrorCode RmtParserReset(RmtParser* rmt_parser);
+RmtErrorCode RmtParserReset(RmtParser* rmt_parser, FILE* file_handle);
 
 #ifdef __cplusplus
 }

@@ -47,6 +47,8 @@ IF(WIN32)
 ELSEIF(UNIX)
     # Use -Wno-missing-field-initializers for CentOS compiler warning
     add_compile_options(-std=c++11 -D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers)
+    # Allow executable to be double clicked.
+    add_link_options(-no-pie)
     # Use _DEBUG on Unix for Debug Builds (defined automatically on Windows)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 ENDIF(WIN32)

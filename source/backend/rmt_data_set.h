@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -57,7 +57,7 @@ typedef struct RmtDataSet
 {
     char   file_path[RMT_MAXIMUM_FILE_PATH];            ///< The file path to the file being worked with.
     char   temporary_file_path[RMT_MAXIMUM_FILE_PATH];  ///< The file path to the safe temporary file being worked with.
-    void*  file_handle;                                 ///< The handle to the RMT file (operates on the temporary).
+    FILE*  file_handle;                                 ///< The handle to the RMT file (operates on the temporary).
     size_t file_size_in_bytes;                          ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
     bool   read_only;                                   ///< Whether the dataset is loaded as read-only.
     bool   sam_enabled;                                 ///< Whether the dataset is SAM (smart access memory) enabled.
@@ -219,12 +219,13 @@ RmtErrorCode RmtDataSetAddSnapshot(RmtDataSet* data_set, const char* name, uint6
 ///
 /// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
 /// @param [in]  snapshot_index                             The index of the snapshot to delete.
+/// @param [in]  open_snapshot                              A pointer to the open snapshot (or nullptr if no open snapshot)
 ///
 /// @returns
 /// kRmtOk                                      The operation completed successfully.
 /// @retval
 /// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
-RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index);
+RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, RmtDataSnapshot* open_snapshot);
 
 /// Rename an existing snapshot in the file.
 ///

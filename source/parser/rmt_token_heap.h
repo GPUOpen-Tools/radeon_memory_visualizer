@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  A priority queue data structure for RmtToken structures.
@@ -80,6 +80,7 @@ typedef struct RmtStreamMerger
 /// @param [in]     token_heap               An RmtStreamMerger structure defining the stream merger.
 /// @param [in]     stream_parsers           An RmtParser structure defining the stream parsers.
 /// @param [in]     stream_parser_count      The number of stream parsers.
+/// @param [in]     file_handle              The file handle for the memory trace.
 ///
 /// @retval
 /// kRmtOk                                   The operation completed successfully.
@@ -87,17 +88,18 @@ typedef struct RmtStreamMerger
 /// kRmtErrorInvalidPointer                  The operation failed because <c><i>token_heap</i></c> was <c><i>NULL</i></c>.
 /// @retval
 /// kRmtErrorInvalidSize                     The operation failed because <c><i>stream_parser_count</i></c> was an invalid size.
-RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* stream_parsers, int32_t stream_parser_count);
+RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* stream_parsers, int32_t stream_parser_count, FILE* file_handle);
 
 /// Clear the heap.
 ///
 /// @param [in]     token_heap               An RmtStreamMerger structure defining the stream merger.
+/// @param [in]     file_handle              The file handle for the memory trace.
 ///
 /// @retval
 /// kRmtOk                                   The operation completed successfully.
 /// @retval
 /// kRmtErrorInvalidPointer                  The operation failed because <c><i>token_heap</i></c> was <c><i>NULL</i></c>.
-RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap);
+RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap, FILE* file_handle);
 
 /// Return true if the heap is empty.
 ///

@@ -225,7 +225,8 @@ namespace rmv
             RmtSnapshotPoint* current_snapshot_point = &data_set->snapshots[current_snapshot_point_index];
             if (current_snapshot_point == snapshot_point)
             {
-                RmtDataSetRemoveSnapshot(data_set, current_snapshot_point_index);
+                RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
+                RmtDataSetRemoveSnapshot(data_set, current_snapshot_point_index, open_snapshot);
             }
         }
 

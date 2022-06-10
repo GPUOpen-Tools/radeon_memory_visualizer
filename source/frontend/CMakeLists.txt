@@ -426,44 +426,53 @@ IF(UNIX AND NOT APPLE)
     set(QT_ICONENGINES_DST "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/iconengines")
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E echo "copying QT libs from ${QT_LIB_SRC} to ${QT_LIB_DST}"
-         COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/iconengines
-         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/imageformats
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Core.so.5         ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Gui.so.5          ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Svg.so.5          ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Widgets.so.5      ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5XcbQpa.so.5       ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5DBus.so.5         ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicudata.so.50        ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicui18n.so.50        ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicuuc.so.50          ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb.so.1             ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-icccm.so.4       ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-image.so.0       ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-keysyms.so.1     ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-randr.so.0       ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-render.so.0      ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-render-util.so.0 ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-shape.so.0       ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-shm.so.0         ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-sync.so.1        ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-util.so.1        ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xfixes.so.0      ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xinerama.so.0    ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xkb.so.1         ${QT_LIB_DST}
-         COMMAND ${CMAKE_COMMAND} -E echo "copying QT platform plugins from ${QT_PLATFORM_SRC} to ${QT_PLATFORM_DST}"
-         COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_PLATFORM_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_PLATFORM_SRC}/libqxcb.so    ${QT_PLATFORM_DST}
-         COMMAND ${CMAKE_COMMAND} -E echo "copying QT imageformat plugins from ${QT_IMAGEFORMATS_SRC} to ${QT_IMAGEFORMATS_DST}"
-         COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_IMAGEFORMATS_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_IMAGEFORMATS_SRC}/libqsvg.so  ${QT_IMAGEFORMATS_DST}
-         COMMAND ${CMAKE_COMMAND} -E echo "copying QT iconengine plugins from ${QT_ICONENGINES_SRC} to ${QT_ICONENGINES_DST}"
-         COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_ICONENGINES_DST}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_ICONENGINES_SRC}/libqsvgicon.so  ${QT_ICONENGINES_DST}
-         COMMAND ${CMAKE_COMMAND} -E echo "copying qt.conf to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../../build/qt.conf $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E echo "copying QT libs from ${QT_LIB_SRC} to ${QT_LIB_DST}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_LIB_DST}
+        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/iconengines
+        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/imageformats
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Core.so.5         ${QT_LIB_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Gui.so.5          ${QT_LIB_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Svg.so.5          ${QT_LIB_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Widgets.so.5      ${QT_LIB_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5XcbQpa.so.5       ${QT_LIB_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5DBus.so.5         ${QT_LIB_DST}
+    )
+
+    # Copy Additional Qt 5.15.2 library files if needed.
+    IF(NOT DISABLE_EXTRA_QT_LIB_DEPLOY)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicudata.so.50        ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicui18n.so.50        ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicuuc.so.50          ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb.so.1             ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-icccm.so.4       ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-image.so.0       ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-keysyms.so.1     ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-randr.so.0       ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-render.so.0      ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-render-util.so.0 ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-shape.so.0       ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-shm.so.0         ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-sync.so.1        ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-util.so.1        ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xfixes.so.0      ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xinerama.so.0    ${QT_LIB_DST}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xkb.so.1         ${QT_LIB_DST}
+        )
+    ENDIF(NOT DISABLE_EXTRA_QT_LIB_DEPLOY)
+
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "copying QT platform plugins from ${QT_PLATFORM_SRC} to ${QT_PLATFORM_DST}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_PLATFORM_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_PLATFORM_SRC}/libqxcb.so    ${QT_PLATFORM_DST}
+        COMMAND ${CMAKE_COMMAND} -E echo "copying QT imageformat plugins from ${QT_IMAGEFORMATS_SRC} to ${QT_IMAGEFORMATS_DST}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_IMAGEFORMATS_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_IMAGEFORMATS_SRC}/libqsvg.so  ${QT_IMAGEFORMATS_DST}
+        COMMAND ${CMAKE_COMMAND} -E echo "copying QT iconengine plugins from ${QT_ICONENGINES_SRC} to ${QT_ICONENGINES_DST}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_ICONENGINES_DST}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_ICONENGINES_SRC}/libqsvgicon.so  ${QT_ICONENGINES_DST}
+        COMMAND ${CMAKE_COMMAND} -E echo "copying qt.conf to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../../build/qt.conf $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
     # Call chrpath on system to override executable file RPATH.
     find_program(CHRPATH_EXECUTABLE NAMES chrpath)

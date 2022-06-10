@@ -68,9 +68,9 @@ static bool MoveTraceFile(const char* existing_file_path, const char* new_file_p
     return MoveFileEx(existing_file_path, new_file_path, MOVEFILE_REPLACE_EXISTING);
 #else
     bool result = false;
-    if (CopyTraceFile(existing_file_path, new_file_path))
+    if (rename(existing_file_path, new_file_path) == 0)
     {
-        result = remove(existing_file_path);
+        result = true;
     }
 
     return result;
@@ -397,7 +397,7 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
     }
 
     // Initialize the token heap for k-way merging.
-    error_code = RmtStreamMergerInitialize(&data_set->stream_merger, data_set->streams, data_set->stream_count);
+    error_code = RmtStreamMergerInitialize(&data_set->stream_merger, data_set->streams, data_set->stream_count, data_set->file_handle);
     RMT_ASSERT(error_code == kRmtOk);
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
@@ -1385,7 +1385,7 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
         }
     }
 
-    RmtStreamMergerReset(&data_set->stream_merger);
+    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
 
     // if the heap has something there, then add it.
     int32_t last_value_index = -1;
@@ -1776,7 +1776,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     RMT_ASSERT(error_code == kRmtOk);
 
     // Reset the RMT stream parsers ready to load the data.
-    RmtStreamMergerReset(&data_set->stream_merger);
+    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
 
     // process all the tokens
     while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
@@ -1956,7 +1956,7 @@ RmtErrorCode RmtDataSetAddSnapshot(RmtDataSet* data_set, const char* name, uint6
 }
 
 // guts of removing a snapshot without destroying the cached object, lets this code be shared with rename.
-static void RemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index)
+static void RemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, RmtDataSnapshot* open_snapshot)
 {
     if (!data_set->read_only)
     {
@@ -1970,11 +1970,21 @@ static void RemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index)
     // remove the snapshot from the list of snapshot points in the dataset.
     const int32_t last_snapshot_index = data_set->snapshot_count - 1;
     memcpy(&data_set->snapshots[snapshot_index], &data_set->snapshots[last_snapshot_index], sizeof(RmtSnapshotPoint));
+
+    // fix up the snapshot point in the open snapshot (if it needs moving).
+    if (open_snapshot)
+    {
+        if (open_snapshot->snapshot_point == &data_set->snapshots[last_snapshot_index])
+        {
+            open_snapshot->snapshot_point = &data_set->snapshots[snapshot_index];
+        }
+    }
+
     data_set->snapshot_count--;
 }
 
 // remove a snapshot from the data set.
-RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index)
+RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, RmtDataSnapshot* open_snapshot)
 {
     RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
     RMT_RETURN_ON_ERROR(snapshot_index < data_set->snapshot_count, kRmtErrorIndexOutOfRange);
@@ -1982,7 +1992,7 @@ RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapsh
     RmtSnapshotPoint* snapshot_point = &data_set->snapshots[snapshot_index];
     RmtDataSnapshotDestroy(snapshot_point->cached_snapshot);
 
-    RemoveSnapshot(data_set, snapshot_index);
+    RemoveSnapshot(data_set, snapshot_index, open_snapshot);
 
     CommitTemporaryFileEdits(data_set, false);
 
@@ -2017,7 +2027,7 @@ RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapsh
     }
 
     // remove it also, has the side effect of copying the new thing we just made back to the original location :D
-    RemoveSnapshot(data_set, snapshot_index);
+    RemoveSnapshot(data_set, snapshot_index, nullptr);
 
     CommitTemporaryFileEdits(data_set, false);
 

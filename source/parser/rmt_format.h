@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions of the RMT format.
@@ -8,7 +8,9 @@
 #ifndef RMV_PARSER_RMT_FORMAT_H_
 #define RMV_PARSER_RMT_FORMAT_H_
 
+#include <string.h>  // for memcpy()
 #include <stdint.h>
+
 #include "rmt_types.h"
 
 #ifndef _WIN32
@@ -611,13 +613,13 @@ typedef struct RmtResourceDescriptionImage
     uint64_t                  max_base_alignment;        ///< The alignment of the image resource.
     uint64_t                  image_offset;              ///< The offset (in bytes) from the base virtual address of the resource to the core image data.
     uint64_t                  image_size;                ///< The size (in bytes) of the core image data inside the resource.
-    uint64_t                  image_alignment;           ///< The alignment of the core image data within the resource’s virtual address allocation.
+    uint64_t                  image_alignment;           ///< The alignment of the core image data within the resource's virtual address allocation.
     uint64_t metadata_head_offset;     ///< The offset (in bytes) from the base virtual address of the resource to the metadata header of the image.
     uint64_t metadata_head_size;       ///< The size (in bytes) of the metadata header inside the resource.
-    uint64_t metadata_head_alignment;  ///< The alignment of the metadata header within the resource’s virtual address allocation.
+    uint64_t metadata_head_alignment;  ///< The alignment of the metadata header within the resource's virtual address allocation.
     uint64_t metadata_tail_offset;     ///< The offset (in bytes) from the base virtual address of the resource to the metadata tail.
     uint64_t metadata_tail_size;       ///< The size (in bytes) of the metadata tail inside the resource.
-    uint64_t metadata_tail_alignment;  ///< The alignment of the metadata tail within the resource’s virtual address allocation.
+    uint64_t metadata_tail_alignment;  ///< The alignment of the metadata tail within the resource's virtual address allocation.
     bool     presentable;              ///< The image is able to be presented by the display controller.
     bool     fullscreen;               ///< The image is fullscreen, only valid when <c><i>presentable</i></c> is <c><i>true</i></c>.
 } RmtResourceDescriptionImage;
@@ -777,10 +779,23 @@ typedef struct RmtTokenPageTableUpdate
 /// A structure encapsulating user data.
 typedef struct RmtTokenUserdata
 {
+    /// @brief Constructor for the RmtTokenUserdata.
+    RmtTokenUserdata();
+
+    /// @brief Destructor for the RmtTokenUserdata.
+    ~RmtTokenUserdata();
+
+    /// @brief RmtTokenUserdata assignment operator.
+    ///
+    /// @param [in] object The source RmtTokenUserdata.
+    ///
+    /// @return A reference to the updated RmtTokenUserdata.
+    RmtTokenUserdata& operator=(const RmtTokenUserdata& object);
+
     RmtTokenCommon  common;         ///< Fields common to all tokens.
     RmtUserdataType userdata_type;  ///< The type of the user data in the payload.
     int32_t         size_in_bytes;  ///< The size (in bytes) of the payload. The largest we can encode is 1MB.
-    uint8_t*        payload_cache;  ///< Pointer to the payload of the user data.  This must be deleted when parsing of the token completes.
+    uint8_t*        payload_cache;  ///< Pointer to the payload of the user data.
 
     RmtResourceIdentifier
         resource_identifier;  ///< The identifier used to match a name to a non-DX resource, only valid when usedataType is RMT_USERDATA_TYPE_NAME.
@@ -911,17 +926,18 @@ void DeallocatePayloadCache(uint8_t* payload_cache);
 /// A structure encapsulating the token.
 typedef struct RmtToken
 {
+    /// @brief RmtToken constructor.
+    RmtToken();
+
     /// @brief RmtToken destructor.
-    ~RmtToken()
-    {
-        if ((type == kRmtTokenTypeUserdata) && (userdata_token.userdata_type == kRmtUserdataTypeName))
-        {
-            // Deallocate cached payload data if the token type is a Name USERDATA token.
-            DeallocatePayloadCache(userdata_token.payload_cache);
-            userdata_token.payload_cache = nullptr;
-            userdata_token.size_in_bytes = 0;
-        }
-    };
+    ~RmtToken();
+
+    /// @brief RmtToken assignment operator.
+    ///
+    /// @param [in] object The source RmtToken.
+    ///
+    /// @return A reference to the updated RmtToken.
+    RmtToken& operator=(const RmtToken& object);
 
     RmtTokenType type;  ///< The type of the RMT token.
 

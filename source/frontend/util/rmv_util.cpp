@@ -167,6 +167,11 @@ QColor rmv_util::GetDeltaChangeColor(DeltaChange delta)
 
 void rmv_util::BuildResourceSizeThresholds(std::vector<uint64_t>& resource_sizes, uint64_t* resource_thresholds)
 {
+    if (resource_sizes.size() == 0)
+    {
+        return;
+    }
+
     std::stable_sort(resource_sizes.begin(), resource_sizes.end());
 
     float step_size = (resource_sizes.size() - 1) / static_cast<float>(rmv::kSizeSliderRange);

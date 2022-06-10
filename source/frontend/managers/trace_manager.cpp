@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Trace Manager.
@@ -96,7 +96,7 @@ namespace rmv
         RmtErrorCode error_code = RmtDataSetInitialize(trace_file_name, &data_set_);
         if (error_code != kRmtOk)
         {
-            memset(&data_set_, 0, sizeof(RmtDataSet));
+            data_set_ = {};
             return kTraceLoadReturnFail;
         }
 
@@ -131,7 +131,7 @@ namespace rmv
 
         rmv::SnapshotManager::Get().ClearOpenSnapshot();
         rmv::SnapshotManager::Get().ClearCompareSnapshots();
-        memset(&data_set_, 0, sizeof(RmtDataSet));
+        data_set_ = {};
 
         active_trace_path_.clear();
     }
