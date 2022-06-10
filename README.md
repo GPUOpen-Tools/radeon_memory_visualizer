@@ -4,8 +4,8 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 
 ## Getting Started
 
-1. Install the latest AMD Video/display driver. Be sure to run DDU before installing the driver to ensure a clean install.
-2. Unzip/Untar the download file. The directory contains the following:
+1. Install the latest AMD Video/display driver. Completely remove previously installed drivers.  On Windows, the driver installation factory reset option should be used.
+2. Unzip/Untar the download file. The directory includes the following:
    * Radeon Developer Service (RDS)
    * Radeon Developer Service CLI (RDS headless)
    * Radeon Developer Panel (RDP)
@@ -22,6 +22,10 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
       * http://radeon-developer-panel.readthedocs.io/en/latest/
       * http://radeon-memory-visualizer.readthedocs.io/en/latest/
 
+## Supported APIs
+ * DirectX12
+ * Vulkan
+
 ## Supported ASICs
 
 * AMD Radeon RX 6000 series
@@ -33,11 +37,12 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 * AMD Radeon RX 400, RX 500 series
 * AMD Tonga R9 285, R9 380
 
-## Supported OS's and API's
+## Supported Operating Systems
+* Windows® 10
+* Windows® 11
+* Ubuntu 20.04 LTS (Vulkan only)
 
-### Windows® 10/11
-* DirectX12
-* Vulkan
+Note: Before running RDP and capturing an RMV memory trace on Linux, be sure to make the necessary configuration changes by running the RDP setup.sh script each time the machine is rebooted. For more information, see the RDP documentation.
 
 ## Required hardware for SAM (Smart access memory) support
 * AMD Radeon RX 6000 series
@@ -52,7 +57,7 @@ Clone the project radeon_memory_visualizer from github.com
 
 git clone https://github.com/GPUOpen-Tools/radeon_memory_visualizer.git
 
-### Building on Windows ###
+### Building on Windows
 As a preliminary step, make sure that you have the following installed on your system:
 * CMake 3.11 or above.
 * Python 3.7 or above.
@@ -81,6 +86,49 @@ Some useful options of the pre_build.py script:
 Once the script has finished, in the case of Visual Studio 2019, a sub-folder called 'vs2019' will be created containing the necessary build files.
 Go into the 'vs2019' folder (build/win/vs2019) and double click on the RMV.sln file and build the 64-bit Debug and Release builds.
 The Release and Debug builds of RMV will be available in the build/release and build/debug folders.
+
+### Building on Ubuntu
+Required dependencies can be installed as follows:
+
+sudo apt-get update
+sudo apt-get install build-essential python3 chrpath
+sudo apt-get install python3-pip
+pip install sphinx_rtd_theme
+sudo snap install cmake --classic
+sudo apt-get install git
+sudo apt-get install python3-sphinx
+sudo apt-get install libxcb-xinerama0
+sudo apt-get install mesa-common-dev libglu1-mesa-dev
+
+Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page here: https://www.qt.io/blog/qt-5.15.2-released
+As an alternative, the Qt 5.12.6 offline installer can be used here: https://download.qt.io/archive/qt/5.12/5.12.6/ (the .run file) and installed
+to ~/Qt/Qt5.12.6 (the default of ~/Qt5.12.6 will not work).
+
+XCB libraries are required for Qt v5.15.x (they are not needed for older Qt versions). By default, the CMake configuration will attempt to copy
+these files from the Qt lib folder. If these files are installed elsewhere on the system or an older version of Qt is being used to build RMV,
+the --disable-extra-qt-lib-deploy pre_build.py script argument may be used. This will prevent the build configuration scripts from attempting to copy
+the libraries in the post build step. If needed, the XCB library files (libxcb*) can be obtained from the /lib folder of the Radeon Developer Tool
+Suite download found at https://gpuopen.com/tools/.
+
+Run the python pre_build.py in the build folder.
+
+$ python3 pre_build.py
+
+Or run the pre_build.py script with the -qt option to specify another version of Qt (also use the --disable-extra-qt-lib-deploy flag since the XCB
+libraries aren't needed). For example:
+
+$ python3 pre_build.py --qt 5.12.6 --disable-extra-qt-lib-deploy
+
+The pre_build.py script will construct the output folders and build the necessary makefiles.
+To build the release build, use:
+
+$ make -j5 -C linux/make/release
+
+Similarly for the debug build, use:
+
+$ make -j5 -C linux/make/debug
+
+The pre_build.py script should only need to be used when adding or removing source files.
 
 ## Support ##
 For support, please visit the RMV repository github page: https://github.com/GPUOpen-Tools/radeon_memory_visualizer
