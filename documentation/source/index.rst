@@ -19,6 +19,8 @@ Supported graphics APIs, RDNA and GCN hardware, and operating systems
 
 \ **Supported RDNA and GCN hardware**
 
+-  AMD Radeon RX 7000 series
+
 -  AMD Radeon RX 6000 series
 
 -  AMD Radeon RX 5000 series
@@ -39,7 +41,7 @@ Supported graphics APIs, RDNA and GCN hardware, and operating systems
 
 -  Windows® 10/11
 
--  Ubuntu® 20.04
+-  Ubuntu® 22.04
 
 Radeon Memory Visualizer - Quick Start
 ======================================

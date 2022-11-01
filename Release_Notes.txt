@@ -1,10 +1,10 @@
-Radeon™ Memory Visualizer V1.4.1 06-13-2022
--------------------------------------------
+Radeon™ Memory Visualizer V1.5 12-14-2022
+-----------------------------------------
 
-V1.4.1 Changes
+V1.5 Changes
 ------------------------------------
-1) Linux capture support (requires driver version 22.10 or higher).
-2) Fix for intermittent crash when adding and removing snapshots.
+1) Keyboard shortcuts added for all panes on the Welcome and Settings lists. Some keys have also been remapped to avoid conflict with the Adrenaline software. See the documentation or keyboard shortcuts pane for details.
+2) Bug fixes.
 
 Known Issues
 ------------------------------------
@@ -19,12 +19,16 @@ Known Issues
 (7) When tracing an application that uses a launcher, or an application that creates multiple devices, it is possible that more than one trace file will be written to disk. In the case of the launcher, adding the launcher's executable name to the Blocked applications list in the Radeon Developer Panel should prevent multiple trace files. Restarting the Radeon Developer Panel may be required before attempting to trace again.
 (8) If a memory dump is created by shutting down the application being traced and there are a large number of resource names, some names may not be included in the RMV file.  The work-around is to use the Dump trace button in the Radeon Developer Panel and wait for the button to be disabled before shutting down the application.  This gives the buffered names a chance to be processed.
 (9) The Shader core clock frequency and Video memory clock frequency for memory traces captured on Linux may be incorrectly displayed as 0.
-(10) The Device name may be blank for memory traces captured on Linux with certain GPUs.
-(11) RMV capture is currently unsupported on Linux with Rembrandt APU’s.
-(12) Installations of Ubuntu 20.04 or newer may have the RADV open source Vulkan® driver installed by default on the system. As a result, after an amdgpu-pro driver install, the default Vulkan ICD may be the RADV ICD. In order to capture a memory trace, Vulkan applications must be using the amdgpu-pro Vulkan ICD. The default Vulkan ICD can be overridden by setting the following environment variable before launching a Vulkan application: VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json
+(10) The Device name may be blank for memory traces captured on Linux with some APUs.
+(11) Installations of Ubuntu 20.04 or newer may have the RADV open source Vulkan® driver installed by default on the system. As a result, after an amdgpu-pro driver install, the default Vulkan ICD may be the RADV ICD. In order to capture a memory trace, Vulkan applications must be using the amdgpu-pro Vulkan ICD. The default Vulkan ICD can be overridden by setting the following environment variable before launching a Vulkan application: VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json
 
 Release Notes History
 ------------------------------------
+
+V1.4.1 Changes
+------------------------------------
+1) Linux capture support (requires driver version 22.10 or higher).
+2) Fix for intermittent crash when adding and removing snapshots.
 
 V1.4 Changes
 ------------------------------------
