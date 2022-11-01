@@ -19,7 +19,6 @@
 #include <stdint.h>
 #include <vector>
 
-#include "rmt_types.h"
 #include "rmt_virtual_allocation_list.h"
 
 namespace rmv

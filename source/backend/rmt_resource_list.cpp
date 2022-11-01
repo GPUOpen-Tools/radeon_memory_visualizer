@@ -7,12 +7,12 @@
 
 #include "rmt_resource_list.h"
 #include "rmt_virtual_allocation_list.h"
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 #include "rmt_page_table.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_address_helper.h"
+#include "rmt_print.h"
 #include <string.h>  // for memcpy()
-#include <rmt_print.h>
 
 #ifndef _WIN32
 #include "linux/safe_crt.h"
@@ -139,8 +139,8 @@ bool RmtResourceOverlapsVirtualAddressRange(const RmtResource* resource, RmtGpuA
     //
     //  |--resource--|
     //                 |--virtual address range--|
-    const RmtGpuAddress next_byte_after_resource = resource->address + resource->size_in_bytes;
-    if (next_byte_after_resource < address_start)
+    const RmtGpuAddress resource_address_end = resource->address + resource->size_in_bytes - 1;
+    if (resource_address_end < address_start)
     {
         return false;
     }
@@ -272,7 +272,7 @@ bool RmtResourceGetName(const RmtResource* resource, int32_t buffer_size, char**
         return false;
     }
 
-    if (resource->name[0] != '\0')
+    if (resource->name != nullptr)
     {
         strcpy_s(*out_resource_name, buffer_size, resource->name);
     }
@@ -387,7 +387,7 @@ static RmtResourceIdNode* InsertNode(RmtResourceList* resource_list, RmtResource
     {
         // create a new node
         RmtResourceIdNode* new_node = (RmtResourceIdNode*)RmtPoolAllocate(&resource_list->resource_id_node_pool);
-        new_node->identifier         = resource_identifier;
+        new_node->identifier        = resource_identifier;
         new_node->resource          = resource;
         new_node->left              = NULL;
         new_node->right             = NULL;
@@ -434,7 +434,7 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         if (node->left == nullptr)
         {
             RmtResourceIdNode* child = node->right;
-            node->identifier          = 0;
+            node->identifier         = 0;
             node->left               = NULL;
             node->right              = NULL;
             RmtPoolFree(&resource_list->resource_id_node_pool, node);
@@ -443,7 +443,7 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         if (node->right == nullptr)
         {
             RmtResourceIdNode* child = node->left;
-            node->identifier          = 0;
+            node->identifier         = 0;
             node->left               = NULL;
             node->right              = NULL;
             RmtPoolFree(&resource_list->resource_id_node_pool, node);
@@ -451,7 +451,7 @@ static RmtResourceIdNode* DeleteNode(RmtResourceList* resource_list, RmtResource
         }
 
         RmtResourceIdNode* smallest_child = GetSmallestNode(node->right);
-        node->identifier                   = smallest_child->identifier;
+        node->identifier                  = smallest_child->identifier;
 
         // update payload pointers.
         RMT_ASSERT(node->resource);
@@ -610,8 +610,8 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
     RMT_RETURN_ON_ERROR((resource_list->resource_count + 1) <= resource_list->maximum_concurrent_resources, kRmtErrorOutOfMemory);
 
     // fill out the stuff we know.
-    RmtResource* new_resource   = &resource_list->resources[resource_list->resource_count++];
-    new_resource->name[0]       = '\0';
+    RmtResource* new_resource = &resource_list->resources[resource_list->resource_count++];
+    new_resource->name          = nullptr;
     new_resource->identifier    = resource_create->resource_identifier;
     new_resource->create_time   = resource_create->common.timestamp;
     new_resource->flags         = 0;

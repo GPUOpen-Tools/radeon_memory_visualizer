@@ -8,9 +8,9 @@
 #ifndef RMV_BACKEND_RMT_DATA_PROFILE_H_
 #define RMV_BACKEND_RMT_DATA_PROFILE_H_
 
-#include <rmt_types.h>
+#include "rmt_types.h"
 #include "rmt_configuration.h"
-#include <rmt_file_format.h>
+#include "rmt_file_format.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,5 +1,5 @@
 #! python3
-# Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Script to perform all necessary pre build steps. This includes:
 #
@@ -49,8 +49,8 @@ else:
 # parse the command line arguments
 parser = argparse.ArgumentParser(description="A script that generates all the necessary build dependencies for a project")
 if sys.platform == "win32":
-    parser.add_argument("--vs", default="2019", choices=["2017", "2019"], help="specify the version of Visual Studio to be used with this script (default: 2019)")
-    parser.add_argument("--toolchain", default="2019", choices=["2017", "2019"], help="specify the compiler toolchain to be used with this script (default: 2019)")
+    parser.add_argument("--vs", default="2019", choices=["2017", "2019", "2022"], help="specify the version of Visual Studio to be used with this script (default: 2019)")
+    parser.add_argument("--toolchain", default="2019", choices=["2017", "2019", "2022"], help="specify the compiler toolchain to be used with this script (default: 2019)")
     parser.add_argument("--qt-root", default="C:\\Qt", help="specify the root directory for locating QT on this system (default: C:\\Qt\\)")
     parser.add_argument("--qt-libver", default="2019", choices=["2017", "2019"], help="specify the Qt lib version to be used with this script (default: 2019)")
 elif sys.platform == "darwin":
@@ -62,13 +62,14 @@ else:
 parser.add_argument("--qt", default="5.15.2", help="specify the version of QT to be used with the script (default: 5.15.2)" )
 parser.add_argument("--clean", action="store_true", help="delete any directories created by this script")
 parser.add_argument("--no-qt", action="store_true", help="build a headless version (not applicable for all products)")
-parser.add_argument("--internal", action="store_true", help="configure internal builds of the tool (only used within AMD")
-parser.add_argument("--disable-break", action="store_true", help="disable RGP_DEBUG_BREAK asserts in debug builds")
+parser.add_argument("--build-number", default="0", help="specify the build number, primarily to be used by build machines to produce versioned builds")
 parser.add_argument("--update", action="store_true", help="Force fetch_dependencies script to update all dependencies")
 parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of PreBuild.py script)")
 parser.add_argument("--build", action="store_true", help="build all supported configurations on completion of prebuild step")
 parser.add_argument("--build-jobs", default="4", help="number of simultaneous jobs to run during a build (default = 4)")
 parser.add_argument("--analyze", action="store_true", help="perform static analysis of code on build (currently VS2017 only)")
+parser.add_argument("--vscode", action="store_true", help="generate CMake options into VsCode settings file for this project")
+parser.add_argument("--disable-extra-qt-lib-deploy", action="store_true", help="prevent extra Qt library files (XCB and ICU libs) from being copied during post build step")
 if support_32_bit_build:
     parser.add_argument("--platform", default="x64", choices=["x64", "x86"], help="specify the platform (32 or 64 bit)")
 args = parser.parse_args()
@@ -76,10 +77,7 @@ args = parser.parse_args()
 # Define the build configurations that will be generated
 configs = ["debug", "release"]
 
-# Generate the appropriate suffix to append for internal builds
-internal_suffix = ""
-if args.internal:
-    internal_suffix = "-internal"
+config_suffix = ""
 
 ## Define some simple utility functions used lower down in the script
 
@@ -110,6 +108,46 @@ def mkdir_print(dir):
         log_print ("Creating Directory: " + dir)
         os.makedirs(dir)
 
+# Generate the full path to QT, converting path to OS specific form
+# Look for Qt path in specified Qt root directory
+# Example:
+# --qt-root=C:\\Qt
+# --qt=5.15.2
+# Look first for C:\\Qt\\Qt5.15.2\\5.15.2
+#  (if not found..)
+# Look next for C:\\Qt\\5.15.2
+#
+# If neither of those can be found AND we are using the default
+# qt-root dir (i.e. the user did not specify --qt-root), then also
+# go up one directory from qt-root and check both permutations
+# again. This allows the default Qt install path on Linux to be
+# found without needing to specify a qt-root
+#
+# Returns a tuple, containing a boolean and a string.
+# If the boolean is True, then the string is the found path to Qt.
+# If the boolean is False, then the string is an error message indicating which paths were searched
+def check_qt_path(qt_root, qt_root_arg, qt_arg):
+    qt_path_not_found_error = "Unable to find Qt root dir. Use --qt-root to specify\n    Locations checked:"
+    qt_path = os.path.normpath(qt_root + "/" + "Qt" + qt_arg + "/" + qt_arg)
+    if not os.path.exists(qt_path):
+        qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
+        qt_path = os.path.normpath(qt_root + "/" + qt_arg)
+        if not os.path.exists(qt_path):
+            qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
+            # if there is no user-specified qt-root, then check additional locations
+            # used by the various Qt installers
+            if qt_root_arg == parser.get_default('qt_root'):
+                qt_path = os.path.normpath(qt_root + "/../" + "Qt" + qt_arg + "/" + qt_arg)
+                if not os.path.exists(qt_path):
+                    qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
+                    qt_path = os.path.normpath(qt_root + "/../" + qt_arg)
+                    if not os.path.exists(qt_path):
+                        qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
+                        return False, qt_path_not_found_error
+            else:
+                return False, qt_path_not_found_error
+    return True, qt_path
+
 if args.analyze and not args.build:
     log_error_and_exit("--analyze option requires the --build option to also be specified")
 
@@ -129,10 +167,6 @@ if support_32_bit_build:
     if args.platform == "x86":
         cmake_output_dir += args.platform
 
-if sys.platform == "win32":
-    if args.internal:
-        cmake_output_dir += internal_suffix
-
 # Clean all files generated by this script or the build process
 if (args.clean):
     log_print ("Cleaning build ...\n")
@@ -140,8 +174,6 @@ if (args.clean):
     rmdir_print(cmake_output_dir)
     # delete the build output directories
     for config in configs:
-        if args.internal:
-            config += internal_suffix
         dir = os.path.join(args.output, config)
         rmdir_print(dir)
     sys.exit(0)
@@ -149,122 +181,93 @@ if (args.clean):
 # Call fetch_dependencies script
 if can_fetch:
     log_print ("Fetching project dependencies ...\n")
-    if (fetch_dependencies.do_fetch_dependencies(args.update, args.internal) == False):
+    if (fetch_dependencies.do_fetch_dependencies(args.update) == False):
         log_error_and_exit("Unable to retrieve dependencies")
 
 # Create the CMake output directory
 mkdir_print(cmake_output_dir)
 
-# locate the relevant QT libraries
-# generate the platform specific portion of the QT path name
-if sys.platform == "win32":
-    qt_leaf = "msvc" + args.qt_libver + "_64"
-elif sys.platform == "darwin":
-    qt_leaf = "clang_64"
-else:
-    qt_leaf = "gcc_64"
+if not args.no_qt:
+    # locate the relevant QT libraries
+    # generate the platform specific portion of the QT path name
+    if sys.platform == "win32":
+        qt_leaf = "msvc" + args.qt_libver + "_64"
+    elif sys.platform == "darwin":
+        qt_leaf = "clang_64"
+    else:
+        qt_leaf = "gcc_64"
 
-# Generate the full path to QT, converting path to OS specific form
-# Look for Qt path in specified Qt root directory
-# Example:
-# --qt-root=C:\\Qt
-# --qt=5.9.6
-# Look first for C:\\Qt\\Qt5.9.6\\5.9.6
-#  (if not found..)
-# Look next for C:\\Qt\\5.9.6
-#
-# If neither of those can be found AND we are using the default
-# qt-root dir (i.e. the user did not specify --qt-root), then also
-# go up one directory from qt-root and check both permutations
-# again. This allows the default Qt install path on Linux to be
-# found without needing to specify a qt-root
+    qt_expanded_root = os.path.expanduser(args.qt_root)
+    qt_found,qt_path = check_qt_path(qt_expanded_root, args.qt_root, args.qt)
 
-qt_expanded_root = os.path.expanduser(args.qt_root)
+    if qt_found == False:
+        log_error_and_exit(qt_path)
 
-qt_path_not_found_error = "Unable to find Qt root dir. Use --qt-root to specify\n    Locations checked:"
+    qt_path = os.path.normpath(qt_path + "/"  + qt_leaf)
 
-qt_path = os.path.normpath(qt_expanded_root + "/" + "Qt" + args.qt + "/" + args.qt)
-if not os.path.exists(qt_path):
-    qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
-    qt_path = os.path.normpath(qt_expanded_root + "/" + args.qt)
-    if not os.path.exists(qt_path):
-        qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
-        # if there is no user-specified qt-root, then check additional locations
-        # used by the various Qt installers
-        if args.qt_root == parser.get_default('qt_root'):
-            qt_path = os.path.normpath(qt_expanded_root + "/../" + "Qt" + args.qt + "/" + args.qt)
-            if not os.path.exists(qt_path):
-                qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
-                qt_path = os.path.normpath(qt_expanded_root + "/../" + args.qt)
-                if not os.path.exists(qt_path):
-                    qt_path_not_found_error = qt_path_not_found_error + "\n      " + qt_path
-                    log_error_and_exit(qt_path_not_found_error)
-        else:
-            log_error_and_exit(qt_path_not_found_error)
-
-qt_path = os.path.normpath(qt_path + "/"  + qt_leaf)
-
-if not os.path.exists(qt_path) and not args.no_qt:
-    log_error_and_exit ("QT Path does not exist - " + qt_path)
+    if not os.path.exists(qt_path) and not args.no_qt:
+        log_error_and_exit ("QT Path does not exist - " + qt_path)
 
 # Specify the type of Build files to generate
-qt_generator = None
+cmake_generator = None
 if sys.platform == "win32":
-    if args.vs == "2019":
-        qt_generator="Visual Studio 16 2019"
+    if args.vs == "2022":
+        cmake_generator="Visual Studio 17 2022"
+    elif args.vs == "2019":
+        cmake_generator="Visual Studio 16 2019"
     else:
-        qt_generator="Visual Studio 15 2017"
+        cmake_generator="Visual Studio 15 2017"
         if not support_32_bit_build or args.platform != "x86":
-            qt_generator = qt_generator + " Win64"
+            cmake_generator = cmake_generator + " Win64"
 
 elif sys.platform == "darwin":
     if args.xcode:
-        qt_generator="Xcode"
+        cmake_generator="Xcode"
     else:
-        qt_generator="Unix Makefiles"
+        cmake_generator="Unix Makefiles"
 else:
-    qt_generator="Unix Makefiles"
+    cmake_generator="Unix Makefiles"
 
 # Common code related to generating a build configuration
 def generate_config(config):
     if (config != ""):
-        cmake_dir = os.path.join(cmake_output_dir, config + internal_suffix)
+        cmake_dir = os.path.join(cmake_output_dir, config + config_suffix)
         mkdir_print(cmake_dir)
     else:
         cmake_dir = cmake_output_dir
 
     cmakelist_path = os.path.join(script_root, os.path.normpath(".."))
 
-    release_output_dir = os.path.join(args.output, "release" + internal_suffix)
-    debug_output_dir = os.path.join(args.output, "debug" + internal_suffix)
+    release_output_dir = os.path.join(args.output, "release" + config_suffix)
+    debug_output_dir = os.path.join(args.output, "debug" + config_suffix)
 
     if args.no_qt:
         cmake_args = ["cmake", cmakelist_path, "-DHEADLESS=TRUE"]
     else:
-        cmake_args = ["cmake", cmakelist_path, "-DCMAKE_PREFIX_PATH=" + qt_path, "-G", qt_generator]
+        cmake_args = ["cmake", cmakelist_path, "-DCMAKE_PREFIX_PATH=" + qt_path, "-G", cmake_generator]
 
     if sys.platform == "win32":
-        if args.vs == "2019":
+        if args.vs != "2017":
             if not support_32_bit_build or args.platform != "x86":
                 cmake_args.extend(["-A" + "x64"])
 
-            if args.toolchain == "2017":
+            if args.toolchain == "2019":
+                cmake_args.extend(["-Tv142"])
+            elif args.toolchain == "2017":
                 cmake_args.extend(["-Tv141"])
 
-    if args.internal:
-        cmake_args.extend(["-DINTERNAL_BUILD:BOOL=TRUE"])
+    if sys.platform.startswith('linux'):
+        if args.disable_extra_qt_lib_deploy:
+            cmake_args.extend(["-DDISABLE_EXTRA_QT_LIB_DEPLOY:BOOL=TRUE"])
 
-    if args.disable_break:
-        cmake_args.extend(["-DDISABLE_RGP_DEBUG_BREAK:BOOL=TRUE"])
+    cmake_args.extend(["-DRMV_BUILD_NUMBER=" + str(args.build_number)])
 
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=" + debug_output_dir])
     cmake_args.extend(["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG=" + debug_output_dir])
 
-    if sys.platform == "win32":
-        cmake_args.extend(["-Dgtest_force_shared_crt=true"])
-    else:
+    if sys.platform != "win32":
         if "RELEASE" in config.upper():
             cmake_args.extend(["-DCMAKE_BUILD_TYPE=Release"])
         elif "DEBUG" in config.upper():
@@ -273,7 +276,53 @@ def generate_config(config):
             log_error_and_exit("unknown configuration: " + config)
 
     if sys.platform == "darwin":
-            cmake_args.extend(["-DNO_APP_BUNDLE=" + str(args.no_bundle)])
+        cmake_args.extend(["-DNO_APP_BUNDLE=" + str(args.no_bundle)])
+
+
+    if args.vscode:
+        # Generate data into VSCode Settings file
+
+        # only generate this file once - even though parent function is called twice on linux platforms
+        if (config == "") or (config == "debug"):
+            import json
+
+            vscode_json_path = cmakelist_path + "/.vscode"
+            vscode_json_file = vscode_json_path + "/settings.json"
+
+            log_print ("Updating VSCode settings file: " + vscode_json_file)
+
+            if os.path.isfile(vscode_json_file):
+                # if file exists load the contents as a JSON data blob
+                with open(vscode_json_file) as f:
+                    json_data = json.load(f)
+            else:
+                # file doesn't exist
+                if not os.path.isdir(vscode_json_path):
+                    # .vscode directory doesn't exist - create it
+                    os.mkdir(vscode_json_path)
+                # initialize dictionary with no data
+                json_data = {}
+
+            cmake_configure_args = []
+            for index, arg in enumerate(cmake_args):
+                # only include cmake arguments starting with -D.
+                # Ignore -DCMAKE_BUILD_TYPE as it's not relevant for VSCode builds
+                if not arg.startswith("-DCMAKE_BUILD_TYPE") and arg.startswith("-D"):
+                    cmake_configure_args.append(arg)
+                if arg.startswith("-G"):
+                    # next argument is the generator type to be captured
+                    json_data['cmake.generator'] = cmake_args[index + 1]
+            json_data['cmake.configureArgs'] = cmake_configure_args
+
+            # define the build directory used by cmake
+            cmake_build_directory = cmake_dir
+            if (config == "debug"):
+                # On linux - use the build type from vscode to define the config
+                cmake_build_directory = cmake_build_directory.replace("debug", "${buildType}", 1)
+            json_data['cmake.buildDirectory'] = cmake_build_directory
+
+            with open(vscode_json_file, 'w') as f:
+                json.dump(json_data, f, indent=4)
 
     if not distutils.spawn.find_executable(cmake_args[0]):
         log_error_and_exit("cmake not found")
@@ -284,7 +333,7 @@ def generate_config(config):
     if(p.returncode != 0):
         log_error_and_exit("cmake failed with %d" % p.returncode)
 
-log_print("\nGenerating build files ...\n")
+log_print("Generating build files ...")
 if sys.platform == "win32":
     # On Windows always generates both Debug and Release configurations in a single solution file
     generate_config("")
@@ -315,7 +364,7 @@ if (args.build):
         else:
             # linux & mac use the same commands
             # generate the path to the config specific makefile
-            build_dir = os.path.join(cmake_output_dir, config + internal_suffix)
+            build_dir = os.path.join(cmake_output_dir, config + config_suffix)
 
             cmake_args = ["cmake", "--build", build_dir, "--parallel", args.build_jobs]
 

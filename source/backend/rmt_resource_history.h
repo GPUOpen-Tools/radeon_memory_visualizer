@@ -8,9 +8,9 @@
 #ifndef RMV_BACKEND_RMT_RESOURCE_HISTORY_H_
 #define RMV_BACKEND_RMT_RESOURCE_HISTORY_H_
 
-#include <rmt_types.h>
-#include <rmt_error.h>
-#include <rmt_configuration.h>
+#include "rmt_types.h"
+#include "rmt_error.h"
+#include "rmt_configuration.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,6 +62,7 @@ typedef struct RmtResourceHistory
     RmtResourceHistoryEvent     events[RMT_MAXIMUM_RESOURCE_HISTORY_EVENTS];  ///< A pointer to an array of <c><i>RmtResourceHistoryEvent</i></c> structures.
     int32_t                     event_count;      ///< The number of <c><i>RmtResourceHistoryEvent</i></c> structures pointed to by <c><i>events</i></c>.
     const RmtVirtualAllocation* base_allocation;  ///< A pointer to a <c><i>RmtVirtualAllocation</i></c> structure that underpins <c><i>resource</i></c>.
+
 } RmtResourceHistory;
 
 /// Add a new event to the resource history.

@@ -143,7 +143,7 @@ namespace rmv
         /// @return The default name string.
         QString GetDefaultExeName() const;
 
-        RmtDataSet      data_set_ = {};      ///< The dataset read from file.
+        RmtDataSet      data_set_;           ///< The dataset read from file.
         RmtDataTimeline timeline_;           ///< The timeline.
         QWidget*        parent_;             ///< Pointer to the parent pane.
         QString         active_trace_path_;  ///< The path to currently opened file.

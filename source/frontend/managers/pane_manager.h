@@ -10,7 +10,7 @@
 
 #include <vector>
 
-#include "rmt_data_set.h"
+#include "rmt_data_snapshot.h"
 
 #include "views/base_pane.h"
 #include "views/compare_pane.h"
@@ -128,14 +128,17 @@ namespace rmv
     static const int kGotoHeapOverviewPane        = Qt::Key_Q;
     static const int kGotoResourceOverviewPane    = Qt::Key_W;
     static const int kGotoAllocationOverviewPane  = Qt::Key_E;
-    static const int kGotoResourceListPane        = Qt::Key_R;
-    static const int kGotoAllocationExplorerPane  = Qt::Key_T;
-    static const int kGotoResourceHistoryPane     = Qt::Key_Y;
+    static const int kGotoResourceListPane        = Qt::Key_T;
+    static const int kGotoAllocationExplorerPane  = Qt::Key_Y;
+    static const int kGotoResourceHistoryPane     = Qt::Key_U;
     static const int kGotoSnapshotDeltaPane       = Qt::Key_A;
     static const int kGotoMemoryLeakFinderPane    = Qt::Key_S;
-    static const int kGotoWelcomePane             = Qt::Key_Z;
-    static const int kGotoRecentSnapshotsPane     = Qt::Key_X;
-    static const int kGotoKeyboardShortcutsPane   = Qt::Key_C;
+    static const int kGotoWelcomePane             = Qt::Key_X;
+    static const int kGotoRecentSnapshotsPane     = Qt::Key_C;
+    static const int kGotoAboutPane               = Qt::Key_V;
+    static const int kGotoGeneralSettingsPane     = Qt::Key_B;
+    static const int kGotoThemesAndColorsPane     = Qt::Key_N;
+    static const int kGotoKeyboardShortcutsPane   = Qt::Key_M;
     static const int kKeyNavBackwardBackspace     = Qt::Key_Backspace;
     static const int kKeyNavBackwardArrow         = Qt::Key_Left;
     static const int kKeyNavForwardArrow          = Qt::Key_Right;

@@ -11,6 +11,8 @@
 
 #include "qt_common/utils/scaling_manager.h"
 
+#include "rmt_util.h"
+
 #include "managers/message_manager.h"
 
 static const int kTitleFontSize              = 8;

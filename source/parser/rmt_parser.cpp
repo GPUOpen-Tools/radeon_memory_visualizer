@@ -8,7 +8,7 @@
 #include <string.h>  // for memcpy()
 
 #include "rmt_parser.h"
-#include <rmt_print.h>
+#include "rmt_print.h"
 #include "rmt_format.h"
 #include "rmt_util.h"
 #include "rmt_assert.h"
@@ -511,7 +511,7 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
     if (out_userdata_token->size_in_bytes > 4 && out_userdata_token->userdata_type == kRmtUserdataTypeName)
     {
         // Allocate memory for the payload cache.  This will be deleted by the token destructor.
-        out_userdata_token->payload_cache = AllocatePayloadCache(out_userdata_token->size_in_bytes);
+        out_userdata_token->payload_cache = RmtTokenAllocatePayloadCache(out_userdata_token->size_in_bytes);
         memcpy(out_userdata_token->payload_cache, payload, out_userdata_token->size_in_bytes);
 
         const uintptr_t id_address = ((uintptr_t)payload) + (out_userdata_token->size_in_bytes - 4);

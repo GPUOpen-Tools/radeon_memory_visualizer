@@ -10,7 +10,7 @@
 #endif  // #ifndef _WIN32
 
 #include <stdint.h>
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 #include "rmt_thread.h"
 
 #ifdef _WIN32

@@ -12,7 +12,6 @@
 #include <map>
 #include <vector>
 
-#include "rmt_resource_list.h"
 #include "rmt_virtual_allocation_list.h"
 
 namespace rmv

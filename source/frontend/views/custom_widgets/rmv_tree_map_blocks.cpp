@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a tree map block collection.
@@ -33,6 +33,11 @@ const static int kMinArea = 4;
 
 // The number of values a boolean can have (true or false).
 const static int kBooleanCount = 2;
+
+#ifdef _DEBUG
+// Text for an unbound resource
+const static char* kUnboundResourceName = "unbound";
+#endif  // #ifdef _DEBUG
 
 /// Sorting function.
 ///
@@ -713,7 +718,7 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
                     unbound_resource->bound_allocation = current_virtual_allocation;
                     unbound_resource->resource_type    = kRmtResourceTypeCount;
 #ifdef _DEBUG
-                    strcpy_s(unbound_resource->name, RMT_MAXIMUM_NAME_LENGTH, "unbound");
+                    unbound_resource->name = kUnboundResourceName;
 #endif
                     // Keep track of the unbound resource.
                     unbound_resources_.push_back(unbound_resource);

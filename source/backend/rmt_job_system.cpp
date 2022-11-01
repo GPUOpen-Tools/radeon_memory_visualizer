@@ -7,7 +7,7 @@
 
 #include "rmt_job_system.h"
 #include "rmt_platform.h"
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 #include <string.h>  // for memset()
 
 // flag to signal worker thread should terminate

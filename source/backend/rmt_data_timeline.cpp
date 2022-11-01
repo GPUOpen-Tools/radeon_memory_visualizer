@@ -8,9 +8,9 @@
 #include "rmt_data_timeline.h"
 #include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
-#include <rmt_file_format.h>
+#include "rmt_file_format.h"
 #include "rmt_job_system.h"
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 #include <string.h>  // for memcpy()
 #include <stdlib.h>  // for malloc(), free()
 
@@ -109,6 +109,7 @@ static void CreateHistogramJob(int32_t thread_id, int32_t index, void* input)
         const int32_t bucket_index = RmtDataTimelineHistogramGetIndex(input_parameters->out_timeline_histogram, index, current_series_index);
         input_parameters->out_timeline_histogram->bucket_data[bucket_index] = current_value;
     }
+
 }
 
 // create the historgram.

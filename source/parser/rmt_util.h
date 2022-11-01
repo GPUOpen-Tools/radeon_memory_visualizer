@@ -46,25 +46,4 @@
 /// Helper macro to work out the number of elements in an array.
 #define RMT_ARRAY_ELEMENTS(x) (int32_t)((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
-/// Inline FNV1a hashing function.  See (http://www.isthe.com/chongo/tech/comp/fnv/)
-static inline uint32_t Fnv1aHash(const uint8_t* data, size_t data_size)
-{
-    uint32_t hash = 0;
-
-    if (data != nullptr)
-    {
-        static constexpr uint32_t kFnvPrime  = 16777619U;
-        static constexpr uint32_t kFnvOffset = 2166136261U;
-
-        hash = kFnvOffset;
-
-        for (uint32_t i = 0; i < data_size; i++)
-        {
-            hash ^= static_cast<uint32_t>(data[i]);
-            hash *= kFnvPrime;
-        }
-    }
-    return hash;
-}
-
 #endif  // #ifndef RMV_PARSER_RMT_UTIL_H_

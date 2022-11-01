@@ -5,7 +5,7 @@
 /// @brief  Implementation of platform-specific thread events.
 //=============================================================================
 
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 #include "rmt_thread_event.h"
 
 #ifdef _WIN32

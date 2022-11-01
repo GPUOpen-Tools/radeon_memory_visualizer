@@ -8,7 +8,7 @@
 #ifndef RMV_BACKEND_RMT_LINEAR_BUFFER_H_
 #define RMV_BACKEND_RMT_LINEAR_BUFFER_H_
 
-#include <rmt_error.h>
+#include "rmt_error.h"
 
 #ifdef __cplusplus
 extern "C" {

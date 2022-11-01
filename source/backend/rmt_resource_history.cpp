@@ -5,8 +5,8 @@
 /// @brief  Implementation of functions operating on a resource history structure.
 //=============================================================================
 
-#include <rmt_resource_history.h>
-#include <rmt_assert.h>
+#include "rmt_resource_history.h"
+#include "rmt_assert.h"
 
 // add an event to resource history log
 RmtErrorCode RmtResourceHistoryAddEvent(RmtResourceHistory*         resource_history,

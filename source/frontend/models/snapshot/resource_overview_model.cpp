@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource Overview model.
@@ -100,7 +100,7 @@ namespace rmv
         if (resource != nullptr)
         {
             text_string = "Id: " + QString::number(resource->identifier);
-            if (strlen(resource->name) > 0)
+            if ((resource->name != nullptr) && (strlen(resource->name) > 0))
             {
                 text_string += "\nName: " + QString(resource->name);
             }

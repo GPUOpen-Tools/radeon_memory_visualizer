@@ -8,94 +8,15 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_resource_history.h"
 #include "rmt_data_set.h"
-#include <rmt_assert.h>
-#include <rmt_print.h>
+#include "rmt_assert.h"
+#include "rmt_print.h"
 #include "rmt_address_helper.h"
+#include "rmt_token.h"
 #include <stdlib.h>  // for free()
 
 #ifndef _WIN32
 #include "linux/safe_crt.h"
 #endif
-
-static void DumpResourceList(FILE* file, RmtResource** resources, int32_t resource_count)
-{
-    fprintf(file, "\t\t\t\"Resources\" : [\n");
-
-    for (int32_t current_resource_index = 0; current_resource_index < resource_count; ++current_resource_index)
-    {
-        const RmtResource* current_resource = resources[current_resource_index];
-
-        fprintf(file, "\t\t\t\t\"Resource %llu\" : {\n", (unsigned long long)current_resource->identifier);
-        fprintf(file, "\t\t\t\t\tCreated : %llu,\n", (unsigned long long)current_resource->create_time);
-        fprintf(file, "\t\t\t\t\tBind : %llu,\n", (unsigned long long)current_resource->bind_time);
-        fprintf(file, "\t\t\t\t\tAddress : \"0x%010llx\",\n", (unsigned long long)current_resource->address);
-        fprintf(file, "\t\t\t\t\tSize (Bytes) : %lld,\n", (unsigned long long)current_resource->size_in_bytes);
-        fprintf(file, "\t\t\t\t\tType : \"%s\"\n", RmtGetResourceTypeNameFromResourceType(current_resource->resource_type));
-        fprintf(file, "\t\t\t\t}");
-
-        if (current_resource_index < (resource_count - 1))
-        {
-            fprintf(file, ",\n");
-        }
-        else
-        {
-            fprintf(file, "\n");
-        }
-    }
-    fprintf(file, "\t\t\t]\n");
-}
-
-static void DumpAllocationList(FILE* file, const RmtVirtualAllocationList* allocation_list)
-{
-    for (int32_t current_allocation_index = 0; current_allocation_index < allocation_list->allocation_count; ++current_allocation_index)
-    {
-        const RmtVirtualAllocation* allocation_details = &allocation_list->allocation_details[current_allocation_index];
-
-        fprintf(file, "\t\"Allocation %d\" : {\n", allocation_details->guid);
-        fprintf(file, "\t\t \"Address\" : \"0x%010llx\",\n", (unsigned long long)allocation_details->base_address);
-        fprintf(file, "\t\t \"Size\" : %lld,\n", (unsigned long long)RmtGetAllocationSizeInBytes(allocation_details->size_in_4kb_page, kRmtPageSize4Kb));
-        fprintf(file, "\t\t \"Created\" : %lld,\n", (unsigned long long)allocation_details->timestamp);
-        fprintf(file, "\t\t \"Last CPU map\" : %lld,\n", (unsigned long long)allocation_details->last_cpu_map);
-        fprintf(file, "\t\t \"Last CPU unmap\" : %lld,\n", (unsigned long long)allocation_details->last_cpu_un_map);
-        fprintf(file, "\t\t \"Last residency update\" : %lld,\n", (unsigned long long)allocation_details->last_residency_update);
-        fprintf(file, "\t\t \"Map count\" : %d,\n", allocation_details->map_count);
-        fprintf(file, "\t\t \"Unbound regions\" : %d,\n", allocation_details->unbound_memory_region_count);
-        fprintf(file, "\t\t \"Resource count\" : %d,\n", allocation_details->resource_count);
-
-        if (allocation_details->resource_count > 0)
-        {
-            DumpResourceList(file, allocation_details->resources, allocation_details->resource_count);
-        }
-
-        fprintf(file, "\t}");
-
-        if (current_allocation_index < (allocation_list->allocation_count - 1))
-        {
-            fprintf(file, ",\n");
-        }
-        else
-        {
-            fprintf(file, "\n");
-        }
-    }
-}
-
-// dump the state.
-RmtErrorCode RmtDataSnapshotDumpJsonToFile(const RmtDataSnapshot* snapshot, const char* filename)
-{
-    FILE*   file     = NULL;
-    errno_t error_no = fopen_s(&file, filename, "wb");
-    if ((file == nullptr) || error_no != 0)
-    {
-        return kRmtErrorFileNotOpen;
-    }
-
-    DumpAllocationList(file, &snapshot->virtual_allocation_list);
-
-    fflush(file);
-    fclose(file);
-    return kRmtOk;
-}
 
 // do the first pass over the RMT data, figure out the resource-based events, and
 // virtual memory-based events, and also build a list of physical address ranges
@@ -220,8 +141,15 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                 break;
             }
 
-            if (!RmtResourceOverlapsVirtualAddressRange(
-                    resource, current_token.virtual_free_token.virtual_address, (current_token.virtual_free_token.virtual_address + 1)))
+            if (current_token.virtual_free_token.virtual_address != out_resource_history->base_allocation->base_address)
+            {
+                break;
+            }
+
+            const uint64_t size_in_bytes = RmtGetAllocationSizeInBytes(out_resource_history->base_allocation->size_in_4kb_page, kRmtPageSize4Kb);
+            const RmtGpuAddress address_start = current_token.virtual_free_token.virtual_address;
+            const RmtGpuAddress address_end   = address_start + size_in_bytes - 1;
+            if (!RmtResourceOverlapsVirtualAddressRange(resource, address_start, address_end))
             {
                 break;
             }
@@ -486,7 +414,6 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
     // fill out the structure fields.
     out_segment_status->total_virtual_memory_requested   = total_virtual_memory_requested;
     out_segment_status->total_physical_mapped_by_process = total_physical_mapped_by_process;
-
     out_segment_status->total_physical_mapped_by_other_processes = 0;
     out_segment_status->max_allocation_size                      = max_virtual_allocation_size;
     out_segment_status->min_allocation_size                      = min_virtual_allocation_size;

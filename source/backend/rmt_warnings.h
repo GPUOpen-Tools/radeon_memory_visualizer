@@ -8,8 +8,8 @@
 #ifndef RMV_BACKEND_RMT_WARNINGS_H_
 #define RMV_BACKEND_RMT_WARNINGS_H_
 
-#include <rmt_types.h>
-#include <rmt_error.h>
+#include "rmt_types.h"
+#include "rmt_error.h"
 
 #ifdef __cplusplus
 extern "C" {

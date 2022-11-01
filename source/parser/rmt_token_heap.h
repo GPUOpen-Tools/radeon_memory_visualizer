@@ -11,6 +11,7 @@
 #include "rmt_error.h"
 #include "rmt_file_format.h"
 #include "rmt_format.h"
+#include "rmt_token.h"
 #include "rmt_util.h"
 
 #ifdef __cplusplus
@@ -19,6 +20,7 @@ extern "C" {
 
 typedef struct RmtToken  RmtToken;
 typedef struct RmtParser RmtParser;
+typedef struct ResourceIdMapNode ResourceIdMapNode;
 
 /// A structure for fast lookup of unique resource ID based on a driver provided ID.
 typedef struct ResourceIdMapNode
@@ -37,29 +39,6 @@ typedef struct ResourceIdMapAllocator
     size_t   bytes_used;
     void*    curr_offset;
     uint32_t resource_count;
-
-    RmtResourceIdentifier GenUniqueId(uint64_t base_driver_id)
-    {
-        return ((base_driver_id & 0xFFFFFFFF) << 32) | (resource_count++ & 0xFFFFFFFF);
-    }
-
-    // Allocates a new node from the underlying allocation, if successful the new node will be initialized
-    ResourceIdMapNode* AllocNewNode(uint64_t base_driver_id)
-    {
-        ResourceIdMapNode* new_node = nullptr;
-        if ((bytes_used + sizeof(ResourceIdMapNode)) <= allocation_size)
-        {
-            curr_offset = static_cast<uint8_t*>(allocation_base) + bytes_used;
-            new_node    = static_cast<ResourceIdMapNode*>(curr_offset);
-            bytes_used += sizeof(ResourceIdMapNode);
-
-            new_node->base_driver_id = base_driver_id;
-            new_node->unique_id      = GenUniqueId(base_driver_id);
-            new_node->left           = nullptr;
-            new_node->right          = nullptr;
-        }
-        return new_node;
-    }
 } ResourceIdMapAllocator;
 
 /// A structure encapsulating a priority queue data structure.

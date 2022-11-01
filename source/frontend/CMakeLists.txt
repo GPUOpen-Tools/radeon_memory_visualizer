@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.11)
 
 project(RadeonMemoryVisualizer)
 
+IF(WIN32)
+    # Warnings as errors for Windows
+    add_compile_options(/W4 /WX)
+    # this warning is caused by the QT header files - use pragma to disable at source
+    # disable warning C4127: conditional expression is constant
+    add_compile_options(/wd4127)
+    # this warning is caused by QT header files and has been introduced by VS2019 16.9.6
+    # disable warning C5240: 'nodiscard': attribute is ignored in this syntactic position
+    add_compile_options(/wd5240)
+ENDIF(WIN32)
+
 # switch on the autogenerators needed for Qt. Includes the MetaObject Compiler (MOC),
 # the UI compiler (UIC) and the resource compiler (RCC)
 set(CMAKE_AUTOMOC ON)
@@ -21,14 +32,12 @@ ENDIF(WIN32)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../backend ../parser ../frontend)
-IF(UNIX)
-    include_directories(AFTER ../backend/Linux)
-ENDIF(UNIX)
 
 find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
 
 IF(UNIX)
     find_package(Threads)
+    add_compile_options(-std=c++11 -D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers)
 ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles

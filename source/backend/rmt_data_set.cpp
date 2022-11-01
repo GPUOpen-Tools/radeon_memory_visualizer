@@ -14,14 +14,15 @@
 
 #include "rmt_data_set.h"
 #include "rmt_data_timeline.h"
-#include <rmt_util.h>
-#include <rmt_assert.h>
+#include "rmt_util.h"
+#include "rmt_assert.h"
 #include "rmt_linear_buffer.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_resource_history.h"
-#include <rmt_file_format.h>
-#include <rmt_print.h>
-#include <rmt_address_helper.h>
+#include "rmt_file_format.h"
+#include "rmt_print.h"
+#include "rmt_address_helper.h"
+#include "rmt_token.h"
 
 #ifndef _WIN32
 #include "linux/safe_crt.h"
@@ -77,15 +78,6 @@ static bool MoveTraceFile(const char* existing_file_path, const char* new_file_p
 #endif
 }
 
-static void CopyString(char* destination, size_t size_in_bytes, char const* source, size_t max_count)
-{
-#ifndef _WIN32
-    strncpy(destination, source, std::min(size_in_bytes, max_count));
-#else
-    strncpy_s(destination, size_in_bytes, source, max_count);
-#endif  // _WIN32
-}
-
 struct RmtResourceNameData
 {
     RmtResourceIdentifier resource_id;
@@ -101,6 +93,9 @@ static std::map<RmtCorrelationIdentifier, RmtResourceNameData> resource_name_loo
 // Map used to lookup unique resource ID hash using the original resource ID as the key.
 static std::map<RmtResourceIdentifier, RmtResourceIdentifier> unique_resource_id_lookup_map;
 
+// Map used to lookup a resource name using a resource ID hash.
+static std::map<RmtResourceIdentifier, const char*> resource_name_lookup_by_resource_id_map;
+
 // A list of implicit resources to be removed from a snapshot.
 static std::unordered_set<RmtResourceIdentifier> implicit_resource_list;
 
@@ -115,6 +110,7 @@ static bool implicit_resource_list_created = false;
 // Replaces original resource IDs in lookup maps with the unique resource ID hash values generated when resource objects are created.
 void UpdateResourceNameIds()
 {
+    resource_name_lookup_by_resource_id_map.clear();
     for (auto& resource_name_data : resource_name_lookup_map)
     {
         RmtCorrelationIdentifier correlation_identifier               = resource_name_data.first;
@@ -135,7 +131,30 @@ void UpdateResourceNameIds()
             }
             resource_name_data.second.resource_id = unique_resource_id_iterator->second;
         }
+
+        // Update the mapping that allows resource names to be quickly looked up from a resource identifier.
+        resource_name_lookup_by_resource_id_map[resource_name_data.second.resource_id] = resource_name_data.second.name.c_str();
     }
+}
+
+RmtErrorCode RmtDataSetGetResourceName(const RmtResourceIdentifier resource_id, const char** out_resource_name)
+{
+    RMT_RETURN_ON_ERROR(out_resource_name != nullptr, kRmtErrorInvalidPointer);
+
+    RmtErrorCode result = kRmtOk;
+
+    const auto lookup_map_iterator = resource_name_lookup_by_resource_id_map.find(resource_id);
+    if (lookup_map_iterator != resource_name_lookup_by_resource_id_map.end())
+    {
+        *out_resource_name = lookup_map_iterator->second;
+    }
+    else
+    {
+        *out_resource_name = nullptr;
+        result             = kRmtErrorNoResourceFound;
+    }
+
+    return result;
 }
 
 // this buffer is used by the parsers to read chunks of data into RAM for processing. The larger this
@@ -350,7 +369,7 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
         }
 
         // Depending on the type of chunk, handle pre-processing it.
-        switch (current_file_chunk->chunk_identifier.chunk_type)
+        switch (current_file_chunk->chunk_identifier.chunk_info.chunk_type)
         {
         case kRmtFileChunkTypeAsicInfo:
             break;
@@ -580,11 +599,11 @@ static RmtErrorCode BuildDataProfile(RmtDataSet* data_set)
 
     void* data = calloc(size_required, 1);
     RMT_ASSERT(data != nullptr);
-    data_set->p_resource_id_map_allocator                  = static_cast<ResourceIdMapAllocator*>(data);
-    data_set->p_resource_id_map_allocator->allocation_base = (void*)(static_cast<const uint8_t*>(data) + sizeof(ResourceIdMapAllocator));
-    data_set->p_resource_id_map_allocator->allocation_size = size_required - sizeof(ResourceIdMapAllocator);
-    data_set->p_resource_id_map_allocator->resource_count  = 0;
-    data_set->stream_merger.allocator                      = data_set->p_resource_id_map_allocator;
+    data_set->resource_id_map_allocator                  = static_cast<ResourceIdMapAllocator*>(data);
+    data_set->resource_id_map_allocator->allocation_base = (void*)(static_cast<const uint8_t*>(data) + sizeof(ResourceIdMapAllocator));
+    data_set->resource_id_map_allocator->allocation_size = size_required - sizeof(ResourceIdMapAllocator);
+    data_set->resource_id_map_allocator->resource_count  = 0;
+    data_set->stream_merger.allocator                      = data_set->resource_id_map_allocator;
     return kRmtOk;
 }
 
@@ -684,9 +703,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     {
     case kRmtTokenTypeVirtualFree:
     {
-#ifdef PRINT_TOKENS
-        RmtPrint("%lld - VIRTUAL_FREE - 0x%010llx", current_token->common.timestamp, current_token->virtual_free_token.virtual_address);
-#endif
 
         error_code = RmtVirtualAllocationListRemoveAllocation(&out_snapshot->virtual_allocation_list, current_token->virtual_free_token.virtual_address);
         RMT_ASSERT(error_code == kRmtOk);
@@ -696,20 +712,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypePageTableUpdate:
     {
-#ifdef PRINT_TOKENS
-        RmtPrint("%lld - PAGE_TABLE_UPDATE - [0x%010llx..0x%010llx] => [0x%010llx..0x%010llx] (%lld * %lld) %d %s",
-                 current_token->common.timestamp,
-                 current_token->page_table_update_token.virtual_address,
-                 current_token->page_table_update_token.virtual_address +
-                     (current_token->page_table_update_token.size_in_pages * RmtGetPageSize(current_token->page_table_update_token.page_size)),
-                 current_token->page_table_update_token.physical_address,
-                 current_token->page_table_update_token.physical_address +
-                     (current_token->page_table_update_token.size_in_pages * RmtGetPageSize(current_token->page_table_update_token.page_size)),
-                 current_token->page_table_update_token.size_in_pages,
-                 RmtGetPageSize(current_token->page_table_update_token.page_size),
-                 current_token->page_table_update_token.update_type,
-                 current_token->page_table_update_token.is_unmapping ? "UM" : "M");
-#endif
 
         if (!current_token->page_table_update_token.is_unmapping)
         {
@@ -742,22 +744,33 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     {
         if (current_token->userdata_token.userdata_type == kRmtUserdataTypeName)
         {
-            char name[RMT_MAXIMUM_NAME_LENGTH];
+            if (!data_set->is_resource_name_processing_complete)
+            {
+                char name[RMT_MAXIMUM_NAME_LENGTH];
 
-            // Calculate the size of the resource name string.  Subtract the size of the ID in the Name USERDATA token and one byte for the termination character to get the name length.
-            int  name_length = RMT_MINIMUM(current_token->userdata_token.size_in_bytes - (sizeof(uint32_t)), RMT_MAXIMUM_NAME_LENGTH);
+                // Calculate the size of the resource name string.  Subtract the size of the ID in the Name USERDATA token and one byte for the termination character to get the name length.
+                int name_length = RMT_MINIMUM(current_token->userdata_token.size_in_bytes - (sizeof(uint32_t)), RMT_MAXIMUM_NAME_LENGTH);
 
-            memcpy(name, current_token->userdata_token.payload_cache, name_length);
-            // Check for invalid characters.  Invalid characters may indicate a parsing issue.
-            RMT_ASSERT(IsValidTextString(name, name_length));
+                if (name_length > 0)
+                {
+                    memcpy(name, current_token->userdata_token.payload_cache, name_length);
+                    // Check for invalid characters.  Invalid characters may indicate a parsing issue.
+                    RMT_ASSERT(IsValidTextString(name, name_length));
 
-            name[name_length-1]           = 0;
+                    name[name_length - 1] = '\0';
+                }
+                else
+                {
+                    name[0] = '\0';
+                }
 
-            // If a matching resource isn't found, attempt to match later using the correlation ID.
-            RmtResourceNameData resource_name_data;
-            resource_name_data.name                                                        = name;
-            resource_name_data.resource_id                                                 = current_token->userdata_token.resource_identifier;
-            resource_name_lookup_map[current_token->userdata_token.correlation_identifier] = resource_name_data;
+                // If a matching resource isn't found, attempt to match later using the correlation ID.
+                RmtResourceNameData resource_name_data;
+                resource_name_data.name        = name;
+                resource_name_data.resource_id = current_token->userdata_token.resource_identifier;
+
+                resource_name_lookup_map[current_token->userdata_token.correlation_identifier] = resource_name_data;
+            }
 
             current_token->userdata_token.payload_cache = nullptr;
         }
@@ -768,24 +781,20 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         }
         else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeMarkImplicitResource)
         {
-#ifdef _IMPLICIT_RESOURCE_LOGGING
             if (implicit_resource_list_created == false)
             {
+#ifdef _IMPLICIT_RESOURCE_LOGGING
                 RmtPrint("ProcessTokenForSnapshot() - add implicit resource: %lld", current_token->userdata_token.resource_identifier);
 #endif  // _IMPLICIT_RESOURCE_LOGGING
                 implicit_resource_list.insert(current_token->userdata_token.resource_identifier);
             }
 
-#ifdef PRINT_TOKENS
-#endif
+        }
     }
     break;
 
     case kRmtTokenTypeMisc:
     {
-#ifdef PRINT_TOKENS
-        RmtPrint("%lld - MISC - %s", current_token->common.timestamp, RmtGetMiscTypeNameFromMiscType(current_token->misc_token.type));
-#endif
     }
     break;
 
@@ -803,13 +812,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeResourceBind:
     {
-#ifdef PRINT_TOKENS
-        RmtPrint("%lld - RESOURCE_BIND - %lld 0x%010llx %lld",
-                 current_token->common.timestamp,
-                 current_token->resource_bind_token.resource_identifier,
-                 current_token->resource_bind_token.virtual_address,
-                 current_token->resource_bind_token.size_in_bytes);
-#endif
 
         error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
 
@@ -824,8 +826,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                                current_token->resource_bind_token.virtual_address,
                                                                (int32_t)(current_token->resource_bind_token.size_in_bytes >> 12),
                                                                kDummyHeapPref,
-                                                               RmtOwnerType::kRmtOwnerTypeClientDriver,
-                                                               data_set->sam_enabled);
+                                                               RmtOwnerType::kRmtOwnerTypeClientDriver);
         }
         else if (error_code == kRmtErrorResourceAlreadyBound)
         {
@@ -899,9 +900,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeCpuMap:
     {
-#ifdef PRINT_TOKENS
-        RmtPrint("%lld - CPU_MAP - 0x%010llx", current_token->common.timestamp, current_token->cpu_map_token.virtual_address);
-#endif
 
         if (current_token->cpu_map_token.is_unmap)
         {
@@ -921,19 +919,12 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeVirtualAllocate:
     {
-#ifdef PRINT_TOKENS
-        RmtPrint("%lld - VIRTUAL_ALLOCATE - 0x%010llx %lld",
-                 current_token->common.timestamp,
-                 current_token->virtual_allocate_token.virtual_address,
-                 current_token->virtual_allocate_token.size_in_bytes);
-#endif
         error_code = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
                                                            current_token->common.timestamp,
                                                            current_token->virtual_allocate_token.virtual_address,
                                                            (int32_t)(current_token->virtual_allocate_token.size_in_bytes >> 12),
                                                            current_token->virtual_allocate_token.preference,
-                                                           current_token->virtual_allocate_token.owner_type,
-                                                           data_set->sam_enabled);
+                                                           current_token->virtual_allocate_token.owner_type);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
@@ -947,14 +938,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
             implicit_resource_list.find(current_token->resource_create_token.original_resource_identifier) == implicit_resource_list.end())
 #endif  // _DISABLE_IMPLICIT_RESOURCE_FILTERING
         {
-#ifdef PRINT_TOKENS
-            char buf[128];
-            sprintf_s(buf,
-                      "%lld - RESOURCE_CREATE - %lld %d",
-                      current_token->common.timestamp,
-                      current_token->resource_create_token.resource_identifier,
-                      current_token->resource_create_token.resource_type);
-#endif
             error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &current_token->resource_create_token);
 
             RMT_ASSERT(error_code == kRmtOk);
@@ -963,42 +946,15 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 current_token->resource_create_token.resource_identifier;
         }
 
-#ifdef PRINT_TOKENS
-        if (error_code != kRmtOk)
-        {
-            RmtPrint("%s - FAILED", buf);
-        }
-        else
-        {
-            RmtPrint(buf);
-        }
-#endif
         //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
 
     case kRmtTokenTypeResourceDestroy:
     {
-#ifdef PRINT_TOKENS
-        char buf[128];
-        sprintf_s(buf,
-                  "%lld - RESOURCE_DESTROY - %lld",
-                  current_token->resource_destroy_token.common.timestamp,
-                  current_token->resource_destroy_token.resource_identifier);
-#endif
         error_code = RmtResourceListAddResourceDestroy(&out_snapshot->resource_list, &current_token->resource_destroy_token);
         //RMT_ASSERT(error_code == kRmtOk);
 
-#ifdef PRINT_TOKENS
-        if (error_code != kRmtOk)
-        {
-            RmtPrint("%s - FAILED", buf);
-        }
-        else
-        {
-            RmtPrint(buf);
-        }
-#endif
         //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
     break;
@@ -1127,6 +1083,8 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
 // destroy the data set.
 RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
 {
+    data_set->is_resource_name_processing_complete = false;
+
     // flush writes and close the handle.
     fflush((FILE*)data_set->file_handle);
     fclose((FILE*)data_set->file_handle);
@@ -1361,10 +1319,13 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     error_code = RmtProcessMapInitialize(&temp_snapshot->process_map);
     RMT_ASSERT(error_code == kRmtOk);
 
-    // Initialize resource lookup maps.
-    resource_correlation_lookup_map.clear();
-    resource_name_lookup_map.clear();
-    unique_resource_id_lookup_map.clear();
+    if (!data_set->is_resource_name_processing_complete)
+    {
+        // Initialize resource lookup maps.
+        resource_correlation_lookup_map.clear();
+        resource_name_lookup_map.clear();
+        unique_resource_id_lookup_map.clear();
+    }
 
     // Special case:
     // for timeline type of process, we have to first fill the 0th value of level 0
@@ -1407,6 +1368,13 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 
         // Generate whatever series values we need for current timeline type from the snapshot.
         last_value_index = UpdateSeriesValuesFromCurrentSnapshot(temp_snapshot, timeline_type, last_value_index, out_timeline);
+    }
+
+    if (!data_set->is_resource_name_processing_complete)
+    {
+        // Update the lookup maps to use unique resource ID hash values.
+        UpdateResourceNameIds();
+        data_set->is_resource_name_processing_complete = true;
     }
 
     // clean up temporary structures we allocated to construct the timeline.
@@ -1807,9 +1775,6 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     SnapshotGeneratorAllocateRegionStack(out_snapshot);
     SnapshotGeneratorCalculateSnapshotPointSummary(out_snapshot, snapshot_point);
 
-    // Update the lookup maps to use unique resource ID hash values.
-    UpdateResourceNameIds();
-
     for (const auto& name_token_item : resource_name_lookup_map)
     {
         RmtResourceIdentifier resource_identifier = name_token_item.second.resource_id;
@@ -1817,7 +1782,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
         error_code = RmtResourceListGetResourceByResourceId(&out_snapshot->resource_list, resource_identifier, (const RmtResource**)&found_resource);
         if (error_code == kRmtOk)
         {
-            CopyString(found_resource->name, sizeof(found_resource->name), name_token_item.second.name.c_str(), name_token_item.second.name.length());
+            found_resource->name = name_token_item.second.name.c_str();
         }
     }
     return kRmtOk;
@@ -1912,13 +1877,13 @@ static RmtErrorCode AddSnapshot(RmtDataSet* data_set, const char* name, uint64_t
 
         // add the header.
         RmtFileChunkHeader chunk_header;
-        chunk_header.chunk_identifier.chunk_type  = kRmtFileChunkTypeSnapshotInfo;
-        chunk_header.chunk_identifier.chunk_index = 0;
-        chunk_header.chunk_identifier.reserved    = 0;
-        chunk_header.version_major                = 1;
-        chunk_header.version_minor                = 0;
-        chunk_header.padding                      = 0;
-        chunk_header.size_in_bytes                = sizeof(RmtFileChunkHeader) + sizeof(RmtFileChunkSnapshotInfo) + name_length;
+        chunk_header.chunk_identifier.chunk_info.chunk_type  = kRmtFileChunkTypeSnapshotInfo;
+        chunk_header.chunk_identifier.chunk_info.chunk_index = 0;
+        chunk_header.chunk_identifier.chunk_info.reserved    = 0;
+        chunk_header.version_major                           = 1;
+        chunk_header.version_minor                           = 0;
+        chunk_header.padding                                 = 0;
+        chunk_header.size_in_bytes                           = sizeof(RmtFileChunkHeader) + sizeof(RmtFileChunkSnapshotInfo) + name_length;
 
         size_t write_size = fwrite(&chunk_header, 1, sizeof(RmtFileChunkHeader), (FILE*)data_set->file_handle);
         RMT_ASSERT(write_size == sizeof(RmtFileChunkHeader));

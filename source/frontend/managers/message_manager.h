@@ -18,8 +18,8 @@
 
 #include <QObject>
 
-#include "rmt_data_set.h"
-#include "rmt_resource_list.h"
+#include "rmt_types.h"
+#include "rmt_virtual_allocation_list.h"
 
 #include "managers/pane_manager.h"
 

@@ -96,7 +96,8 @@ namespace rmv
         RmtErrorCode error_code = RmtDataSetInitialize(trace_file_name, &data_set_);
         if (error_code != kRmtOk)
         {
-            data_set_ = {};
+            memset(&data_set_, 0, sizeof(RmtDataSet));
+            RmtTokenClearPayloadCaches();
             return kTraceLoadReturnFail;
         }
 
@@ -131,7 +132,8 @@ namespace rmv
 
         rmv::SnapshotManager::Get().ClearOpenSnapshot();
         rmv::SnapshotManager::Get().ClearCompareSnapshots();
-        data_set_ = {};
+        memset(&data_set_, 0, sizeof(RmtDataSet));
+        RmtTokenClearPayloadCaches();
 
         active_trace_path_.clear();
     }

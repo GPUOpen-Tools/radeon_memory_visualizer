@@ -8,8 +8,8 @@
 #ifndef RMV_BACKEND_RMT_PHYSICAL_ALLOCATION_LIST_H_
 #define RMV_BACKEND_RMT_PHYSICAL_ALLOCATION_LIST_H_
 
-#include <rmt_types.h>
-#include <rmt_error.h>
+#include "rmt_types.h"
+#include "rmt_error.h"
 #include "rmt_configuration.h"
 #include "rmt_pool.h"
 #include "rmt_format.h"

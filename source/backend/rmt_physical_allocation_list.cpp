@@ -6,7 +6,7 @@
 //=============================================================================
 
 #include "rmt_physical_allocation_list.h"
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 #include <string.h>  // memcpy
 #include <math.h>    // for sqrt
 

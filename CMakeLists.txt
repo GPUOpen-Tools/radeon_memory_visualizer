@@ -3,6 +3,22 @@ cmake_minimum_required(VERSION 3.11)
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RMV)
 
+# Define version information
+set(RMV_MAJOR_VERSION 1)
+set(RMV_MINOR_VERSION 5)
+if (NOT RMV_BUGFIX_NUMBER)
+    set(RMV_BUGFIX_NUMBER 0)
+endif ()
+if (NOT RMV_BUILD_NUMBER)
+    set(RMV_BUILD_NUMBER 0)
+endif ()
+string(TIMESTAMP DATE "\"%m/%d/%Y\"")
+string(TIMESTAMP YEAR "%Y")
+string(TIMESTAMP YEAR_STRING "\"%Y\"")
+
+configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR}/Buildinfo.properties")
+configure_file("${CMAKE_SOURCE_DIR}/source/frontend/util/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/util/version.h")
+
 ## For RMV we only care about the Debug and Release configuration types
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
@@ -18,11 +34,11 @@ set (CMAKE_DEBUG_POSTFIX -d${ADT_INTERNAL_POSTFIX})
 set (CMAKE_RELEASE_POSTFIX ${ADT_INTERNAL_POSTFIX})
 
 IF(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release${ADT_INTERNAL_POSTFIX})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../debug${ADT_INTERNAL_POSTFIX})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release${ADT_INTERNAL_POSTFIX_LOWER})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../debug${ADT_INTERNAL_POSTFIX_LOWER})
 ELSE(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release${ADT_INTERNAL_POSTFIX})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug${ADT_INTERNAL_POSTFIX})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release${ADT_INTERNAL_POSTFIX_LOWER})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug${ADT_INTERNAL_POSTFIX_LOWER})
 ENDIF(WIN32)
 
 # Add for CentOS compiler warning
@@ -33,20 +49,12 @@ include_directories("${PROJECT_SOURCE_DIR}/external/")
 
 # Global compiler options
 IF(WIN32)
-    add_compile_options(/W4 /WX /MP)
-    # disable warning C4201: nonstandard extension used: nameless struct/union
-    add_compile_options(/wd4201)
-    # this warning is caused by the QT header files - use pragma to disable at source
-    # disable warning C4127: conditional expression is constant
-    add_compile_options(/wd4127)
-    # this warning is caused by QT header files and has been introduced by VS2019 16.9.6
-    # disable warning C5240: 'nodiscard': attribute is ignored in this syntactic position
-    add_compile_options(/wd5240)
+    add_compile_options(/MP)
     # bump the stack size
     add_link_options(/STACK:16777216)
 ELSEIF(UNIX)
     # Use -Wno-missing-field-initializers for CentOS compiler warning
-    add_compile_options(-std=c++11 -D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers)
+    add_compile_options(-D_LINUX -Wall -Wextra -Wno-missing-field-initializers)
     # Allow executable to be double clicked.
     add_link_options(-no-pie)
     # Use _DEBUG on Unix for Debug Builds (defined automatically on Windows)
@@ -113,18 +121,17 @@ ENDIF(WIN32)
 # This is evaluated at project build time - not at CMake generation time
 set(BUILD_ROOT $<$<CONFIG:debug>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}>$<$<CONFIG:release>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}>)
 
-# Define the option to pass to the sphinx documentation job
-set(SPHINX_OPTION public)
-
-find_program(SPHINX_EXECUTABLE sphinx-build)
-if(NOT SPHINX_EXECUTABLE)
-  message(FATAL_ERROR "SPHINX_EXECUTABLE (sphinx-build) is not found!")
+if(APPLE)
+    set(DOCS_OUTPUT_DIR $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/../Resources)
+else()
+    set(DOCS_OUTPUT_DIR ${BUILD_ROOT})
 endif()
 
 # group sphinx source files into a sphinx folder
 file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_SOURCE_DIR}/documentation/source/*.rst)
 set (SPHINX_DOC_MAIN ${CMAKE_SOURCE_DIR}/documentation/source/conf.py)
-source_group("sphinx" FILES ${SPHINX_DOC_FILES} ${SPHINX_DOC_MAIN})
+set (ALL_SPHINX_FILES ${SPHINX_DOC_FILES} ${SPHINX_DOC_MAIN})
+source_group("sphinx" FILES ${ALL_SPHINX_FILES})
 
 # group release documents into a release_docs folder
 set (RELEASE_DOCS_IN_ROOT
@@ -136,34 +143,47 @@ set (RELEASE_DOCS_IN_ROOT
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
 
-# hang the sphinx build on the conf.py file and specify a dummy output ("sphinx_output")
-# this ensures the sphinx docs are built everytime you ask to build the Documentation target
-# Sphinx has proper dependency checking, so this works as expected.
-# Once built, clean up any unneeded files.
-add_custom_target(Documentation SOURCES ${SPHINX_DOC_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
-add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
-    COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
-    COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${BUILD_ROOT}/docs/help/rmv/html/. -t ${SPHINX_OPTION}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${BUILD_ROOT}/docs/help/rmv/html/.doctrees
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/allocation_explorer.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/allocation_overview.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/capture.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/carousel.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/heap_overview.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/memory_leak_finder.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/resource_details.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/resource_list.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/resource_overview.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/settings.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/snapshot_delta.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rmv/html/timeline.html
-)
+find_program(SPHINX_EXECUTABLE sphinx-build)
+if(SPHINX_EXECUTABLE)
+    # Define the option to pass to the sphinx documentation job
+    set(SPHINX_OPTION public)
+
+    # hang the sphinx build on the conf.py file and specify a dummy output ("sphinx_output")
+    # this ensures the sphinx docs are built everytime you ask to build the Documentation target
+    # Sphinx has proper dependency checking, so this works as expected.
+    # Once built, clean up any unneeded files.
+    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
+    if(APPLE)
+        add_dependencies(Documentation RadeonMemoryVisualizer)
+    endif()
+    add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
+        COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
+        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/. -t ${SPHINX_OPTION}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/.doctrees
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/allocation_explorer.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/allocation_overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/capture.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/carousel.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/heap_overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/memory_leak_finder.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/resource_details.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/resource_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/resource_overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/settings.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/snapshot_delta.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/timeline.html
+    )
+else()
+    message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
+    # If the sphinx binary isn't found, then just create the Documentation project with only the release docs in it.
+    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS})
+endif()
 
 add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "copying Documentation to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_ROOT}/docs
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${BUILD_ROOT}/.
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/docs
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_ROOT}/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sampleTrace.rmv  ${BUILD_ROOT}/samples/sample_trace.rmv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sampleTrace.rmv  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rmv
 )

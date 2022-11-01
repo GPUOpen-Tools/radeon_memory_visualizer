@@ -76,19 +76,20 @@ typedef enum RmtApiType
     kRmtApiTypeCount           ///< The number of APIs supported.
 } RmtApiType;
 
+typedef struct ChunkInfo
+{
+    RmtFileChunkType chunk_type : 8;   ///< The type of chunk.
+    int32_t          chunk_index : 8;  ///< The index of the chunk.
+    int32_t          reserved : 16;    ///< Reserved, set to 0.
+} ChunkInfo;
+
 /// A structure encapsulating a single chunk identifier.
 typedef struct RmtFileChunkIdentifier
 {
     union
     {
-        struct
-        {
-            RmtFileChunkType chunk_type : 8;   ///< The type of chunk.
-            int32_t          chunk_index : 8;  ///< The index of the chunk.
-            int32_t          reserved : 16;    ///< Reserved, set to 0.
-        };
-
-        uint32_t value;  ///< 32bit value containing all the above fields.
+        ChunkInfo chunk_info;
+        uint32_t  value;  ///< 32bit value containing all the above fields.
     };
 } RmtFileChunkIdentifier;
 

@@ -8,6 +8,7 @@
 #include "models/aliased_resource_model.h"
 
 #include "rmt_resource_list.h"
+#include "rmt_virtual_allocation_list.h"
 
 #include "util/rmv_util.h"
 

@@ -15,7 +15,7 @@
 
 #include "rmt_assert.h"
 #include "rmt_print.h"
-#include "rmt_data_set.h"
+#include "rmt_types.h"
 #include "rmt_data_snapshot.h"
 
 #include "util/string_util.h"

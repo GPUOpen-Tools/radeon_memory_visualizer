@@ -8,7 +8,7 @@
 #ifndef RMV_BACKEND_RMT_THREAD_EVENT_H_
 #define RMV_BACKEND_RMT_THREAD_EVENT_H_
 
-#include <rmt_error.h>
+#include "rmt_error.h"
 
 /// Define the size of a thread event handle structure (in DWORDS).
 #define RMT_THREAD_EVENT_SIZE (4)

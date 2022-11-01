@@ -11,8 +11,6 @@
 #include <stdarg.h>
 
 #include "rmt_print.h"
-#include "rmt_data_set.h"
-#include "rmt_data_snapshot.h"
 
 #include "qt_common/utils/scaling_manager.h"
 
@@ -48,6 +46,8 @@ static QString GetTracePath()
 }
 
 #if 0
+#include "rmt_data_set.h"
+#include "rmt_data_snapshot.h"
 static RmtDataSet command_line_data_set;
 static RmtDataSnapshot command_line_snapshot;
 #endif
@@ -59,7 +59,7 @@ static RmtDataSnapshot command_line_snapshot;
 int main(int argc, char* argv[])
 {
 #ifdef _DEBUG
-    RmtSetPrintingCallback(PrintCallback);
+    RmtSetPrintingCallback(PrintCallback, true);
 #endif
 #if 0
     // Test feature to dump RMV file to JSON. Need a bunch of error handling.

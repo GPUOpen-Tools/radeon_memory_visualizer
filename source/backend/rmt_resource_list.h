@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a resource list.
@@ -8,11 +8,12 @@
 #ifndef RMV_BACKEND_RMT_RESOURCE_LIST_H_
 #define RMV_BACKEND_RMT_RESOURCE_LIST_H_
 
-#include <rmt_types.h>
-#include <rmt_error.h>
+#include "rmt_types.h"
+#include "rmt_error.h"
 #include "rmt_configuration.h"
 #include "rmt_pool.h"
 #include "rmt_format.h"
+#include "rmt_token.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,12 +67,12 @@ typedef enum RmtResourceUsageType
 /// A structure encapsulating a single resource.
 typedef struct RmtResource
 {
-    char                  name[RMT_MAXIMUM_NAME_LENGTH];  ///< The name of the resource.
-    RmtResourceIdentifier identifier;                     ///< A GUID for the this resource.
-    uint64_t              create_time;                    ///< The time the resource was created.
-    uint64_t              bind_time;                      ///< The time the resource was last bound to a virtual address range.
-    uint64_t              address;                        ///< The virtual address of the resource.
-    uint64_t              size_in_bytes;                  ///< The total size of the resource.
+    const char*           name;           ///< The name of the resource.
+    RmtResourceIdentifier identifier;     ///< A GUID for the this resource.
+    uint64_t              create_time;    ///< The time the resource was created.
+    uint64_t              bind_time;      ///< The time the resource was last bound to a virtual address range.
+    uint64_t              address;        ///< The virtual address of the resource.
+    uint64_t              size_in_bytes;  ///< The total size of the resource.
     const RmtVirtualAllocation*
                     bound_allocation;  ///< An pointers to a <c><i>RmtAllocation</i></c> structure containing the virtual address allocation containing this resource. This is set to NULL if the resource isn't bound to a virtual address.
     uint32_t        flags;             ///< Flags on the resource.
@@ -170,7 +171,7 @@ typedef struct RmtResourceIdNode
     RmtResourceIdNode*    right;       ///< A pointer to a <c><i>RmtResourceNodeId</i></c> structure that is the right child of this node.
 } RmtResourceIdNode;
 
-/// A structure encapsulating a list of allocations.
+/// A structure encapsulating a list of resources.
 typedef struct RmtResourceList
 {
     // Data structure for fast lookups based on resource GUID.
@@ -179,8 +180,8 @@ typedef struct RmtResourceList
     RmtPool            resource_id_node_pool;  ///< The pool allocator for the memory buffer pointed to be <c><i>resourceIdNodes</i></c>.
 
     // Storage for resources.
-    RmtResource*                    resources;                     ///< A buffer of extra allocation details.
-    int32_t                         resource_count;                ///< The number of live allocations in the list.
+    RmtResource*                    resources;                     ///< A buffer of extra resource details.
+    int32_t                         resource_count;                ///< The number of live resources in the list.
     int32_t                         maximum_concurrent_resources;  ///< The maximum number of resources that can be in flight at once.
     const RmtVirtualAllocationList* virtual_allocation_list;       ///< The virtual allocation to query for bindings.
 

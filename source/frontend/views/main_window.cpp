@@ -289,6 +289,7 @@ void MainWindow::CreateActions()
     QSignalMapper* signal_mapper = new QSignalMapper(this);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoWelcomePane, rmv::kPaneIdStartWelcome);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoRecentSnapshotsPane, rmv::kPaneIdStartRecentTraces);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAboutPane, rmv::kPaneIdStartAbout);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoGenerateSnapshotPane, rmv::kPaneIdTimelineGenerateSnapshot);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoDeviceConfigurationPane, rmv::kPaneIdTimelineDeviceConfiguration);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoHeapOverviewPane, rmv::kPaneIdSnapshotHeapOverview);
@@ -299,7 +300,10 @@ void MainWindow::CreateActions()
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoAllocationExplorerPane, rmv::kPaneIdSnapshotAllocationExplorer);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoSnapshotDeltaPane, rmv::kPaneIdCompareSnapshotDelta);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoMemoryLeakFinderPane, rmv::kPaneIdCompareMemoryLeakFinder);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoGeneralSettingsPane, rmv::kPaneIdSettingsGeneral);
+    SetupHotkeyNavAction(signal_mapper, rmv::kGotoThemesAndColorsPane, rmv::kPaneIdSettingsThemesAndColors);
     SetupHotkeyNavAction(signal_mapper, rmv::kGotoKeyboardShortcutsPane, rmv::kPaneIdSettingsKeyboardShortcuts);
+
     connect(signal_mapper, SIGNAL(mapped(int)), this, SLOT(ViewPane(int)));
 
     // Set up forward/backward navigation.
@@ -338,6 +342,7 @@ void MainWindow::CreateActions()
     close_trace_action_->setDisabled(true);
 
     exit_action_ = new QAction(tr("Exit"), this);
+    exit_action_->setShortcut(Qt::ALT | Qt::Key_F4);
     connect(exit_action_, &QAction::triggered, this, &MainWindow::CloseRmv);
 
     for (int i = 0; i < kMaxSubmenuSnapshots; i++)
@@ -347,9 +352,11 @@ void MainWindow::CreateActions()
     }
 
     help_action_ = new QAction(tr("Help"), this);
+    help_action_->setShortcut(Qt::CTRL | Qt::Key_F1);
     connect(help_action_, &QAction::triggered, this, &MainWindow::OpenHelp);
 
     about_action_ = new QAction(tr("About Radeon Memory Visualizer"), this);
+    about_action_->setShortcut(Qt::CTRL | Qt::Key_F2);
     connect(about_action_, &QAction::triggered, this, &MainWindow::OpenAboutPane);
 }
 

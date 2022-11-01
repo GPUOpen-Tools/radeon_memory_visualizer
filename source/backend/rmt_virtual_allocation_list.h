@@ -8,8 +8,8 @@
 #ifndef RMV_BACKEND_RMT_VIRTUAL_ALLOCATION_LIST_H_
 #define RMV_BACKEND_RMT_VIRTUAL_ALLOCATION_LIST_H_
 
-#include <rmt_types.h>
-#include <rmt_error.h>
+#include "rmt_types.h"
+#include "rmt_error.h"
 #include "rmt_configuration.h"
 #include "rmt_pool.h"
 #include "rmt_format.h"
@@ -18,8 +18,9 @@
 extern "C" {
 #endif  // #ifdef __cplusplus
 
-typedef struct RmtResource     RmtResource;
-typedef struct RmtDataSnapshot RmtDataSnapshot;
+typedef struct RmtResource                  RmtResource;
+typedef struct RmtDataSnapshot              RmtDataSnapshot;
+typedef struct RmtVirtualAllocationInterval RmtVirtualAllocationInterval;
 
 /// A structure encapsulating a region of memory that is unbound.
 typedef struct RmtMemoryRegion
@@ -61,7 +62,7 @@ typedef struct RmtVirtualAllocation
     RmtResource** resources;                                   ///< The address of an array of points to <c><i>RmtResource</i></c> structures.
     int32_t       next_resource_index;                         ///< The index of the new resource.
     RmtMemoryRegion*
-            unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing the unbound memory inside this virtual allocation.
+        unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing the unbound memory inside this virtual allocation.
     int32_t unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
 } RmtVirtualAllocation;
 
@@ -174,7 +175,7 @@ typedef struct RmtVirtualAllocationList
     RmtResource**         resource_connectivity;                              ///< An array of pointers to resources, sorted by the resource's base address.
     int32_t               resource_connectivity_count;  ///< The number of resoure pointers in the buffer pointed to by <c><i>resourceConnectivity</i></c>.
     RmtMemoryRegion*
-            unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing all unbound memory regions for all allocations.
+        unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing all unbound memory regions for all allocations.
     int32_t unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
 
 } RmtVirtualAllocationList;
@@ -218,7 +219,6 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
 /// @param [in] size_in_4kb_pages                       The size of the allocation.
 /// @param [in] preferences                             An array of preferred heaps for the allocation.
 /// @param [in] owner                                   The owner of the allocation.
-/// @param [in] sam_enabled                             If true, indicates Smart Access Memory is enabled.
 ///
 /// @retval
 /// kRmtOk                          The operation completed successfully.
@@ -231,8 +231,7 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
                                                    RmtGpuAddress             address,
                                                    int32_t                   size_in_4kb_pages,
                                                    const RmtHeapType         preferences[4],
-                                                   RmtOwnerType              owner,
-                                                   bool                      sam_enabled);
+                                                   RmtOwnerType              owner);
 
 /// Remove an allocation from the list.
 ///

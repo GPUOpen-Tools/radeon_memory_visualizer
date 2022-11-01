@@ -18,7 +18,6 @@
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/colored_legend_scene.h"
 
-#include "rmt_format.h"
 #include "rmt_resource_list.h"
 #include "rmt_virtual_allocation_list.h"
 

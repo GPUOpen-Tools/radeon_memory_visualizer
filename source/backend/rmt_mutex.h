@@ -8,7 +8,7 @@
 #ifndef RMV_BACKEND_RMT_MUTEX_H_
 #define RMV_BACKEND_RMT_MUTEX_H_
 
-#include <rmt_error.h>
+#include "rmt_error.h"
 
 /// Define the size of a mutex handle structure (in DWORDS).
 #define RMT_MUTEX_SIZE (24)

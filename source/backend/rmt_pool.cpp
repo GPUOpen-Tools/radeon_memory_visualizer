@@ -6,7 +6,7 @@
 //=============================================================================
 
 #include "rmt_pool.h"
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 
 #define POOL_ALLOC_TRASH_DEALLOCATED_MEMORY
 #ifdef POOL_ALLOC_TRASH_DEALLOCATED_MEMORY

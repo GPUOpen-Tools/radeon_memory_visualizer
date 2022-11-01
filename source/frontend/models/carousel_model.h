@@ -13,7 +13,6 @@
 #include <stdint.h>
 
 #include "rmt_data_snapshot.h"
-#include "rmt_resource_list.h"
 
 namespace rmv
 {

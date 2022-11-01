@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a snapshot.
@@ -8,7 +8,7 @@
 #ifndef RMV_BACKEND_RMT_DATA_SNAPSHOT_H_
 #define RMV_BACKEND_RMT_DATA_SNAPSHOT_H_
 
-#include <rmt_types.h>
+#include "rmt_types.h"
 #include "rmt_resource_list.h"
 #include "rmt_page_table.h"
 #include "rmt_virtual_allocation_list.h"
@@ -172,18 +172,6 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
 /// @returns
 /// The heap type where the physical address resides.
 RmtHeapType RmtDataSnapshotGetSegmentForAddress(const RmtDataSnapshot* snapshot, RmtGpuAddress gpu_address);
-
-/// Dump a snapshot as a JSON payload to a file.
-///
-/// @param [in]  snapshot                                   A pointer to a <c><i>RmtDataSnapshot</i></c> structure.
-/// @param [in]  filename                                   A pointer to the json file name to use.
-///
-/// @returns
-/// kRmtOk                                      The operation completed successfully.
-/// @retval
-/// kRmtErrorFileNotOpen                        The operation failed due to <c><i>filename</i></c> being invalid.
-///
-RmtErrorCode RmtDataSnapshotDumpJsonToFile(const RmtDataSnapshot* snapshot, const char* filename);
 
 #ifdef __cplusplus
 }

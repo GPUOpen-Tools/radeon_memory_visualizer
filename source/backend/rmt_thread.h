@@ -8,7 +8,7 @@
 #ifndef RMV_BACKEND_RMT_THREAD_H_
 #define RMV_BACKEND_RMT_THREAD_H_
 
-#include <rmt_error.h>
+#include "rmt_error.h"
 
 /// Define the size of the thread handle structure (in DWORDS).
 #define RMT_THREAD_SIZE (24)

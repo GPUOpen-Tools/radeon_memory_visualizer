@@ -136,7 +136,7 @@ static RmtErrorCode Peek(RmtStreamMerger* token_heap, RmtToken* out_token)
     RMT_ASSERT(token_heap);
     RMT_ASSERT(out_token);
 
-    *out_token = *token_heap->tokens[0];
+    RmtTokenCopy(out_token, token_heap->tokens[0]);
     return kRmtOk;
 }
 
@@ -246,6 +246,29 @@ bool RmtStreamMergerIsEmpty(const RmtStreamMerger* token_heap)
     return (token_heap->current_size == 0);
 }
 
+static RmtResourceIdentifier GenUniqueId(ResourceIdMapAllocator* allocator, uint64_t base_driver_id)
+{
+    return ((base_driver_id & 0xFFFFFFFF) << 32) | (allocator->resource_count++ & 0xFFFFFFFF);
+}
+
+// Allocates a new node from the underlying allocation, if successful the new node will be initialized
+static ResourceIdMapNode* AllocNewNode(ResourceIdMapAllocator* allocator, uint64_t base_driver_id)
+{
+    ResourceIdMapNode* new_node = nullptr;
+    if ((allocator->bytes_used + sizeof(ResourceIdMapNode)) <= allocator->allocation_size)
+    {
+        allocator->curr_offset = static_cast<uint8_t*>(allocator->allocation_base) + allocator->bytes_used;
+        new_node               = static_cast<ResourceIdMapNode*>(allocator->curr_offset);
+        allocator->bytes_used += sizeof(ResourceIdMapNode);
+
+        new_node->base_driver_id = base_driver_id;
+        new_node->unique_id      = GenUniqueId(allocator, base_driver_id);
+        new_node->left           = nullptr;
+        new_node->right          = nullptr;
+    }
+    return new_node;
+}
+
 // recursive function to find a node by base driver ID
 static ResourceIdMapNode* FindResourceNode(ResourceIdMapNode* root, uint64_t base_driver_id)
 {
@@ -276,7 +299,7 @@ static ResourceIdMapNode* InsertNode(ResourceIdMapAllocator* allocator,
     if ((node == nullptr) && (allocator != nullptr))
     {
         // create a new node
-        ResourceIdMapNode* new_node = allocator->AllocNewNode(base_driver_id);
+        ResourceIdMapNode* new_node = AllocNewNode(allocator, base_driver_id);
         RMT_ASSERT(new_node != nullptr);
         if (new_resource_id != nullptr)
         {
@@ -297,7 +320,7 @@ static ResourceIdMapNode* InsertNode(ResourceIdMapAllocator* allocator,
     else
     {
         // In this case, it means we're replacing a driver resource Id with a new unique Id
-        node->unique_id = allocator->GenUniqueId(base_driver_id);
+        node->unique_id = GenUniqueId(allocator, base_driver_id);
         if (new_resource_id != nullptr)
         {
             (*new_resource_id) = node->unique_id;
@@ -309,7 +332,27 @@ static ResourceIdMapNode* InsertNode(ResourceIdMapAllocator* allocator,
 
 static uint64_t HashId(uint64_t base_driver_id)
 {
-    return Fnv1aHash(reinterpret_cast<uint8_t*>(&base_driver_id), sizeof(base_driver_id));
+    /// Inline FNV1a hashing function.  See (http://www.isthe.com/chongo/tech/comp/fnv/
+    /// Uses the Creative Commons CC0 license.
+    const uint8_t* data      = reinterpret_cast<uint8_t*>(&base_driver_id);
+    size_t         data_size = sizeof(base_driver_id);
+
+    uint32_t hash = 0;
+
+    if (data != nullptr)
+    {
+        static constexpr uint32_t kFnvPrime  = 16777619U;
+        static constexpr uint32_t kFnvOffset = 2166136261U;
+
+        hash = kFnvOffset;
+
+        for (uint32_t i = 0; i < data_size; i++)
+        {
+            hash ^= static_cast<uint32_t>(data[i]);
+            hash *= kFnvPrime;
+        }
+    }
+    return hash;
 }
 
 RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_token)
@@ -345,10 +388,10 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
             // When we see a new resource create, we want to create a new map node which will generate a unique resource ID based on our driver
             // provided ID.
             out_token->resource_create_token.original_resource_identifier = out_token->resource_create_token.resource_identifier;
-            uint64_t              base_driver_id                 = HashId(out_token->resource_create_token.resource_identifier);
-            RmtResourceIdentifier unique_id                      = 0;
-            token_heap->map_root                                 = InsertNode(token_heap->allocator, token_heap->map_root, base_driver_id, &unique_id);
-            out_token->resource_create_token.resource_identifier = unique_id;
+            uint64_t              base_driver_id                          = HashId(out_token->resource_create_token.resource_identifier);
+            RmtResourceIdentifier unique_id                               = 0;
+            token_heap->map_root                                          = InsertNode(token_heap->allocator, token_heap->map_root, base_driver_id, &unique_id);
+            out_token->resource_create_token.resource_identifier          = unique_id;
 
             break;
         }

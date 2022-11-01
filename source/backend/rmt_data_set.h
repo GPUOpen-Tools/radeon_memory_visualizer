@@ -8,8 +8,8 @@
 #ifndef RMV_BACKEND_RMT_DATA_SET_H_
 #define RMV_BACKEND_RMT_DATA_SET_H_
 
-#include <rmt_types.h>
-#include <rmt_error.h>
+#include "rmt_types.h"
+#include "rmt_error.h"
 #include "rmt_adapter_info.h"
 #include "rmt_configuration.h"
 #include "rmt_segment_info.h"
@@ -19,9 +19,9 @@
 #include "rmt_data_timeline.h"
 #include "rmt_virtual_allocation_list.h"
 #include "rmt_physical_allocation_list.h"
-#include <rmt_token_heap.h>
-#include <rmt_file_format.h>
-#include <rmt_parser.h>
+#include "rmt_token_heap.h"
+#include "rmt_file_format.h"
+#include "rmt_parser.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,8 +91,9 @@ typedef struct RmtDataSet
     RmtVirtualAllocationList  virtual_allocation_list;   ///< Temporary virtual allocation list.
     RmtPhysicalAllocationList physical_allocation_list;  ///< Temporary physical allocation list.
 
-    ResourceIdMapAllocator* p_resource_id_map_allocator;  ///< Allocator buffer/struct used to do lookup of unique resource ID.
+    ResourceIdMapAllocator* resource_id_map_allocator;  ///< Allocator buffer/struct used to do lookup of unique resource ID.
 
+    bool is_resource_name_processing_complete;  ///< A flag that indicates, if true, that resource names have been processed for the loaded memory trace.
 } RmtDataSet;
 
 /// Initialize the RMT data set from a file path.
@@ -247,6 +248,19 @@ RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapsh
 /// @returns
 /// The series index.
 int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t timestamp);
+
+/// Retrieve the resource name associated with a resource.
+///
+/// @param [in]  resource_id                                The resource identifier for the name to be retrieved.
+/// @param [out] out_resource_name                          A pointer to the resource name.
+///
+/// @returns
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>out_resource_name</i></c> being an invalid pointer.
+/// @retval
+/// kRmtErrorResourceNotFound                   A resource name could not be found for the <c><i>resource_id</i></c> specified.
+RmtErrorCode RmtDataSetGetResourceName(const RmtResourceIdentifier resource_id, const char** out_resource_name);
 
 #ifdef __cplusplus
 }

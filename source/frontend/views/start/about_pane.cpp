@@ -117,7 +117,7 @@ void AboutPane::CheckForUpdates()
     // Don't allow checking for updates if there is already one in progress.
     if (check_for_updates_thread_ == nullptr)
     {
-        check_for_updates_thread_ = new UpdateCheck::ThreadController(this, RMV_MAJOR_VERSION, RMV_MINOR_VERSION, RMV_BUGFIX_NUMBER, RMV_BUILD_NUMBER);
+        check_for_updates_thread_ = new UpdateCheck::ThreadController(this, RMV_MAJOR_VERSION, RMV_MINOR_VERSION, RMV_BUILD_NUMBER, RMV_BUGFIX_NUMBER);
 
         // Build dialog to display and allow user to cancel the check if desired.
         if (check_for_updates_pending_dialog_ == nullptr)

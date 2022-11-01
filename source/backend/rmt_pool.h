@@ -9,7 +9,7 @@
 #ifndef RMV_BACKEND_RMT_ALLOC_POOL_H_
 #define RMV_BACKEND_RMT_ALLOC_POOL_H_
 
-#include <rmt_error.h>
+#include "rmt_error.h"
 
 #ifdef __cplusplus
 extern "C" {

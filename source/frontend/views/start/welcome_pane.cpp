@@ -91,7 +91,7 @@ WelcomePane::WelcomePane(QWidget* parent)
     if (rmv::RMVSettings::Get().GetCheckForUpdatesOnStartup())
     {
         UpdateCheck::ThreadController* background_thread =
-            new UpdateCheck::ThreadController(this, RMV_MAJOR_VERSION, RMV_MINOR_VERSION, RMV_BUGFIX_NUMBER, RMV_BUILD_NUMBER);
+            new UpdateCheck::ThreadController(this, RMV_MAJOR_VERSION, RMV_MINOR_VERSION, RMV_BUILD_NUMBER, RMV_BUGFIX_NUMBER);
 
         // Get notified when the check for updates has completed.
         // There is not a way in the UI to cancel this thread, so no reason to connect to its CheckForUpdatesCancelled callback.

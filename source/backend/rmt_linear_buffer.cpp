@@ -6,7 +6,7 @@
 //=============================================================================
 
 #include "rmt_linear_buffer.h"
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 
 RmtErrorCode RmtAllocLinearBufferInitialize(RmtAllocLinearBuffer* linear_buffer, void* buffer, size_t buffer_size)
 {

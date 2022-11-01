@@ -7,6 +7,7 @@
 
 #include "views/snapshot/resource_list_pane.h"
 
+#include <QFileDialog>
 #include <QScrollBar>
 #include <QCheckBox>
 
@@ -283,3 +284,4 @@ void ResourceListPane::SelectResourceInTable()
         }
     }
 }
+

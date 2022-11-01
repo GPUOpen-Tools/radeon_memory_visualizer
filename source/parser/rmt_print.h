@@ -178,7 +178,7 @@ void RmtGetPipelineStageNameFromPipelineStageFlags(int32_t flags, char* flag_tex
 /// @param [in] callback_func   The callback function to use for printing.
 /// @param [in] enable_printing Enable the print function that prints to stdout if no callback specified.
 ///                             May be useful to disable in case the backend is being used outside of RMV.
-void RmtSetPrintingCallback(RmtPrintingCallback callback_func, bool enable_printing = true);
+void RmtSetPrintingCallback(RmtPrintingCallback callback_func, bool enable_printing);
 
 /// @brief Printing function to use. Will use printing function set with
 /// <c><i>RgpSetPrintingCallback</i></c>. If nothing is set, then

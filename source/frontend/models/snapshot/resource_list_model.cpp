@@ -7,8 +7,6 @@
 
 #include "models/snapshot/resource_list_model.h"
 
-#include <QTableView>
-
 #include "rmt_assert.h"
 #include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
@@ -18,6 +16,10 @@
 
 #include "managers/trace_manager.h"
 #include "util/string_util.h"
+
+#ifndef _WIN32
+#include "linux/safe_crt.h"
+#endif
 
 namespace rmv
 {
@@ -137,4 +139,5 @@ namespace rmv
     {
         return proxy_model_;
     }
+
 }  // namespace rmv

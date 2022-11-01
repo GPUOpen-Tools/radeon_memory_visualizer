@@ -9,7 +9,7 @@
 #include <mutex>
 #endif  // #ifndef _WIN32
 
-#include <rmt_assert.h>
+#include "rmt_assert.h"
 #include "rmt_mutex.h"
 
 #ifdef _WIN32
