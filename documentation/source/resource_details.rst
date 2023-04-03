@@ -27,3 +27,7 @@ why the resource memory is in a different place than requested (maybe it was
 made resident at some point and then paged out).
 
 .. image:: media/snapshot/resource_details_1.png
+
+Not all events have all the parameters listed in the table. In this case, the
+entry will be marked as 'n/a' - not applicable. For example, the physical memory
+address isn't applicable for a virtual allocation event.

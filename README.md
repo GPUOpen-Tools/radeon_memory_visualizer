@@ -41,7 +41,6 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 ## Supported Operating Systems
 * Windows® 10
 * Windows® 11
-* Ubuntu 20.04 LTS (Vulkan only)
 * Ubuntu 22.04 LTS (Vulkan only)
 
 Note: Before running RDP and capturing an RMV memory trace on Linux, be sure to make the necessary configuration changes by running the RDP setup.sh script each time the machine is rebooted. For more information, see the RDP documentation.
@@ -89,4 +88,4 @@ CMake is a registered trademark of Kitware, Inc.
 Qt and the Qt logo are registered trademarks of the Qt Company Ltd and/or its subsidiaries worldwide.
 
 
-© 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
+© 2020-2023 Advanced Micro Devices, Inc. All rights reserved.

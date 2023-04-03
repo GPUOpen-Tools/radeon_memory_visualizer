@@ -45,8 +45,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. 
 
 
-nlohmann-json v3.2.0 (MIT) 
-Copyright (c) 2013-2018 Niels Lohmann
+nlohmann-json v3.9.1 (MIT)
+Copyright (c) 2013-2020 Niels Lohmann
 
 MIT License 
 Permission is hereby granted, free of charge, to any person obtaining a copy

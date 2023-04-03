@@ -9,14 +9,14 @@ Again, the resources will have a stippled effect if they are aliased.
 Filtering by preferred heap is provided so that only resources in the specified
 preferred heaps are shown.
 
-The coloring mode can be changed using the 'color by .. ' combo box, which will
+The coloring mode can be changed using the "**color by ..**" combo box, which will
 color the resources and allocations by various parameters, for example, resource
 usage, and the preferred heap type.
 
 The allocations can be sorted using the sort combo box at the top. Sorting is
 currently based on allocation size, allocation Id, allocation age or resource
 count (the number of resources in the allocation). Another combo box to the
-left allows the sort to be in ascending or decending order.
+left allows the sort to be in ascending or descending order.
 
 Normally, allocations are sized relative to the largest allocations. Sometimes
 this makes smaller allocations difficult to see. The 'Normalize allocations'

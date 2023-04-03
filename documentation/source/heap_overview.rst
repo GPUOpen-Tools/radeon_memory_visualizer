@@ -33,7 +33,7 @@ The requested bar graph shows how much of that heap was requested by the
 application. Just because an application requests memory doesn't automatically
 mean the application gets it. If the application requests too much memory,
 a warning message is displayed. The bar is also color coded to show whether
-the memory type is oversubscibed or is close to being oversubscribed.
+the memory type is oversubscribed or is close to being oversubscribed.
 
 The 'total size' bar shows the total amount of physical memory in the heap.
 

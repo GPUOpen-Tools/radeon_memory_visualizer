@@ -41,7 +41,7 @@ Supported graphics APIs, RDNA and GCN hardware, and operating systems
 
 -  Windows® 10/11
 
--  Ubuntu® 22.04
+-  Ubuntu® 22.04 LTS (Vulkan only)
 
 Radeon Memory Visualizer - Quick Start
 ======================================
@@ -252,4 +252,4 @@ Microsoft is a registered trademark of Microsoft Corporation in the US and other
 Windows is a registered trademark of Microsoft Corporation in the US and other jurisdictions.
 
 
-© 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
+© 2018-2023 Advanced Micro Devices, Inc. All rights reserved.

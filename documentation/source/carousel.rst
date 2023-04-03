@@ -31,7 +31,7 @@ in the "Other" category.
 .. image:: media/snapshot/carousel_resource_types.png
 
 The **Virtual memory** shows how much memory has resources bound to it. Unbound
-memory is effectively usused so should be minimized as much as possible. Sometimes
+memory is effectively unused so should be minimized as much as possible. Sometimes
 due to alignment issues this is not possible but if there is a lot of unbound
 memory, this will be seen in the *Allocation overview* pane for each allocation.
 
