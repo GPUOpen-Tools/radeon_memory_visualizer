@@ -1,5 +1,5 @@
 #! python3
-# Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Script to perform all necessary pre build steps. This includes:
 #
@@ -49,8 +49,8 @@ else:
 # parse the command line arguments
 parser = argparse.ArgumentParser(description="A script that generates all the necessary build dependencies for a project")
 if sys.platform == "win32":
-    parser.add_argument("--vs", default="2019", choices=["2017", "2019", "2022"], help="specify the version of Visual Studio to be used with this script (default: 2019)")
-    parser.add_argument("--toolchain", default="2019", choices=["2017", "2019", "2022"], help="specify the compiler toolchain to be used with this script (default: 2019)")
+    parser.add_argument("--vs", default="2022", choices=["2017", "2019", "2022"], help="specify the version of Visual Studio to be used with this script (default: 2022)")
+    parser.add_argument("--toolchain", default="2022", choices=["2017", "2019", "2022"], help="specify the compiler toolchain to be used with this script (default: 2022)")
     parser.add_argument("--qt-root", default="C:\\Qt", help="specify the root directory for locating QT on this system (default: C:\\Qt\\)")
     parser.add_argument("--qt-libver", default="2019", choices=["2017", "2019"], help="specify the Qt lib version to be used with this script (default: 2019)")
 elif sys.platform == "darwin":

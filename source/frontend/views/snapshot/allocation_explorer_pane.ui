@@ -144,7 +144,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="RMVClickableTableView" name="allocation_table_view_">
+                <widget class="ScaledTableView" name="allocation_table_view_">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                    <horstretch>0</horstretch>
@@ -454,7 +454,7 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="RMVClickableTableView" name="resource_table_view_" native="true">
+                    <widget class="ScaledTableView" name="resource_table_view_" native="true">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                        <horstretch>0</horstretch>
@@ -533,11 +533,6 @@
    <class>RMVColoredCheckbox</class>
    <extends>QCheckBox</extends>
    <header>views/custom_widgets/rmv_colored_checkbox.h</header>
-  </customwidget>
-  <customwidget>
-   <class>RMVClickableTableView</class>
-   <extends>ScaledTableView</extends>
-   <header>views/custom_widgets/rmv_clickable_table_view.h</header>
   </customwidget>
   <customwidget>
    <class>SnapshotStartPane</class>

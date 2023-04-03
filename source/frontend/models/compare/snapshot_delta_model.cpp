@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Snapshot Delta model.
@@ -8,8 +8,6 @@
 #include "models/compare/snapshot_delta_model.h"
 
 #include "rmt_assert.h"
-#include "rmt_data_set.h"
-#include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 
 #include "managers/trace_manager.h"

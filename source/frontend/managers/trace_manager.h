@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the Trace Manager.
@@ -12,7 +12,7 @@
 #include <QObject>
 #include <QVector>
 
-#include "rmt_data_set.h"
+#include "rmt_trace_loader.h"
 
 #include "managers/snapshot_manager.h"
 
@@ -24,7 +24,8 @@ enum TraceLoadReturnCode
     kTraceLoadReturnError,
     kTraceLoadReturnSuccess,
     kTraceLoadReturnFail,
-    kTraceLoadReturnAlreadyOpened
+    kTraceLoadReturnAlreadyOpened,
+    kTraceLoadReturnOutOfVirtualGPUMemory,
 };
 
 Q_DECLARE_METATYPE(TraceLoadReturnCode)
@@ -68,13 +69,6 @@ namespace rmv
         ///
         /// @return An error code returned from the loading thread.
         TraceLoadReturnCode TraceLoad(const char* trace_file_name);
-
-        /// @brief Return whether a trace may be loaded.
-        ///
-        /// @param [in] trace_path the path to the trace.
-        ///
-        /// @return true if we may attempt an actual trace load.
-        bool TraceValidToLoad(const QString& trace_path) const;
 
         /// @brief Clear a trace from memory.
         ///
@@ -143,10 +137,8 @@ namespace rmv
         /// @return The default name string.
         QString GetDefaultExeName() const;
 
-        RmtDataSet      data_set_;           ///< The dataset read from file.
-        RmtDataTimeline timeline_;           ///< The timeline.
-        QWidget*        parent_;             ///< Pointer to the parent pane.
-        QString         active_trace_path_;  ///< The path to currently opened file.
+        QWidget* parent_;             ///< Pointer to the parent pane.
+        QString  active_trace_path_;  ///< The path to currently opened file.
     };
 }  // namespace rmv
 

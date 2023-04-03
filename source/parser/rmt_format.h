@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions of the RMT format.
@@ -33,6 +33,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
+
+///  RDF Result flags.
+static const int kRmtRdfResultFailure = 0;
+static const int kRmtRdfResultSuccess = 1;
 
 /// An enumeration of all token types supported by RMT.
 typedef enum RmtTokenType
@@ -117,6 +121,30 @@ typedef enum RmtResourceType
     // add above this.
     kRmtResourceTypeCount
 } RmtResourceType;
+
+/// An enumeration of abstract usage types.
+typedef enum RmtResourceUsageType
+{
+    kRmtResourceUsageTypeUnknown,           ///< The resource usage type is unknown.
+    kRmtResourceUsageTypeDepthStencil,      ///< The resource is a depth/stencil buffer.
+    kRmtResourceUsageTypeRenderTarget,      ///< The resource is a color target.
+    kRmtResourceUsageTypeTexture,           ///< The resource is a texture.
+    kRmtResourceUsageTypeVertexBuffer,      ///< The resource is a vertex buffer.
+    kRmtResourceUsageTypeIndexBuffer,       ///< The resource is an index buffer.
+    kRmtResourceUsageTypeRayTracingBuffer,  ///< The resource is a ray tracing-related buffer (ie BVH).
+    kRmtResourceUsageTypeUav,               ///< The resource is an unordered access view.
+    kRmtResourceUsageTypeShaderPipeline,    ///< The resource is a shader pipeline.
+    kRmtResourceUsageTypeCommandBuffer,     ///< The resource is a command buffer.
+    kRmtResourceUsageTypeHeap,              ///< The resource is a memory heap.
+    kRmtResourceUsageTypeDescriptors,       ///< The resource is a descriptor heap/pool.
+    kRmtResourceUsageTypeBuffer,            ///< The resource is a buffer.
+    kRmtResourceUsageTypeGpuEvent,          ///< The resource is a GPU event.
+    kRmtResourceUsageTypeFree,              ///< An additional type to represent memory that is allocated, but not bound to something.
+    kRmtResourceUsageTypeInternal,
+
+    // Add above this.
+    kRmtResourceUsageTypeCount
+} RmtResourceUsageType;
 
 /// An enumeration of process events.
 typedef enum RmtProcessEventType

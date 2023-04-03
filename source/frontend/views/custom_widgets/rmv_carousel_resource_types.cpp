@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the carousel resource types widget.
@@ -11,6 +11,8 @@
 
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
+
+#include "rmt_print.h"
 
 #include "models/colorizer.h"
 #include "util/rmv_util.h"
@@ -109,7 +111,7 @@ void RMVCarouselResourceTypes::paint(QPainter* painter, const QStyleOptionGraphi
 
         DrawCarouselMemoryUsageLegend(painter,
                                       y_pos,
-                                      rmv::string_util::GetResourceUsageString(usage_type),
+                                      RmtGetResourceUsageTypeNameFromResourceUsageType(usage_type),
                                       rmv::Colorizer::GetResourceUsageColor(usage_type),
                                       data_.usage_map[i].usage_amount);
         DrawHorizontalBarComponent(painter, "", bar_offset, y_pos, bar_length, kIconWidth, data_.usage_map[i].usage_amount, data_.usage_maximum, false);

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a single heap in the heap overview pane.
@@ -8,6 +8,8 @@
 #include "views/snapshot/heap_overview_heap_layout.h"
 
 #include "qt_common/utils/scaling_manager.h"
+
+#include "rmt_print.h"
 
 #include "managers/message_manager.h"
 #include "models/colorizer.h"
@@ -134,7 +136,7 @@ void HeapOverviewHeapLayout::Update()
             ui_->resource_donut_->SetIndexValue(i, value);
             const QColor& color = rmv::Colorizer::GetResourceUsageColor(type);
             ui_->resource_donut_->SetIndexColor(i, color);
-            resource_legends_scenes_[i]->AddColorLegendItem(color, rmv::string_util::GetResourceUsageString(type));
+            resource_legends_scenes_[i]->AddColorLegendItem(color, RmtGetResourceUsageTypeNameFromResourceUsageType(type));
         }
 
         if (num_other > 0)

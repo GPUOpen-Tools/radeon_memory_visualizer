@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a resource list.
@@ -40,30 +40,6 @@ typedef enum RmtResourceFlagBits
     kRmtResourceFlagDangling = (1 << 0),  ///< The resource was left dangling by freeing the underlaying virtual allocation without destroying the resource.
 } RmtResourceFlagBits;
 
-/// An enumeration of asbtract usage types.
-typedef enum RmtResourceUsageType
-{
-    kRmtResourceUsageTypeUnknown,           ///< The resource usage type is unknown.
-    kRmtResourceUsageTypeDepthStencil,      ///< The resource is a depth/stencil buffer.
-    kRmtResourceUsageTypeRenderTarget,      ///< The resource is a color target.
-    kRmtResourceUsageTypeTexture,           ///< The resource is a texture.
-    kRmtResourceUsageTypeVertexBuffer,      ///< The resource is a vertex buffer.
-    kRmtResourceUsageTypeIndexBuffer,       ///< The resource is an index buffer.
-    kRmtResourceUsageTypeRayTracingBuffer,  ///< The resource is a ray tracing-related buffer (ie BVH).
-    kRmtResourceUsageTypeUav,               ///< The resource is an unordered access view.
-    kRmtResourceUsageTypeShaderPipeline,    ///< The resource is a shader pipeline.
-    kRmtResourceUsageTypeCommandBuffer,     ///< The resource is a command buffer.
-    kRmtResourceUsageTypeHeap,              ///< The resource is a memory heap.
-    kRmtResourceUsageTypeDescriptors,       ///< The resource is a descriptor heap/pool.
-    kRmtResourceUsageTypeBuffer,            ///< The resource is a buffer.
-    kRmtResourceUsageTypeGpuEvent,          ///< The resource is a GPU event.
-    kRmtResourceUsageTypeFree,              ///< An additional type to represent memory that is allocated, but not bound to something.
-    kRmtResourceUsageTypeInternal,
-
-    // Add above this.
-    kRmtResourceUsageTypeCount
-} RmtResourceUsageType;
-
 /// A structure encapsulating a single resource.
 typedef struct RmtResource
 {
@@ -86,15 +62,15 @@ typedef struct RmtResource
         RmtResourceDescriptionBuffer   buffer;     ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBuffer</i></c>.
         RmtResourceDescriptionGpuEvent gpu_event;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeGpuEvent</i></c>.
         RmtResourceDescriptionBorderColorPalette
-                                             border_color_palette;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBorderColorPalette</i></c>.
-        RmtResourceDescriptionPerfExperiment perf_experiment;       ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePerfExperiment</i></c>.
-        RmtResourceDescriptionQueryHeap      query_heap;            ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeQueryHeap</i></c>.
-        RmtResourceDescriptionPipeline       pipeline;              ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePipeline</i></c>.
-        RmtResourceDescriptionVideoDecoder   video_decoder;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoDecoder</i></c>.
-        RmtResourceDescriptionVideoEncoder   video_encoder;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoEncoder</i></c>.
-        RmtResourceDescriptionHeap           heap;                  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeHeap</i></c>.
-        RmtResourceDescriptionDescriptorHeap descriptor_heap;       ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorHeap</i></c>.
-        RmtResourceDescriptionDescriptorPool descriptor_pool;       ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorPool</i></c>.
+            border_color_palette;                              ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBorderColorPalette</i></c>.
+        RmtResourceDescriptionPerfExperiment perf_experiment;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePerfExperiment</i></c>.
+        RmtResourceDescriptionQueryHeap      query_heap;       ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeQueryHeap</i></c>.
+        RmtResourceDescriptionPipeline       pipeline;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePipeline</i></c>.
+        RmtResourceDescriptionVideoDecoder   video_decoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoDecoder</i></c>.
+        RmtResourceDescriptionVideoEncoder   video_encoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoEncoder</i></c>.
+        RmtResourceDescriptionHeap           heap;             ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeHeap</i></c>.
+        RmtResourceDescriptionDescriptorHeap descriptor_heap;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorHeap</i></c>.
+        RmtResourceDescriptionDescriptorPool descriptor_pool;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorPool</i></c>.
         RmtResourceDescriptionCommandAllocator
                                            command_allocator;  ///< Valid when <c><i>resourceType</i></c> is <c><i>RMT_RESOURCE_TYPE_COMMAND_ALLOCATOR</i></c>.
         RmtResourceDescriptionMiscInternal misc_internal;      ///< Valid when <c><i>resourceType</i></c> is <c><i>RMT_RESOURCE_TYPE_MISC_INTERNAL</i></c>.

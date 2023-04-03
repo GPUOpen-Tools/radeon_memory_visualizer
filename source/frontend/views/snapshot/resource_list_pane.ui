@@ -152,7 +152,7 @@
             </widget>
            </item>
            <item>
-            <widget class="RMVClickableTableView" name="resource_table_view_" native="true">
+            <widget class="ScaledTableView" name="resource_table_view_" native="true">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                <horstretch>0</horstretch>
@@ -306,9 +306,14 @@
    <header>qt_common/custom_widgets/scaled_label.h</header>
   </customwidget>
   <customwidget>
-   <class>RMVClickableTableView</class>
-   <extends>ScaledTableView</extends>
-   <header>views/custom_widgets/rmv_clickable_table_view.h</header>
+   <class>ScaledPushButton</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/scaled_push_button.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledTableView</class>
+   <extends>QTableView</extends>
+   <header>qt_common/custom_widgets/scaled_table_view.h</header>
   </customwidget>
   <customwidget>
    <class>TextSearchWidget</class>

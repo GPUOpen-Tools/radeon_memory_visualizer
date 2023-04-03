@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -7,6 +7,8 @@
 
 #ifndef RMV_UTIL_CONSTANTS_H_
 #define RMV_UTIL_CONSTANTS_H_
+
+#include "rmt_constants.h"
 
 #include <QColor>
 #include <QUrl>
@@ -78,6 +80,9 @@ namespace rmv
             "Opening the trace file as read-only (snapshot edits will not be saved). The RMV file is either read only or has been opened in another instance "
             "of RMV";
 
+        // Specific error messages.
+        static const QString kOpenTraceOutOfVirtualGPUMemory = "The trace file contains allocations requesting more than 64GB of GPU memory. Please reduce the video memory consumption.\n\n";
+
         // Open recent trace missing pop up dialog.
         static const QString kOpenRecentTraceTitle = "Trace not opened";
         static const QString kOpenRecentTraceStart = "Trace \"";
@@ -105,15 +110,14 @@ namespace rmv
         static const QString kSettingsUnitsSeconds      = "Seconds";
         static const QString kSettingsUnitsMinutes      = "Minutes";
 
-        // The file extension for trace files.
-        static const QString kTraceFileExtension = ".rmv";
-
         // Help file locations for trace and RMV.
         static const QString kTraceHelpFile       = "/docs/help/rdp/html/index.html";
         static const QString kRmvHelpFile         = "/docs/help/rmv/html/index.html";
         static const QString kRmvLicenseFile      = "/License.txt";
-        static const QString kSampleTraceLocation = "/samples/sample_trace" + kTraceFileExtension;
-        static const QString kFileOpenFileTypes   = "RMV trace files (*.rmv)";
+        static const QString kSampleTraceLocation = "/samples/sample_trace" + QString(kRMVTraceFileExtension);
+
+        static const QString kFileOpenFileTypes = "RMV trace files (*" + QString(kRMVTraceFileExtension) + ")";
+
         static const QString kMissingRmvTrace     = "Missing RMV sample trace: ";
         static const QString kMissingRmvHelpFile  = "Missing RMV help file: ";
 

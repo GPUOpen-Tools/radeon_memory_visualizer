@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of a number of string utilities.
@@ -76,13 +76,6 @@ namespace rmv
         ///
         /// @return The localized string.
         QString LocalizedValueBytes(int64_t value);
-
-        /// @brief Helper function to fetch a string representation of a resource usage type.
-        ///
-        /// @param [in] usage_type resource usage type.
-        ///
-        /// @return A string representation of a resource usage.
-        QString GetResourceUsageString(RmtResourceUsageType usage_type);
 
     }  // namespace string_util
 }  // namespace rmv

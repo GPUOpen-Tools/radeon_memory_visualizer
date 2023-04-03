@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the allocation overview model.
@@ -10,8 +10,6 @@
 #include <vector>
 
 #include "rmt_assert.h"
-#include "rmt_data_set.h"
-#include "rmt_data_snapshot.h"
 
 #include "managers/trace_manager.h"
 #include "util/string_util.h"

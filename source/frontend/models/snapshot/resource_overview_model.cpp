@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource Overview model.
@@ -10,7 +10,6 @@
 #include <QTableView>
 
 #include "rmt_assert.h"
-#include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 
@@ -124,7 +123,7 @@ namespace rmv
             }
 
             const RmtResourceUsageType usage_type = (resource->identifier != 0) ? RmtResourceGetUsageType(resource) : kRmtResourceUsageTypeFree;
-            text_string += "\nUsage: " + rmv::string_util::GetResourceUsageString(usage_type);
+            text_string += "\nUsage: " + QString(RmtGetResourceUsageTypeNameFromResourceUsageType(usage_type));
 
             // If the resource type is an image, display dimensions and format information.
             if (resource->resource_type == kRmtResourceTypeImage)

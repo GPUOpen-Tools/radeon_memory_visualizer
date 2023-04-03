@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a number of string utilities.
@@ -135,64 +135,4 @@ QString rmv::string_util::LocalizedValueAddress(RmtGpuAddress address)
 QString rmv::string_util::LocalizedValueBytes(int64_t value)
 {
     return rmv::string_util::LocalizedValue(value) + " bytes";
-}
-
-QString rmv::string_util::GetResourceUsageString(RmtResourceUsageType usage_type)
-{
-    QString out = "";
-
-    switch (usage_type)
-    {
-    case kRmtResourceUsageTypeDepthStencil:
-        out = "Depth stencil buffer";
-        break;
-    case kRmtResourceUsageTypeRenderTarget:
-        out = "Render target";
-        break;
-    case kRmtResourceUsageTypeTexture:
-        out = "Texture";
-        break;
-    case kRmtResourceUsageTypeVertexBuffer:
-        out = "Vertex buffer";
-        break;
-    case kRmtResourceUsageTypeIndexBuffer:
-        out = "Index buffer";
-        break;
-    case kRmtResourceUsageTypeRayTracingBuffer:
-        out = "Ray tracing";
-        break;
-    case kRmtResourceUsageTypeUav:
-        out = "UAV";
-        break;
-    case kRmtResourceUsageTypeShaderPipeline:
-        out = "Shader pipeline";
-        break;
-    case kRmtResourceUsageTypeCommandBuffer:
-        out = "Command buffer";
-        break;
-    case kRmtResourceUsageTypeHeap:
-        out = "Heap";
-        break;
-    case kRmtResourceUsageTypeDescriptors:
-        out = "Descriptors";
-        break;
-    case kRmtResourceUsageTypeBuffer:
-        out = "Multi-use buffer";
-        break;
-    case kRmtResourceUsageTypeFree:
-        out = "Unbound";
-        break;
-    case kRmtResourceUsageTypeGpuEvent:
-        out = "Event";
-        break;
-    case kRmtResourceUsageTypeInternal:
-        out = "Internal";
-        break;
-
-    default:
-        out = "Unknown";
-        break;
-    }
-
-    return out;
 }

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a resource timeline item model.
@@ -16,6 +16,7 @@
 #include "rmt_util.h"
 
 #include "managers/trace_manager.h"
+#include "util/string_util.h"
 #include "util/time_util.h"
 
 namespace rmv
@@ -86,12 +87,66 @@ namespace rmv
         {
             switch (index.column())
             {
-            case kResourceHistoryLegend:
+            case kResourceHistoryColumnLegend:
                 return event_type;
-            case kResourceHistoryEvent:
+            case kResourceHistoryColumnEvent:
                 return GetTextFromEventType(event_type);
-            case kResourceHistoryTime:
+            case kResourceHistoryColumnTime:
                 return rmv::time_util::ClockToTimeUnit(timestamp);
+            case kResourceHistoryColumnVirtualAddress:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventResourceBound:
+                case kRmtResourceHistoryEventVirtualMemoryAllocated:
+                case kRmtResourceHistoryEventVirtualMemoryFree:
+                case kRmtResourceHistoryEventVirtualMemoryMapped:
+                case kRmtResourceHistoryEventVirtualMemoryUnmapped:
+                case kRmtResourceHistoryEventVirtualMemoryMakeResident:
+                case kRmtResourceHistoryEventVirtualMemoryEvict:
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                case kRmtResourceHistoryEventPhysicalMapToHost:
+                    return rmv::string_util::LocalizedValueAddress(resource_history_->events[row_index].virtual_address);
+
+                default:
+                    return "n/a";
+                }
+
+            case kResourceHistoryColumnPhysicalAddress:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                    return rmv::string_util::LocalizedValueAddress(resource_history_->events[row_index].physical_address);
+
+                default:
+                    return "n/a";
+                }
+
+            case kResourceHistoryColumnSize:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventVirtualMemoryAllocated:
+                case kRmtResourceHistoryEventVirtualMemoryFree:
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                    return rmv::string_util::LocalizedValueMemory(resource_history_->events[row_index].size_in_bytes, false, false);
+
+                default:
+                    return "n/a";
+                }
+
+            case kResourceHistoryColumnPageSize:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalMapToHost:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                    return rmv::string_util::LocalizedValueMemory(resource_history_->events[row_index].page_size_in_bytes, false, false);
+
+                default:
+                    return "n/a";
+                }
 
             default:
                 break;
@@ -101,12 +156,66 @@ namespace rmv
         {
             switch (index.column())
             {
-            case kResourceHistoryLegend:
+            case kResourceHistoryColumnLegend:
                 return QVariant::fromValue<int>(row_index);
-            case kResourceHistoryEvent:
+            case kResourceHistoryColumnEvent:
                 return QVariant::fromValue<int>(event_type);
-            case kResourceHistoryTime:
+            case kResourceHistoryColumnTime:
                 return QVariant::fromValue<qulonglong>(timestamp);
+            case kResourceHistoryColumnVirtualAddress:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventResourceBound:
+                case kRmtResourceHistoryEventVirtualMemoryAllocated:
+                case kRmtResourceHistoryEventVirtualMemoryFree:
+                case kRmtResourceHistoryEventVirtualMemoryMapped:
+                case kRmtResourceHistoryEventVirtualMemoryUnmapped:
+                case kRmtResourceHistoryEventVirtualMemoryMakeResident:
+                case kRmtResourceHistoryEventVirtualMemoryEvict:
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                case kRmtResourceHistoryEventPhysicalMapToHost:
+                    return QVariant::fromValue<qulonglong>(resource_history_->events[row_index].virtual_address);
+
+                default:
+                    return 0;
+                }
+
+            case kResourceHistoryColumnPhysicalAddress:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                    return QVariant::fromValue<qulonglong>(resource_history_->events[row_index].physical_address);
+
+                default:
+                    return 0;
+                }
+
+            case kResourceHistoryColumnSize:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventVirtualMemoryAllocated:
+                case kRmtResourceHistoryEventVirtualMemoryFree:
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                    return QVariant::fromValue<qulonglong>(resource_history_->events[row_index].size_in_bytes);
+
+                default:
+                    return 0;
+                }
+
+            case kResourceHistoryColumnPageSize:
+                switch (event_type)
+                {
+                case kRmtResourceHistoryEventPhysicalMapToLocal:
+                case kRmtResourceHistoryEventPhysicalMapToHost:
+                case kRmtResourceHistoryEventPhysicalUnmap:
+                    return QVariant::fromValue<qulonglong>(resource_history_->events[row_index].page_size_in_bytes);
+
+                default:
+                    return 0;
+                }
 
             default:
                 break;
@@ -116,8 +225,12 @@ namespace rmv
         {
             switch (index.column())
             {
-            case kResourceHistoryEvent:
-            case kResourceHistoryTime:
+            case kResourceHistoryColumnEvent:
+            case kResourceHistoryColumnTime:
+            case kResourceHistoryColumnVirtualAddress:
+            case kResourceHistoryColumnPhysicalAddress:
+            case kResourceHistoryColumnSize:
+            case kResourceHistoryColumnPageSize:
                 if (row > snapshot_table_index_)
                 {
                     return QColor(Qt::lightGray);
@@ -142,14 +255,20 @@ namespace rmv
         {
             switch (section)
             {
-            case kResourceHistoryLegend:
+            case kResourceHistoryColumnLegend:
                 return "Legend";
-            case kResourceHistoryEvent:
+            case kResourceHistoryColumnEvent:
                 return "Event";
-            case kResourceHistoryTime:
+            case kResourceHistoryColumnTime:
                 return "Timestamp";
-            case kResourceHistoryDetails:
-                return "Details";
+            case kResourceHistoryColumnVirtualAddress:
+                return "Virtual address";
+            case kResourceHistoryColumnPhysicalAddress:
+                return "Physical address";
+            case kResourceHistoryColumnSize:
+                return "Size";
+            case kResourceHistoryColumnPageSize:
+                return "Page size";
 
             default:
                 break;

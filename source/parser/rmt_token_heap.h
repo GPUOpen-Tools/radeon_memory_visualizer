@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  A priority queue data structure for RmtToken structures.
@@ -18,8 +18,8 @@
 extern "C" {
 #endif  // #ifdef __cplusplus
 
-typedef struct RmtToken  RmtToken;
-typedef struct RmtParser RmtParser;
+typedef struct RmtToken          RmtToken;
+typedef struct RmtParser         RmtParser;
 typedef struct ResourceIdMapNode ResourceIdMapNode;
 
 /// A structure for fast lookup of unique resource ID based on a driver provided ID.

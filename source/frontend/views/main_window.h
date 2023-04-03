@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the main window.
@@ -18,7 +18,6 @@
 #include "qt_common/custom_widgets/navigation_bar.h"
 #include "qt_common/custom_widgets/navigation_list_widget.h"
 
-#include "rmt_data_set.h"
 #include "rmt_resource_list.h"
 
 #include "managers/pane_manager.h"

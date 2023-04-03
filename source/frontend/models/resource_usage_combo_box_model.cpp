@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model corresponding to a resource combo box.
@@ -13,6 +13,7 @@
 
 #include "rmt_resource_list.h"
 #include "rmt_assert.h"
+#include "rmt_print.h"
 
 #include "util/string_util.h"
 
@@ -51,7 +52,7 @@ namespace rmv
             auto it = kExcludedResources.find(i);
             if (it == kExcludedResources.end())
             {
-                checkbox = combo_box->AddCheckboxItem(rmv::string_util::GetResourceUsageString(RmtResourceUsageType(i)), QVariant(), false, false);
+                checkbox = combo_box->AddCheckboxItem(RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceUsageType(i)), QVariant(), false, false);
                 RMT_ASSERT(checkbox != nullptr);
                 if (checkbox != nullptr)
                 {
@@ -106,7 +107,7 @@ namespace rmv
         {
             if (ItemInList(resource) == true)
             {
-                resource_filter += "|" + QString(rmv::string_util::GetResourceUsageString(static_cast<RmtResourceUsageType>(resource)));
+                resource_filter += "|" + QString(RmtGetResourceUsageTypeNameFromResourceUsageType(static_cast<RmtResourceUsageType>(resource)));
             }
         }
         resource_filter += ")";

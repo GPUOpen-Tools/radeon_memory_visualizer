@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Device configuration model.
@@ -17,6 +17,11 @@ namespace rmv
     /// Used to map UI widgets to their corresponding model data.
     enum DeviceConfigurationWidgets
     {
+        kDeviceConfigurationCPUName,
+        kDeviceConfigurationCPUSpeed,
+        kDeviceConfigurationCPUPhysicalCores,
+        kDeviceConfigurationCPULogicalCores,
+        kDeviceConfigurationSystemMemorySize,
         kDeviceConfigurationDeviceName,
         kDeviceConfigurationDeviceID,
         kDeviceConfigurationMemorySize,
@@ -25,7 +30,8 @@ namespace rmv
         kDeviceConfigurationLocalMemoryBandwidth,
         kDeviceConfigurationLocalMemoryType,
         kDeviceConfigurationLocalMemoryBusWidth,
-
+        kDeviceConfigurationDriverPackagingVersion,
+        kDeviceConfigurationDriverSoftwareVersion,
         kDeviceConfigurationNumWidgets
     };
 
@@ -44,6 +50,14 @@ namespace rmv
 
         /// @brief Update the model with data from the back end.
         void Update();
+
+        /// @brief Is the extended driver information available in the trace file.
+        ///
+        /// Extended information (such as CPU and driver information) is only available with
+        /// The RDF file format and the SystemInfo chunk.
+        ///
+        /// @return true if extended information is available, false if not.
+        bool ExtendedInfoAvailable();
     };
 
 }  // namespace rmv

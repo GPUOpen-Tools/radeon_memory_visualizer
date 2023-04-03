@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource List pane.
@@ -39,6 +39,7 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     model_->InitializeModel(ui_->total_size_label_, rmv::kResourceListTotalSize, "text");
 
     model_->InitializeTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount);
+    ui_->resource_table_view_->setCursor(Qt::PointingHandCursor);
 
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->preferred_heap_combo_box_, rmv::text::kPreferredHeap);
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->resource_usage_combo_box_, rmv::text::kResourceUsage);

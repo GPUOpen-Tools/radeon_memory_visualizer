@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource details model.
@@ -12,7 +12,6 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "rmt_assert.h"
-#include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 #include "rmt_util.h"
@@ -71,15 +70,32 @@ namespace rmv
         delete properties_model_;
     }
 
-    void ResourceDetailsModel::InitializeTimelineTableModel(QTableView* timeline_table_view, uint num_rows, uint num_columns)
+    void ResourceDetailsModel::InitializeTimelineTableModel(ScaledTableView* timeline_table_view, uint num_rows, uint num_columns)
     {
         if (timeline_proxy_model_ != nullptr)
         {
             delete timeline_proxy_model_;
             timeline_proxy_model_ = nullptr;
         }
+
         timeline_proxy_model_ = new ResourceDetailsProxyModel();
         timeline_model_       = timeline_proxy_model_->InitializeResourceTableModels(timeline_table_view, num_rows, num_columns);
+
+        timeline_table_view->horizontalHeader()->setSectionsClickable(true);
+
+        // The Resource timeline table has lots of horizontal space,
+        // so these column widths are a bit wider than the actual table contents.
+        timeline_table_view->SetColumnPadding(0);
+        timeline_table_view->SetColumnWidthEms(kResourceHistoryColumnLegend, 6);
+        timeline_table_view->SetColumnWidthEms(kResourceHistoryColumnEvent, 30);
+        timeline_table_view->SetColumnWidthEms(kResourceHistoryColumnTime, 15);
+        timeline_table_view->SetColumnWidthEms(kResourceHistoryColumnVirtualAddress, 15);
+        timeline_table_view->SetColumnWidthEms(kResourceHistoryColumnPhysicalAddress, 15);
+        timeline_table_view->SetColumnWidthEms(kResourceHistoryColumnSize, 15);
+        timeline_table_view->SetColumnWidthEms(kResourceHistoryColumnPageSize, 15);
+
+        // Still let the user resize the columns if desired.
+        timeline_table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
     }
 
     void ResourceDetailsModel::InitializePropertiesTableModel(QTableView* properties_table_view, uint num_rows, uint num_columns)
@@ -115,10 +131,9 @@ namespace rmv
         if (TraceManager::Get().DataSetValid())
         {
             const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-            const RmtDataSnapshot* snapshot      = open_snapshot;
-            if (snapshot != nullptr)
+            if (open_snapshot != nullptr)
             {
-                const RmtErrorCode error_code = RmtResourceListGetResourceByResourceId(&snapshot->resource_list, resource_identifier, resource);
+                const RmtErrorCode error_code = RmtResourceListGetResourceByResourceId(&open_snapshot->resource_list, resource_identifier, resource);
                 if (error_code == kRmtOk)
                 {
                     return true;
@@ -175,7 +190,7 @@ namespace rmv
             SetModelData(kResourceDetailsAllocationOffset, rmv::string_util::LocalizedValue(RmtResourceGetOffsetFromBoundAllocation(resource)));
             SetModelData(kResourceDetailsBaseAddress, QString("0x") + QString::number(resource->address, 16));
             SetModelData(kResourceDetailsSize, rmv::string_util::LocalizedValueMemory(resource->size_in_bytes, false, false));
-            SetModelData(kResourceDetailsType, rmv::string_util::GetResourceUsageString(RmtResourceGetUsageType(resource)));
+            SetModelData(kResourceDetailsType, RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceGetUsageType(resource)));
             SetModelData(kResourceDetailsHeap, RmtResourceGetHeapTypeName(resource));
 
             if (TraceManager::Get().DataSetValid())
@@ -345,7 +360,7 @@ namespace rmv
 
         for (int32_t count = 0; count < timeline_model_->rowCount(); count++)
         {
-            uint64_t min_time = timeline_model_->data(timeline_model_->index(count, kResourceHistoryTime), Qt::UserRole).toULongLong();
+            uint64_t min_time = timeline_model_->data(timeline_model_->index(count, kResourceHistoryColumnTime), Qt::UserRole).toULongLong();
             uint64_t max_time = min_time + icon_size;
             if (logical_position > min_time && logical_position < max_time)
             {
@@ -382,7 +397,7 @@ namespace rmv
             end_timestamp = snapshot_timestamp;
         }
 
-        double   duration        = end_timestamp - start_timestamp;
+        double duration = end_timestamp - start_timestamp;
 
         if (index < 0 || index >= event_count)
         {
@@ -402,7 +417,7 @@ namespace rmv
             }
         }
 
-        const QModelIndex           legend_model_index = timeline_model_->index(index, kResourceHistoryLegend);
+        const QModelIndex           legend_model_index = timeline_model_->index(index, kResourceHistoryColumnLegend);
         RmtResourceHistoryEventType event_type         = static_cast<RmtResourceHistoryEventType>(timeline_model_->data(legend_model_index).toInt());
         int                         event_index        = timeline_model_->data(legend_model_index, Qt::UserRole).toInt();
         uint64_t                    timestamp          = 0;

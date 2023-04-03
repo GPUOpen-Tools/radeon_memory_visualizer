@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of rmv_util which holds useful utility functions.
@@ -106,7 +106,7 @@ bool rmv_util::TraceValidToLoad(const QString& trace_path)
     {
         const QString extension = trace_path.mid(trace_path.lastIndexOf("."), trace_path.length());
 
-        if (extension.compare(rmv::text::kTraceFileExtension, Qt::CaseInsensitive) == 0)
+        if (extension.compare(kRMVTraceFileExtension, Qt::CaseInsensitive) == 0)
         {
             may_load = true;
         }

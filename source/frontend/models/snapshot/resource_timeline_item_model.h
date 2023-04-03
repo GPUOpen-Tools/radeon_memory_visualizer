@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a resource timeline item model.
@@ -20,12 +20,15 @@ namespace rmv
     /// @brief Column Id's for fields in the resource history table in the resource details pane.
     enum ResourceHistoryColumn
     {
-        kResourceHistoryLegend,
-        kResourceHistoryEvent,
-        kResourceHistoryTime,
-        kResourceHistoryDetails,
+        kResourceHistoryColumnLegend,
+        kResourceHistoryColumnEvent,
+        kResourceHistoryColumnTime,
+        kResourceHistoryColumnVirtualAddress,
+        kResourceHistoryColumnPhysicalAddress,
+        kResourceHistoryColumnSize,
+        kResourceHistoryColumnPageSize,
 
-        kResourceHistoryCount
+        kResourceHistoryColumnCount
     };
 
     /// @brief Container class that holds model data for the resource timeline table in the resource details pane.

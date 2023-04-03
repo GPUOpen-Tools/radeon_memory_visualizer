@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the snapshot table view.
@@ -12,11 +12,11 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_SNAPSHOT_TABLE_VIEW_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_SNAPSHOT_TABLE_VIEW_H_
 
-#include "views/custom_widgets/rmv_clickable_table_view.h"
+#include "qt_common/custom_widgets/scaled_table_view.h"
 #include "views/delegates/rmv_snapshot_name_delegate.h"
 
 /// @brief Class declaration for the Snapshot table view.
-class RMVSnapshotTableView : public RMVClickableTableView
+class RMVSnapshotTableView : public ScaledTableView
 {
     Q_OBJECT
 public:

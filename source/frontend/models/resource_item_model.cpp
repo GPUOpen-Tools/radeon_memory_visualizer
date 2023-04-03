@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a resource item model.
@@ -12,6 +12,7 @@
 
 #include "rmt_assert.h"
 #include "rmt_data_snapshot.h"
+#include "rmt_print.h"
 #include "rmt_resource_list.h"
 #include "rmt_util.h"
 
@@ -147,7 +148,7 @@ namespace rmv
             case kResourceColumnUsage:
             {
                 const RmtResourceUsageType resource_usage_type = RmtResourceGetUsageType(resource);
-                return rmv::string_util::GetResourceUsageString(resource_usage_type);
+                return RmtGetResourceUsageTypeNameFromResourceUsageType(resource_usage_type);
             }
             case kResourceColumnAllocationIdInternal:
             {
@@ -198,6 +199,8 @@ namespace rmv
         {
             switch (index.column())
             {
+            case kResourceColumnName:
+                return cache_[row].resource_name;
             case kResourceColumnSize:
                 return rmv::string_util::LocalizedValueBytes(resource->size_in_bytes);
             case kResourceColumnMappedInvisible:

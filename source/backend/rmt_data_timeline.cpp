@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the data timeline functions.
@@ -83,7 +83,7 @@ static void CreateHistogramJob(int32_t thread_id, int32_t index, void* input)
     const uint64_t start_timestamp = input_parameters->start_timestamp + (input_parameters->bucket_width_in_cycles * index);
     const uint64_t end_timestamp   = start_timestamp + input_parameters->bucket_width_in_cycles;
     RMT_UNUSED(end_timestamp);
-    int32_t       value_index = RmtDataSetGetSeriesIndexForTimestamp(NULL, start_timestamp);
+    int32_t value_index = RmtDataSetGetSeriesIndexForTimestamp(NULL, start_timestamp);
     const int32_t level_index = 0;
 
     for (int32_t current_series_index = 0; current_series_index < input_parameters->timeline->series_count; ++current_series_index)
@@ -147,7 +147,7 @@ RmtErrorCode RmtDataTimelineCreateHistogram(const RmtDataTimeline*    timeline,
     // Allocate memory for the data and prepare it.
     out_timeline_histogram->bucket_group_count = timeline->series_count;
     const int32_t size_in_bytes                = timeline->series_count * out_timeline_histogram->bucket_count * sizeof(uint64_t);
-    out_timeline_histogram->bucket_data        = (uint64_t*)malloc(size_in_bytes);
+    out_timeline_histogram->bucket_data = (uint64_t*)malloc(size_in_bytes);
     RMT_ASSERT_MESSAGE(out_timeline_histogram->bucket_data, "Failed to allocate timeline histogram.");
     RMT_RETURN_ON_ERROR(out_timeline_histogram->bucket_data, kRmtErrorOutOfMemory);
     memset(out_timeline_histogram->bucket_data, 0, size_in_bytes);

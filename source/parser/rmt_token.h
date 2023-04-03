@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions of the RMT token.
@@ -132,6 +132,7 @@ typedef struct RmtTokenVirtualAllocate
     uint64_t       size_in_bytes;                         ///< The size (in bytes) of the allocation.
     RmtOwnerType   owner_type;                            ///< The owner of the allocation.
     RmtHeapType    preference[RMT_NUM_HEAP_PREFERENCES];  ///< An ordered list of heap preferences for the allocation.
+    bool           is_external;                           ///< If true, indicates externally owned allocation opened by target application.  False, otherwise.
 } RmtTokenVirtualAllocate;
 
 /// A structure encapsulating a resource description.

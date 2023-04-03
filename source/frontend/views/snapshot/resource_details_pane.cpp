@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource details pane.
@@ -75,17 +75,8 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
     ui_->resource_properties_table_view_->horizontalHeader()->setSectionsClickable(true);
     ui_->resource_properties_table_view_->horizontalHeader()->setStretchLastSection(false);
 
-    model_->InitializeTimelineTableModel(ui_->resource_timeline_table_view_, 0, rmv::kResourceHistoryCount);
-
-    // The Resource timeline table has lots of horizontal space,
-    // so these column widths are a bit wider than the actual table contents.
-    ui_->resource_timeline_table_view_->SetColumnPadding(0);
-    ui_->resource_timeline_table_view_->SetColumnWidthEms(0, 6);
-    ui_->resource_timeline_table_view_->SetColumnWidthEms(1, 30);
-    ui_->resource_timeline_table_view_->SetColumnWidthEms(2, 8);
-
-    // Still let the user resize the columns if desired.
-    ui_->resource_timeline_table_view_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+    model_->InitializeTimelineTableModel(ui_->resource_timeline_table_view_, 0, rmv::kResourceHistoryColumnCount);
+    ui_->resource_timeline_table_view_->setCursor(Qt::PointingHandCursor);
 
     // Set up the residency legends.
     rmv::widget_util::InitGraphicsView(ui_->legends_view_local_, rmv::kColoredLegendsHeight);
@@ -107,15 +98,11 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
     ui_->residency_donut_->SetNumSegments(kRmtHeapTypeSystem + 2);
 
     ui_->resource_timeline_table_view_->setFrameStyle(QFrame::StyledPanel);
-    ui_->resource_timeline_table_view_->horizontalHeader()->setSectionsClickable(true);
     ui_->resource_timeline_table_view_->horizontalHeader()->setResizeContentsPrecision(32);
 
     // Allow the resource_timeline_table_view_ to resize the rows based on the size of the first column.
     ui_->resource_timeline_table_view_->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
     ui_->resource_timeline_table_view_->verticalHeader()->setResizeContentsPrecision(1);
-
-    // Hide the details column until it's hooked up.
-    ui_->resource_timeline_table_view_->hideColumn(rmv::kResourceHistoryDetails);
 
     // Hide the 'owner type' and 'flags' in the public build.
     ui_->label_owner_type_->hide();
@@ -125,7 +112,7 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
 
     // Add a delegate to the resource timeline table to allow custom painting.
     legend_delegate_ = new RMVResourceEventDelegate(nullptr, model_);
-    ui_->resource_timeline_table_view_->setItemDelegateForColumn(rmv::kResourceHistoryLegend, legend_delegate_);
+    ui_->resource_timeline_table_view_->setItemDelegateForColumn(rmv::kResourceHistoryColumnLegend, legend_delegate_);
 
     // Intercept the ResourceSelected signal so the chosen resource can be set up. This signal is sent
     // before the pane navigation.
@@ -237,7 +224,7 @@ void ResourceDetailsPane::Refresh()
         }
 
         ui_->resource_timeline_table_view_->setSortingEnabled(true);
-        ui_->resource_timeline_table_view_->sortByColumn(rmv::kResourceHistoryTime, Qt::AscendingOrder);
+        ui_->resource_timeline_table_view_->sortByColumn(rmv::kResourceHistoryColumnTime, Qt::AscendingOrder);
         rmv::widget_util::SetWidgetBackgroundColor(ui_->residency_donut_, Qt::white);
 
         int     value;

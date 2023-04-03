@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Trace Manager.
@@ -27,6 +27,7 @@
 #include "managers/message_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/definitions.h"
+#include "util/rmv_util.h"
 
 namespace rmv
 {
@@ -92,19 +93,13 @@ namespace rmv
         rmv::SnapshotManager::Get().ClearOpenSnapshot();
         rmv::SnapshotManager::Get().ClearCompareSnapshots();
 
-        // Loading regular binary data.
-        RmtErrorCode error_code = RmtDataSetInitialize(trace_file_name, &data_set_);
-        if (error_code != kRmtOk)
+        const RmtErrorCode return_code = RmtTraceLoaderTraceLoad(trace_file_name);
+        if (return_code != kRmtOk)
         {
-            memset(&data_set_, 0, sizeof(RmtDataSet));
-            RmtTokenClearPayloadCaches();
-            return kTraceLoadReturnFail;
-        }
-
-        // Create the default timeline for the data set.
-        error_code = RmtDataSetGenerateTimeline(&data_set_, kRmtDataTimelineTypeResourceUsageVirtualSize, &timeline_);
-        if (error_code != kRmtOk)
-        {
+            if (return_code == kRmtErrorPageTableSizeExceeded)
+            {
+                return kTraceLoadReturnOutOfVirtualGPUMemory;
+            }
             return kTraceLoadReturnFail;
         }
 
@@ -113,28 +108,10 @@ namespace rmv
 
     void TraceManager::ClearTrace()
     {
-        if (DataSetValid())
-        {
-            // Clean up any cached snapshots.
-            for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < data_set_.snapshot_count; ++current_snapshot_point_index)
-            {
-                RmtSnapshotPoint* current_snapshot_point = &data_set_.snapshots[current_snapshot_point_index];
-                if (current_snapshot_point->cached_snapshot)
-                {
-                    RmtDataSnapshotDestroy(current_snapshot_point->cached_snapshot);
-                    delete current_snapshot_point->cached_snapshot;
-                }
-            }
-
-            RmtDataTimelineDestroy(&timeline_);
-            RmtDataSetDestroy(&data_set_);
-        }
+        RmtTraceLoaderClearTrace();
 
         rmv::SnapshotManager::Get().ClearOpenSnapshot();
         rmv::SnapshotManager::Get().ClearCompareSnapshots();
-        memset(&data_set_, 0, sizeof(RmtDataSet));
-        RmtTokenClearPayloadCaches();
-
         active_trace_path_.clear();
     }
 
@@ -142,7 +119,7 @@ namespace rmv
     {
         bool result = false;
 
-        if (TraceValidToLoad(path) == true)
+        if (rmv_util::TraceValidToLoad(path) == true)
         {
             QFileInfo trace_file(path);
 
@@ -238,7 +215,14 @@ namespace rmv
             // If the trace file doesn't exist, ask the user if they want to remove it from
             // the recent traces list. This has to be done from the main thread.
             QFileInfo file_info(active_trace_path_);
-            QString   text = rmv::text::kDeleteRecentTraceText.arg(file_info.fileName());
+            QString   text("");
+
+            if (error_code == kTraceLoadReturnOutOfVirtualGPUMemory)
+            {
+                text += rmv::text::kOpenTraceOutOfVirtualGPUMemory;
+            }
+
+            text += rmv::text::kDeleteRecentTraceText.arg(file_info.fileName());
 
             const int ret =
                 QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Yes | QMessageBox::No, QMessageBox::Question, rmv::text::kDeleteRecentTraceTitle, text);
@@ -303,24 +287,6 @@ namespace rmv
         return (loading_thread == nullptr || loading_thread->isRunning() == false);
     }
 
-    bool TraceManager::TraceValidToLoad(const QString& trace_path) const
-    {
-        bool may_load = false;
-
-        QFileInfo trace_file(trace_path);
-        if (trace_file.exists() && trace_file.isFile())
-        {
-            const QString extension = trace_path.mid(trace_path.lastIndexOf("."), trace_path.length());
-
-            if (extension.compare(rmv::text::kTraceFileExtension, Qt::CaseInsensitive) == 0)
-            {
-                may_load = true;
-            }
-        }
-
-        return may_load;
-    }
-
     QString TraceManager::GetDefaultExeName() const
     {
         QString default_exe_name;
@@ -345,21 +311,17 @@ namespace rmv
 
     bool TraceManager::DataSetValid() const
     {
-        if (data_set_.file_handle == nullptr)
-        {
-            return false;
-        }
-        return true;
+        return RmtTraceLoaderDataSetValid();
     }
 
     RmtDataSet* TraceManager::GetDataSet()
     {
-        return &data_set_;
+        return RmtTraceLoaderGetDataSet();
     }
 
     RmtDataTimeline* TraceManager::GetTimeline()
     {
-        return &timeline_;
+        return RmtTraceLoaderGetTimeline();
     }
 
 }  // namespace rmv

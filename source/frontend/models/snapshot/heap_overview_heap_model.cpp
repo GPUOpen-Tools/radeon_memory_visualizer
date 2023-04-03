@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model for a heap layout for the Heap Overview
@@ -11,7 +11,6 @@
 #include <QVariant>
 
 #include "rmt_assert.h"
-#include "rmt_data_set.h"
 #include "rmt_print.h"
 
 #include "managers/trace_manager.h"

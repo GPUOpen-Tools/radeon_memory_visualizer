@@ -1063,7 +1063,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="RMVClickableTableView" name="resource_timeline_table_view_">
+            <widget class="ScaledTableView" name="resource_timeline_table_view_">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -1458,11 +1458,6 @@
    <extends>QWidget</extends>
    <header>views/custom_widgets/rmv_scaled_donut_widget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>RMVClickableTableView</class>
-   <extends>ScaledTableView</extends>
-   <header>views/custom_widgets/rmv_clickable_table_view.h</header>
   </customwidget>
   <customwidget>
    <class>SnapshotStartPane</class>

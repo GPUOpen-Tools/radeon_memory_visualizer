@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Timeline pane.
@@ -56,6 +56,7 @@ TimelinePane::TimelinePane(QWidget* parent)
 
     model_->InitializeModel(ui_->snapshot_count_label_, rmv::kTimelineSnapshotCount, "text");
     model_->InitializeTableModel(ui_->snapshot_table_view_, 0, rmv::kSnapshotTimelineColumnCount);
+    ui_->snapshot_table_view_->setCursor(Qt::PointingHandCursor);
 
     // Set default columns widths appropriately so that they can show the table contents.
     ui_->snapshot_table_view_->SetColumnPadding(0);
@@ -246,10 +247,9 @@ void TimelinePane::UpdateSnapshotMarkers()
     ui_->timeline_view_->ClearSnapshotMarkers();
 
     // Add snapshot widgets.
-    RmtDataSet* data_set = trace_manager.GetDataSet();
-    for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < data_set->snapshot_count; current_snapshot_point_index++)
+    for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < RmtTraceLoaderGetSnapshotCount(); current_snapshot_point_index++)
     {
-        RmtSnapshotPoint*  current_snapshot_point = &data_set->snapshots[current_snapshot_point_index];
+        RmtSnapshotPoint*  current_snapshot_point = RmtTraceLoaderGetSnapshotPoint(current_snapshot_point_index);
         RMVSnapshotMarker* marker                 = AddSnapshot(current_snapshot_point);
         RMT_UNUSED(marker);
     }

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.11)
 
 project(RadeonMemoryVisualizer)
 
+add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
+
 IF(WIN32)
     # Warnings as errors for Windows
     add_compile_options(/W4 /WX)
@@ -37,12 +39,11 @@ find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
 
 IF(UNIX)
     find_package(Threads)
-    add_compile_options(-std=c++11 -D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers)
+    add_compile_options(-D_LINUX -Wall -Wextra -Werror)
 ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
-
 set( SOURCES
     "main.cpp"
     "managers/load_animation_manager.cpp"
@@ -175,8 +176,6 @@ set( SOURCES
     "views/custom_widgets/rmv_carousel_nav_button.h"
     "views/custom_widgets/rmv_carousel_resource_types.cpp"
     "views/custom_widgets/rmv_carousel_resource_types.h"
-    "views/custom_widgets/rmv_clickable_table_view.cpp"
-    "views/custom_widgets/rmv_clickable_table_view.h"
     "views/custom_widgets/rmv_colored_checkbox.cpp"
     "views/custom_widgets/rmv_colored_checkbox.h"
     "views/custom_widgets/rmv_color_picker_button.cpp"
@@ -348,9 +347,9 @@ ENDIF(CMAKE_RELEASE_POSTFIX)
 
 # executable file library dependency list
 IF(WIN32)
-    target_link_libraries(${PROJECT_NAME} RmvParser RmvBackend Qt5::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} RmvBackend RmvParser system_info rdf Qt5::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
 ELSEIF(UNIX)
-	target_link_libraries(${PROJECT_NAME} RmvBackend RmvParser Qt5::Widgets QtCustomWidgets QtUtils Threads::Threads ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} RmvBackend RmvParser system_info rdf Qt5::Widgets QtCustomWidgets QtUtils Threads::Threads ${UPDATECHECKAPI_LIBS})
 ENDIF()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -408,6 +407,7 @@ IF(WIN32)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "copying Visual Studio redist files from ${VSREDISTDIR} to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/concrt140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
@@ -446,7 +446,7 @@ IF(UNIX AND NOT APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5XcbQpa.so.5       ${QT_LIB_DST}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5DBus.so.5         ${QT_LIB_DST}
     )
-
+   
     # Copy Additional Qt 5.15.2 library files if needed.
     IF(NOT DISABLE_EXTRA_QT_LIB_DEPLOY)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -470,6 +470,8 @@ IF(UNIX AND NOT APPLE)
         )
     ENDIF(NOT DISABLE_EXTRA_QT_LIB_DEPLOY)
 
+    set(SO_POSTFIX $<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>$<$<CONFIG:Release>:${CMAKE_RELEASE_POSTFIX}>)
+
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "copying QT platform plugins from ${QT_PLATFORM_SRC} to ${QT_PLATFORM_DST}"
         COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_PLATFORM_DST}
@@ -483,6 +485,7 @@ IF(UNIX AND NOT APPLE)
         COMMAND ${CMAKE_COMMAND} -E echo "copying qt.conf to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../../build/qt.conf $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
+
     # Call chrpath on system to override executable file RPATH.
     find_program(CHRPATH_EXECUTABLE NAMES chrpath)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

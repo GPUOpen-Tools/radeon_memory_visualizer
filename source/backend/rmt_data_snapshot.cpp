@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Functions working on a snapshot.
@@ -43,8 +43,15 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                 break;
             }
 
-            RmtResourceHistoryAddEvent(
-                out_resource_history, kRmtResourceHistoryEventResourceCreated, current_token.common.thread_id, current_token.common.timestamp, false);
+            RmtResourceHistoryAddEvent(out_resource_history,
+                                       kRmtResourceHistoryEventResourceCreated,
+                                       current_token.common.thread_id,
+                                       current_token.common.timestamp,
+                                       0,
+                                       0,
+                                       0,
+                                       0,
+                                       false);
             break;
 
         case kRmtTokenTypeResourceDestroy:
@@ -53,8 +60,15 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                 break;
             }
 
-            RmtResourceHistoryAddEvent(
-                out_resource_history, kRmtResourceHistoryEventResourceDestroyed, current_token.common.thread_id, current_token.common.timestamp, false);
+            RmtResourceHistoryAddEvent(out_resource_history,
+                                       kRmtResourceHistoryEventResourceDestroyed,
+                                       current_token.common.thread_id,
+                                       current_token.common.timestamp,
+                                       0,
+                                       0,
+                                       0,
+                                       0,
+                                       false);
             break;
 
         case kRmtTokenTypeResourceBind:
@@ -63,8 +77,15 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                 break;
             }
 
-            RmtResourceHistoryAddEvent(
-                out_resource_history, kRmtResourceHistoryEventResourceBound, current_token.common.thread_id, current_token.common.timestamp, false);
+            RmtResourceHistoryAddEvent(out_resource_history,
+                                       kRmtResourceHistoryEventResourceBound,
+                                       current_token.common.thread_id,
+                                       current_token.common.timestamp,
+                                       current_token.resource_bind_token.virtual_address,
+                                       0,
+                                       0,
+                                       0,
+                                       false);
             break;
 
         case kRmtTokenTypeVirtualAllocate:
@@ -76,8 +97,15 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                 break;
             }
 
-            RmtResourceHistoryAddEvent(
-                out_resource_history, kRmtResourceHistoryEventVirtualMemoryAllocated, current_token.common.thread_id, current_token.common.timestamp, false);
+            RmtResourceHistoryAddEvent(out_resource_history,
+                                       kRmtResourceHistoryEventVirtualMemoryAllocated,
+                                       current_token.common.thread_id,
+                                       current_token.common.timestamp,
+                                       current_token.virtual_allocate_token.virtual_address,
+                                       0,
+                                       current_token.virtual_allocate_token.size_in_bytes,
+                                       0,
+                                       false);
         }
         break;
 
@@ -89,7 +117,7 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
             }
 
             // NOTE: PAL can only make resident/evict a full virtual allocation on CPU, not just a single resource.
-            if (current_token.cpu_map_token.virtual_address != out_resource_history->base_allocation->base_address)
+            if (current_token.resource_reference.virtual_address != out_resource_history->base_allocation->base_address)
             {
                 break;
             }
@@ -100,12 +128,23 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                                            kRmtResourceHistoryEventVirtualMemoryMakeResident,
                                            current_token.common.thread_id,
                                            current_token.common.timestamp,
+                                           current_token.resource_reference.virtual_address,
+                                           0,
+                                           0,
+                                           0,
                                            false);
             }
             else
             {
-                RmtResourceHistoryAddEvent(
-                    out_resource_history, kRmtResourceHistoryEventVirtualMemoryEvict, current_token.common.thread_id, current_token.common.timestamp, false);
+                RmtResourceHistoryAddEvent(out_resource_history,
+                                           kRmtResourceHistoryEventVirtualMemoryEvict,
+                                           current_token.common.thread_id,
+                                           current_token.common.timestamp,
+                                           current_token.resource_reference.virtual_address,
+                                           0,
+                                           0,
+                                           0,
+                                           false);
             }
             break;
 
@@ -124,13 +163,27 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
 
             if (current_token.cpu_map_token.is_unmap)
             {
-                RmtResourceHistoryAddEvent(
-                    out_resource_history, kRmtResourceHistoryEventVirtualMemoryUnmapped, current_token.common.thread_id, current_token.common.timestamp, false);
+                RmtResourceHistoryAddEvent(out_resource_history,
+                                           kRmtResourceHistoryEventVirtualMemoryUnmapped,
+                                           current_token.common.thread_id,
+                                           current_token.common.timestamp,
+                                           current_token.cpu_map_token.virtual_address,
+                                           0,
+                                           0,
+                                           0,
+                                           false);
             }
             else
             {
-                RmtResourceHistoryAddEvent(
-                    out_resource_history, kRmtResourceHistoryEventVirtualMemoryMapped, current_token.common.thread_id, current_token.common.timestamp, false);
+                RmtResourceHistoryAddEvent(out_resource_history,
+                                           kRmtResourceHistoryEventVirtualMemoryMapped,
+                                           current_token.common.thread_id,
+                                           current_token.common.timestamp,
+                                           current_token.cpu_map_token.virtual_address,
+                                           0,
+                                           0,
+                                           0,
+                                           false);
             }
             break;
 
@@ -146,7 +199,7 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                 break;
             }
 
-            const uint64_t size_in_bytes = RmtGetAllocationSizeInBytes(out_resource_history->base_allocation->size_in_4kb_page, kRmtPageSize4Kb);
+            const uint64_t      size_in_bytes = RmtGetAllocationSizeInBytes(out_resource_history->base_allocation->size_in_4kb_page, kRmtPageSize4Kb);
             const RmtGpuAddress address_start = current_token.virtual_free_token.virtual_address;
             const RmtGpuAddress address_end   = address_start + size_in_bytes - 1;
             if (!RmtResourceOverlapsVirtualAddressRange(resource, address_start, address_end))
@@ -154,8 +207,15 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
                 break;
             }
 
-            RmtResourceHistoryAddEvent(
-                out_resource_history, kRmtResourceHistoryEventVirtualMemoryFree, current_token.common.thread_id, current_token.common.timestamp, false);
+            RmtResourceHistoryAddEvent(out_resource_history,
+                                       kRmtResourceHistoryEventVirtualMemoryFree,
+                                       current_token.common.thread_id,
+                                       current_token.common.timestamp,
+                                       current_token.virtual_free_token.virtual_address,
+                                       0,
+                                       size_in_bytes,
+                                       0,
+                                       false);
         }
         break;
 
@@ -169,6 +229,7 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
             // check for overlap between the resource VA range and this change to the PA mappings.
             const uint64_t size_in_bytes =
                 RmtGetAllocationSizeInBytes(current_token.page_table_update_token.size_in_pages, current_token.page_table_update_token.page_size);
+            const uint64_t page_size_in_bytes = RmtGetPageSize(current_token.page_table_update_token.page_size);
 
             if (!RmtAllocationsOverlap(current_token.page_table_update_token.virtual_address,
                                        size_in_bytes,
@@ -180,20 +241,41 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
 
             if (current_token.page_table_update_token.is_unmapping)
             {
-                RmtResourceHistoryAddEvent(
-                    out_resource_history, kRmtResourceHistoryEventPhysicalUnmap, current_token.common.thread_id, current_token.common.timestamp, true);
+                RmtResourceHistoryAddEvent(out_resource_history,
+                                           kRmtResourceHistoryEventPhysicalUnmap,
+                                           current_token.common.thread_id,
+                                           current_token.common.timestamp,
+                                           current_token.page_table_update_token.virtual_address,
+                                           current_token.page_table_update_token.physical_address,
+                                           size_in_bytes,
+                                           page_size_in_bytes,
+                                           true);
             }
             else
             {
                 if (current_token.page_table_update_token.physical_address == 0)
                 {
-                    RmtResourceHistoryAddEvent(
-                        out_resource_history, kRmtResourceHistoryEventPhysicalMapToHost, current_token.common.thread_id, current_token.common.timestamp, true);
+                    RmtResourceHistoryAddEvent(out_resource_history,
+                                               kRmtResourceHistoryEventPhysicalMapToHost,
+                                               current_token.common.thread_id,
+                                               current_token.common.timestamp,
+                                               current_token.page_table_update_token.virtual_address,
+                                               current_token.page_table_update_token.physical_address,
+                                               size_in_bytes,
+                                               page_size_in_bytes,
+                                               true);
                 }
                 else
                 {
-                    RmtResourceHistoryAddEvent(
-                        out_resource_history, kRmtResourceHistoryEventPhysicalMapToLocal, current_token.common.thread_id, current_token.common.timestamp, true);
+                    RmtResourceHistoryAddEvent(out_resource_history,
+                                               kRmtResourceHistoryEventPhysicalMapToLocal,
+                                               current_token.common.thread_id,
+                                               current_token.common.timestamp,
+                                               current_token.page_table_update_token.virtual_address,
+                                               current_token.page_table_update_token.physical_address,
+                                               size_in_bytes,
+                                               page_size_in_bytes,
+                                               true);
                 }
             }
         }

@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2016-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2016-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Linux definition of Windows safe CRT functions.
@@ -53,6 +53,26 @@ size_t fread_s(void* buffer, size_t buffer_size, size_t element_size, size_t cou
 /// \param source The source (input) string.
 /// \return 0 on success, non-zero on error.
 errno_t strcpy_s(char* destination, size_t size, const char* source);
+
+/// @brief strncpy_s secure version of strncpy.
+///
+/// Safely copies characters from the source string to the destination string and adds a terminator to the end of the destination string.
+/// Truncated strings (i.e. source strings that are longer than the size of the destination buffer) can be copied by specifying a
+/// <c><i>max_count</i></c> which is one less than the actual size of the destination buffer.  A terminating character is added to the
+/// truncated destination string.
+///
+/// @param [out] out_destination    The destination (output) string.
+/// @param [in]  destination_size   The size of the destination buffer.
+/// @param [in]  source             The source (input) string.
+/// @param [in]  max_count          The maximum number of bytes to copy.
+///
+/// @retval
+/// 0                               The operation completed succesfully.
+/// @retval
+/// ERANGE                          The number of characters to copy is zero.
+/// @retval
+/// EINVAL                          The operation failed because <c><i>out_destination</i></c> or <c>source<i>out_destination</i></c> was a null pointer.
+errno_t strncpy_s(char* out_destination, const size_t destination_size, const char* source, const size_t max_count);
 
 /// strcat_s secure version of strcat.
 /// \param destination The destination (output) string.

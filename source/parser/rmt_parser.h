@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Core parsing code for RMT data.
@@ -32,8 +32,13 @@ typedef struct RmtParser RmtParser;
 /// @param [in] parser                      A pointer to a <c><i>RmtParser</i></c> structure that is requesting additional memory.
 /// @param [in] start_offset                The offset in the current buffer where the parser is currently positioned. Any memory returned should include this data.
 /// @param [out] out_rmt_buffer             A pointer to the address of the buffer that <c><i>parser</i></c> will be updated to work with.
-/// @param [out] out_rmt_buffer_size        A pointer to an <c><i>size_t</i></c> which contains the size of the buffer pointed to by the contets of <c><i>outRmtBuffer</i></c>.
-typedef RmtErrorCode (*RmtParserNextChunkCallbackFunc)(const RmtParser* parser, size_t start_offset, const void** out_rmt_buffer, size_t* out_rmt_buffer_size);
+/// @param [out] out_rmt_buffer_size        A pointer to a <c><i>size_t</i></c> which contains the size of the buffer pointed to by the contents of <c><i>outRmtBuffer</i></c>.
+typedef RmtErrorCode (*RmtParserNextChunkCallbackFunc)(const RmtParser* parser, const size_t start_offset, void** out_rmt_buffer, size_t* out_rmt_buffer_size);
+
+/// A callback function that resets the object that manages the data stream buffer.
+///
+/// @param [in] parser                      A pointer to a <c><i>RmtParser</i></c> structure that is requesting additional memory.
+typedef RmtErrorCode (*RmtParserResetDataStreamCallbackFunc)(const RmtParser* parser);
 
 /// A structure representing current position in the RMT parser.
 typedef struct RmtParserPosition
@@ -68,11 +73,14 @@ typedef struct RmtParser
     int32_t file_buffer_offset;       ///< The current offset into the file buffer.
     int32_t file_buffer_actual_size;  ///< The actual size of the dat in the file buffer.
 
-    int32_t  major_version;  ///< The major version of the RMT format.
-    int32_t  minor_version;  ///< The minor version of the RMT format.
-    uint64_t thread_id;      ///< The thread ID of the CPU thread in the target application where the RMT data was collected from.
-    uint64_t process_id;     ///< The process ID of the target application where the RMT data was collected from.
-    int32_t  stream_index;   ///< The index of the RMT stream within the RMT file.
+    int32_t  major_version;         ///< The major version of the RMT format.
+    int32_t  minor_version;         ///< The minor version of the RMT format.
+    uint64_t thread_id;             ///< The thread ID of the CPU thread in the target application where the RMT data was collected from.
+    uint64_t process_id;            ///< The process ID of the target application where the RMT data was collected from.
+    int32_t  stream_index;          ///< The index of the RMT stream within the RMT file.
+    bool     buffer_refill_needed;  ///< A flag that indicates all data in the buffer has been parsed and the next chunk needs to be loaded.
+    RmtParserResetDataStreamCallbackFunc reset_data_stream_func;  ///< The function called to reset the object that manages the data stream buffer.
+
 } RmtParser;
 
 /// Initialize the RMT parser structure.
@@ -106,6 +114,20 @@ RmtErrorCode RmtParserInitialize(RmtParser* rmt_parser,
                                  int32_t    stream_index,
                                  uint64_t   process_id,
                                  uint64_t   thread_id);
+
+/// Set the callback functions that the <c><i>RmtParser</i></c> structure uses to manage the data stream buffer.
+///
+/// @param [in] rmt_parser                    A pointer to an <c><i>RmtParser</i></c> structure.
+/// @param [in] next_chunk_callback           A pointer to the function that fills the buffer with the next data stream chunk (set to <c><i>NULL</i></c> to disable).
+/// @param [in] reset_data_stream_callback    A pointer to the function that resets the buffer pointers for the object that manages the data stream (set to <c><i>NULL</i></c> to disable).
+///
+/// @retval
+/// kRmtOk                              The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>rmt_parser</i></c> is <c><i>NULL</i></c>.
+RmtErrorCode RmtParserSetCallbacks(RmtParser*                           rmt_parser,
+                                   RmtParserNextChunkCallbackFunc       next_chunk_callback,
+                                   RmtParserResetDataStreamCallbackFunc reset_data_stream_callback);
 
 /// Advance the RMT parser forward by a single token.
 ///

@@ -2,16 +2,20 @@ cmake_minimum_required(VERSION 3.10)
 project(RmvBackend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories(AFTER ../backend ../parser)
+include_directories(AFTER ../backend ../parser ../../external/rdf/rdf/inc)
 
-IF(UNIX)
+add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
+add_definitions(-DRDF_CXX_BINDINGS)
+IF(WIN32)
+    # Warnings as errors for Windows
+    add_compile_options(/W4 /WX)
+ELSEIF(UNIX)
     # Remove warnings for Linux in backend
-    add_compile_options(-std=c++11 -D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-sign-compare -Wno-uninitialized)
-ENDIF(UNIX)
+    add_compile_options(-D_LINUX -Wall -Wextra -Werror)
+ENDIF(WIN32)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
-
 set( SOURCES
     "rmt_adapter_info.cpp"
     "rmt_adapter_info.h"
@@ -30,6 +34,8 @@ set( SOURCES
     "rmt_job_system.h"
     "rmt_linear_buffer.cpp"
     "rmt_linear_buffer.h"
+    "rmt_legacy_snapshot_writer.cpp"
+    "rmt_legacy_snapshot_writer.h"
     "rmt_mutex.cpp"
     "rmt_mutex.h"
     "rmt_page_table.cpp"
@@ -41,15 +47,24 @@ set( SOURCES
     "rmt_process_map.cpp"
     "rmt_process_map.h"
     "rmt_process_start_info.h"
+    "rmt_rdf_file_parser.h"
+    "rmt_rdf_file_parser.cpp"
+    "rmt_rdf_snapshot_writer.cpp"
+    "rmt_rdf_snapshot_writer.h"
+    "rmt_rdf_system_info.h"
     "rmt_resource_history.cpp"
     "rmt_resource_history.h"
     "rmt_resource_list.cpp"
     "rmt_resource_list.h"
     "rmt_segment_info.h"
+    "rmt_snapshot_writer.cpp"
+    "rmt_snapshot_writer.h"
     "rmt_thread.cpp"
     "rmt_thread.h"
     "rmt_thread_event.cpp"
     "rmt_thread_event.h"
+    "rmt_trace_loader.cpp"
+    "rmt_trace_loader.h"
     "rmt_virtual_allocation_list.cpp"
     "rmt_virtual_allocation_list.h"
     "rmt_warnings.cpp"

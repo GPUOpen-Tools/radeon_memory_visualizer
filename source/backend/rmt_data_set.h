@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -8,20 +8,19 @@
 #ifndef RMV_BACKEND_RMT_DATA_SET_H_
 #define RMV_BACKEND_RMT_DATA_SET_H_
 
-#include "rmt_types.h"
-#include "rmt_error.h"
-#include "rmt_adapter_info.h"
 #include "rmt_configuration.h"
-#include "rmt_segment_info.h"
-#include "rmt_process_start_info.h"
-#include "rmt_process_map.h"
 #include "rmt_data_profile.h"
 #include "rmt_data_timeline.h"
-#include "rmt_virtual_allocation_list.h"
-#include "rmt_physical_allocation_list.h"
-#include "rmt_token_heap.h"
 #include "rmt_file_format.h"
 #include "rmt_parser.h"
+#include "rmt_physical_allocation_list.h"
+#include "rmt_process_map.h"
+#include "rmt_process_start_info.h"
+#include "rmt_rdf_system_info.h"
+#include "rmt_segment_info.h"
+#include "rmt_token_heap.h"
+#include "rmt_types.h"
+#include "rmt_virtual_allocation_list.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +29,7 @@ extern "C" {
 typedef struct RmtDataSnapshot    RmtDataSnapshot;
 typedef struct RmtResource        RmtResource;
 typedef struct RmtResourceHistory RmtResourceHistory;
+typedef void*                     RmtSnapshotWriterHandle;  ///< The type definition for the snapshot writer handle.
 
 /// Callback function prototype for allocating memory.
 typedef void* (*RmtDataSetAllocationFunc)(size_t size_in_bytes, size_t alignment);
@@ -50,6 +50,7 @@ typedef struct RmtSnapshotPoint
     uint64_t         bound_virtual_memory;
     uint64_t         unbound_virtual_memory;
     uint64_t         committed_memory[kRmtHeapTypeCount];
+    uint16_t         chunk_index;  ///< The index of the snapshot data chunk in the RDF file (not used for legacy traces).
 } RmtSnapshotPoint;
 
 /// A structure encapsulating a single RMT dataset.
@@ -70,7 +71,7 @@ typedef struct RmtDataSet
     int32_t         stream_count;                  ///< The number of RMT streams in the file.
     RmtStreamMerger stream_merger;                 ///< Token heap.
 
-    RmtAdapterInfo adapter_info;  ///< The adapter info.
+    RmtRdfSystemInfo system_info;  ///< The system information.
 
     RmtSegmentInfo segment_info[RMT_MAXIMUM_SEGMENTS];  ///< An array of segment information.
     int32_t        segment_info_count;                  ///< The number of segments.
@@ -93,7 +94,10 @@ typedef struct RmtDataSet
 
     ResourceIdMapAllocator* resource_id_map_allocator;  ///< Allocator buffer/struct used to do lookup of unique resource ID.
 
-    bool is_resource_name_processing_complete;  ///< A flag that indicates, if true, that resource names have been processed for the loaded memory trace.
+    bool     is_rdf_trace;                           ///< A flag that indicates, if true, that the trace is RDF format.  Otherwise, false.
+    bool     is_resource_name_processing_complete;   ///< A flag that indicates, if true, that resource names have been processed for the loaded memory trace.
+    uint32_t active_gpu;                             ///< The active GPU used by the application process that was captured.
+    RmtSnapshotWriterHandle snapshot_writer_handle;  ///< The object responsible for writing snapshots to the trace file.
 } RmtDataSet;
 
 /// Initialize the RMT data set from a file path.

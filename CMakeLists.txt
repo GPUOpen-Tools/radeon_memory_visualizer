@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.11)
 
+set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
+
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 5)
+set(RMV_MINOR_VERSION 6)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -19,6 +21,9 @@ string(TIMESTAMP YEAR_STRING "\"%Y\"")
 configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR}/Buildinfo.properties")
 configure_file("${CMAKE_SOURCE_DIR}/source/frontend/util/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/util/version.h")
 
+option(RDF_ENABLE_CXX_BINDINGS "Allow usage of C++ interface for RDF library" ON)
+option(RDF_STATIC              "Build RDF as a static library" ON)
+
 ## For RMV we only care about the Debug and Release configuration types
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
@@ -30,15 +35,15 @@ IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
 ENDIF()
 
 # As default for RMV, include the debug & internal status in filename - but not the platform bitness
-set (CMAKE_DEBUG_POSTFIX -d${ADT_INTERNAL_POSTFIX})
-set (CMAKE_RELEASE_POSTFIX ${ADT_INTERNAL_POSTFIX})
+set (CMAKE_DEBUG_POSTFIX -d)
+set (CMAKE_RELEASE_POSTFIX)
 
 IF(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release${ADT_INTERNAL_POSTFIX_LOWER})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../debug${ADT_INTERNAL_POSTFIX_LOWER})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../debug)
 ELSE(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release${ADT_INTERNAL_POSTFIX_LOWER})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug${ADT_INTERNAL_POSTFIX_LOWER})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug)
 ENDIF(WIN32)
 
 # Add for CentOS compiler warning
@@ -46,6 +51,7 @@ add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
 include_directories("${PROJECT_SOURCE_DIR}/external/")
+include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
 
 # Global compiler options
 IF(WIN32)
@@ -53,12 +59,12 @@ IF(WIN32)
     # bump the stack size
     add_link_options(/STACK:16777216)
 ELSEIF(UNIX)
-    # Use -Wno-missing-field-initializers for CentOS compiler warning
-    add_compile_options(-D_LINUX -Wall -Wextra -Wno-missing-field-initializers)
+    add_compile_options(-D_LINUX -mno-avx2)
     # Allow executable to be double clicked.
     add_link_options(-no-pie)
     # Use _DEBUG on Unix for Debug Builds (defined automatically on Windows)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 ENDIF(WIN32)
 
 IF(WIN32)
@@ -87,8 +93,14 @@ MACRO(SOURCE_GROUP_BY_FOLDER target)
     ENDIF (files)
 ENDMACRO(SOURCE_GROUP_BY_FOLDER)
 
+# Define C++ standard for RMV
+set(CMAKE_CXX_STANDARD 17)
+
 add_subdirectory(external/qt_common/custom_widgets QtCommon/custom_widgets)
 add_subdirectory(external/qt_common/utils QtCommon/utils)
+add_subdirectory(external/rdf/imported/zstd)
+add_subdirectory(external/rdf/rdf)
+add_subdirectory(external/system_info_utils)
 add_subdirectory(source/parser parser)
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
@@ -185,5 +197,5 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sampleTrace.rmv  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rmv
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sample_trace.rmv  ${DOCS_OUTPUT_DIR}/samples/.
 )

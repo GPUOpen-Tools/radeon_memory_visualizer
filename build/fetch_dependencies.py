@@ -1,5 +1,5 @@
 #! python3
-# Copyright (c) 2020 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Script to fetch all external git and/or downloadable dependencies needed to build the project
 #

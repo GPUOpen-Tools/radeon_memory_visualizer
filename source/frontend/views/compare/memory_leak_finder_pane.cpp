@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Memory leak finder pane.
@@ -42,6 +42,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     model_->InitializeModel(ui_->diff_snapshot_label_, rmv::kMemoryLeakFinderDiffSnapshot, "text");
 
     model_->InitializeTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount, rmv::kSnapshotCompareIdCommon);
+    ui_->resource_table_view_->setCursor(Qt::PointingHandCursor);
 
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->preferred_heap_combo_box_, rmv::text::kPreferredHeap);
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->resource_usage_combo_box_, rmv::text::kResourceUsage);

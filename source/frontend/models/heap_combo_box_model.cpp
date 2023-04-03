@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model corresponding to a heap combo box.
@@ -14,6 +14,14 @@
 
 namespace rmv
 {
+    // Heap combo box string for "Other" filter option.
+    const QString kOtherHeapTypeString("Other");
+
+    // Regular expression text used for "Other" heap type filter option.
+    // For heaps reported as "none" by the driver, the RMV Backend may change the heap type to a custom string."
+    // The custom types are also included for the "other" heap type filtering.
+    const QString kUnspecifiedHeapTypeFilterString("-|Orphaned|Detached|Unspecified|Unknown");
+
     HeapComboBoxModel::HeapComboBoxModel()
         : ComboBoxModel()
     {
@@ -37,7 +45,15 @@ namespace rmv
 
         for (uint32_t i = 0; i < (uint32_t)kRmtHeapTypeCount; i++)
         {
-            checkbox = combo_box->AddCheckboxItem(RmtGetHeapTypeNameFromHeapType(RmtHeapType(i)), QVariant(), false, false);
+            if (i == RmtHeapType::kRmtHeapTypeNone)
+            {
+                checkbox = combo_box->AddCheckboxItem(kOtherHeapTypeString, QVariant(), false, false);
+            }
+            else
+            {
+                checkbox = combo_box->AddCheckboxItem(RmtGetHeapTypeNameFromHeapType(RmtHeapType(i)), QVariant(), false, false);
+            }
+
             RMT_ASSERT(checkbox != nullptr);
             if (checkbox != nullptr)
             {
@@ -66,16 +82,41 @@ namespace rmv
     {
         SetupState(combo_box);
 
+        // The number of selected filter types.
+        int filter_count = 0;
+
         // Build the heap filter.
-        QString heap_filter = QString("(-|ORPHANED");
-        for (int heap = 0; heap < kRmtHeapTypeCount; heap++)
+        QString heap_filter = QString("(");
+        for (int heap = 0; heap < RmtHeapType::kRmtHeapTypeCount; heap++)
         {
             if (ItemInList(heap) == true)
             {
-                heap_filter += "|" + QString(RmtGetHeapTypeNameFromHeapType((RmtHeapType)heap));
+                if (filter_count > 0)
+                {
+                    // Add a bar between the filter types if this isn't the first selected item.
+                    heap_filter += "|";
+                }
+
+                if (heap == RmtHeapType::kRmtHeapTypeNone)
+                {
+                    // Handle special case for unspecified heap type.
+                    heap_filter += kUnspecifiedHeapTypeFilterString;
+                }
+                else
+                {
+                    heap_filter += QString(RmtGetHeapTypeNameFromHeapType(static_cast<RmtHeapType>(heap)));
+                }
+                filter_count++;
             }
         }
+
         heap_filter += ")";
+
+        if (filter_count == 0)
+        {
+            // No heap types selected.  Use an empty RegEx character set to filter all rows.
+            heap_filter = "([])";
+        }
 
         return heap_filter;
     }

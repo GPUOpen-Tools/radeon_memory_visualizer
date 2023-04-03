@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a priority queue data structure.
@@ -199,8 +199,7 @@ RmtErrorCode RmtStreamMergerInitialize(RmtStreamMerger* token_heap, RmtParser* s
     token_heap->parsers                 = stream_parsers;
     token_heap->minimum_start_timestamp = UINT64_MAX;
 
-    RmtStreamMergerReset(token_heap, file_handle);
-    return kRmtOk;
+    return RmtStreamMergerReset(token_heap, file_handle);
 }
 
 RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap, FILE* file_handle)
@@ -208,12 +207,16 @@ RmtErrorCode RmtStreamMergerReset(RmtStreamMerger* token_heap, FILE* file_handle
     RMT_RETURN_ON_ERROR(token_heap, kRmtErrorInvalidPointer);
 
     token_heap->current_size = 0;
+    RmtTokenClearPayloadCaches();
 
     for (int32_t current_rmt_stream_index = 0; current_rmt_stream_index < token_heap->parser_count; ++current_rmt_stream_index)
     {
         // reset each parser.
         RmtErrorCode error_code = RmtParserReset(&token_heap->parsers[current_rmt_stream_index], file_handle);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+
+        // The stream buffer size should not be 0.  This indicates a chunk with this stream index was not loaded from the trace file.
+        RMT_RETURN_ON_ERROR(token_heap->parsers[current_rmt_stream_index].file_buffer_size > 0, kRmtErrorMalformedData);
 
         // insert first token of each parser
         RmtToken* current_token = &token_heap->buffer[current_rmt_stream_index];
@@ -441,13 +444,25 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
     RmtToken* next_token_from_stream = &token_heap->buffer[out_token->common.stream_index];
     *next_token_from_stream          = {};
     error_code                       = RmtParserAdvance(&token_heap->parsers[out_token->common.stream_index], next_token_from_stream, NULL);
+
+    if (error_code == kRmtErrorInvalidSize)
+    {
+        // If invalid size error is returned (i.e. end of buffer reached), it indicates there was only room in the buffer for part of the token data.
+        // Calling RmtParserAdvance() again here will load the next chunk buffer with the last partial token prepended to the buffer.
+        // The partial token will then be re-parsed in full.
+        error_code = RmtParserAdvance(&token_heap->parsers[out_token->common.stream_index], next_token_from_stream, NULL);
+
+        // Two End of Buffers in a row should not happen (it would mean a token larger than the data chunk in the trace file was parsed).
+        RMT_ASSERT(error_code != kRmtErrorInvalidSize);
+    }
+
     if (error_code == kRmtOk)
     {
         error_code = Insert(token_heap, next_token_from_stream);
         RMT_ASSERT(error_code == kRmtOk);
     }
 
-    // EOF is a valid error code, as that's just a stream ending, anything else is probably bad.
+    // EOF is a valid error code, as that's just a stream ending.
     if (error_code == kRmtEof)
     {
         return kRmtOk;

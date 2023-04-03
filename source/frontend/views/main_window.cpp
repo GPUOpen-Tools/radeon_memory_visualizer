@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -580,7 +580,7 @@ void MainWindow::dropEvent(QDropEvent* event)
         {
             const QString potential_trace_path = event->mimeData()->urls().at(i).toLocalFile();
 
-            if (rmv::TraceManager::Get().TraceValidToLoad(potential_trace_path) == true)
+            if (rmv_util::TraceValidToLoad(potential_trace_path) == true)
             {
                 rmv::TraceManager::Get().LoadTrace(potential_trace_path);
             }
@@ -621,13 +621,12 @@ void MainWindow::UpdateSnapshotCombobox(RmtSnapshotPoint* selected_snapshot_poin
 
     if (trace_manager.DataSetValid())
     {
-        const RmtDataSet* data_set = trace_manager.GetDataSet();
         ui_->snapshot_combo_box_->ClearItems();
 
         int32_t selected_snapshot_point_index = 0;
-        for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < data_set->snapshot_count; ++current_snapshot_point_index)
+        for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < RmtTraceLoaderGetSnapshotCount(); ++current_snapshot_point_index)
         {
-            const RmtSnapshotPoint* current_snapshot_point = &data_set->snapshots[current_snapshot_point_index];
+            const RmtSnapshotPoint* current_snapshot_point = RmtTraceLoaderGetSnapshotPoint(current_snapshot_point_index);
             QString name_string = QString(current_snapshot_point->name) + " (" + rmv::time_util::ClockToTimeUnit(current_snapshot_point->timestamp) + ")";
             if (current_snapshot_point == selected_snapshot_point)
             {
@@ -636,7 +635,7 @@ void MainWindow::UpdateSnapshotCombobox(RmtSnapshotPoint* selected_snapshot_poin
             ui_->snapshot_combo_box_->AddItem(name_string, (qulonglong)current_snapshot_point);
         }
 
-        if (data_set->snapshot_count > 1)
+        if (RmtTraceLoaderGetSnapshotCount() > 1)
         {
             ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneSnapshot, true);
             ui_->main_tab_widget_->setTabEnabled(rmv::kMainPaneCompare, true);

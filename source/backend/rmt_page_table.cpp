@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the page table helper functions.
@@ -69,13 +69,13 @@ static RmtHeapType GetHeapTypeFromAddress(RmtPageTable* page_table, RmtGpuAddres
 }
 
 // update mapping for a single 4KB page.
-static void UpdateMappingForSingle4KPage(RmtPageTable* page_table,
-                                         int32_t       level0_radix,
-                                         int32_t       level1_radix,
-                                         int32_t       level2_radix,
-                                         int32_t       level3_radix,
-                                         RmtGpuAddress physical_address,
-                                         bool          is_unmapping)
+static RmtErrorCode UpdateMappingForSingle4KPage(RmtPageTable* page_table,
+                                                 int32_t       level0_radix,
+                                                 int32_t       level1_radix,
+                                                 int32_t       level2_radix,
+                                                 int32_t       level3_radix,
+                                                 RmtGpuAddress physical_address,
+                                                 bool          is_unmapping)
 {
     // The first three nodes have a similar idea that they are implementing. If we didn't
     // already have a level 1 node for this radix, then we can allocate one now. When we
@@ -84,7 +84,7 @@ static void UpdateMappingForSingle4KPage(RmtPageTable* page_table,
     if (level1 == nullptr)
     {
         level1 = (RmtPageDirectoryLevel1*)RmtPoolAllocate(&page_table->level1_allocator);
-        RMT_ASSERT(level1);
+        RMT_RETURN_ON_ERROR(level1 != nullptr, kRmtErrorPageTableSizeExceeded);
         for (int32_t current_page_directory_level_index = 0; current_page_directory_level_index < RMT_PAGE_DIRECTORY_LEVEL_1_SIZE;
              ++current_page_directory_level_index)
         {
@@ -97,7 +97,7 @@ static void UpdateMappingForSingle4KPage(RmtPageTable* page_table,
     if (level2 == nullptr)
     {
         level2 = (RmtPageDirectoryLevel2*)RmtPoolAllocate(&page_table->level2_allocator);
-        RMT_ASSERT(level2);
+        RMT_RETURN_ON_ERROR(level2 != nullptr, kRmtErrorPageTableSizeExceeded);
         for (int32_t current_page_directory_level_index = 0; current_page_directory_level_index < RMT_PAGE_DIRECTORY_LEVEL_2_SIZE;
              ++current_page_directory_level_index)
         {
@@ -110,7 +110,7 @@ static void UpdateMappingForSingle4KPage(RmtPageTable* page_table,
     if (level3 == nullptr)
     {
         level3 = (RmtPageDirectoryLevel3*)RmtPoolAllocate(&page_table->level3_allocator);
-        RMT_ASSERT(level3);
+        RMT_RETURN_ON_ERROR(level3 != nullptr, kRmtErrorPageTableSizeExceeded);
         for (int32_t current_page_directory_level_index = 0; current_page_directory_level_index < RMT_MAXIMUM_PAGE_TABLE_LEAF_SIZE;
              ++current_page_directory_level_index)
         {
@@ -177,6 +177,7 @@ static void UpdateMappingForSingle4KPage(RmtPageTable* page_table,
         level3->physical_addresses[(level3_radix * 6) + 5] = 0;
         level3->is_mapped[byte_offset] &= ~mask;
     }
+    return kRmtOk;
 }
 
 // Initialize the page table.
@@ -246,7 +247,8 @@ RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
     const uint64_t size_of_page     = RmtGetPageSize(page_size);
     const uint64_t size_in_bytes    = size_in_pages * size_of_page;
     const int32_t  size_in_4k_pages = (int32_t)(size_in_bytes / page_size_4kib);
-    RMT_ASSERT(size_in_4k_pages * 4 * 1024 == size_in_bytes);  // make sure no precision lost in division (4KB should always be a factor of other page sizes).
+    RMT_ASSERT(static_cast<uint64_t>(size_in_4k_pages * 4 * 1024) ==
+               size_in_bytes);  // make sure no precision lost in division (4KB should always be a factor of other page sizes).
 
     // Update each page's mapping in the page table.
     RmtGpuAddress current_virtual_address  = virtual_address;
@@ -259,7 +261,12 @@ RmtErrorCode RmtPageTableUpdateMemoryMappings(RmtPageTable*          page_table,
         int32_t level3_radix = 0;
         DecomposeAddress(current_virtual_address, &level0_radix, &level1_radix, &level2_radix, &level3_radix);
 
-        UpdateMappingForSingle4KPage(page_table, level0_radix, level1_radix, level2_radix, level3_radix, current_physical_address, is_unmapping);
+        RmtErrorCode result =
+            UpdateMappingForSingle4KPage(page_table, level0_radix, level1_radix, level2_radix, level3_radix, current_physical_address, is_unmapping);
+        if (result != kRmtOk)
+        {
+            return result;
+        }
 
         current_virtual_address += page_size_4kib;
         if (!is_unmapping && (current_physical_address == 0U))

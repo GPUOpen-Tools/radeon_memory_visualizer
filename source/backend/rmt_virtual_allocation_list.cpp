@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the virtual allocation list functions.
@@ -386,7 +386,8 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
                                                    RmtGpuAddress             address,
                                                    int32_t                   size_in_4kb_pages,
                                                    const RmtHeapType         preferences[4],
-                                                   RmtOwnerType              owner)
+                                                   RmtOwnerType              owner,
+                                                   uint64_t                  allocation_identifier)
 {
     RMT_ASSERT(virtual_allocation_list);
     RMT_RETURN_ON_ERROR(virtual_allocation_list, kRmtErrorInvalidPointer);
@@ -422,6 +423,7 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
     allocation_details->commit_type             = 0;
     allocation_details->resource_count          = 0;
     allocation_details->next_resource_index     = 0;
+    allocation_details->allocation_identifier   = allocation_identifier;
 
     for (int32_t current_heap_preference_index = 0; current_heap_preference_index < RMT_NUM_HEAP_PREFERENCES; ++current_heap_preference_index)
     {

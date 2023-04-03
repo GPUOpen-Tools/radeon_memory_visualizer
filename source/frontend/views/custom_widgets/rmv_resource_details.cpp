@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the resource details widget.
@@ -12,6 +12,7 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
+#include "rmt_print.h"
 #include "util/string_util.h"
 
 RMVResourceDetails::RMVResourceDetails(const RMVResourceDetailsConfig& config)
@@ -104,7 +105,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
 
         x_pos += ScalingManager::Get().Scaled(250);
         painter->drawText(x_pos, header_height, "Usage");
-        painter->drawText(x_pos, value_height, rmv::string_util::GetResourceUsageString(usage_type));
+        painter->drawText(x_pos, value_height, RmtGetResourceUsageTypeNameFromResourceUsageType(usage_type));
     }
     else
     {

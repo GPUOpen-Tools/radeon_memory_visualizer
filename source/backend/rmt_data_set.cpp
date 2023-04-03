@@ -1,9 +1,26 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
 //=============================================================================
+
+#include "rmt_data_set.h"
+
+#include "rmt_adapter_info.h"
+#include "rmt_address_helper.h"
+#include "rmt_assert.h"
+#include "rmt_data_snapshot.h"
+#include "rmt_data_timeline.h"
+#include "rmt_file_format.h"
+#include "rmt_legacy_snapshot_writer.h"
+#include "rmt_linear_buffer.h"
+#include "rmt_print.h"
+#include "rmt_rdf_file_parser.h"
+#include "rmt_resource_history.h"
+#include "rmt_snapshot_writer.h"
+#include "rmt_token.h"
+#include "rmt_util.h"
 
 #include <map>
 #include <unordered_set>
@@ -12,27 +29,17 @@
 #include <string.h>  // for memcpy()
 #include <time.h>
 
-#include "rmt_data_set.h"
-#include "rmt_data_timeline.h"
-#include "rmt_util.h"
-#include "rmt_assert.h"
-#include "rmt_linear_buffer.h"
-#include "rmt_data_snapshot.h"
-#include "rmt_resource_history.h"
-#include "rmt_file_format.h"
-#include "rmt_print.h"
-#include "rmt_address_helper.h"
-#include "rmt_token.h"
-
-#ifndef _WIN32
+#ifdef _LINUX
+#include "rmt_trace_loader.h"
 #include "linux/safe_crt.h"
+
 #include <fstream>
 #include <stddef.h>  // for offsetof macro.
 #include <unistd.h>
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#endif
+#endif  // #ifdef _LINUX
 
 // Determine if a file is read only.
 static bool IsFileReadOnly(const char* file_path)
@@ -76,6 +83,24 @@ static bool MoveTraceFile(const char* existing_file_path, const char* new_file_p
 
     return result;
 #endif
+}
+
+// Convert a snapshot writer handle to a snapshot writer class object pointer.
+RmtSnapshotWriter* SnapshotWriterFromHandle(RmtSnapshotWriterHandle handle)
+{
+    RmtSnapshotWriter* snapshot_writer = reinterpret_cast<RmtSnapshotWriter*>(handle);
+
+    RMT_ASSERT((handle == nullptr) || ((handle != nullptr) && (snapshot_writer != nullptr)));
+    return snapshot_writer;
+}
+
+// Delete a snapshot writer object associated with a data set.
+RmtErrorCode DestroySnapshotWriter(RmtDataSet* data_set)
+{
+    delete SnapshotWriterFromHandle(data_set->snapshot_writer_handle);
+    data_set->snapshot_writer_handle = nullptr;
+
+    return kRmtOk;
 }
 
 struct RmtResourceNameData
@@ -260,21 +285,27 @@ static RmtErrorCode ParseAdapterInfoChunk(RmtDataSet* data_set, RmtFileChunkHead
     RMT_RETURN_ON_ERROR(read_size == sizeof(RmtFileChunkAdapterInfo), kRmtErrorMalformedData);
 
     // these should always match.
-    RMT_STATIC_ASSERT(sizeof(adapter_info_chunk.name) == sizeof(data_set->adapter_info.name));
+    RMT_STATIC_ASSERT(sizeof(adapter_info_chunk.name) == sizeof(data_set->system_info.name));
 
     // fill out adapter info.
-    memcpy(data_set->adapter_info.name, adapter_info_chunk.name, RMT_MAX_ADAPTER_NAME_LENGTH);
-    data_set->adapter_info.pcie_family_id              = adapter_info_chunk.pcie_family_id;
-    data_set->adapter_info.pcie_revision_id            = adapter_info_chunk.pcie_revision_id;
-    data_set->adapter_info.device_id                   = adapter_info_chunk.device_id;
-    data_set->adapter_info.minimum_engine_clock        = adapter_info_chunk.minimum_engine_clock;
-    data_set->adapter_info.maximum_engine_clock        = adapter_info_chunk.maximum_engine_clock;
-    data_set->adapter_info.memory_type                 = (RmtAdapterInfoMemoryType)adapter_info_chunk.memory_type;
-    data_set->adapter_info.memory_operations_per_clock = adapter_info_chunk.memory_operations_per_clock;
-    data_set->adapter_info.memory_bus_width            = adapter_info_chunk.memory_bus_width;
-    data_set->adapter_info.memory_bandwidth            = adapter_info_chunk.memory_bandwidth;
-    data_set->adapter_info.minimum_memory_clock        = adapter_info_chunk.minimum_memory_clock;
-    data_set->adapter_info.maximum_memory_clock        = adapter_info_chunk.maximum_memory_clock;
+    strncpy_s(data_set->system_info.name, sizeof(data_set->system_info.name), adapter_info_chunk.name, sizeof(data_set->system_info.name) - 1);
+
+    data_set->system_info.pcie_family_id       = adapter_info_chunk.pcie_family_id;
+    data_set->system_info.pcie_revision_id     = adapter_info_chunk.pcie_revision_id;
+    data_set->system_info.device_id            = adapter_info_chunk.device_id;
+    data_set->system_info.minimum_engine_clock = adapter_info_chunk.minimum_engine_clock;
+    data_set->system_info.maximum_engine_clock = adapter_info_chunk.maximum_engine_clock;
+
+    strncpy_s(data_set->system_info.memory_type_name,
+              sizeof(data_set->system_info.memory_type_name),
+              RmtAdapterInfoGetVideoMemoryType(static_cast<RmtAdapterInfoMemoryType>(adapter_info_chunk.memory_type)),
+              sizeof(data_set->system_info.memory_type_name) - 1);
+
+    data_set->system_info.memory_operations_per_clock = adapter_info_chunk.memory_operations_per_clock;
+    data_set->system_info.memory_bus_width            = adapter_info_chunk.memory_bus_width;
+    data_set->system_info.memory_bandwidth            = adapter_info_chunk.memory_bandwidth;
+    data_set->system_info.minimum_memory_clock        = adapter_info_chunk.minimum_memory_clock;
+    data_set->system_info.maximum_memory_clock        = adapter_info_chunk.maximum_memory_clock;
     return kRmtOk;
 }
 
@@ -522,9 +553,9 @@ static void BuildDataProfileParseResourceDestroy(RmtDataSet* data_set, const Rmt
     RMT_ASSERT(current_token->type == kRmtTokenTypeResourceDestroy);
 
     // Only remove the resource from list of created resources if it has previously been created.
-    if (created_resources.find(current_token->resource_create_token.resource_identifier) != created_resources.end())
+    if (created_resources.find(current_token->resource_destroy_token.resource_identifier) != created_resources.end())
     {
-        created_resources.erase(current_token->resource_create_token.resource_identifier);
+        created_resources.erase(current_token->resource_destroy_token.resource_identifier);
     }
     data_set->data_profile.current_resource_count--;
 }
@@ -603,7 +634,7 @@ static RmtErrorCode BuildDataProfile(RmtDataSet* data_set)
     data_set->resource_id_map_allocator->allocation_base = (void*)(static_cast<const uint8_t*>(data) + sizeof(ResourceIdMapAllocator));
     data_set->resource_id_map_allocator->allocation_size = size_required - sizeof(ResourceIdMapAllocator);
     data_set->resource_id_map_allocator->resource_count  = 0;
-    data_set->stream_merger.allocator                      = data_set->resource_id_map_allocator;
+    data_set->stream_merger.allocator                    = data_set->resource_id_map_allocator;
     return kRmtOk;
 }
 
@@ -676,10 +707,11 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
     return kRmtOk;
 }
 
+#ifdef _DEBUG
 // Verify that a string contains only valid characters.
 static bool IsValidTextString(const char* text, size_t length)
 {
-    int character_position = 0;
+    size_t character_position = 0;
     while ((character_position < length) && (text[character_position] != '\0'))
     {
         if ((text[character_position] <= 0x1f) || text[character_position] == 0x7f)
@@ -691,6 +723,7 @@ static bool IsValidTextString(const char* text, size_t length)
 
     return true;
 }
+#endif  // _DEBUG
 
 // consume next RMT token for snapshot generation.
 static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* current_token, RmtDataSnapshot* out_snapshot)
@@ -754,9 +787,12 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 if (name_length > 0)
                 {
                     memcpy(name, current_token->userdata_token.payload_cache, name_length);
-                    // Check for invalid characters.  Invalid characters may indicate a parsing issue.
-                    RMT_ASSERT(IsValidTextString(name, name_length));
-
+#ifdef _DEBUG
+                    // Check for invalid characters. Invalid characters may indicate a parsing issue.
+                    // NOTE: Test intentionally only done in debug.
+                    bool result = IsValidTextString(name, name_length);
+                    RMT_ASSERT(result == true);
+#endif  // _DEBUG
                     name[name_length - 1] = '\0';
                 }
                 else
@@ -821,12 +857,17 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
             // alloc token.  This is an expected case as that allocation is owned outside the target process, so we'll add
             // the allocation to the list so future resource tokens can find it.
             static const RmtHeapType kDummyHeapPref[4] = {kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible};
-            error_code                                 = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
+
+            // The byte offset of the token in the data stream is used to uniquely identify this allocation.
+            // The offset is used rather than the virtual allocation address in case there are allocations/frees then another allocation with the same base address.
+            uint64_t allocation_identifier = current_token->common.offset;
+            error_code                     = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
                                                                current_token->common.timestamp,
                                                                current_token->resource_bind_token.virtual_address,
                                                                (int32_t)(current_token->resource_bind_token.size_in_bytes >> 12),
                                                                kDummyHeapPref,
-                                                               RmtOwnerType::kRmtOwnerTypeClientDriver);
+                                                               RmtOwnerType::kRmtOwnerTypeClientDriver,
+                                                               allocation_identifier);
         }
         else if (error_code == kRmtErrorResourceAlreadyBound)
         {
@@ -919,12 +960,16 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeVirtualAllocate:
     {
-        error_code = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
+        // The byte offset of the token in the data stream is used to uniquely identify this allocation.
+        // The offset is used rather than the virtual allocation address in case there are allocations/frees then another allocation with the same base address.
+        uint64_t allocation_identifier = current_token->common.offset;
+        error_code                     = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
                                                            current_token->common.timestamp,
                                                            current_token->virtual_allocate_token.virtual_address,
                                                            (int32_t)(current_token->virtual_allocate_token.size_in_bytes >> 12),
                                                            current_token->virtual_allocate_token.preference,
-                                                           current_token->virtual_allocate_token.owner_type);
+                                                           current_token->virtual_allocate_token.owner_type,
+                                                           allocation_identifier);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
@@ -932,11 +977,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeResourceCreate:
     {
-        // For testing purposes, define _DISABLE_IMPLICIT_RESOURCE_FILTERING to prevent implicitly created resource from being removed.
-#ifndef _DISABLE_IMPLICIT_RESOURCE_FILTERING
-        if ((!implicit_resource_list_created) ||
-            implicit_resource_list.find(current_token->resource_create_token.original_resource_identifier) == implicit_resource_list.end())
-#endif  // _DISABLE_IMPLICIT_RESOURCE_FILTERING
         {
             error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &current_token->resource_create_token);
 
@@ -967,19 +1007,25 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 }
 
 // helper function that mirrors the .bak file to the original.
-static void CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary)
+static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary)
 {
     RMT_ASSERT(data_set);
     if (data_set->read_only)
     {
-        return;
+        return kRmtOk;
     }
+
+    RmtErrorCode result = kRmtErrorFileAccessFailed;
 
     if (data_set->file_handle != nullptr)
     {
         fflush((FILE*)data_set->file_handle);
         fclose((FILE*)data_set->file_handle);
         data_set->file_handle = NULL;
+    }
+    else if (data_set->is_rdf_trace)
+    {
+        result = RmtRdfStreamClose();
     }
 
     if (remove_temporary)
@@ -992,14 +1038,43 @@ static void CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary
         // for a mirror without remove, we need to recopy the temp
         bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
         RMT_ASSERT(success);
-        success = CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
-        RMT_ASSERT(success);
 
-        data_set->file_handle = NULL;
-        errno_t error_no      = fopen_s((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+");
-        RMT_ASSERT(data_set->file_handle);
-        RMT_ASSERT(error_no == 0);
+        if (success == false)
+        {
+            // Failed to move backup trace file to original trace file.
+            // The backup file is left for the user in case they want to recover any saved snapshots.
+            data_set->read_only = true;
+        }
+        else
+        {
+            success = CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
+            RMT_ASSERT(success);
+            if (success == false)
+            {
+                data_set->read_only = true;
+            }
+        }
+
+        if (data_set->is_rdf_trace)
+        {
+            result = RmtRdfStreamOpen(data_set->temporary_file_path, data_set->read_only);
+        }
+        else
+        {
+            data_set->file_handle = NULL;
+            errno_t error_no      = fopen_s((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+");
+
+            RMT_ASSERT(data_set->file_handle);
+            RMT_ASSERT(error_no == 0);
+
+            if (error_no == 0)
+            {
+                result = kRmtOk;
+            }
+        }
     }
+
+    return result;
 }
 
 // initialize the data set by reading the header chunks, and setting up the streams.
@@ -1015,22 +1090,46 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     memcpy(data_set->file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
     memcpy(data_set->temporary_file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
 
-    data_set->file_handle = NULL;
-    data_set->read_only   = false;
+    data_set->file_handle  = NULL;
+    data_set->read_only    = false;
+    data_set->is_rdf_trace = false;
+    data_set->active_gpu   = 0;
     errno_t error_no;
-
+    bool    file_transfer_result = false;
     if (IsFileReadOnly(path))
     {
         data_set->read_only = true;
     }
     else
     {
-        // copy the entire input file to a temporary.
         strcat_s(data_set->temporary_file_path, sizeof(data_set->temporary_file_path), ".bak");
-        CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
+#ifdef _LINUX
+        if (RmtTraceLoaderIsTraceAlreadyInUse(data_set->temporary_file_path))
+        {
+            data_set->read_only = true;
+        }
+        else
+        {
+            // copy the entire input file to a temporary.
+            file_transfer_result = CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
+        }
+#else
+        // copy the entire input file to a temporary.
+        file_transfer_result = CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
+#endif  // #ifdef _LINUX
+    }
 
-        // Load the data from the RMT file.
-        error_no = fopen_s((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+");
+    const char* file_access_mode = "rb+";
+    const char* trace_file       = data_set->temporary_file_path;
+
+    // If the trace file is a standard RMV trace and it doesn't have the read-only attribute set, do an additional check here
+    // to see if another instance of RMV already has the file open (this would be the .bak file).
+    if (!data_set->read_only)
+    {
+        // Determine if the back up file should be opened or the original file.
+        // If the backup file can't be opened with write privileges, set the read only flag and attempt to open the original file in read only mode.
+        // Return an error if the original file can't be opened.
+        error_no = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
             data_set->read_only = true;
@@ -1039,34 +1138,60 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
 
     if (data_set->read_only)
     {
-        // file is read-only so just read the original rmv trace file
-        error_no = fopen_s((FILE**)&data_set->file_handle, data_set->file_path, "rb");
+        // File is read-only so just read the original rmv trace file
+        file_access_mode = "rb";
+        trace_file       = data_set->file_path;
+        error_no         = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
             return kRmtErrorFileNotOpen;
         }
     }
 
-    // get the size of the file.
-    const size_t current_stream_offset = ftell((FILE*)data_set->file_handle);
-    fseek((FILE*)data_set->file_handle, 0L, SEEK_END);
-    data_set->file_size_in_bytes = ftell((FILE*)data_set->file_handle);
-    fseek((FILE*)data_set->file_handle, (int32_t)current_stream_offset, SEEK_SET);
-    if (data_set->file_size_in_bytes == 0U)
+    if (data_set->file_handle != nullptr)
     {
-        fclose((FILE*)data_set->file_handle);
-        data_set->file_handle = NULL;
-        return kRmtErrorFileNotOpen;
+        // Close the trace file so that it can be opened in RDF format.
+        fclose(data_set->file_handle);
+        data_set->file_handle = nullptr;
     }
 
-    // check that the file is larger enough at least for the RMT file header.
-    if (data_set->file_size_in_bytes < sizeof(RmtFileHeader))
+    // Attempt to open the file in RDF format.  Open the original file in read only mode or the backup file in read/write mode.
+    RmtErrorCode error_code = RmtRdfFileParserLoadRdf(trace_file, data_set);
+    if (error_code != kRmtOk)
     {
-        return kRmtErrorFileNotOpen;
+        // Loading as an RDF file failed, attempt to open the trace file using the legacy format.
+        error_no = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
+        if ((data_set->file_handle == nullptr) || error_no != 0)
+        {
+            return kRmtErrorFileNotOpen;
+        }
+
+        // Get the size of the file.
+        const size_t current_stream_offset = ftell((FILE*)data_set->file_handle);
+        fseek((FILE*)data_set->file_handle, 0L, SEEK_END);
+        data_set->file_size_in_bytes = ftell((FILE*)data_set->file_handle);
+        fseek((FILE*)data_set->file_handle, (int32_t)current_stream_offset, SEEK_SET);
+        if (data_set->file_size_in_bytes == 0U)
+        {
+            fclose((FILE*)data_set->file_handle);
+            data_set->file_handle = NULL;
+            return kRmtErrorFileNotOpen;
+        }
+
+        // check that the file is larger enough at least for the RMT file header.
+        if (data_set->file_size_in_bytes < sizeof(RmtFileHeader))
+        {
+            return kRmtErrorFileNotOpen;
+        }
+
+        error_code = ParseChunks(data_set);
+        if (error_code == kRmtOk)
+        {
+            RmtLegacySnapshotWriter* snapshot_writer = new RmtLegacySnapshotWriter(data_set);
+            data_set->snapshot_writer_handle         = reinterpret_cast<RmtSnapshotWriterHandle*>(snapshot_writer);
+        }
     }
 
-    // parse all the chunk headers from the file.
-    RmtErrorCode error_code = ParseChunks(data_set);
     RMT_ASSERT(error_code == kRmtOk);
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
@@ -1075,9 +1200,14 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     // construct the data profile for subsequent data parsing.
     error_code = BuildDataProfile(data_set);
     RMT_ASSERT(error_code == kRmtOk);
-    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    return kRmtOk;
+    // If the trace wasn't opened in read only mode and copying to the backup file failed then report an error.
+    if (!data_set->read_only && !file_transfer_result)
+    {
+        error_code = kRmtErrorFileAccessFailed;
+    }
+
+    return error_code;
 }
 
 // destroy the data set.
@@ -1085,12 +1215,24 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
 {
     data_set->is_resource_name_processing_complete = false;
 
-    // flush writes and close the handle.
-    fflush((FILE*)data_set->file_handle);
-    fclose((FILE*)data_set->file_handle);
-    data_set->file_handle = NULL;
+    if (data_set->file_handle != nullptr)
+    {
+        // Flush writes and close the handle.
+        fflush((FILE*)data_set->file_handle);
+        fclose((FILE*)data_set->file_handle);
+        data_set->file_handle = NULL;
+    }
 
     CommitTemporaryFileEdits(data_set, true);
+
+    if (data_set->is_rdf_trace)
+    {
+        RmtRdfFileParserDestroyAllDataStreams();
+        RmtRdfStreamClose();
+        DestroySnapshotWriter(data_set);
+        data_set->is_rdf_trace = false;
+    }
+    data_set->stream_count = 0;
 
     data_set->file_handle = NULL;
     return kRmtOk;
@@ -1265,10 +1407,10 @@ static RmtErrorCode TimelineGeneratorAllocateMemory(RmtDataSet* data_set, RmtDat
     out_timeline->series_count = GetSeriesCountFromTimelineType(data_set, timeline_type);
     RMT_ASSERT(out_timeline->series_count < RMT_MAXIMUM_TIMELINE_DATA_SERIES);
 
-    const int32_t  values_per_top_level_series = RmtDataSetGetSeriesIndexForTimestamp(data_set, data_set->maximum_timestamp) + 1;
-    const uint64_t buffer_size                 = values_per_top_level_series * sizeof(uint64_t);
-    const size_t   series_memory_buffer_size   = buffer_size * out_timeline->series_count;
-    out_timeline->series_memory_buffer         = (int32_t*)PerformAllocation(data_set, series_memory_buffer_size, sizeof(uint64_t));
+    const int32_t values_per_top_level_series = RmtDataSetGetSeriesIndexForTimestamp(data_set, data_set->maximum_timestamp) + 1;
+    const uint64_t buffer_size               = values_per_top_level_series * sizeof(uint64_t);
+    const size_t   series_memory_buffer_size = buffer_size * out_timeline->series_count;
+    out_timeline->series_memory_buffer       = (int32_t*)PerformAllocation(data_set, series_memory_buffer_size, sizeof(uint64_t));
     RMT_ASSERT(out_timeline->series_memory_buffer);
     RMT_RETURN_ON_ERROR(out_timeline->series_memory_buffer, kRmtErrorOutOfMemory);
 
@@ -1872,33 +2014,11 @@ static RmtErrorCode AddSnapshot(RmtDataSet* data_set, const char* name, uint64_t
 
     if (!data_set->read_only)
     {
-        // jump to the end of the file, and write a new snapshot out.
-        fseek((FILE*)data_set->file_handle, 0L, SEEK_END);
+        // Add the minimum timestamp to the snapshot timestamp so that rebase on load works.
+        const uint64_t timestamp_with_offset = timestamp + data_set->stream_merger.minimum_start_timestamp;
 
-        // add the header.
-        RmtFileChunkHeader chunk_header;
-        chunk_header.chunk_identifier.chunk_info.chunk_type  = kRmtFileChunkTypeSnapshotInfo;
-        chunk_header.chunk_identifier.chunk_info.chunk_index = 0;
-        chunk_header.chunk_identifier.chunk_info.reserved    = 0;
-        chunk_header.version_major                           = 1;
-        chunk_header.version_minor                           = 0;
-        chunk_header.padding                                 = 0;
-        chunk_header.size_in_bytes                           = sizeof(RmtFileChunkHeader) + sizeof(RmtFileChunkSnapshotInfo) + name_length;
-
-        size_t write_size = fwrite(&chunk_header, 1, sizeof(RmtFileChunkHeader), (FILE*)data_set->file_handle);
-        RMT_ASSERT(write_size == sizeof(RmtFileChunkHeader));
-
-        // add the snapshot payload
-        RmtFileChunkSnapshotInfo snapshot_info_chunk;
-        snapshot_info_chunk.name_length_in_bytes = name_length;
-        snapshot_info_chunk.snapshot_time        = timestamp + data_set->stream_merger.minimum_start_timestamp;  // add the minimum so rebase on load works.
-        data_set->snapshots[snapshot_index].file_offset = ftell((FILE*)data_set->file_handle);                   // get offset before write to payload
-        write_size                                      = fwrite(&snapshot_info_chunk, 1, sizeof(RmtFileChunkSnapshotInfo), (FILE*)data_set->file_handle);
-        RMT_ASSERT(write_size == sizeof(RmtFileChunkSnapshotInfo));
-
-        // write the name
-        write_size = fwrite(name, 1, name_length, (FILE*)data_set->file_handle);
-        RMT_ASSERT(write_size == name_length);
+        // Update the snapshots in the file using which ever trace file format has been loaded.
+        SnapshotWriterFromHandle(data_set->snapshot_writer_handle)->Add(name, timestamp_with_offset, static_cast<int16_t>(snapshot_index));
     }
 
     // write the pointer back.
@@ -1916,20 +2036,19 @@ RmtErrorCode RmtDataSetAddSnapshot(RmtDataSet* data_set, const char* name, uint6
     RMT_ASSERT(error_code == kRmtOk);
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    CommitTemporaryFileEdits(data_set, false);
-    return kRmtOk;
+    return CommitTemporaryFileEdits(data_set, false);
 }
 
 // guts of removing a snapshot without destroying the cached object, lets this code be shared with rename.
 static void RemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, RmtDataSnapshot* open_snapshot)
 {
+    // Clear the snapshot name.  This marks it for deletion.
+    data_set->snapshots[snapshot_index].name[0] = '\0';
+
     if (!data_set->read_only)
     {
-        // set the length to 0 in the file.
-        const uint64_t offset_to_snapshot_chunk = data_set->snapshots[snapshot_index].file_offset;  // offset to snapshot info chunk.
-        fseek((FILE*)data_set->file_handle, (int32_t)(offset_to_snapshot_chunk + offsetof(RmtFileChunkSnapshotInfo, name_length_in_bytes)), SEEK_SET);
-        const uint32_t value = 0;
-        fwrite(&value, 1, sizeof(uint32_t), (FILE*)data_set->file_handle);
+        // Update the snapshots in file using which ever trace file format has been loaded.
+        SnapshotWriterFromHandle(data_set->snapshot_writer_handle)->Remove(static_cast<int16_t>(snapshot_index));
     }
 
     // remove the snapshot from the list of snapshot points in the dataset.
@@ -1959,9 +2078,7 @@ RmtErrorCode RmtDataSetRemoveSnapshot(RmtDataSet* data_set, const int32_t snapsh
 
     RemoveSnapshot(data_set, snapshot_index, open_snapshot);
 
-    CommitTemporaryFileEdits(data_set, false);
-
-    return kRmtOk;
+    return CommitTemporaryFileEdits(data_set, false);
 }
 
 // rename a snapshot in the data set.
@@ -1994,9 +2111,7 @@ RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapsh
     // remove it also, has the side effect of copying the new thing we just made back to the original location :D
     RemoveSnapshot(data_set, snapshot_index, nullptr);
 
-    CommitTemporaryFileEdits(data_set, false);
-
-    return kRmtOk;
+    return CommitTemporaryFileEdits(data_set, false);
 }
 
 int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t timestamp)

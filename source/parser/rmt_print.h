@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// $brief  Printing helper functions for RMT.
@@ -31,6 +31,13 @@ const char* RmtGetPageSizeNameFromPageSize(RmtPageSize page_size);
 /// @returns
 /// Pointer to the resource type string.
 const char* RmtGetResourceTypeNameFromResourceType(RmtResourceType resource_type);
+
+/// Get the resource usage type as a string from the resource type ID.
+///
+/// @param [in]     usage_type           An RmtResourceUsageType defining the resource usage type.
+/// @returns
+/// Pointer to the resource usage type string.
+const char* RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceUsageType usage_type);
 
 /// Get the commit type as a string from the commit type ID.
 ///

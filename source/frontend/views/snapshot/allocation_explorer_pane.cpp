@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Allocation Explorer pane.
@@ -49,9 +49,11 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
 
     // Initialize allocation table.
     model_->InitializeAllocationTableModel(ui_->allocation_table_view_, 0, rmv::kVirtualAllocationColumnCount);
+    ui_->allocation_table_view_->setCursor(Qt::PointingHandCursor);
 
     // Initialize resource table.
     model_->InitializeResourceTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount);
+    ui_->resource_table_view_->setCursor(Qt::PointingHandCursor);
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->resource_search_box_, ui_->resource_size_slider_);
     rmv::widget_util::InitCommonFilteringComponents(ui_->allocation_search_box_, ui_->allocation_size_slider_);

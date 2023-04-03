@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the resource event delegate.
@@ -37,7 +37,7 @@ QSize RMVResourceEventDelegate::sizeHint(const QStyleOptionViewItem& option, con
 {
     QSize size_hint;
 
-    if (index.column() == rmv::kResourceHistoryLegend)
+    if (index.column() == rmv::kResourceHistoryColumnLegend)
     {
         int scaled_dimension = ScalingManager::Get().Scaled(kIconDefaultSizeHint);
         size_hint.setWidth(scaled_dimension);
@@ -53,7 +53,7 @@ QSize RMVResourceEventDelegate::sizeHint(const QStyleOptionViewItem& option, con
 
 void RMVResourceEventDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
-    if (index.column() == rmv::kResourceHistoryLegend)
+    if (index.column() == rmv::kResourceHistoryColumnLegend)
     {
         const RmtResourceHistoryEventType event_type = (RmtResourceHistoryEventType)index.data().toInt();
         QColor                            color      = model_->GetColorFromEventType(event_type, false);

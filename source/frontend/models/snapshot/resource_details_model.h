@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Resource details model.
@@ -98,7 +98,7 @@ namespace rmv
         /// @param [in] timeline_table_view The view to the table.
         /// @param [in] num_rows            Total rows of the table.
         /// @param [in] num_columns         Total columns of the table.
-        void InitializeTimelineTableModel(QTableView* timeline_table_view, uint num_rows, uint num_columns);
+        void InitializeTimelineTableModel(ScaledTableView* timeline_table_view, uint num_rows, uint num_columns);
 
         /// @brief Initialize the resource properties table model.
         ///

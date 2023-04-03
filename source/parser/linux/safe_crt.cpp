@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2016-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2016-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Linux implementation of Windows safe CRT functions.
@@ -52,7 +52,7 @@ errno_t fopen_s(FILE** file, const char* filename, const char* mode)
 
     *file = fopen(filename, mode);
 
-    if (*file)
+    if (*file == nullptr)
     {
         return errno;
     }
@@ -105,6 +105,34 @@ errno_t strcpy_s(char* destination, size_t size, const char* source)
     }
 
     assert(result == 0);
+
+    return result;
+}
+
+errno_t strncpy_s(char* out_destination, const size_t destination_size, const char* source, const size_t max_count)
+{
+    errno_t result             = 0;
+    size_t  characters_to_copy = RMT_MINIMUM(destination_size, max_count);
+
+    if (out_destination == nullptr)
+    {
+        result = EINVAL;
+    }
+    else if (source == nullptr)
+    {
+        out_destination[0] = '\0';
+        result             = EINVAL;
+    }
+    else if (characters_to_copy == 0)
+    {
+        result = ERANGE;
+    }
+
+    if (result == 0)
+    {
+        strncpy(out_destination, source, characters_to_copy);
+        *(out_destination + max_count) = '\0';
+    }
 
     return result;
 }

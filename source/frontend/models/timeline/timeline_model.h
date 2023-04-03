@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Timeline model.
@@ -12,7 +12,7 @@
 
 #include "qt_common/utils/model_view_mapper.h"
 
-#include "rmt_data_set.h"
+#include "rmt_data_snapshot.h"
 #include "rmt_data_timeline.h"
 #include "rmt_job_system.h"
 

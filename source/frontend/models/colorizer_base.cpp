@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the colorizer base class.
@@ -365,7 +365,7 @@ namespace rmv
                 {
                     const RmtResourceUsageType resource_usage_type = (RmtResourceUsageType)index;
                     legends_scene->AddColorLegendItem(GetResourceUsageColor(resource_usage_type),
-                                                      rmv::string_util::GetResourceUsageString(resource_usage_type));
+                                                      RmtGetResourceUsageTypeNameFromResourceUsageType(resource_usage_type));
                 }
             }
         }

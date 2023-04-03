@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Main entry point.
@@ -36,7 +36,7 @@ static QString GetTracePath()
     if (QCoreApplication::arguments().count() > 1)
     {
         const QString potential_trace_path = QDir::toNativeSeparators(QCoreApplication::arguments().at(1));
-        if (rmv::TraceManager::Get().TraceValidToLoad(potential_trace_path) == true)
+        if (rmv_util::TraceValidToLoad(potential_trace_path) == true)
         {
             out = potential_trace_path;
         }
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     // Test feature to dump RMV file to JSON. Need a bunch of error handling.
     if (argc == 4)
     {
-        RmtErrorCode error_code = rmtDataSetInitialize(argv[1], &command_line_data_set);
+        RmtErrorCode error_code = RmtDataSetInitialize(argv[1], &command_line_data_set);
         if (error_code != kRmtOk)
         {
             return 1;
@@ -73,13 +73,13 @@ int main(int argc, char* argv[])
 
         const uint64_t timestamp = strtoull(argv[2], NULL, 0);
         RMT_UNUSED(timestamp);
-        error_code = rmtDataSetGenerateSnapshot(&command_line_data_set, command_line_data_set.maximumTimestamp, "snapshot 0", &command_line_snapshot);
+        error_code = RmtDataSetGenerateSnapshot(&command_line_data_set, command_line_data_set.maximumTimestamp, "Snapshot 0", &command_line_snapshot);
         if (error_code != kRmtOk)
         {
             return 2;
         }
 
-        error_code = rmtDataSnapshotDumpJsonToFile(&command_line_snapshot, argv[3]);
+        error_code = RmtJsonDumpToFile(&command_line_snapshot, argv[3]);
         if (error_code != kRmtOk)
         {
             return 3;

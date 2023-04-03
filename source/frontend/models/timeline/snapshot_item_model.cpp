@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a snapshot item model.
@@ -65,9 +65,8 @@ namespace rmv
                 return false;
             }
 
-            RmtDataSet* data_set = trace_manager.GetDataSet();
-            int         row      = index.row();
-            if (row >= data_set->snapshot_count)
+            int row = index.row();
+            if (row >= RmtTraceLoaderGetSnapshotCount())
             {
                 return false;
             }
@@ -86,9 +85,9 @@ namespace rmv
 
             // Make sure this new snapshot name doesn't exist already in the table. This also tests
             // the case to make sure the current snapshot name has changed.
-            for (int i = 0; i < data_set->snapshot_count; i++)
+            for (int i = 0; i < RmtTraceLoaderGetSnapshotCount(); i++)
             {
-                const RmtSnapshotPoint* snapshot_point = &data_set->snapshots[i];
+                const RmtSnapshotPoint* snapshot_point = RmtTraceLoaderGetSnapshotPoint(i);
                 if (QString::compare(new_snapshot_name, snapshot_point->name, Qt::CaseSensitive) == 0)
                 {
                     return false;
@@ -96,6 +95,7 @@ namespace rmv
             }
 
             // Set data in the model.
+            RmtDataSet* data_set = trace_manager.GetDataSet();
             RmtDataSetRenameSnapshot(data_set, row, new_snapshot_name.toLatin1().data());
             return true;
         }
@@ -116,14 +116,13 @@ namespace rmv
             return QVariant();
         }
 
-        const RmtDataSet* data_set = trace_manager.GetDataSet();
-        int               row      = index.row();
-        if (row >= data_set->snapshot_count)
+        int row = index.row();
+        if (row >= RmtTraceLoaderGetSnapshotCount())
         {
             return QVariant();
         }
 
-        const RmtSnapshotPoint* snapshot_point = &data_set->snapshots[row];
+        const RmtSnapshotPoint* snapshot_point = RmtTraceLoaderGetSnapshotPoint(row);
         int                     column         = index.column();
 
         if (role == Qt::DisplayRole)

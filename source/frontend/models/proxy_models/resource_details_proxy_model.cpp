@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes the resource details
@@ -33,7 +33,14 @@ namespace rmv
         model->SetColumnCount(num_columns);
 
         setSourceModel(model);
-        SetFilterKeyColumns({kResourceHistoryTime, kResourceHistoryEvent});
+        SetFilterKeyColumns({
+            kResourceHistoryColumnEvent,
+            kResourceHistoryColumnTime,
+            kResourceHistoryColumnVirtualAddress,
+            kResourceHistoryColumnPhysicalAddress,
+            kResourceHistoryColumnSize,
+            kResourceHistoryColumnPageSize,
+        });
 
         view->setModel(this);
 
@@ -50,20 +57,19 @@ namespace rmv
 
     bool ResourceDetailsProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
     {
-        if ((left.column() == kResourceHistoryTime && right.column() == kResourceHistoryTime))
+        if ((left.column() == kResourceHistoryColumnEvent && right.column() == kResourceHistoryColumnEvent))
+        {
+            QModelIndex left_data  = sourceModel()->index(left.row(), kResourceHistoryColumnEvent, QModelIndex());
+            QModelIndex right_data = sourceModel()->index(right.row(), kResourceHistoryColumnEvent, QModelIndex());
+            return QString::localeAwareCompare(left_data.data().toString(), right_data.data().toString()) < 0;
+        }
+
+        if ((left.column() == kResourceHistoryColumnTime && right.column() == kResourceHistoryColumnTime))
         {
             const double left_data  = left.data(Qt::UserRole).toULongLong();
             const double right_data = right.data(Qt::UserRole).toULongLong();
             return left_data < right_data;
         }
-
-        if ((left.column() == kResourceHistoryEvent && right.column() == kResourceHistoryEvent))
-        {
-            QModelIndex left_data  = sourceModel()->index(left.row(), kResourceHistoryEvent, QModelIndex());
-            QModelIndex right_data = sourceModel()->index(right.row(), kResourceHistoryEvent, QModelIndex());
-            return QString::localeAwareCompare(left_data.data().toString(), right_data.data().toString()) < 0;
-        }
-
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rmv

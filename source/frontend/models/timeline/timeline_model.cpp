@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Timeline model.
@@ -124,10 +124,9 @@ namespace rmv
         TraceManager& trace_manager = TraceManager::Get();
         if (trace_manager.DataSetValid())
         {
-            const RmtDataSet* data_set = trace_manager.GetDataSet();
-            table_model_->SetRowCount(data_set->snapshot_count);
-
-            SetModelData(kTimelineSnapshotCount, rmv::string_util::LocalizedValue(data_set->snapshot_count));
+            int32_t snapshot_count = RmtTraceLoaderGetSnapshotCount();
+            table_model_->SetRowCount(snapshot_count);
+            SetModelData(kTimelineSnapshotCount, rmv::string_util::LocalizedValue(snapshot_count));
         }
 
         proxy_model_->invalidate();
@@ -175,7 +174,7 @@ namespace rmv
         // for snapshot_num. If this snapshot exists already, increment snapshot_num
         // and repeat until the snapshot name is unique.
         RmtDataSet*              data_set      = trace_manager.GetDataSet();
-        int                      snapshot_num  = data_set->snapshot_count;
+        int                      snapshot_num  = RmtTraceLoaderGetSnapshotCount();
         static const char* const kSnapshotName = "Snapshot ";
         char                     name_buffer[128];
         bool                     found_duplicate = false;
@@ -184,9 +183,9 @@ namespace rmv
         {
             found_duplicate = false;
             sprintf_s(name_buffer, 128, "%s%d", kSnapshotName, snapshot_num);
-            for (int i = 0; i < data_set->snapshot_count; i++)
+            for (int i = 0; i < snapshot_num; i++)
             {
-                if (strcmp(data_set->snapshots[i].name, name_buffer) == 0)
+                if (strcmp(RmtTraceLoaderGetSnapshotPoint(i)->name, name_buffer) == 0)
                 {
                     found_duplicate = true;
                     break;
@@ -219,9 +218,9 @@ namespace rmv
         TraceManager& trace_manager = TraceManager::Get();
         RmtDataSet*   data_set      = trace_manager.GetDataSet();
 
-        for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < data_set->snapshot_count; ++current_snapshot_point_index)
+        for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < RmtTraceLoaderGetSnapshotCount(); ++current_snapshot_point_index)
         {
-            RmtSnapshotPoint* current_snapshot_point = &data_set->snapshots[current_snapshot_point_index];
+            const RmtSnapshotPoint* current_snapshot_point = RmtTraceLoaderGetSnapshotPoint(current_snapshot_point_index);
             if (current_snapshot_point == snapshot_point)
             {
                 RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
@@ -339,7 +338,7 @@ namespace rmv
             value    = sorter.GetResourceValue(i);
             int type = sorter.GetResourceType(i);
             text_string += QString("%1: %2\n")
-                               .arg(rmv::string_util::GetResourceUsageString(static_cast<RmtResourceUsageType>(type)))
+                               .arg(RmtGetResourceUsageTypeNameFromResourceUsageType(static_cast<RmtResourceUsageType>(type)))
                                .arg(GetValueString(value, display_as_memory));
             color_string += QString("#%1\n").arg(QString::number(Colorizer::GetResourceUsageColor(static_cast<RmtResourceUsageType>(type)).rgb(), 16));
         }

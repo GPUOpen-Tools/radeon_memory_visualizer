@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of printing helper functions for RMT.
@@ -80,6 +80,61 @@ const char* RmtGetResourceTypeNameFromResourceType(RmtResourceType resource_type
         return "CMD_ALLOCATOR";
     case kRmtResourceTypeMiscInternal:
         return "MISC_INTERNAL";
+    default:
+        return "Unknown";
+    }
+}
+
+// Get a resource's usage type as a string.
+const char* RmtGetResourceUsageTypeNameFromResourceUsageType(const RmtResourceUsageType usage_type)
+{
+    switch (usage_type)
+    {
+    case kRmtResourceUsageTypeDepthStencil:
+        return "Depth stencil buffer";
+
+    case kRmtResourceUsageTypeRenderTarget:
+        return "Render target";
+
+    case kRmtResourceUsageTypeTexture:
+        return "Texture";
+
+    case kRmtResourceUsageTypeVertexBuffer:
+        return "Vertex buffer";
+
+    case kRmtResourceUsageTypeIndexBuffer:
+        return "Index buffer";
+
+    case kRmtResourceUsageTypeRayTracingBuffer:
+        return "Ray tracing";
+
+    case kRmtResourceUsageTypeUav:
+        return "UAV";
+
+    case kRmtResourceUsageTypeShaderPipeline:
+        return "Shader pipeline";
+
+    case kRmtResourceUsageTypeCommandBuffer:
+        return "Command buffer";
+
+    case kRmtResourceUsageTypeHeap:
+        return "Heap";
+
+    case kRmtResourceUsageTypeDescriptors:
+        return "Descriptors";
+
+    case kRmtResourceUsageTypeBuffer:
+        return "Multi-use buffer";
+
+    case kRmtResourceUsageTypeFree:
+        return "Unbound";
+
+    case kRmtResourceUsageTypeGpuEvent:
+        return "Event";
+
+    case kRmtResourceUsageTypeInternal:
+        return "Internal";
+
     default:
         return "Unknown";
     }

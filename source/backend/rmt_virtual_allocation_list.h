@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for managing a virtual allocation list.
@@ -63,7 +63,9 @@ typedef struct RmtVirtualAllocation
     int32_t       next_resource_index;                         ///< The index of the new resource.
     RmtMemoryRegion*
         unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing the unbound memory inside this virtual allocation.
-    int32_t unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
+    int32_t  unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
+    uint64_t allocation_identifier;        ///< Uniquely identifies this virtual memory allocation.
+
 } RmtVirtualAllocation;
 
 /// Get the size (in bytes) of a virtual allocation.
@@ -219,6 +221,7 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
 /// @param [in] size_in_4kb_pages                       The size of the allocation.
 /// @param [in] preferences                             An array of preferred heaps for the allocation.
 /// @param [in] owner                                   The owner of the allocation.
+/// @param [in] allocation_identifier                   A value that uniquely identifies the virtual memory allocation.
 ///
 /// @retval
 /// kRmtOk                          The operation completed successfully.
@@ -231,7 +234,8 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
                                                    RmtGpuAddress             address,
                                                    int32_t                   size_in_4kb_pages,
                                                    const RmtHeapType         preferences[4],
-                                                   RmtOwnerType              owner);
+                                                   RmtOwnerType              owner,
+                                                   const uint64_t            allocation_identifier);
 
 /// Remove an allocation from the list.
 ///

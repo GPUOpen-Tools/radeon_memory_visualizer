@@ -1,18 +1,16 @@
 //=============================================================================
-// Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief  The adapter information captured for the target process.
+/// @brief  Helper function for legacy adapter information captured for the target process.
 //=============================================================================
 
 #include "rmt_adapter_info.h"
 #include "rmt_assert.h"
 
-const char* RmtAdapterInfoGetVideoMemoryType(const RmtAdapterInfo* adapter_info)
+const char* RmtAdapterInfoGetVideoMemoryType(const RmtAdapterInfoMemoryType memory_type)
 {
-    RMT_ASSERT(adapter_info);
-
-    switch (adapter_info->memory_type)
+    switch (memory_type)
     {
     case kRmtAdapterInfoMemoryTypeUnknown:
         return "Unknown";

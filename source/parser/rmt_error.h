@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Error codes.
@@ -39,6 +39,8 @@ static const RmtErrorCode kRmtErrorAddressAlreadyMapped     = 0x80000010;  /// T
 static const RmtErrorCode kRmtErrorSharedAllocationNotFound = 0x80000011;  /// An allocation was not found due to it being an external shared allocation.
 static const RmtErrorCode kRmtErrorResourceAlreadyBound     = 0x80000012;  /// A resource was already bound to a virtual memory range.
 static const RmtErrorCode kRmtErrorFileAlreadyOpened        = 0x80000013;  /// The operation failed because a file was already opened.
+static const RmtErrorCode kRmtErrorFileAccessFailed         = 0x80000014;  /// The operation failed because a file couldn't be accessed.
+static const RmtErrorCode kRmtErrorPageTableSizeExceeded    = 0x80000015;  /// The operation failed because the page table size was exceeded.
 
 /// Helper macro to return error code y from a function when a specific condition, x, is not met.
 #define RMT_RETURN_ON_ERROR(x, y) \

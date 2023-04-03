@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes multiple columns.
@@ -110,7 +110,7 @@ namespace rmv
         if (preferred_heap_index.column() == kResourceColumnPreferredHeap)
         {
             QString index_data = preferred_heap_index.data().toString();
-            if (preferred_heap_filter_.match(index_data).hasMatch() == false)
+            if ((preferred_heap_filter_.isValid() == false) || (preferred_heap_filter_.match(index_data).hasMatch() == false))
             {
                 return false;
             }
