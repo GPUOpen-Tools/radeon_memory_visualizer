@@ -182,6 +182,17 @@ typedef struct RmtTokenResourceDestroy
     RmtResourceIdentifier resource_identifier;  ///< A unique identifier for the resource being unbound.
 } RmtTokenResourceDestroy;
 
+/// A structure for a resource update
+typedef struct RmtTokenResourceUpdate
+{
+    RmtTokenCommon        common;               ///< Fields common to all tokens.
+    RmtResourceIdentifier resource_identifier;  ///< Resource ID
+    uint32_t              subresource_id;       ///< Subresource ID
+    RmtResourceType       resource_type;        ///< Type of resource being updated
+    uint64_t              before;               ///< Usage flags before
+    uint64_t              after;                ///< Usage flags after
+} RmtTokenResourceUpdate;
+
 /// A structure encapsulating the token.
 typedef struct RmtToken
 {
@@ -204,6 +215,7 @@ typedef struct RmtToken
         RmtTokenResourceCreate    resource_create_token;    ///< Valid when <c><i>type</i></c> is <c><i>kRmtTokenTypeResourceCreate</i></c>.
         RmtTokenTimeDelta         time_delta_token;         ///< Valid when <c><i>type</i></c> is <c><i>kRmtTokenTypeTimeDelta</i></c>.
         RmtTokenResourceDestroy   resource_destroy_token;   ///< Valid when <c><i>type</i></c> is <c><i>kRmtTokenTypeResourceDestroy</i></c>.
+        RmtTokenResourceUpdate    resource_update_token;    ///< Valid when <c><i>type</i></c> is <c><i>kRmtTokenTypeResourceUpdate</i></c>.
     };
 
 } RmtToken;

@@ -30,6 +30,7 @@
 #define RMT_TOKEN_SIZE_VIRTUAL_ALLOCATE (96 / 8)    ///< Virtual Allocate Token Size, in bytes
 #define RMT_TOKEN_SIZE_RESOURCE_CREATE (56 / 8)     ///< Resource Create Token Size, in bytes
 #define RMT_TOKEN_SIZE_RESOURCE_DESTROY (40 / 8)    ///< Resource Destroy Token Size, in bytes
+#define RMT_TOKEN_SIZE_RESOURCE_UPDATE (112 / 8)    ///< Resource Update Token Size, in bytes
 
 #define IMAGE_RESOURCE_TOKEN_SIZE (304 / 8)                 ///< Image Resource Token Size
 #define IMAGE_RESOURCE_TOKEN_SIZE_V1_6 (312 / 8)            ///< Image Resource Token Size for V1.6 onwards
@@ -441,6 +442,10 @@ static int32_t GetTokenSize(RmtParser* rmt_parser, const uint16_t token_header)
     }
     case kRmtTokenTypeResourceDestroy:
         return RMT_TOKEN_SIZE_RESOURCE_DESTROY;
+
+    case kRmtTokenTypeResourceUpdate:
+        return RMT_TOKEN_SIZE_RESOURCE_UPDATE;
+
     default:
         RMT_ASSERT(false);
 
@@ -1387,6 +1392,38 @@ static RmtErrorCode ParseResourceDestroy(RmtParser* rmt_parser, const uint16_t t
     return kRmtOk;
 }
 
+// parse resource update
+static RmtErrorCode ParseResourceUpdate(RmtParser*              rmt_parser,
+    const uint16_t          token_header,
+    RmtTokenResourceUpdate* out_resource_update)
+{
+    RMT_UNUSED(token_header);
+
+    PopulateCommonFields(rmt_parser, &out_resource_update->common);
+
+    uint8_t data[RMT_TOKEN_SIZE_RESOURCE_UPDATE];
+    RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
+
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+
+    out_resource_update->resource_identifier = ReadBitsFromBuffer(data, sizeof(data), 39, 8);
+    out_resource_update->subresource_id      = (uint32_t)ReadBitsFromBuffer(data, sizeof(data), 71, 40);
+    out_resource_update->resource_type       = (RmtResourceType)ReadBitsFromBuffer(data, sizeof(data), 77, 72);
+    // Resource types can be anything, but for now, the driver is only going to log buffers:
+    RMT_ASSERT(out_resource_update->resource_type == kRmtResourceTypeBuffer);
+    // Buffers should always be cleared with 0xFFFFFFFF. Maybe there is a valid case where this could be something else...
+    RMT_ASSERT(out_resource_update->subresource_id == 0xffffffff);
+
+    // The DX12 resource transition API provides the state before and after the transition. The driver converts
+    // them to the relevant RMT usage flags and stores them in the 'before' and 'after' fields.
+    // Since we are only concerned with buffers right now, these flags will be of type
+    // RMT_BUFFER_USAGE_FLAGS (aka RmtBufferUsageFlagBits):
+    out_resource_update->before              = ReadBitsFromBuffer(data, sizeof(data), 92, 78);
+    out_resource_update->after               = ReadBitsFromBuffer(data, sizeof(data), 107, 93);
+
+    return kRmtOk;
+}
+
 RmtErrorCode RmtParserInitialize(RmtParser* rmt_parser,
                                  FILE*      file_handle,
                                  int32_t    file_offset,
@@ -1540,6 +1577,9 @@ RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtPar
         break;
     case kRmtTokenTypeResourceDestroy:
         error_code = ParseResourceDestroy(rmt_parser, token_header, &out_token->resource_destroy_token);
+        break;
+    case kRmtTokenTypeResourceUpdate:
+        error_code = ParseResourceUpdate(rmt_parser, token_header, &out_token->resource_update_token);
         break;
     default:
         RMT_ASSERT(0);

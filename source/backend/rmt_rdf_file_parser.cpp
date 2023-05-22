@@ -76,7 +76,10 @@ static RmtErrorCode LoadSnapshotChunks(rdfChunkFile* chunk_file, RmtDataSet* dat
             // Load each of the Snapshot Info chunks using the indices found in the Snapshot Index chunk and copy to the data set.
             for (uint16_t snapshot_info_chunk_index : *indices)
             {
-                StoreSnapshotToDataSet(*chunk_file, snapshot_info_chunk, snapshot_info_chunk_index, *data_set);
+                if (snapshot_info_chunk_index != kEmptySnapshotIndexChunk)
+                {
+                    StoreSnapshotToDataSet(*chunk_file, snapshot_info_chunk, snapshot_info_chunk_index, *data_set);
+                }
             }
         }
     }

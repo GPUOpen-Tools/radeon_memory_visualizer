@@ -141,6 +141,10 @@ void RmtTokenCopy(RmtToken* dest, const RmtToken* src)
         memcpy(&dest->virtual_free_token, &src->virtual_free_token, sizeof(RmtTokenVirtualFree));
         break;
 
+    case RmtTokenType::kRmtTokenTypeResourceUpdate:
+        memcpy(&dest->resource_update_token, &src->resource_update_token, sizeof(RmtTokenResourceUpdate));
+        break;
+
     default:
         break;
     }

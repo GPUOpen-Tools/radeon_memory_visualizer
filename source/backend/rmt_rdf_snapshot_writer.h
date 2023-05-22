@@ -15,7 +15,12 @@
 
 #include "rdf/rdf/inc/amdrdf.h"
 
+#include <stdint.h>
+
 constexpr const char* kSnapshotIndexChunkId = "RmvSnapshotIndex";
+
+// A dummy index that indicates there are no snapshots in the file.
+static const uint16_t kEmptySnapshotIndexChunk = UINT16_MAX;
 
 // A class that handles writing snapshot data to RDF trace files.
 class RmtRdfSnapshotWriter : public RmtSnapshotWriter

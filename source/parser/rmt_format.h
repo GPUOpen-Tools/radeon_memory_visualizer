@@ -42,7 +42,7 @@ static const int kRmtRdfResultSuccess = 1;
 typedef enum RmtTokenType
 {
     kRmtTokenTypeTimestamp         = 0,   ///< The token is a timestamp token.
-    kRmtTokenTypeReserved0         = 1,   ///< The token is reserved
+    kRmtTokenTypeResourceUpdate    = 1,   ///< The token is a resource update token.
     kRmtTokenTypeReserved1         = 2,   ///< The token is reserved
     kRmtTokenTypePageTableUpdate   = 3,   ///< The token is a page table update token.
     kRmtTokenTypeUserdata          = 4,   ///< The token is a user data token.

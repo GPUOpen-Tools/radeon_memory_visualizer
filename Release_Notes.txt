@@ -1,11 +1,10 @@
-Radeon™ Memory Visualizer V1.6 04-26-2023
------------------------------------------
+Radeon™ Memory Visualizer V1.6.1 05-24-2023
+-------------------------------------------
 
-V1.6 Changes
+V1.6.1 Changes
 ------------------------------------
-1) Additional parameters added to the resource history table in the resource details pane.
-2) Improved Device configuration reporting with newer trace files, including CPU and driver information.
-3) Bug/stability fixes.
+1) Add support for an upcoming driver release.
+2) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -24,6 +23,12 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.6 Changes
+------------------------------------
+1) Additional parameters added to the resource history table in the resource details pane.
+2) Improved Device configuration reporting with newer trace files, including CPU and driver information.
+3) Bug/stability fixes.
 
 V1.5 Changes
 ------------------------------------

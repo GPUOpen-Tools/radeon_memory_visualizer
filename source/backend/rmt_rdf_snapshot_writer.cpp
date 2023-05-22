@@ -159,14 +159,23 @@ RmtErrorCode RmtRdfSnapshotWriter::Remove(const uint16_t removed_snapshot_index)
     {
         std::vector<int16_t> indices;
         std::string          chunk_indices_string;
-        indices.reserve(data_set_->snapshot_count);
-        for (int16_t snapshot_index = 0; snapshot_index < data_set_->snapshot_count; snapshot_index++)
+
+        // NOTE: The snapshot count isn't decremented until after the remove operation completes so the count will be one here if the last snapshot is being deleted.
+        if (data_set_->snapshot_count > 1)
         {
-            // Skip snapshots with an empty name.
-            if (data_set_->snapshots[snapshot_index].name[0] != '\0')
+            indices.reserve(data_set_->snapshot_count);
+            for (int16_t snapshot_index = 0; snapshot_index < data_set_->snapshot_count; snapshot_index++)
             {
-                indices.push_back(data_set_->snapshots[snapshot_index].chunk_index);
+                // Skip snapshots with an empty name.
+                if (data_set_->snapshots[snapshot_index].name[0] != '\0')
+                {
+                    indices.push_back(data_set_->snapshots[snapshot_index].chunk_index);
+                }
             }
+        }
+        else
+        {
+            indices.push_back(kEmptySnapshotIndexChunk);
         }
 
         // Populate the header for the snapshot index chunk.
