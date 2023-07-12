@@ -65,12 +65,14 @@ typedef enum RmtTokenType
 /// An enumeration of user data types.
 typedef enum RmtUserdataType
 {
-    kRmtUserdataTypeName                 = 0,  ///< The user data contains a string which is relevant to the following sequence of tokens.
-    kRmtUserdataTypeSnapshot             = 1,  ///< The user data contains a string which names a specific momemnt in time.
-    kRmtUserdataTypeBinary               = 2,  ///< The user data contains a blind binary payload.
-    kRmtUserdataTypeReserved             = 3,  ///< Reserved for future expansion.
-    kRmtUserdataTypeCorrelation          = 4,  ///< The user data contains 2 32-bit handles for matching resource names to DX12 resources.
-    kRmtUserdataTypeMarkImplicitResource = 5   ///< The user data contains a 32-bit resource ID that should be filtered because it was created implicitly.
+    kRmtUserdataTypeName                    = 0,  ///< The user data contains a string which is relevant to the following sequence of tokens.
+    kRmtUserdataTypeSnapshot                = 1,  ///< The user data contains a string which names a specific momemnt in time.
+    kRmtUserdataTypeBinary                  = 2,  ///< The user data contains a blind binary payload.
+    kRmtUserdataTypeReserved                = 3,  ///< Reserved for future expansion.
+    kRmtUserdataTypeCorrelation             = 4,  ///< The user data contains 2 32-bit handles for matching resource names to DX12 resources.
+    kRmtUserdataTypeMarkImplicitResource    = 5,  ///< The user data contains a 32-bit resource ID that should be filtered because it was created implicitly.
+    kRmtUserdataTypeName_V2                 = 6,  ///< The user data contains a string and a time delay.
+    kRmtUserdataTypeMarkImplicitResource_V2 = 7   ///< The user data contains a 32-bit implicit resource ID, with time delay.
 } RmtUserdataType;
 
 /// An enumeration of miscellaenous events.
@@ -116,7 +118,7 @@ typedef enum RmtResourceType
     kRmtResourceTypeDescriptorHeap   = 13,  ///< A specialised type of heap which holds descriptors only. [DX12 only]
     kRmtResourceTypeDescriptorPool   = 14,  ///< A specialised pool containing multiple heaps which hold descriptors only. [Vulkan only]
     kRmtResourceTypeCommandAllocator = 15,  ///< A command allocator resource.
-    kRmtResourceTypeMiscInternal     = 16,  ///< A micellaneous internal type of resource.
+    kRmtResourceTypeMiscInternal     = 16,  ///< A miscellaneous internal type of resource.
 
     // add above this.
     kRmtResourceTypeCount

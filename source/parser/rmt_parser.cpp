@@ -559,18 +559,39 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
 
     if (out_userdata_token->size_in_bytes > 4 && out_userdata_token->userdata_type == kRmtUserdataTypeName)
     {
-        // Allocate memory for the payload cache.  This will be deleted by the token destructor.
+        // Allocate memory for the payload cache.
         out_userdata_token->payload_cache = RmtTokenAllocatePayloadCache(out_userdata_token->size_in_bytes);
         memcpy(out_userdata_token->payload_cache, payload, out_userdata_token->size_in_bytes);
 
         const uintptr_t id_address = ((uintptr_t)payload) + (out_userdata_token->size_in_bytes - 4);
         const uint32_t  id_value   = *((uint32_t*)id_address);
 
-        // Handle DX12 trace.
+        out_userdata_token->time_delay = 0;
+
         const RmtCorrelationIdentifier correlation_identifier = (RmtCorrelationIdentifier)id_value;
         out_userdata_token->correlation_identifier            = correlation_identifier;
 
-        // Handle Vulkan trace.
+        const RmtResourceIdentifier resource_identifier = (RmtResourceIdentifier)id_value;
+        out_userdata_token->resource_identifier         = resource_identifier;
+    }
+    else if (out_userdata_token->size_in_bytes > 4 && out_userdata_token->userdata_type == kRmtUserdataTypeName_V2)
+    {
+        // Allocate memory for the payload cache.
+        out_userdata_token->payload_cache = RmtTokenAllocatePayloadCache(out_userdata_token->size_in_bytes);
+        memcpy(out_userdata_token->payload_cache, payload, out_userdata_token->size_in_bytes);
+
+        typedef uint32_t     NameIdentifier;
+        typedef uint64_t     NameTimeDelay;
+        const uintptr_t      id_address = ((uintptr_t)payload) + (out_userdata_token->size_in_bytes - (sizeof(NameIdentifier) + sizeof(NameTimeDelay)));
+        const NameIdentifier id_value   = *((NameIdentifier*)id_address);
+
+        const uintptr_t     time_delay_address = ((uintptr_t)payload) + (out_userdata_token->size_in_bytes - sizeof(NameTimeDelay));
+        const NameTimeDelay time_delay_value   = *((NameTimeDelay*)time_delay_address);
+        out_userdata_token->time_delay         = time_delay_value;
+
+        const RmtCorrelationIdentifier correlation_identifier = (RmtCorrelationIdentifier)id_value;
+        out_userdata_token->correlation_identifier            = correlation_identifier;
+
         const RmtResourceIdentifier resource_identifier = (RmtResourceIdentifier)id_value;
         out_userdata_token->resource_identifier         = resource_identifier;
     }
@@ -592,6 +613,23 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
         const uint32_t              resource_id_value   = *(reinterpret_cast<uint32_t*>(resource_id_address));
         const RmtResourceIdentifier resource_identifier = static_cast<RmtResourceIdentifier>(resource_id_value);
         out_userdata_token->resource_identifier         = resource_identifier;
+        out_userdata_token->time_delay                  = 0;
+#ifdef _IMPLICIT_RESOURCE_LOGGING
+        RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx", out_userdata_token->resource_identifier);
+#endif  // _IMPLICIT_RESOURCE_LOGGING
+    }
+    else if (out_userdata_token->userdata_type == kRmtUserdataTypeMarkImplicitResource_V2)
+    {
+        typedef uint64_t NameTimeDelay;
+
+        const uintptr_t             resource_id_address = (reinterpret_cast<uintptr_t>(payload));
+        const uint32_t              resource_id_value   = *(reinterpret_cast<uint32_t*>(resource_id_address));
+        const RmtResourceIdentifier resource_identifier = static_cast<RmtResourceIdentifier>(resource_id_value);
+        out_userdata_token->resource_identifier         = resource_identifier;
+
+        const uintptr_t     time_delay_address = ((uintptr_t)payload) + sizeof(uint32_t);
+        const NameTimeDelay time_delay_value   = *((NameTimeDelay*)time_delay_address);
+        out_userdata_token->time_delay         = time_delay_value;
 #ifdef _IMPLICIT_RESOURCE_LOGGING
         RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx", out_userdata_token->resource_identifier);
 #endif  // _IMPLICIT_RESOURCE_LOGGING
@@ -1393,15 +1431,13 @@ static RmtErrorCode ParseResourceDestroy(RmtParser* rmt_parser, const uint16_t t
 }
 
 // parse resource update
-static RmtErrorCode ParseResourceUpdate(RmtParser*              rmt_parser,
-    const uint16_t          token_header,
-    RmtTokenResourceUpdate* out_resource_update)
+static RmtErrorCode ParseResourceUpdate(RmtParser* rmt_parser, const uint16_t token_header, RmtTokenResourceUpdate* out_resource_update)
 {
     RMT_UNUSED(token_header);
 
     PopulateCommonFields(rmt_parser, &out_resource_update->common);
 
-    uint8_t data[RMT_TOKEN_SIZE_RESOURCE_UPDATE];
+    uint8_t      data[RMT_TOKEN_SIZE_RESOURCE_UPDATE];
     RmtErrorCode error_code = ReadBytes(rmt_parser, data, 0, sizeof(data));
 
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
@@ -1411,15 +1447,13 @@ static RmtErrorCode ParseResourceUpdate(RmtParser*              rmt_parser,
     out_resource_update->resource_type       = (RmtResourceType)ReadBitsFromBuffer(data, sizeof(data), 77, 72);
     // Resource types can be anything, but for now, the driver is only going to log buffers:
     RMT_ASSERT(out_resource_update->resource_type == kRmtResourceTypeBuffer);
-    // Buffers should always be cleared with 0xFFFFFFFF. Maybe there is a valid case where this could be something else...
-    RMT_ASSERT(out_resource_update->subresource_id == 0xffffffff);
 
     // The DX12 resource transition API provides the state before and after the transition. The driver converts
     // them to the relevant RMT usage flags and stores them in the 'before' and 'after' fields.
     // Since we are only concerned with buffers right now, these flags will be of type
     // RMT_BUFFER_USAGE_FLAGS (aka RmtBufferUsageFlagBits):
-    out_resource_update->before              = ReadBitsFromBuffer(data, sizeof(data), 92, 78);
-    out_resource_update->after               = ReadBitsFromBuffer(data, sizeof(data), 107, 93);
+    out_resource_update->before = ReadBitsFromBuffer(data, sizeof(data), 92, 78);
+    out_resource_update->after  = ReadBitsFromBuffer(data, sizeof(data), 107, 93);
 
     return kRmtOk;
 }

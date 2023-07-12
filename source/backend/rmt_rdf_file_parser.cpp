@@ -330,6 +330,12 @@ static RmtErrorCode QueueDataStreamChunks(rdfChunkFile* chunk_file, RmtDataSet* 
                     // Set the parser callback functions for RDF data stream processing.
                     RmtParserSetCallbacks(&parser, RdfDataStreamGetNextChunk, RdfDataStreamReset);
 
+                    // Set the target process.
+                    if (data_stream->GetProcessId() != 0 && data_set->target_process_id == 0)
+                    {
+                        data_set->target_process_id = data_stream->GetProcessId();
+                    }
+
                     // Increment the number of streams.
                     data_set->stream_count++;
                 }

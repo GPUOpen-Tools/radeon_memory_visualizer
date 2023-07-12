@@ -16,6 +16,7 @@ ENDIF(WIN32)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 set( SOURCES
     "rmt_adapter_info.cpp"
     "rmt_adapter_info.h"
@@ -36,6 +37,10 @@ set( SOURCES
     "rmt_linear_buffer.h"
     "rmt_legacy_snapshot_writer.cpp"
     "rmt_legacy_snapshot_writer.h"
+    "rmt_memory_event_history.cpp"
+    "rmt_memory_event_history.h"
+    "rmt_memory_event_history_impl.cpp"
+    "rmt_memory_event_history_impl.h"
     "rmt_mutex.cpp"
     "rmt_mutex.h"
     "rmt_page_table.cpp"
@@ -56,6 +61,8 @@ set( SOURCES
     "rmt_resource_history.h"
     "rmt_resource_list.cpp"
     "rmt_resource_list.h"
+    "rmt_resource_userdata.cpp"
+    "rmt_resource_userdata.h"
     "rmt_segment_info.h"
     "rmt_snapshot_writer.cpp"
     "rmt_snapshot_writer.h"

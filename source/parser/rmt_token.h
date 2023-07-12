@@ -68,6 +68,7 @@ typedef struct RmtTokenUserdata
     RmtUserdataType userdata_type;  ///< The type of the user data in the payload.
     int32_t         size_in_bytes;  ///< The size (in bytes) of the payload. The largest we can encode is 1MB.
     uint8_t*        payload_cache;  ///< Pointer to the payload of the user data.
+    uint64_t        time_delay;     ///< Time delay, if any, between the RMT token creation and a previous event.
 
     RmtResourceIdentifier
         resource_identifier;  ///< The identifier used to match a name to a non-DX resource, only valid when usedataType is RMT_USERDATA_TYPE_NAME.

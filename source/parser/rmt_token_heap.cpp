@@ -421,8 +421,10 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
             switch (out_token->userdata_token.userdata_type)
             {
             case kRmtUserdataTypeName:
+            case kRmtUserdataTypeName_V2:
             case kRmtUserdataTypeCorrelation:
             case kRmtUserdataTypeMarkImplicitResource:
+            case kRmtUserdataTypeMarkImplicitResource_V2:
             {
                 break;
             }

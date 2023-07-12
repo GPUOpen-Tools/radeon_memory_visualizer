@@ -17,6 +17,7 @@
 #include "rmt_process_map.h"
 #include "rmt_process_start_info.h"
 #include "rmt_rdf_system_info.h"
+#include "rmt_resource_userdata.h"
 #include "rmt_segment_info.h"
 #include "rmt_token_heap.h"
 #include "rmt_types.h"
@@ -96,6 +97,7 @@ typedef struct RmtDataSet
 
     bool     is_rdf_trace;                           ///< A flag that indicates, if true, that the trace is RDF format.  Otherwise, false.
     bool     is_resource_name_processing_complete;   ///< A flag that indicates, if true, that resource names have been processed for the loaded memory trace.
+    bool     contains_correlation_tokens;            ///< A flag that indicates, if true, that the trace contain correlation tokens.
     uint32_t active_gpu;                             ///< The active GPU used by the application process that was captured.
     RmtSnapshotWriterHandle snapshot_writer_handle;  ///< The object responsible for writing snapshots to the trace file.
 } RmtDataSet;
@@ -252,19 +254,6 @@ RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapsh
 /// @returns
 /// The series index.
 int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t timestamp);
-
-/// Retrieve the resource name associated with a resource.
-///
-/// @param [in]  resource_id                                The resource identifier for the name to be retrieved.
-/// @param [out] out_resource_name                          A pointer to the resource name.
-///
-/// @returns
-/// kRmtOk                                      The operation completed successfully.
-/// @retval
-/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>out_resource_name</i></c> being an invalid pointer.
-/// @retval
-/// kRmtErrorResourceNotFound                   A resource name could not be found for the <c><i>resource_id</i></c> specified.
-RmtErrorCode RmtDataSetGetResourceName(const RmtResourceIdentifier resource_id, const char** out_resource_name);
 
 #ifdef __cplusplus
 }

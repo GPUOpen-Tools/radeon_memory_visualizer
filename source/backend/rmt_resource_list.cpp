@@ -593,12 +593,15 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
     if (resource != nullptr)
     {
         // remove it
-        if ((resource->bound_allocation != nullptr) && resource->resource_type != kRmtResourceTypeHeap)
+        if (resource->bound_allocation != nullptr)
         {
             if (resource->bound_allocation->resource_count > 0)
             {
                 ((RmtVirtualAllocation*)resource->bound_allocation)->resource_count--;
-                ((RmtVirtualAllocation*)resource->bound_allocation)->non_heap_resource_count--;
+                if (resource->resource_type != kRmtResourceTypeHeap)
+                {
+                    ((RmtVirtualAllocation*)resource->bound_allocation)->non_heap_resource_count--;
+                }
             }
         }
 
@@ -751,13 +754,14 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
     // NOTE: We have multiple binds per resource for command buffer allocators,
     // This is because they grow in size to accomodate the allocators needs. GPU events
     // are often inlined into command buffers, so these are also affected by extension.
-    // Buffer resources which have already been bound to a virtual memory allocation are also
-    // flagged with the kRmtErrorResourceAlreadyBound return value.  The caller can then destroy
+    // Heap and Buffer resources which have already been bound to a virtual memory allocation are
+    // also flagged with the kRmtErrorResourceAlreadyBound return value.  The caller can then destroy
     // the existing resource, create a new resource and re-bind it to a different allocation.
     if (resource->bound_allocation != nullptr)
     {
         switch (resource->resource_type)
         {
+        case kRmtResourceTypeHeap:
         case kRmtResourceTypeBuffer:
         case kRmtResourceTypeCommandAllocator:
             return kRmtErrorResourceAlreadyBound;

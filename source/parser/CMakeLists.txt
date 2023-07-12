@@ -16,6 +16,7 @@ ENDIF(WIN32)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 set( SOURCES
     "rmt_address_helper.cpp"
     "rmt_address_helper.h"
@@ -43,6 +44,8 @@ set( SOURCES
     "rmt_rdf_snapshot_index.h"
     "rmt_rdf_snapshot_info.cpp"
     "rmt_rdf_snapshot_info.h"
+    "rmt_string_memory_pool.cpp"
+    "rmt_string_memory_pool.h"
     "rmt_token.cpp"
     "rmt_token.h"
     "rmt_token_heap.cpp"

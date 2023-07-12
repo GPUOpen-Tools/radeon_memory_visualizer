@@ -22,7 +22,7 @@
 #include "rmt_token.h"
 #include "rmt_util.h"
 
-#include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <stdlib.h>  // for malloc() / free()
 #include <string>
@@ -85,6 +85,31 @@ static bool MoveTraceFile(const char* existing_file_path, const char* new_file_p
 #endif
 }
 
+// Portable delete file function.
+static bool DeleteTemporaryFile(const char* file_path)
+{
+    bool         result           = false;
+    const size_t file_path_length = strlen(file_path);
+    const size_t extension_length = strlen("bak");
+
+    if (file_path_length > extension_length)
+    {
+        const char* file_extension = file_path + (file_path_length - extension_length);
+        if (strcmp(file_extension, "bak") == 0)
+        {
+#ifdef _WIN32
+            return DeleteFile(file_path);
+#else
+            if (remove(file_path) == 0)
+            {
+                result = true;
+            }
+#endif
+        }
+    }
+    return result;
+}
+
 // Convert a snapshot writer handle to a snapshot writer class object pointer.
 RmtSnapshotWriter* SnapshotWriterFromHandle(RmtSnapshotWriterHandle handle)
 {
@@ -103,84 +128,11 @@ RmtErrorCode DestroySnapshotWriter(RmtDataSet* data_set)
     return kRmtOk;
 }
 
-struct RmtResourceNameData
-{
-    RmtResourceIdentifier resource_id;
-    std::string           name;
-};
-
-// Map used to associate correlation IDs with Resource IDs.
-static std::map<RmtCorrelationIdentifier, RmtResourceIdentifier> resource_correlation_lookup_map;
-
-// Map used to look up resource name data.
-static std::map<RmtCorrelationIdentifier, RmtResourceNameData> resource_name_lookup_map;
-
 // Map used to lookup unique resource ID hash using the original resource ID as the key.
-static std::map<RmtResourceIdentifier, RmtResourceIdentifier> unique_resource_id_lookup_map;
-
-// Map used to lookup a resource name using a resource ID hash.
-static std::map<RmtResourceIdentifier, const char*> resource_name_lookup_by_resource_id_map;
-
-// A list of implicit resources to be removed from a snapshot.
-static std::unordered_set<RmtResourceIdentifier> implicit_resource_list;
+static std::unordered_map<RmtResourceIdentifier, RmtResourceIdentifier> unique_resource_id_lookup_map;
 
 // The set of created resources at any point in time.
 static std::unordered_set<RmtResourceIdentifier> created_resources;
-
-// A flag used to indicate that the list of implicit resources has been created.
-// This list is created when the trace is first parsed and the timeline is built.
-// The list is used when parsing the trace for building snapshots.
-static bool implicit_resource_list_created = false;
-
-// Replaces original resource IDs in lookup maps with the unique resource ID hash values generated when resource objects are created.
-void UpdateResourceNameIds()
-{
-    resource_name_lookup_by_resource_id_map.clear();
-    for (auto& resource_name_data : resource_name_lookup_map)
-    {
-        RmtCorrelationIdentifier correlation_identifier               = resource_name_data.first;
-        auto                     resource_correlation_lookup_iterator = resource_correlation_lookup_map.find(correlation_identifier);
-        if (resource_correlation_lookup_iterator != resource_correlation_lookup_map.end())
-        {
-            // Take the unique resource IDs from the correlation USERDATA tokens and copy them to the resource name data.
-            resource_name_data.second.resource_id = resource_correlation_lookup_iterator->second;
-        }
-
-        // Update original resource IDs to unique resource IDs.
-        auto unique_resource_id_iterator = unique_resource_id_lookup_map.find(resource_name_data.second.resource_id);
-        if (unique_resource_id_iterator != unique_resource_id_lookup_map.end())
-        {
-            if (resource_correlation_lookup_iterator != resource_correlation_lookup_map.end())
-            {
-                resource_correlation_lookup_iterator->second = unique_resource_id_iterator->second;
-            }
-            resource_name_data.second.resource_id = unique_resource_id_iterator->second;
-        }
-
-        // Update the mapping that allows resource names to be quickly looked up from a resource identifier.
-        resource_name_lookup_by_resource_id_map[resource_name_data.second.resource_id] = resource_name_data.second.name.c_str();
-    }
-}
-
-RmtErrorCode RmtDataSetGetResourceName(const RmtResourceIdentifier resource_id, const char** out_resource_name)
-{
-    RMT_RETURN_ON_ERROR(out_resource_name != nullptr, kRmtErrorInvalidPointer);
-
-    RmtErrorCode result = kRmtOk;
-
-    const auto lookup_map_iterator = resource_name_lookup_by_resource_id_map.find(resource_id);
-    if (lookup_map_iterator != resource_name_lookup_by_resource_id_map.end())
-    {
-        *out_resource_name = lookup_map_iterator->second;
-    }
-    else
-    {
-        *out_resource_name = nullptr;
-        result             = kRmtErrorNoResourceFound;
-    }
-
-    return result;
-}
 
 // this buffer is used by the parsers to read chunks of data into RAM for processing. The larger this
 // buffer the better the parsing performance, but the larger the memory footprint.
@@ -482,13 +434,15 @@ static void BuildDataProfileParseUserdata(RmtDataSet* data_set, const RmtToken* 
 
     const RmtTokenUserdata* userdata = (const RmtTokenUserdata*)&current_token->userdata_token;
 
-    if (userdata->userdata_type != kRmtUserdataTypeSnapshot)
+    if (userdata->userdata_type == kRmtUserdataTypeCorrelation)
     {
-        return;  // we only care about snapshots.
+        data_set->contains_correlation_tokens = true;
     }
-
-    data_set->data_profile.snapshot_count++;
-    data_set->data_profile.snapshot_name_count += userdata->size_in_bytes + 1;  // +1 for /0
+    else if (userdata->userdata_type == kRmtUserdataTypeSnapshot)
+    {
+        data_set->data_profile.snapshot_count++;
+        data_set->data_profile.snapshot_name_count += userdata->size_in_bytes + 1;  // +1 for /0
+    }
 }
 
 static void BuildDataProfileParseProcessEvent(RmtDataSet* data_set, const RmtToken* current_token)
@@ -707,24 +661,6 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
     return kRmtOk;
 }
 
-#ifdef _DEBUG
-// Verify that a string contains only valid characters.
-static bool IsValidTextString(const char* text, size_t length)
-{
-    size_t character_position = 0;
-    while ((character_position < length) && (text[character_position] != '\0'))
-    {
-        if ((text[character_position] <= 0x1f) || text[character_position] == 0x7f)
-        {
-            return false;
-        }
-        character_position++;
-    }
-
-    return true;
-}
-#endif  // _DEBUG
-
 // consume next RMT token for snapshot generation.
 static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* current_token, RmtDataSnapshot* out_snapshot)
 {
@@ -775,56 +711,38 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeUserdata:
     {
-        if (current_token->userdata_token.userdata_type == kRmtUserdataTypeName)
+        if (current_token->userdata_token.userdata_type == kRmtUserdataTypeName || current_token->userdata_token.userdata_type == kRmtUserdataTypeName_V2)
         {
             if (!data_set->is_resource_name_processing_complete)
             {
-                char name[RMT_MAXIMUM_NAME_LENGTH];
+                // Get resource name from token. It'll be the first part of the payload, and null-terminated.
+                const char* resource_name = reinterpret_cast<const char*>(current_token->userdata_token.payload_cache);
 
-                // Calculate the size of the resource name string.  Subtract the size of the ID in the Name USERDATA token and one byte for the termination character to get the name length.
-                int name_length = RMT_MINIMUM(current_token->userdata_token.size_in_bytes - (sizeof(uint32_t)), RMT_MAXIMUM_NAME_LENGTH);
-
-                if (name_length > 0)
-                {
-                    memcpy(name, current_token->userdata_token.payload_cache, name_length);
-#ifdef _DEBUG
-                    // Check for invalid characters. Invalid characters may indicate a parsing issue.
-                    // NOTE: Test intentionally only done in debug.
-                    bool result = IsValidTextString(name, name_length);
-                    RMT_ASSERT(result == true);
-#endif  // _DEBUG
-                    name[name_length - 1] = '\0';
-                }
-                else
-                {
-                    name[0] = '\0';
-                }
-
-                // If a matching resource isn't found, attempt to match later using the correlation ID.
-                RmtResourceNameData resource_name_data;
-                resource_name_data.name        = name;
-                resource_name_data.resource_id = current_token->userdata_token.resource_identifier;
-
-                resource_name_lookup_map[current_token->userdata_token.correlation_identifier] = resource_name_data;
+                error_code = RmtResourceUserdataTrackResourceNameToken(current_token->userdata_token.correlation_identifier,
+                                                                       resource_name,
+                                                                       current_token->common.timestamp,
+                                                                       current_token->userdata_token.time_delay);
+                RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
             }
 
             current_token->userdata_token.payload_cache = nullptr;
         }
         else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeCorrelation)
         {
-            // store values in lookup map.
-            resource_correlation_lookup_map[current_token->userdata_token.correlation_identifier] = current_token->userdata_token.resource_identifier;
-        }
-        else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeMarkImplicitResource)
-        {
-            if (implicit_resource_list_created == false)
+            if (!data_set->is_resource_name_processing_complete)
             {
-#ifdef _IMPLICIT_RESOURCE_LOGGING
-                RmtPrint("ProcessTokenForSnapshot() - add implicit resource: %lld", current_token->userdata_token.resource_identifier);
-#endif  // _IMPLICIT_RESOURCE_LOGGING
-                implicit_resource_list.insert(current_token->userdata_token.resource_identifier);
+                RmtResourceUserdataTrackResourceCorrelationToken(
+                    current_token->userdata_token.resource_identifier, current_token->userdata_token.correlation_identifier, current_token->common.timestamp);
             }
-
+        }
+        else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeMarkImplicitResource ||
+                 current_token->userdata_token.userdata_type == kRmtUserdataTypeMarkImplicitResource_V2)
+        {
+            if (!data_set->is_resource_name_processing_complete)
+            {
+                RmtResourceUserdataTrackImplicitResourceToken(
+                    current_token->userdata_token.resource_identifier, current_token->common.timestamp, current_token->userdata_token.time_delay);
+            }
         }
     }
     break;
@@ -848,77 +766,85 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeResourceBind:
     {
-
-        error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
-
-        if (error_code == kRmtErrorSharedAllocationNotFound)
+        if (!RmtResourceUserDataIsResourceImplicit(current_token->resource_bind_token.resource_identifier))
         {
-            // This is not a true error, it just means that we encountered a shareable resource without the matching virtual
-            // alloc token.  This is an expected case as that allocation is owned outside the target process, so we'll add
-            // the allocation to the list so future resource tokens can find it.
-            static const RmtHeapType kDummyHeapPref[4] = {kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible};
 
-            // The byte offset of the token in the data stream is used to uniquely identify this allocation.
-            // The offset is used rather than the virtual allocation address in case there are allocations/frees then another allocation with the same base address.
-            uint64_t allocation_identifier = current_token->common.offset;
-            error_code                     = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
-                                                               current_token->common.timestamp,
-                                                               current_token->resource_bind_token.virtual_address,
-                                                               (int32_t)(current_token->resource_bind_token.size_in_bytes >> 12),
-                                                               kDummyHeapPref,
-                                                               RmtOwnerType::kRmtOwnerTypeClientDriver,
-                                                               allocation_identifier);
-        }
-        else if (error_code == kRmtErrorResourceAlreadyBound)
-        {
-            // Handle the case where the resource is already bound to a virtual memory allocation.
-            // This can occur for command allocators which can be bound to multiple chunks of virtual
-            // address space simultaneously or buffer resources already bound to an allocation.  These
-            // resources are implicitly destroyed, created again and bound to a different allocation.
-            const RmtResource* matching_resource = NULL;
-            error_code                           = RmtResourceListGetResourceByResourceId(
-                &out_snapshot->resource_list, current_token->resource_bind_token.resource_identifier, &matching_resource);
-            if (error_code == kRmtOk)
+            error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
+
+            if (error_code == kRmtErrorSharedAllocationNotFound)
             {
-                // form the token.
-                RmtTokenResourceCreate resource_create_token;
-                resource_create_token.resource_identifier = matching_resource->identifier;
-                resource_create_token.owner_type          = matching_resource->owner_type;
-                resource_create_token.commit_type         = matching_resource->commit_type;
-                resource_create_token.resource_type = matching_resource->resource_type;
-                memcpy(&resource_create_token.common, &current_token->common, sizeof(RmtTokenCommon));
+                // This is not a true error, it just means that we encountered a shareable resource without the matching virtual
+                // alloc token.  This is an expected case as that allocation is owned outside the target process, so we'll add
+                // the allocation to the list so future resource tokens can find it.
+                static const RmtHeapType kDummyHeapPref[4] = {kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible};
 
-                switch (matching_resource->resource_type)
+                // The byte offset of the token in the data stream is used to uniquely identify this allocation.
+                // The offset is used rather than the virtual allocation address in case there are allocations/frees then another allocation with the same base address.
+                uint64_t allocation_identifier = current_token->common.offset;
+                error_code                     = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
+                                                                   current_token->common.timestamp,
+                                                                   current_token->resource_bind_token.virtual_address,
+                                                                   (int32_t)(current_token->resource_bind_token.size_in_bytes >> 12),
+                                                                   kDummyHeapPref,
+                                                                   RmtOwnerType::kRmtOwnerTypeClientDriver,
+                                                                   allocation_identifier);
+            }
+            else if (error_code == kRmtErrorResourceAlreadyBound)
+            {
+                // Handle the case where the resource is already bound to a virtual memory allocation.
+                // This can occur for command allocators which can be bound to multiple chunks of virtual
+                // address space simultaneously or buffer resources already bound to an allocation.  These
+                // resources are implicitly destroyed, created again and bound to a different allocation.
+                // Heap resources may also need to re-bind if a larger size is required.
+                const RmtResource* matching_resource = NULL;
+                error_code                           = RmtResourceListGetResourceByResourceId(
+                    &out_snapshot->resource_list, current_token->resource_bind_token.resource_identifier, &matching_resource);
+                if (error_code == kRmtOk)
                 {
-                case kRmtResourceTypeCommandAllocator:
-                    memcpy(&resource_create_token.command_allocator, &matching_resource->command_allocator, sizeof(RmtResourceDescriptionCommandAllocator));
-                    break;
+                    // form the token.
+                    RmtTokenResourceCreate resource_create_token;
+                    resource_create_token.resource_identifier = matching_resource->identifier;
+                    resource_create_token.owner_type          = matching_resource->owner_type;
+                    resource_create_token.commit_type         = matching_resource->commit_type;
+                    resource_create_token.resource_type = matching_resource->resource_type;
+                    memcpy(&resource_create_token.common, &current_token->common, sizeof(RmtTokenCommon));
 
-                case kRmtResourceTypeBuffer:
-                    memcpy(&resource_create_token.buffer, &matching_resource->buffer, sizeof(RmtResourceDescriptionBuffer));
-                    break;
+                    switch (matching_resource->resource_type)
+                    {
+                    case kRmtResourceTypeCommandAllocator:
+                        memcpy(&resource_create_token.command_allocator, &matching_resource->command_allocator, sizeof(RmtResourceDescriptionCommandAllocator));
+                        break;
 
-                default:
-                    // Unexpected resource type.
-                    RMT_ASSERT_FAIL("Re-binding is only supported for buffer and command allocator resource types");
-                    break;
-                }
+                    case kRmtResourceTypeBuffer:
+                        memcpy(&resource_create_token.buffer, &matching_resource->buffer, sizeof(RmtResourceDescriptionBuffer));
+                        break;
 
-                // Create the resource.  Since the resource already exists, the Create operation will implicitly destroy it first.
-                error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &resource_create_token);
-                RMT_ASSERT(error_code == kRmtOk);
+                    case kRmtResourceTypeHeap:
+                        memcpy(&resource_create_token.heap, &matching_resource->heap, sizeof(RmtResourceDescriptionHeap));
+                        break;
 
-                if (!(current_token->resource_bind_token.is_system_memory && current_token->resource_bind_token.virtual_address == 0))
-                {
-                    // Re-bind the resource to its new virtual memory allocation.
-                    error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
+                    default:
+                        // Unexpected resource type.
+                        RMT_ASSERT_FAIL("Re-binding is only supported for buffer, heap and command allocator resource types");
+                        break;
+                    }
+
+                    // Create the resource.  Since the resource already exists, the Create operation will implicitly destroy it first.
+                    error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &resource_create_token);
                     RMT_ASSERT(error_code == kRmtOk);
+
+                    if (!(current_token->resource_bind_token.is_system_memory && current_token->resource_bind_token.virtual_address == 0))
+                    {
+                        // Re-bind the resource to its new virtual memory allocation.
+                        error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
+                        RMT_ASSERT(error_code == kRmtOk);
+                    }
                 }
             }
-        }
 
-        RMT_ASSERT(error_code == kRmtOk);
-        // RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+            RMT_ASSERT(error_code == kRmtOk);
+            // RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+        }
     }
     break;
 
@@ -975,13 +901,50 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     }
     break;
 
+    case kRmtTokenTypeResourceUpdate:
+    {
+        if (!RmtResourceUserDataIsResourceImplicit(current_token->resource_update_token.resource_identifier))
+        {
+            // Attempt to match the Reource Update token to a previously created resource.
+            // If a resource is found, update the usage flags.
+            RmtResourceIdentifier id = current_token->resource_update_token.resource_identifier;
+            if (unique_resource_id_lookup_map.find(id) != unique_resource_id_lookup_map.end())
+            {
+                RmtResource* resource = nullptr;
+                error_code =
+                    RmtResourceListGetResourceByResourceId(&out_snapshot->resource_list, unique_resource_id_lookup_map[id], (const RmtResource**)&resource);
+                RMT_ASSERT(error_code == kRmtOk);
+                if (resource != nullptr)
+                {
+                    resource->buffer.usage_flags = static_cast<uint32_t>(current_token->resource_update_token.after);
+                }
+            }
+        }
+    }
+    break;
+
     case kRmtTokenTypeResourceCreate:
     {
+        if (!RmtResourceUserDataIsResourceImplicit(current_token->resource_create_token.resource_identifier))
         {
             error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &current_token->resource_create_token);
 
-            RMT_ASSERT(error_code == kRmtOk);
+            if (!data_set->is_resource_name_processing_complete)
+            {
+                RmtResourceUserdataTrackResourceCreateToken(current_token->resource_create_token.original_resource_identifier,
+                                                            current_token->resource_create_token.resource_identifier,
+                                                            current_token->resource_create_token.resource_type,
+                                                            current_token->common.timestamp);
+            }
+            else
+            {
+                RmtResourceUserdataUpdateResourceName(&out_snapshot->resource_list, current_token->resource_create_token.resource_identifier);
+            }
 
+            RMT_ASSERT(error_code == kRmtOk);
+            // Note: The 32 bit driver resource ID may be reused.
+            // In this case, the lookup map will be updated by replacing the old internal resource ID with
+            // the one for this ResourceCreate token.
             unique_resource_id_lookup_map[current_token->resource_create_token.original_resource_identifier] =
                 current_token->resource_create_token.resource_identifier;
         }
@@ -992,10 +955,16 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeResourceDestroy:
     {
-        error_code = RmtResourceListAddResourceDestroy(&out_snapshot->resource_list, &current_token->resource_destroy_token);
-        //RMT_ASSERT(error_code == kRmtOk);
+        if (!RmtResourceUserDataIsResourceImplicit(current_token->resource_destroy_token.resource_identifier))
+        {
+            RmtResourceUserdataTrackResourceDestroyToken(current_token->resource_destroy_token.resource_identifier,
+                                                         current_token->resource_destroy_token.common.timestamp);
 
-        //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+            error_code = RmtResourceListAddResourceDestroy(&out_snapshot->resource_list, &current_token->resource_destroy_token);
+            //RMT_ASSERT(error_code == kRmtOk);
+
+            //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+        }
     }
     break;
 
@@ -1032,6 +1001,8 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
     {
         bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
         RMT_ASSERT(success);
+        // Note: MoveTraceFile() may fail if there is a second instance of RMV with same trace
+        // file opened.  The second instance will open exclusively in read only mode.
     }
     else
     {
@@ -1084,6 +1055,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     RMT_ASSERT(data_set);
     RMT_RETURN_ON_ERROR(path, kRmtErrorInvalidPointer);
     RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RmtErrorCode error_code = kRmtOk;
 
     // copy the path
     const size_t path_length = strlen(path);
@@ -1126,26 +1098,31 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     // to see if another instance of RMV already has the file open (this would be the .bak file).
     if (!data_set->read_only)
     {
-        // Determine if the back up file should be opened or the original file.
-        // If the backup file can't be opened with write privileges, set the read only flag and attempt to open the original file in read only mode.
-        // Return an error if the original file can't be opened.
+        // Determine if the back up file or original file should be opened. If the backup file can't be opened with write privileges
+        // (because another RMV instance already has opened it), set the read only flag and attempt to open the original file in read only mode.
         error_no = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
+            // Set the read only flag so that opening the original file will be attempted.
             data_set->read_only = true;
         }
     }
 
     if (data_set->read_only)
     {
-        // File is read-only so just read the original rmv trace file
+        // File is read-only.  Attempt to just read the original rmv trace file.
         file_access_mode = "rb";
         trace_file       = data_set->file_path;
         error_no         = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
-            return kRmtErrorFileNotOpen;
+            error_code = kRmtErrorFileNotOpen;
         }
+    }
+    else if (!file_transfer_result)
+    {
+        // If the trace wasn't opened in read only mode and copying to the backup file failed then report an error.
+        error_code = kRmtErrorFileAccessFailed;
     }
 
     if (data_set->file_handle != nullptr)
@@ -1155,56 +1132,82 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         data_set->file_handle = nullptr;
     }
 
-    // Attempt to open the file in RDF format.  Open the original file in read only mode or the backup file in read/write mode.
-    RmtErrorCode error_code = RmtRdfFileParserLoadRdf(trace_file, data_set);
-    if (error_code != kRmtOk)
+    if (error_code == kRmtOk)
     {
-        // Loading as an RDF file failed, attempt to open the trace file using the legacy format.
-        error_no = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
-        if ((data_set->file_handle == nullptr) || error_no != 0)
+        // Attempt to open the file in RDF format.  Open the original file in read only mode or the backup file in read/write mode.
+        error_code = RmtRdfFileParserLoadRdf(trace_file, data_set);
+
+        if (error_code != kRmtOk)
         {
-            return kRmtErrorFileNotOpen;
+            // Loading as an RDF file failed, attempt to open the trace file using the legacy format.
+            error_no = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
+            if ((data_set->file_handle != nullptr) && (error_no == 0))
+            {
+                error_code = kRmtOk;
+            }
+            else
+            {
+                error_code = kRmtErrorFileNotOpen;
+            }
+
+            if (error_code == kRmtOk)
+            {
+                // Get the size of the file.
+                const size_t current_stream_offset = ftell((FILE*)data_set->file_handle);
+                fseek((FILE*)data_set->file_handle, 0L, SEEK_END);
+                data_set->file_size_in_bytes = ftell((FILE*)data_set->file_handle);
+                fseek((FILE*)data_set->file_handle, (int32_t)current_stream_offset, SEEK_SET);
+
+                // Check that the file is large enough to at least contain the RMT file header.
+                if (data_set->file_size_in_bytes < sizeof(RmtFileHeader))
+                {
+                    error_code = kRmtErrorFileNotOpen;
+                }
+            }
+
+            if (error_code == kRmtOk)
+            {
+                // Parse legacy trace.
+                error_code = ParseChunks(data_set);
+                if (error_code == kRmtOk)
+                {
+                    RmtLegacySnapshotWriter* snapshot_writer = new RmtLegacySnapshotWriter(data_set);
+                    data_set->snapshot_writer_handle         = reinterpret_cast<RmtSnapshotWriterHandle*>(snapshot_writer);
+                }
+            }
         }
 
-        // Get the size of the file.
-        const size_t current_stream_offset = ftell((FILE*)data_set->file_handle);
-        fseek((FILE*)data_set->file_handle, 0L, SEEK_END);
-        data_set->file_size_in_bytes = ftell((FILE*)data_set->file_handle);
-        fseek((FILE*)data_set->file_handle, (int32_t)current_stream_offset, SEEK_SET);
-        if (data_set->file_size_in_bytes == 0U)
-        {
-            fclose((FILE*)data_set->file_handle);
-            data_set->file_handle = NULL;
-            return kRmtErrorFileNotOpen;
-        }
-
-        // check that the file is larger enough at least for the RMT file header.
-        if (data_set->file_size_in_bytes < sizeof(RmtFileHeader))
-        {
-            return kRmtErrorFileNotOpen;
-        }
-
-        error_code = ParseChunks(data_set);
         if (error_code == kRmtOk)
         {
-            RmtLegacySnapshotWriter* snapshot_writer = new RmtLegacySnapshotWriter(data_set);
-            data_set->snapshot_writer_handle         = reinterpret_cast<RmtSnapshotWriterHandle*>(snapshot_writer);
+            CheckForSAMSupport(data_set);
+
+            // Construct the data profile for subsequent data parsing.
+            data_set->contains_correlation_tokens = false;
+            error_code                            = BuildDataProfile(data_set);
+            RMT_ASSERT(error_code == kRmtOk);
         }
     }
 
-    RMT_ASSERT(error_code == kRmtOk);
-    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
-
-    CheckForSAMSupport(data_set);
-
-    // construct the data profile for subsequent data parsing.
-    error_code = BuildDataProfile(data_set);
-    RMT_ASSERT(error_code == kRmtOk);
-
-    // If the trace wasn't opened in read only mode and copying to the backup file failed then report an error.
-    if (!data_set->read_only && !file_transfer_result)
+    if (error_code != kRmtOk)
     {
-        error_code = kRmtErrorFileAccessFailed;
+        // An error occurred.  Do final cleanup.
+        if ((FILE*)data_set->file_handle != nullptr)
+        {
+            fclose((FILE*)data_set->file_handle);
+            data_set->file_handle = NULL;
+        }
+
+        DestroySnapshotWriter(data_set);
+        data_set->is_rdf_trace = false;
+
+        if (!data_set->read_only)
+        {
+            DeleteTemporaryFile(trace_file);
+        }
+        else
+        {
+            data_set->read_only = false;
+        }
     }
 
     return error_code;
@@ -1438,10 +1441,6 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 {
     RMT_ASSERT(data_set);
 
-    // Reset the list of implicitly created resources.
-    implicit_resource_list.clear();
-    implicit_resource_list_created = false;
-
     // Allocate temporary snapshot.
     RmtDataSnapshot* temp_snapshot = (RmtDataSnapshot*)PerformAllocation(data_set, sizeof(RmtDataSnapshot), alignof(RmtDataSnapshot));
     RMT_ASSERT(temp_snapshot);
@@ -1460,14 +1459,6 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     // initialize the process map.
     error_code = RmtProcessMapInitialize(&temp_snapshot->process_map);
     RMT_ASSERT(error_code == kRmtOk);
-
-    if (!data_set->is_resource_name_processing_complete)
-    {
-        // Initialize resource lookup maps.
-        resource_correlation_lookup_map.clear();
-        resource_name_lookup_map.clear();
-        unique_resource_id_lookup_map.clear();
-    }
 
     // Special case:
     // for timeline type of process, we have to first fill the 0th value of level 0
@@ -1490,13 +1481,18 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 
     RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
 
+    // For each timeline generated, clear the driver resource ID to internal resource ID
+    // lookup map.  As ResourceCreate tokens are processed, the mapping to driver resource IDs
+    // will be updated to reflect the current state.
+    unique_resource_id_lookup_map.clear();
+
     // if the heap has something there, then add it.
     int32_t last_value_index = -1;
     while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
         // grab the next token from the heap.
-        RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        RmtToken current_token = {};
+        error_code             = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
@@ -1514,15 +1510,13 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 
     if (!data_set->is_resource_name_processing_complete)
     {
-        // Update the lookup maps to use unique resource ID hash values.
-        UpdateResourceNameIds();
+        RmtResourceUserdataProcessEvents(data_set->contains_correlation_tokens);
         data_set->is_resource_name_processing_complete = true;
     }
 
     // clean up temporary structures we allocated to construct the timeline.
     RmtDataSnapshotDestroy(temp_snapshot);
     PerformFree(data_set, temp_snapshot);
-    implicit_resource_list_created = true;
     return kRmtOk;
 }
 
@@ -1917,16 +1911,6 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     SnapshotGeneratorAllocateRegionStack(out_snapshot);
     SnapshotGeneratorCalculateSnapshotPointSummary(out_snapshot, snapshot_point);
 
-    for (const auto& name_token_item : resource_name_lookup_map)
-    {
-        RmtResourceIdentifier resource_identifier = name_token_item.second.resource_id;
-        RmtResource*          found_resource      = NULL;
-        error_code = RmtResourceListGetResourceByResourceId(&out_snapshot->resource_list, resource_identifier, (const RmtResource**)&found_resource);
-        if (error_code == kRmtOk)
-        {
-            found_resource->name = name_token_item.second.name.c_str();
-        }
-    }
     return kRmtOk;
 }
 

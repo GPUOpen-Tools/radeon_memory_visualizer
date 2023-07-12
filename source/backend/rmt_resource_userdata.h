@@ -1,0 +1,132 @@
+//=============================================================================
+// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Function definitions for any resource sideband data.
+///
+/// This is typically resource information from other sources, for example,
+/// resource names and buffers marked as implicit will come from userdata
+/// tokens and could come from other sources ie ETW.
+//=============================================================================
+
+#ifndef RMV_BACKEND_RMT_RESOURCE_USERDATA_H_
+#define RMV_BACKEND_RMT_RESOURCE_USERDATA_H_
+
+#include "rmt_types.h"
+#include "rmt_resource_list.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif  // #ifdef __cplusplus
+
+// Type definition for a timestamp value.
+typedef uint64_t RmtTimestamp;
+
+/// @brief Process the tracked tokens to generate the final names to resources mapping.
+///
+/// @param [in]  any_correlations               A flag that indicates, if true, that Correlation UserData tokens where parsed.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+RmtErrorCode RmtResourceUserdataProcessEvents(const bool any_correlations);
+
+/// @brief Track a ResourceCreate token.
+///
+/// @param [in]  driver_resource_id             The resource identifier contained in the ResourceCreate token.
+/// @param [in]  internal_resource_id           The internally generated resource identifier.
+/// @param [in]  resource_type                  The resource type.
+/// @param [in]  timestamp                      The timestamp for the token.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+RmtErrorCode RmtResourceUserdataTrackResourceCreateToken(const RmtResourceIdentifier driver_resource_id,
+                                                         const RmtResourceIdentifier internal_resource_id,
+                                                         const RmtResourceType       resource_type,
+                                                         const RmtTimestamp          timestamp);
+
+/// @brief Track a ResourceDestroy token.
+///
+/// @param [in]  internal_resource_id           The internal resource ID for the previously created resource.
+/// @param [in]  timestamp                      The timestamp for the token.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+RmtErrorCode RmtResourceUserdataTrackResourceDestroyToken(const RmtResourceIdentifier internal_resource_id, const RmtTimestamp timestamp);
+
+/// @brief Track a Correlation UserData token.
+///
+/// @param [in]  driver_resource_id             The 32-bit driver resource ID.
+/// @param [in]  correlation_id                 The correlation ID.
+/// @param [in]  timestamp                      The timestamp for the token.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+RmtErrorCode RmtResourceUserdataTrackResourceCorrelationToken(const RmtResourceIdentifier    driver_resource_id,
+                                                              const RmtCorrelationIdentifier correlation_id,
+                                                              const RmtTimestamp             timestamp);
+
+/// @brief Track a Name UserData token.
+///
+/// @param [in]  resource_name_id               The identifier contained in the Name UserData token (either a resource ID or correlation id).
+/// @param [in]  resource_name                  A pointer to the resource name.
+/// @param [in]  timestamp                      The timestamp for the token.
+/// @param [in]  delay_time                     The delay between when the data for the token was generated and when the token was emitted.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorMalformedData                      An invalid delay_time was specified.
+RmtErrorCode RmtResourceUserdataTrackResourceNameToken(const RmtCorrelationIdentifier resource_name_id,
+                                                       const char*                    resource_name,
+                                                       const RmtTimestamp             timestamp,
+                                                       const RmtTimestamp             delay_time);
+
+/// @brief Lookup the name associated with a resource and update the resource object.
+
+/// @param [in]  resource_list                  A pointer to the list of resource objects.
+/// @param [in]  internal_resource_id           The internal resource identifier of the resource to be updated.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>resource_list</i></c> being an invalid pointer.
+/// @retval
+/// kRmtErrorResourceNotFound                   A resource name could not be found for the <c><i>internal_resource_id</i></c> specified.
+RmtErrorCode RmtResourceUserdataUpdateResourceName(const RmtResourceList* resource_list, const RmtResourceIdentifier internal_resource_id);
+
+/// @brief Track an implicit resource UserData token.
+///
+/// @param [in]  correlation_id                 The correlation ID.
+/// @param [in]  timestamp                      The timestamp for the token.
+/// @param [in]  delay_time                     The delay between when the data for the token was generated and when the token was emitted.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorMalformedData                      An invalid delay_time was specified.
+RmtErrorCode RmtResourceUserdataTrackImplicitResourceToken(RmtResourceIdentifier correlation_id, uint64_t timestamp, uint64_t delay_time);
+
+/// @brief Retrieve the resource name associated with a resource.
+///
+/// @param [in]  internal_resource_id           The resource identifier for the name to be retrieved.
+/// @param [out] out_resource_name              A pointer to the resource name.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>out_resource_name</i></c> being an invalid pointer.
+/// @retval
+/// kRmtErrorResourceNotFound                   A resource name could not be found for the <c><i>internal_resource_id</i></c> specified.
+RmtErrorCode RmtResourceUserdataGetResourceName(const RmtResourceIdentifier internal_resource_id, const char** out_resource_name);
+
+/// @brief Retrieve whether a resource is implicit or not.
+///
+/// @param [in]  resource_id                    The resource identifier for the name to be retrieved.
+///
+/// @returns                                    true if resource is implicit, false otherwise.
+bool RmtResourceUserDataIsResourceImplicit(const RmtResourceIdentifier resource_id);
+
+#ifdef __cplusplus
+}
+#endif  // #ifdef __cplusplus
+#endif  // #ifndef RMV_BACKEND_RMT_RESOURCE_USERDATA_H_

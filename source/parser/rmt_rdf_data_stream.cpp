@@ -107,7 +107,7 @@ bool RmtRdfDataStream::LoadNextChunk(const size_t offset)
                 rdfChunkFile* chunk_file = nullptr;
                 if ((rdfChunkFileOpenStream(*stream_, &chunk_file) == rdfResult::rdfResultOk) && (chunk_file != nullptr))
                 {
-                	const char*   identifier = ChunkIdentifier();
+                    const char* identifier = ChunkIdentifier();
                     if (rdfChunkFileReadChunkData(
                             chunk_file, identifier, chunk_info_list_[next_chunk_number_].chunk_index, chunk_buffer_.data() + remaining_buffer_size) ==
                         rdfResult::rdfResultOk)
