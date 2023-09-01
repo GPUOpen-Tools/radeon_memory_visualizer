@@ -15,7 +15,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
    * Start your application. The Radeon Developer Panel will switch to the "APPLICATIONS" tab. The overlay window in the top left of the application being traced will show if RMV tracing is enabled. If not, make sure the app is running in Vulkan® or DirectX®12 mode.
    * When tracing is complete, click on the 'Memory Trace' tab and click "Dump Trace" or close your application (in this case, the trace will be dumped automatically).
 4. For further detailed instructions, please see the documentation provided in the Help. Help can be found in the following locations:
-   * Help web pages exist in the "docs" sub directory
+   * Help web pages exist in the "help" sub directory
    * Help web pages can be accessed from the **Help** button (?) in the Developer Panel
    * Help web pages can be accessed from the Welcome screen in the Radeon Memory Visualizer, or from the **Help** menu
    * The documentation is hosted publicly at:
@@ -31,12 +31,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 * AMD Radeon RX 7000 series
 * AMD Radeon RX 6000 series
 * AMD Radeon RX 5000 series
-* AMD Radeon VII
-* AMD RX Vega 64 and RX Vega 56
-* AMD Ryzen™ Processors with Radeon Vega Graphics
-* AMD Radeon R9 Fury and Nano series
-* AMD Radeon RX 400, RX 500 series
-* AMD Tonga R9 285, R9 380
+* AMD Ryzen™ Processors with Radeon Graphics
 
 ## Supported Operating Systems
 * Windows® 10
@@ -48,8 +43,7 @@ Note: Before running RDP and capturing an RMV memory trace on Linux, be sure to 
 ## Required hardware for SAM (Smart access memory) support
 * AMD Radeon RX 7000 series
 * AMD Radeon RX 6000 series
-* AMD Ryzen 5000 series processors
-* AMD Ryzen 3000 series processors (except for the Ryzen 5 3400G and Ryzen 3 3200G)
+* AMD Ryzen 5000 and higher series processors with Radeon Graphics
 
 ## Build instructions
 See [BUILD.md](BUILD.md) for more details.
@@ -58,7 +52,7 @@ See [BUILD.md](BUILD.md) for more details.
 For support, please visit the RMV repository github page: https://github.com/GPUOpen-Tools/radeon_memory_visualizer
 
 ## License ##
-Radeon Memory Visualizer is licensed under the MIT license. See the [License.txt](License.txt) file for complete license information.
+Radeon Memory Visualizer is licensed under the MIT license. See the [LICENSE.txt](LICENSE.txt) file for complete license information.
 
 ## Copyright information ##
 Please see [NOTICES.txt](NOTICES.txt) for third party license information.

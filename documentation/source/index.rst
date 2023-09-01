@@ -3,13 +3,13 @@ The Radeon™ Memory Visualizer (RMV)
 
 The Radeon Memory Visualizer is a memory optimization tool that can be used by
 developers to optimize memory usage for DirectX® 12, Vulkan™ applications for
-AMD GCN and RDNA™ hardware.
+AMD RDNA™ hardware.
 
 This document describes how the Radeon Memory Visualizer can be used to
 examine a memory trace file.
 
-Supported graphics APIs, RDNA and GCN hardware, and operating systems
----------------------------------------------------------------------
+Supported graphics APIs, RDNA hardware, and operating systems
+-------------------------------------------------------------
 
 **Supported APIs**
 
@@ -17,7 +17,7 @@ Supported graphics APIs, RDNA and GCN hardware, and operating systems
 
 -  Vulkan
 
-\ **Supported RDNA and GCN hardware**
+\ **Supported RDNA hardware**
 
 -  AMD Radeon RX 7000 series
 
@@ -25,17 +25,8 @@ Supported graphics APIs, RDNA and GCN hardware, and operating systems
 
 -  AMD Radeon RX 5000 series
 
--  AMD Radeon VII
+-  AMD Ryzen™ Processors with Radeon Graphics
 
--  AMD RX Vega 64 and RX Vega 56
-
--  AMD Ryzen™ Processors with Radeon Vega Graphics
-
--  AMD Radeon R9 Fury and Nano series
-
--  AMD Radeon RX 400 and RX 500 series
-
--  AMD Tonga R9 285, R9 380
 
 \ **Supported Operating Systems**
 
@@ -61,6 +52,14 @@ There are a few ways to load a trace into RMV.
 
 1) Use the “File/Open trace” pull down menu, or the “File/Recent
    trace” pull down menu item.
+   
+  Note that RMV is also capable of loading Radeon GPU Detective (.rgd) files.
+  In order to view .rgd file names in the File open dialog box, be sure to select
+  "RGD crash dump files (*.rgd)" in the file filter dropdown listbox.  RGD files
+  load all the same types of data as RMV files, however, they are opened in
+  read-only mode (i.e., created snapshots are not saved).
+
+.. image:: media/open_file_rgd.png
 
 2) Go to the “Welcome” view and click on the “Open a Radeon Memory
    trace…”

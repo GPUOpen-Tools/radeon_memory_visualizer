@@ -78,3 +78,29 @@ aliased indicating that 2 or more resources are sharing the same memory. In the
 screenshot below, the stippling effect can be seen on the command buffer.
 
 .. image:: media/snapshot/resource_overview_3.png
+
+To help visualize aliased resources, a set of rules are employed to determine which
+resource blocks are displayed on the Resource overview pane and size of the blocks
+relative to other resources.  When there is an overlap with one or more resources,
+the overlapped portion of the resource with the highest priority is displayed.
+The priority is based on three factors. The first being the resource usage type
+in the order of importance listed in the resource type legend (the rightmost type
+is the highest priority and the leftmost is the lowest priority).  If overlapping
+resources have the same usage type, they are then compared by size.  The smallest
+sized resource has the highest priority.  If the size of the resources is also
+the same, the value of the resource identifier is used to make the final decision.
+
+The Allocation overview pane below illustrates aliased resources of mixed usage
+types and mixed sizes that are partially overlapping.
+
+.. image:: media/snapshot/allocation_overview_4.png
+
+Resources overlapped in this way result in the following resource blocks displayed
+on the Resource overview pane.
+
+.. image:: media/snapshot/resource_overview_4.png
+
+Note that the sum of the aliased resource sizes (2 KiB, 3 Kib 1 KiB and 2 KiB)
+total 8 KiB plus the non-aliased resource size of 2 KiB adds up to match the
+reported Total allocated and bound size.
+
