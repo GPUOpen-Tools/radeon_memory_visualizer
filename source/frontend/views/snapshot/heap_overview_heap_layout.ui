@@ -305,7 +305,7 @@
                </widget>
               </item>
               <item row="3" column="0">
-               <widget class="ScaledLabel" name="label_used_">
+               <widget class="ScaledLabel" name="label_committed_">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -320,7 +320,7 @@
                  </font>
                 </property>
                 <property name="toolTip">
-                 <string>The amount of memory in this heap that has been commited to physical memory</string>
+                 <string>The amount of memory in this heap that has been committed to physical memory</string>
                 </property>
                 <property name="text">
                  <string>Committed</string>
@@ -331,7 +331,7 @@
                </widget>
               </item>
               <item row="3" column="1">
-               <widget class="RMVHeapOverviewMemoryBar" name="bar_used_" native="true">
+               <widget class="RMVHeapOverviewMemoryBar" name="bar_committed_" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -345,7 +345,7 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>The amount of memory in this heap that has been commited to physical memory</string>
+                 <string>The amount of memory in this heap that has been committed to physical memory</string>
                 </property>
                </widget>
               </item>

@@ -364,7 +364,7 @@ namespace rmv
             for (int loop = 0; loop < resource_count; loop++)
             {
                 const RmtResource& resource = resource_list.resources[loop];
-                uint64_t           size     = resource.size_in_bytes;
+                const uint64_t     size     = resource.adjusted_size_in_bytes;
                 if (size > 0)
                 {
                     resource_sizes.push_back(size);

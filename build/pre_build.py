@@ -1,12 +1,15 @@
 #! python3
-# Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
-#
-# Script to perform all necessary pre build steps. This includes:
-#
-#   - Fetching all dependencies
-#   - Creating output directories
-#   - Calling CMake with appropriate parameters to generate the build files
-#
+##=============================================================================
+## Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+## \author AMD Developer Tools Team
+## \file
+## \brief Script to perform all necessary pre build steps. This includes:
+##
+##   - Fetching all dependencies
+##   - Creating output directories
+##   - Calling CMake with appropriate parameters to generate the build files
+##=============================================================================
+
 import os
 import sys
 import importlib.util
@@ -59,6 +62,8 @@ elif sys.platform == "darwin":
     parser.add_argument("--qt-root", default="~/Qt", help="specify the root directory for locating QT on this system (default: ~/Qt) ")
 else:
     parser.add_argument("--qt-root", default="~/Qt", help="specify the root directory for locating QT on this system (default: ~/Qt) ")
+    parser.add_argument("--disable-extra-qt-lib-deploy", action="store_true", help="prevent extra Qt library files (XCB and ICU libs) from being copied during post build step")
+    parser.add_argument("--qt-system", action="store_true", help="use the system-installed version of QT")
 parser.add_argument("--qt", default="5.15.2", help="specify the version of QT to be used with the script (default: 5.15.2)" )
 parser.add_argument("--clean", action="store_true", help="delete any directories created by this script")
 parser.add_argument("--no-qt", action="store_true", help="build a headless version (not applicable for all products)")
@@ -69,7 +74,6 @@ parser.add_argument("--build", action="store_true", help="build all supported co
 parser.add_argument("--build-jobs", default="4", help="number of simultaneous jobs to run during a build (default = 4)")
 parser.add_argument("--analyze", action="store_true", help="perform static analysis of code on build (currently VS2017 only)")
 parser.add_argument("--vscode", action="store_true", help="generate CMake options into VsCode settings file for this project")
-parser.add_argument("--disable-extra-qt-lib-deploy", action="store_true", help="prevent extra Qt library files (XCB and ICU libs) from being copied during post build step")
 if support_32_bit_build:
     parser.add_argument("--platform", default="x64", choices=["x64", "x86"], help="specify the platform (32 or 64 bit)")
 args = parser.parse_args()
@@ -259,6 +263,8 @@ def generate_config(config):
     if sys.platform.startswith('linux'):
         if args.disable_extra_qt_lib_deploy:
             cmake_args.extend(["-DDISABLE_EXTRA_QT_LIB_DEPLOY:BOOL=TRUE"])
+        if args.qt_system:
+            cmake_args.extend(["-DQT_SYSTEM:BOOL=TRUE"])
 
     cmake_args.extend(["-DRMV_BUILD_NUMBER=" + str(args.build_number)])
 
@@ -355,8 +361,6 @@ if (args.build):
             # For Visual Studio, specify the config to build
             cmake_args = ["cmake", "--build", build_dir, "--config", config, "--target", "ALL_BUILD", "--",  "/m:" + args.build_jobs]
             if args.analyze:
-#                cmake_args.append("/p:CodeAnalysisTreatWarningsAsErrors=true")
-#                cmake_args.append("/p:CodeAnalysisRuleSet=NativeRecommendedRules.ruleset")
                 cmake_args.append("/p:CodeAnalysisRuleSet=NativeMinimumRules.ruleset")
                 cmake_args.append("/p:RunCodeAnalysis=true")
 

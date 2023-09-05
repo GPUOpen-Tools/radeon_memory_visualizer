@@ -14,7 +14,7 @@
 
 #include "views/custom_widgets/rmv_tooltip.h"
 
-#include <QDebug>
+#include "qt_common/utils/scaling_manager.h"
 
 #include "views/custom_widgets/rmv_color_swatch_tooltip_item.h"
 
@@ -23,6 +23,9 @@ static const QColor kTooltipBackgroundColor = QColor(255, 255, 255, 230);
 
 // The width of the border around the text in the tooltip.
 static const double kTooltipBorderWidth = 3.0;
+
+// The default font size with no DPI scaling.
+static const int kDefaultFontSize = 11;
 
 // The position to place the tooltip to the right of the mouse so that the
 // mouse cursor isn't obscured.
@@ -71,12 +74,15 @@ void RMVTooltip::CreateToolTip(QGraphicsScene* scene, bool color_swatch)
 
 void RMVTooltip::SetText(const QString& text_string)
 {
+    QFont font = tooltip_contents_->font();
+    font.setPixelSize(ScalingManager::Get().Scaled(kDefaultFontSize));
+    tooltip_contents_->setFont(font);
     tooltip_contents_->setText(text_string);
 
     // The method setText() will update the bounding rectangle for tooltip_contents, so update
     // the background rectangle. Add a small margin so text is not overlapping the outline.
-    QRectF rect   = tooltip_contents_->boundingRect();
-    qreal  offset = 2.0 * kTooltipBorderWidth;
+    QRectF      rect   = tooltip_contents_->boundingRect();
+    const qreal offset = ScalingManager::Get().Scaled(2.0 * kTooltipBorderWidth);
     rect.setWidth(rect.width() + offset);
     rect.setHeight(rect.height() + offset);
     tooltip_background_->setRect(rect);
@@ -99,14 +105,6 @@ void RMVTooltip::UpdateToolTip(const QPointF& mouse_pos, const QPointF& scene_po
     Q_ASSERT(tooltip_background_);
     Q_ASSERT(view_width > 0);
     Q_ASSERT(view_height > 0);
-
-#if 0
-    qDebug() << "mouse_pos: " << mouse_pos;
-    qDebug() << "scene_pos: " << scene_pos;
-    qDebug() << "view_width: " << view_width;
-    qDebug() << "view_height: " << view_height;
-    qDebug() << "---------";
-#endif
 
     tooltip_background_->show();
     tooltip_contents_->show();

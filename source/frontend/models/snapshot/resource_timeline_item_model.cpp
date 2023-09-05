@@ -130,6 +130,7 @@ namespace rmv
                 case kRmtResourceHistoryEventVirtualMemoryFree:
                 case kRmtResourceHistoryEventPhysicalMapToLocal:
                 case kRmtResourceHistoryEventPhysicalUnmap:
+                case kRmtResourceHistoryEventPhysicalMapToHost:
                     return rmv::string_util::LocalizedValueMemory(resource_history_->events[row_index].size_in_bytes, false, false);
 
                 default:

@@ -103,7 +103,12 @@ namespace rmv
             {
                 text_string += "\nName: " + QString(resource->name);
             }
-            text_string += "\nSize: " + rmv::string_util::LocalizedValueMemory(resource->size_in_bytes, false, false);
+            text_string += "\nActual size: " + rmv::string_util::LocalizedValueMemory(resource->size_in_bytes, false, false);
+
+            if (RmtResourceGetAliasCount(resource) > 0)
+            {
+                text_string += "\nAliased size: " + rmv::string_util::LocalizedValueMemory(resource->adjusted_size_in_bytes, false, false);
+            }
 
             const uint64_t offset = RmtResourceGetOffsetFromBoundAllocation(resource);
             text_string += "\nOffset: " + rmv::string_util::LocalizedValue(offset);

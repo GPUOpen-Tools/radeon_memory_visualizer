@@ -130,9 +130,8 @@ static RmtErrorCode LoadSegmentChunk(rdfChunkFile* chunk_file, RmtDataSet* data_
                 {
                     data_set->segment_info[count].base_address = data.physical_base_address;
                     data_set->segment_info[count].heap_type    = static_cast<RmtHeapType>(data.type);
-                    data_set->segment_info[count].index =
-                        0;  /// TODO: This is missing from RDF spec (should be memory index, exposed by the Vulkan software stack)
-                    data_set->segment_info[count].size = data.size;
+                    data_set->segment_info[count].index        = 0;
+                    data_set->segment_info[count].size         = data.size;
                     count++;
                 }
                 else
@@ -383,10 +382,10 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
             data_set->system_info.memory_bandwidth            = static_cast<int32_t>(system_info.gpus[active_gpu].memory.bandwidth / 1048576);
             data_set->system_info.memory_operations_per_clock = system_info.gpus[active_gpu].memory.mem_ops_per_clock;
 
-            strncpy_s(data_set->system_info.memory_type_name,
-                      sizeof(data_set->system_info.memory_type_name),
+            strncpy_s(data_set->system_info.video_memory_type_name,
+                      sizeof(data_set->system_info.video_memory_type_name),
                       system_info.gpus[active_gpu].memory.type.c_str(),
-                      sizeof(data_set->system_info.memory_type_name) - 1);
+                      sizeof(data_set->system_info.video_memory_type_name) - 1);
 
             strncpy_s(data_set->system_info.name,
                       sizeof(data_set->system_info.name),
@@ -417,6 +416,9 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
                   system_info.driver.software_version.c_str(),
                   kRmtMaxDriverSoftwareVersionNameLength - 1);
 
+        strncpy_s(
+            data_set->system_info.system_memory_type_name, kRmtMaxMemoryTypeNameLength, system_info.os.memory.type.c_str(), kRmtMaxMemoryTypeNameLength - 1);
+
         result = kRmtOk;
     }
 
@@ -428,7 +430,7 @@ RmtErrorCode RmtRdfFileParserLoadRdf(const char* path, RmtDataSet* data_set)
     RMT_RETURN_ON_ERROR(path, kRmtErrorInvalidPointer);
     RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
 
-    RmtErrorCode error_code = RmtRdfStreamOpen(path, data_set->read_only);
+    RmtErrorCode error_code = RmtRdfStreamOpen(path, data_set->flags.read_only);
 
     if (error_code == kRmtOk)
     {
@@ -467,7 +469,7 @@ RmtErrorCode RmtRdfFileParserLoadRdf(const char* path, RmtDataSet* data_set)
         if (error_code == kRmtOk)
         {
             // Set the flag indicating that the file is an RDF trace.
-            data_set->is_rdf_trace = true;
+            data_set->flags.is_rdf_trace = true;
 
             RmtRdfSnapshotWriter* snapshot_writer = new RmtRdfSnapshotWriter(data_set, &global_data_stream);
             data_set->snapshot_writer_handle      = reinterpret_cast<RmtSnapshotWriterHandle*>(snapshot_writer);

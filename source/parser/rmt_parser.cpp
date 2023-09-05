@@ -209,7 +209,6 @@ static uint64_t ReadBitsFromBuffer(const uint8_t* buffer, size_t buffer_size, ui
 // update the parser's notion of time
 static void UpdateTimeState(RmtParser* rmt_parser, const uint16_t token_header)
 {
-
     // work out the token type.
     const RmtTokenType token_type = (RmtTokenType)(token_header & 0xf);
 
@@ -1567,6 +1566,10 @@ RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtPar
     // token type encoded in [3:0]
     const RmtTokenType token_type = (RmtTokenType)(token_header & 0xf);
     out_token->type               = token_type;
+
+    // Assert that if this is the first token in the stream (i.e. the offset is 0) that the token type is a timestamp.
+    RMT_ASSERT((rmt_parser->stream_current_offset > 0) ||
+               ((rmt_parser->stream_current_offset == 0) && token_type == kRmtTokenTypeTimestamp));
 
     switch (token_type)
     {

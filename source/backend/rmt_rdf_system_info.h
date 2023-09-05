@@ -34,6 +34,7 @@ typedef struct RmtRdfSystemInfo
     uint32_t num_physical_cores;                                                      ///< The number of physical cores on the CPU.
     uint32_t num_logical_cores;                                                       ///< The number of logical cores on the CPU.
     uint64_t system_physical_memory_size;                                             ///< The amount of system memory in bytes.
+    char     system_memory_type_name[kRmtMaxMemoryTypeNameLength];                    ///< The system memory type text string.
     char     name[kRmtMaxAdapterNameLength];                                          ///< The name of the adapter as a NULL terminated string.
     uint32_t pcie_family_id;                                                          ///< The PCIe family ID of the adapter.
     uint32_t pcie_revision_id;                                                        ///< The PCIe revision ID of the adapter.
@@ -45,7 +46,7 @@ typedef struct RmtRdfSystemInfo
     uint32_t memory_bandwidth;                                                        ///< Bandwidth of the memory system (in MB/s).
     uint32_t minimum_memory_clock;                                                    ///< The minimum memory clock (in MHz).
     uint32_t maximum_memory_clock;                                                    ///< The maximum memory clock (in MHz).
-    char     memory_type_name[kRmtMaxMemoryTypeNameLength];                           ///< The memory type text string.
+    char     video_memory_type_name[kRmtMaxMemoryTypeNameLength];                     ///< The video memory type text string.
     char     driver_packaging_version_name[kRmtMaxDriverPackagingVersionNameLength];  ///< The driver packaging name.
     char     driver_software_version_name[kRmtMaxDriverSoftwareVersionNameLength];    ///< The driver software version name.
 } RmtRdfSystemInfo;

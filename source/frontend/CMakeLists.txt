@@ -44,6 +44,7 @@ ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 set( SOURCES
     "main.cpp"
     "managers/load_animation_manager.cpp"
@@ -486,11 +487,13 @@ IF(UNIX AND NOT APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../../build/qt.conf $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 
-    # Call chrpath on system to override executable file RPATH.
-    find_program(CHRPATH_EXECUTABLE NAMES chrpath)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E echo "trying chrpath"
-        COMMAND ${CHRPATH_EXECUTABLE} -r "\\$$ORIGIN/lib" $<TARGET_FILE:${PROJECT_NAME}>
-    )
+    IF(NOT QT_SYSTEM)
+        # Call chrpath on system to override executable file RPATH.
+        find_program(CHRPATH_EXECUTABLE NAMES chrpath)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "trying chrpath"
+            COMMAND ${CHRPATH_EXECUTABLE} -r "\\$$ORIGIN/lib" $<TARGET_FILE:${PROJECT_NAME}>
+        )
+    ENDIF(NOT QT_SYSTEM)
 
 ENDIF(UNIX AND NOT APPLE)

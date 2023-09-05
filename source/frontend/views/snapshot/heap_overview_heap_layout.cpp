@@ -193,13 +193,13 @@ void HeapOverviewHeapLayout::Update()
     ui_->bar_requested_->SetParameters(total_virtual_memory_requested, 0, max_size, true, subscription_status);
     ui_->bar_bound_->SetParameters(total_bound_virtual_memory, 0, max_size, false, subscription_status);
     ui_->bar_total_size_->SetParameters(total_physical_size, 0, max_size, false, subscription_status);
-    ui_->bar_used_->SetParameters(total_physical_mapped_by_process, total_physical_mapped_by_other_processes, max_size, false, subscription_status);
+    ui_->bar_committed_->SetParameters(total_physical_mapped_by_process, total_physical_mapped_by_other_processes, max_size, false, subscription_status);
 
     // Update the various UI elements.
     ui_->bar_requested_->update();
     ui_->bar_bound_->update();
     ui_->bar_total_size_->update();
-    ui_->bar_used_->update();
+    ui_->bar_committed_->update();
 
     ui_->donut_widget_->update();
 }

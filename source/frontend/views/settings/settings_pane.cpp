@@ -40,6 +40,7 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->units_combo_push_button_->AddItem(rmv::text::kSettingsUnitsMilliseconds);
     ui_->units_combo_push_button_->AddItem(rmv::text::kSettingsUnitsSeconds);
     ui_->units_combo_push_button_->AddItem(rmv::text::kSettingsUnitsMinutes);
+    ui_->units_combo_push_button_->AddItem(rmv::text::kSettingsUnitsHours);
     ui_->units_combo_push_button_->SetSelectedRow(0);
     connect(ui_->units_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::TimeUnitsChanged);
 

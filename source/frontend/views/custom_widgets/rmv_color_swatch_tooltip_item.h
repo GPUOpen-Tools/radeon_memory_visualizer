@@ -42,7 +42,6 @@ public:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) Q_DECL_OVERRIDE;
 
 private:
-    int text_height_;  ///< The text height.
     int icon_size_;    ///< The icon size.
 };
 

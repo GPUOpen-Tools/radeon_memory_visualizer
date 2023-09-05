@@ -384,7 +384,7 @@ uint64_t RmtDataSnapshotGetSmallestResourceSize(const RmtDataSnapshot* snapshot)
     for (int32_t current_resource_index = 0; current_resource_index < snapshot->resource_list.resource_count; ++current_resource_index)
     {
         const RmtResource* current_resource = &snapshot->resource_list.resources[current_resource_index];
-        smallest_resource_size_in_bytes     = RMT_MINIMUM(smallest_resource_size_in_bytes, current_resource->size_in_bytes);
+        smallest_resource_size_in_bytes     = RMT_MINIMUM(smallest_resource_size_in_bytes, current_resource->adjusted_size_in_bytes);
     }
 
     if (smallest_resource_size_in_bytes == UINT64_MAX)

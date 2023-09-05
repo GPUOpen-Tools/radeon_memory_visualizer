@@ -19,6 +19,7 @@ extern "C" {
 #endif  // #ifdef __cplusplus
 
 typedef struct RmtResource                  RmtResource;
+typedef struct RmtResourceList              RmtResourceList;
 typedef struct RmtDataSnapshot              RmtDataSnapshot;
 typedef struct RmtVirtualAllocationInterval RmtVirtualAllocationInterval;
 
@@ -351,6 +352,19 @@ uint64_t RmtVirtualAllocationListGetBoundTotalSizeInBytes(const RmtDataSnapshot*
 /// The size (in bytes) of the memory in a <c><i>virtual_allocation_list</i></c> that is not bound to resources.
 uint64_t RmtVirtualAllocationListGetUnboundTotalSizeInBytes(const RmtDataSnapshot* snapshot, const RmtVirtualAllocationList* virtual_allocation_list);
 
+/// Update the alias size of each resource bound to an allocation.
+///
+/// @param [in] allocation_list                        A pointer to a <c><i>RmtVirtualAllocationList</i></c> structure.
+/// @param [in] resource_list                          A pointer to a <c><i>RmtResourceList</i></c> structure.
+/// @param [in] resource_usage_mask                    A bit mask of all usage types that should be included when calculating alias size.
+///
+/// @retval
+/// kRmtOk                                  The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                 The operation failed because <c><i>virtual_allocation_list</i></c> or <c><i>resource_list</i></c> was <c><i>NULL</i></c>.
+RmtErrorCode RmtVirtualAllocationListUpdateAliasedResourceSizes(const RmtVirtualAllocationList* allocation_list,
+                                                                const RmtResourceList*          resource_list,
+                                                                const uint64_t                  resource_usage_mask);
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus

@@ -237,7 +237,7 @@ namespace rmv
         if (DataSetValid())
         {
             const RmtDataSet* data_set = GetDataSet();
-            if (data_set->read_only == true)
+            if (data_set->flags.read_only == true)
             {
                 read_only = true;
             }

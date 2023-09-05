@@ -41,6 +41,13 @@ namespace rmv
         /// @return The filter string.
         QString GetFilterString(const ArrowIconComboBox* combo_box);
 
+        /// @brief Get the bit mask for the resource usage filter.
+        ///
+        /// @param [in] combo_box Pointer to the combo box to query.
+        ///
+        /// @return Resource usage bit mask.
+        uint64_t GetFilterMask(const ArrowIconComboBox* combo_box);
+
         /// @brief Check the state of the combo box and setup the internal state representation of the ArrowIconComboBox.
         ///
         /// @param [in] combo_box Pointer to the combo box whose state is to be examined.

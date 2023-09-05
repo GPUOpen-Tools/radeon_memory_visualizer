@@ -72,7 +72,7 @@ QString rmv_util::GetFileLocation()
     Q_UNUSED(hr);
     Q_ASSERT(hr == S_OK);
 
-    file_location = QString::fromUtf16((const ushort*)wsz_path);
+    file_location = QString::fromUtf16((const char16_t*)wsz_path);
     file_location.append("/" + rmv::kRmvExecutableBaseFilename);
 
 #else
@@ -106,7 +106,7 @@ bool rmv_util::TraceValidToLoad(const QString& trace_path)
     {
         const QString extension = trace_path.mid(trace_path.lastIndexOf("."), trace_path.length());
 
-        if (extension.compare(kRMVTraceFileExtension, Qt::CaseInsensitive) == 0)
+        if ((extension.compare(kRMVTraceFileExtension, Qt::CaseInsensitive) == 0) || (extension.compare(kRGDTraceFileExtension, Qt::CaseInsensitive) == 0))
         {
             may_load = true;
         }

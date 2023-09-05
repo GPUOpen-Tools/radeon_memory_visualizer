@@ -10,7 +10,6 @@
 
 #include <QRegularExpressionValidator>
 
-
 /// Support for the regular expression validator.
 class RMVRegularExpressionValidator : public QRegularExpressionValidator
 {
@@ -35,7 +34,7 @@ public:
     ///
     /// @param [in] input    The string entered by the user.
     /// @param [in] position The current cursor position in the input string.
-    /// 
+    ///
     /// @return The validation state.
     virtual State validate(QString& input, int& position) const Q_DECL_OVERRIDE;
 
@@ -46,7 +45,6 @@ public:
 
 private:
     QString invalid_input_message_;  ///< The tooltip message displayed if the input string is invalid.
-
 };
 
 #endif  // RMV_VIEWS_DELEGATES_RMV_REGULAR_EXPRESSION_VALIDATOR_H_

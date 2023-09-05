@@ -7,7 +7,6 @@
 
 #include "views/main_window.h"
 
-#include <QDesktopWidget>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QMimeData>
@@ -274,47 +273,43 @@ void MainWindow::SetupWindowRects(bool loaded_settings)
 #endif  // RMV_DEBUG_WINDOW
 }
 
-void MainWindow::SetupHotkeyNavAction(QSignalMapper* mapper, int key, int pane)
+void MainWindow::SetupHotkeyNavAction(int key, int pane)
 {
     QAction* action = new QAction(this);
     action->setShortcut(key | Qt::ALT);
 
-    connect(action, SIGNAL(triggered()), mapper, SLOT(map()));
     this->addAction(action);
-    mapper->setMapping(action, pane);
+    connect(action, &QAction::triggered, [=]() { ViewPane(pane); });
 }
 
 void MainWindow::CreateActions()
 {
-    QSignalMapper* signal_mapper = new QSignalMapper(this);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoWelcomePane, rmv::kPaneIdStartWelcome);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoRecentSnapshotsPane, rmv::kPaneIdStartRecentTraces);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAboutPane, rmv::kPaneIdStartAbout);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoGenerateSnapshotPane, rmv::kPaneIdTimelineGenerateSnapshot);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoDeviceConfigurationPane, rmv::kPaneIdTimelineDeviceConfiguration);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoHeapOverviewPane, rmv::kPaneIdSnapshotHeapOverview);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceOverviewPane, rmv::kPaneIdSnapshotResourceOverview);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAllocationOverviewPane, rmv::kPaneIdSnapshotAllocationOverview);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceListPane, rmv::kPaneIdSnapshotResourceList);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoResourceHistoryPane, rmv::kPaneIdSnapshotResourceDetails);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoAllocationExplorerPane, rmv::kPaneIdSnapshotAllocationExplorer);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoSnapshotDeltaPane, rmv::kPaneIdCompareSnapshotDelta);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoMemoryLeakFinderPane, rmv::kPaneIdCompareMemoryLeakFinder);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoGeneralSettingsPane, rmv::kPaneIdSettingsGeneral);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoThemesAndColorsPane, rmv::kPaneIdSettingsThemesAndColors);
-    SetupHotkeyNavAction(signal_mapper, rmv::kGotoKeyboardShortcutsPane, rmv::kPaneIdSettingsKeyboardShortcuts);
-
-    connect(signal_mapper, SIGNAL(mapped(int)), this, SLOT(ViewPane(int)));
+    SetupHotkeyNavAction(rmv::kGotoWelcomePane, rmv::kPaneIdStartWelcome);
+    SetupHotkeyNavAction(rmv::kGotoRecentSnapshotsPane, rmv::kPaneIdStartRecentTraces);
+    SetupHotkeyNavAction(rmv::kGotoAboutPane, rmv::kPaneIdStartAbout);
+    SetupHotkeyNavAction(rmv::kGotoGenerateSnapshotPane, rmv::kPaneIdTimelineGenerateSnapshot);
+    SetupHotkeyNavAction(rmv::kGotoDeviceConfigurationPane, rmv::kPaneIdTimelineDeviceConfiguration);
+    SetupHotkeyNavAction(rmv::kGotoHeapOverviewPane, rmv::kPaneIdSnapshotHeapOverview);
+    SetupHotkeyNavAction(rmv::kGotoResourceOverviewPane, rmv::kPaneIdSnapshotResourceOverview);
+    SetupHotkeyNavAction(rmv::kGotoAllocationOverviewPane, rmv::kPaneIdSnapshotAllocationOverview);
+    SetupHotkeyNavAction(rmv::kGotoResourceListPane, rmv::kPaneIdSnapshotResourceList);
+    SetupHotkeyNavAction(rmv::kGotoResourceHistoryPane, rmv::kPaneIdSnapshotResourceDetails);
+    SetupHotkeyNavAction(rmv::kGotoAllocationExplorerPane, rmv::kPaneIdSnapshotAllocationExplorer);
+    SetupHotkeyNavAction(rmv::kGotoSnapshotDeltaPane, rmv::kPaneIdCompareSnapshotDelta);
+    SetupHotkeyNavAction(rmv::kGotoMemoryLeakFinderPane, rmv::kPaneIdCompareMemoryLeakFinder);
+    SetupHotkeyNavAction(rmv::kGotoGeneralSettingsPane, rmv::kPaneIdSettingsGeneral);
+    SetupHotkeyNavAction(rmv::kGotoThemesAndColorsPane, rmv::kPaneIdSettingsThemesAndColors);
+    SetupHotkeyNavAction(rmv::kGotoKeyboardShortcutsPane, rmv::kPaneIdSettingsKeyboardShortcuts);
 
     // Set up forward/backward navigation.
     QAction* shortcut = new QAction(this);
-    shortcut->setShortcut(Qt::ALT | rmv::kKeyNavForwardArrow);
+    shortcut->setShortcut(QKeySequence(Qt::ALT | rmv::kKeyNavForwardArrow));
 
     connect(shortcut, &QAction::triggered, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateForward);
     this->addAction(shortcut);
 
     shortcut = new QAction(this);
-    shortcut->setShortcut(Qt::ALT | rmv::kKeyNavBackwardArrow);
+    shortcut->setShortcut(QKeySequence(Qt::ALT | rmv::kKeyNavBackwardArrow));
 
     connect(shortcut, &QAction::triggered, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateBack);
     this->addAction(shortcut);
@@ -348,7 +343,7 @@ void MainWindow::CreateActions()
     for (int i = 0; i < kMaxSubmenuSnapshots; i++)
     {
         recent_trace_actions_.push_back(new QAction("", this));
-        recent_trace_mappers_.push_back(new QSignalMapper());
+        recent_trace_connections_.push_back(QMetaObject::Connection());
     }
 
     help_action_ = new QAction(tr("Help"), this);
@@ -374,15 +369,14 @@ void MainWindow::CycleTimeUnits()
 
 void MainWindow::SetupRecentTracesMenu()
 {
-    for (int i = 0; i < recent_trace_mappers_.size(); i++)
+    const QVector<RecentFileData>& files = rmv::RMVSettings::Get().RecentFiles();
+
+    for (int i = 0; i < recent_trace_connections_.size(); i++)
     {
-        disconnect(recent_trace_actions_[i], SIGNAL(triggered(bool)), recent_trace_mappers_[i], SLOT(map()));
-        disconnect(recent_trace_mappers_[i], SIGNAL(mapped(QString)), this, SLOT(LoadTrace(QString)));
+        disconnect(recent_trace_connections_[i]);
     }
 
     recent_traces_menu_->clear();
-
-    const QVector<RecentFileData>& files = rmv::RMVSettings::Get().RecentFiles();
 
     const int num_items = (files.size() > kMaxSubmenuSnapshots) ? kMaxSubmenuSnapshots : files.size();
 
@@ -392,11 +386,7 @@ void MainWindow::SetupRecentTracesMenu()
 
         recent_traces_menu_->addAction(recent_trace_actions_[i]);
 
-        connect(recent_trace_actions_[i], SIGNAL(triggered(bool)), recent_trace_mappers_[i], SLOT(map()));
-
-        recent_trace_mappers_[i]->setMapping(recent_trace_actions_[i], files[i].path);
-
-        connect(recent_trace_mappers_[i], SIGNAL(mapped(QString)), this, SLOT(LoadTrace(QString)));
+        recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
     }
 
     emit rmv::MessageManager::Get().RecentFileListChanged();
@@ -642,7 +632,9 @@ void MainWindow::UpdateSnapshotCombobox(RmtSnapshotPoint* selected_snapshot_poin
         }
 
         // Search the list of items in the combo box that has the open snapshot pointer.
+        ui_->snapshot_combo_box_->blockSignals(true);
         ui_->snapshot_combo_box_->SetSelectedRow(selected_snapshot_point_index);
+        ui_->snapshot_combo_box_->blockSignals(false);
     }
 }
 

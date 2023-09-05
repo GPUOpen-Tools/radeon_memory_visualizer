@@ -26,7 +26,7 @@ namespace rmv
     static const QString kHeapDescriptions[kRmtHeapTypeCount] = {
         QString("This heap is in local (video) memory. It is mappable by the CPU, but does not use the CPU cache."),
         QString("This heap is in local (video) memory. It is not mappable by the CPU."),
-        QString("This heap is in host (system) memory. It is intended for write-only data on the CPU side.")};
+        QString("This heap is in host (system) memory. It is intended for direct CPU access.")};
 
     static const QString kWarningHeader = "<b>WARNING! </b><br>";
 
@@ -194,7 +194,7 @@ namespace rmv
 
     bool HeapOverviewHeapModel::IsSAMSupported()
     {
-        return TraceManager::Get().GetDataSet()->sam_enabled;
+        return TraceManager::Get().GetDataSet()->flags.sam_enabled;
     }
 
     RmtHeapType HeapOverviewHeapModel::GetHeapType() const

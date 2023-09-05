@@ -14,7 +14,6 @@
 
 RMVColorSwatchTooltipItem::RMVColorSwatchTooltipItem(QGraphicsItem* parent)
     : QGraphicsSimpleTextItem(parent)
-    , text_height_(0)
     , icon_size_(0)
 {
 }
@@ -42,8 +41,8 @@ void RMVColorSwatchTooltipItem::paint(QPainter* painter, const QStyleOptionGraph
     {
         painter->setFont(font());
 
-        text_height_ = boundingRect().height() / num_rows;
-        icon_size_   = text_height_ - 2;
+        const int text_height = boundingRect().height() / num_rows;
+        icon_size_            = text_height - 2;
 
         int offset = 0;
         for (auto index = 0; index < line_list.size(); index++)
@@ -51,7 +50,7 @@ void RMVColorSwatchTooltipItem::paint(QPainter* painter, const QStyleOptionGraph
             QString color = data(index).toString();
             painter->fillRect(0, offset + 1, icon_size_, icon_size_, QColor(color));
             painter->drawText(icon_size_ + 1, icon_size_ + offset, line_list[index]);
-            offset += text_height_;
+            offset += text_height;
         }
     }
 }

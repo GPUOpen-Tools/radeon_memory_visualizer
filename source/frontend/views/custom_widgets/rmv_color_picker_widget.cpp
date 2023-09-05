@@ -34,7 +34,7 @@ RMVColorPickerWidget::RMVColorPickerWidget(QWidget* parent)
     SetPalette(kDefaultPaletteString);
 
     // Set up signals/slots.
-    connect(&button_group_, SIGNAL(buttonClicked(int)), this, SLOT(ButtonClicked(int)));
+    connect(&button_group_, &QButtonGroup::idClicked, this, &RMVColorPickerWidget::ButtonClicked);
 
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QWidget::updateGeometry);
 }

@@ -312,8 +312,8 @@ const char* RmtGetFormatNameFromFormat(RmtFormat format)
         return "X1Y5Z5W5_UNORM";
     case kRmtFormatX1Y5Z5W5Uscaled:
         return "X1Y5Z5W5_USCALED";
-    case kRmtFormatX8Xnorm:
-        return "X8_XNORM";
+    case kRmtFormatX8Unorm:
+        return "X8_UNORM";
     case kRmtFormatX8Snorm:
         return "X8_SNORM";
     case kRmtFormatX8Uscaled:
@@ -330,8 +330,8 @@ const char* RmtGetFormatNameFromFormat(RmtFormat format)
         return "A8_UNORM";
     case kRmtFormatL8Unorm:
         return "L8_UNORM";
-    case kRmtFormatP8Uint:
-        return "P8_UINT";
+    case kRmtFormatP8Unorm:
+        return "P8_UNORM";
     case kRmtFormatX8Y8Unorm:
         return "X8Y8_UNORM";
     case kRmtFormatX8Y8Snorm:
@@ -454,8 +454,8 @@ const char* RmtGetFormatNameFromFormat(RmtFormat format)
         return "X32Y32Z32W32_FLOAT";
     case kRmtFormatD16UnormS8Uint:
         return "D16_UNORM_S8_UINT";
-    case kRmtFormatD32UnormS8Uint:
-        return "D32_UNORM_S8_UINT";
+    case kRmtFormatD32FloatS8Uint:
+        return "D32_FLOAT_S8_UINT";
     case kRmtFormatX9Y9Z9E5Float:
         return "X9Y9Z9E5_FLOAT";
     case kRmtFormatBC1Unorm:
@@ -472,21 +472,20 @@ const char* RmtGetFormatNameFromFormat(RmtFormat format)
         return "BC3_SRGB";
     case kRmtFormatBC4Unorm:
         return "BC4_UNORM";
-    case kRmtFormatBC4Srgb:
-        return "BC4_SRGB";
+    case kRmtFormatBC4Snorm:
+        return "BC4_SNORM";
     case kRmtFormatBC5Unorm:
         return "BC5_UNORM";
-    case kRmtFormatBC5Srgb:
-        return "BC5_SRGB";
-    case kRmtFormatBC6Unorm:
-        return "BC6_UNORM";
-    case kRmtFormatBC6Srgb:
-        return "BC6_SRGB";
+    case kRmtFormatBC5Snorm:
+        return "BC5_SNORM";
+    case kRmtFormatBC6UFloat:
+        return "BC6_UFLOAT";
+    case kRmtFormatBC6SFloat:
+        return "BC6_SFLOAT";
     case kRmtFormatBC7Unorm:
         return "BC7_UNORM";
     case kRmtFormatBC7Srgb:
         return "BC7_SRGB";
-
     case kRmtFormatEtC2X8Y8Z8Unorm:
         return "ETC2X8Y8Z8_UNORM";
     case kRmtFormatEtC2X8Y8Z8Srgb:
@@ -549,8 +548,12 @@ const char* RmtGetFormatNameFromFormat(RmtFormat format)
         return "ASTCLDR10X6_SRGB";
     case kRmtFormatAstcldR10X8Unorm:
         return "ASTCLDR10X8_UNORM";
+    case kRmtFormatAstcldR10X8Srgb:
+        return "ASTCLDR10X8_SRGB";
     case kRmtFormatAstcldR10X10Unorm:
         return "ASTCLDR10X10_UNORM";
+    case kRmtFormatAstcldR10X10Srgb:
+        return "ASTCLDR10X10_SRGB";
     case kRmtFormatAstcldR12X10Unorm:
         return "ASTCLDR12X10_UNORM";
     case kRmtFormatAstcldR12X10Srgb:
@@ -617,6 +620,50 @@ const char* RmtGetFormatNameFromFormat(RmtFormat format)
         return "P016";
     case kRmtFormatP010:
         return "P010";
+    case kRmtFormatP210:
+        return "P210";
+    case kRmtFormatX8MMUnorm:
+        return "X8 MM UNORM";
+    case kRmtFormatX8MMUint:
+        return "X8 MM UINT";
+    case kRmtFormatX8Y8MMUnorm:
+        return "X8Y8 MM UNORM";
+    case kRmtFormatX8Y8MMUint:
+        return "X8Y8 MM UINT";
+    case kRmtFormatX16MM10Unorm:
+        return "X16 MM10 UNORM";
+    case kRmtFormatX16MM10Uint:
+        return "X16 MM10 UINT";
+    case kRmtFormatX16Y16MM10Unorm:
+        return "X16Y16 MM10 UNORM";
+    case kRmtFormatX16Y16MM10Uint:
+        return "X16Y16 MM10 UINT";
+    case kRmtFormatP208:
+        return "P208";
+    case kRmtFormatX16MM12Unorm:
+        return "X16 MM12 UNORM";
+    case kRmtFormatX16MM12Uint:
+        return "X16 MM12 UINT";
+    case kRmtFormatX16Y16MM12Unorm:
+        return "X16Y16 MM12 UNORM";
+    case kRmtFormatX16Y16MM12Uint:
+        return "X16Y16 MM12 UINT";
+    case kRmtFormatP012:
+        return "P012";
+    case kRmtFormatP212:
+        return "P212";
+    case kRmtFormatP412:
+        return "P412";
+    case kRmtFormatX10Y10Z10W2Float:
+        return "X10Y10Z10W2 FLOAT";
+    case kRmtFormatY216:
+        return "Y216";
+    case kRmtFormatY210:
+        return "Y210";
+    case kRmtFormatY416:
+        return "Y416";
+    case kRmtFormatY410:
+        return "Y410";
 
     default:
         return "Unknown";

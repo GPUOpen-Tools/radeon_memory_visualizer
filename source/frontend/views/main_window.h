@@ -11,7 +11,6 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QMenu>
-#include <QSignalMapper>
 
 #include "ui_main_window.h"
 
@@ -206,10 +205,9 @@ private:
 
     /// @brief Setup mapping for keyboard binds.
     ///
-    /// @param [in] mapper The signal mapper.
     /// @param [in] key    The pressed key.
     /// @param [in] pane   The target pane.
-    void SetupHotkeyNavAction(QSignalMapper* mapper, int key, int pane);
+    void SetupHotkeyNavAction(int key, int pane);
 
     /// @brief Handle a drag enter event.
     ///
@@ -284,9 +282,9 @@ private:
 
     QMenu* help_menu_;  ///< Help menu control
 
-    QMenu*                  recent_traces_menu_;    ///< Sub menu containing recently opened files.
-    QVector<QSignalMapper*> recent_trace_mappers_;  ///< Map signals to the recent traces when clicked on.
-    QVector<QAction*>       recent_trace_actions_;  ///< List of actions for recent traces.
+    QMenu*                           recent_traces_menu_;        ///< Sub menu containing recently opened files.
+    QVector<QAction*>                recent_trace_actions_;      ///< List of actions for recent traces.
+    QVector<QMetaObject::Connection> recent_trace_connections_;  ///< List of previously connected signals/slots.
 
     TimelinePane*        timeline_pane_;          ///< Pointer to timeline pane.
     ResourceDetailsPane* resource_details_pane_;  ///< Pointer to resource details pane.

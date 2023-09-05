@@ -14,6 +14,7 @@ extern "C" {
 
 // The file extensions for trace files.
 static const char* kRMVTraceFileExtension = ".rmv";
+static const char* kRGDTraceFileExtension = ".rgd";
 #ifdef __cplusplus
 }
 #endif  // __cplusplus

@@ -54,6 +54,16 @@ typedef struct RmtSnapshotPoint
     uint16_t         chunk_index;  ///< The index of the snapshot data chunk in the RDF file (not used for legacy traces).
 } RmtSnapshotPoint;
 
+// Various flags used by the dataset.
+struct RmtDataSetFlags
+{
+    bool read_only : 1;                    ///< Whether the dataset is loaded as read-only.
+    bool sam_enabled : 1;                  ///< Whether the dataset is SAM (smart access memory) enabled.
+    bool is_rdf_trace : 1;                 ///< Whether the dataset is generated from an RDF file.
+    bool userdata_processed : 1;           ///< Whether the userdata tokens have been processed yet.
+    bool contains_correlation_tokens : 1;  ///< Whether the dataset contains any correlation tokens.
+};
+
 /// A structure encapsulating a single RMT dataset.
 typedef struct RmtDataSet
 {
@@ -61,8 +71,6 @@ typedef struct RmtDataSet
     char   temporary_file_path[RMT_MAXIMUM_FILE_PATH];  ///< The file path to the safe temporary file being worked with.
     FILE*  file_handle;                                 ///< The handle to the RMT file (operates on the temporary).
     size_t file_size_in_bytes;                          ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
-    bool   read_only;                                   ///< Whether the dataset is loaded as read-only.
-    bool   sam_enabled;                                 ///< Whether the dataset is SAM (smart access memory) enabled.
     time_t create_time;                                 ///< The time the trace was created.
 
     RmtDataSetAllocationFunc allocate_func;  ///< Allocate memory function pointer.
@@ -95,11 +103,11 @@ typedef struct RmtDataSet
 
     ResourceIdMapAllocator* resource_id_map_allocator;  ///< Allocator buffer/struct used to do lookup of unique resource ID.
 
-    bool     is_rdf_trace;                           ///< A flag that indicates, if true, that the trace is RDF format.  Otherwise, false.
-    bool     is_resource_name_processing_complete;   ///< A flag that indicates, if true, that resource names have been processed for the loaded memory trace.
-    bool     contains_correlation_tokens;            ///< A flag that indicates, if true, that the trace contain correlation tokens.
-    uint32_t active_gpu;                             ///< The active GPU used by the application process that was captured.
+    uint32_t                active_gpu;              ///< The active GPU used by the application process that was captured.
     RmtSnapshotWriterHandle snapshot_writer_handle;  ///< The object responsible for writing snapshots to the trace file.
+
+    struct RmtDataSetFlags flags;  ///< The dataset flags, described above.
+
 } RmtDataSet;
 
 /// Initialize the RMT data set from a file path.
@@ -254,6 +262,14 @@ RmtErrorCode RmtDataSetRenameSnapshot(RmtDataSet* data_set, const int32_t snapsh
 /// @returns
 /// The series index.
 int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t timestamp);
+
+/// Get the total video memory for the specified data set.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+///
+/// @returns                                                The amount of video memory, in bytes.
+
+uint64_t RmtDataSetGetTotalVideoMemoryInBytes(const RmtDataSet* data_set);
 
 #ifdef __cplusplus
 }

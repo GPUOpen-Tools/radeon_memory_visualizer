@@ -80,7 +80,6 @@ typedef struct RmtParser
     int32_t  stream_index;          ///< The index of the RMT stream within the RMT file.
     bool     buffer_refill_needed;  ///< A flag that indicates all data in the buffer has been parsed and the next chunk needs to be loaded.
     RmtParserResetDataStreamCallbackFunc reset_data_stream_func;  ///< The function called to reset the object that manages the data stream buffer.
-
 } RmtParser;
 
 /// Initialize the RMT parser structure.

@@ -13,13 +13,11 @@
 RMVRegularExpressionValidator::RMVRegularExpressionValidator(QObject* parent)
     : QRegularExpressionValidator(parent)
 {
-
 }
 
 RMVRegularExpressionValidator::RMVRegularExpressionValidator(const QRegularExpression& regular_expression, QObject* parent)
     : QRegularExpressionValidator(regular_expression, parent)
 {
-
 }
 
 RMVRegularExpressionValidator::~RMVRegularExpressionValidator()
@@ -30,8 +28,8 @@ QValidator::State RMVRegularExpressionValidator::validate(QString& input, int& p
 {
     QValidator::State result = QValidator::Intermediate;
 
-   result = QRegularExpressionValidator::validate(input, position);
-    
+    result = QRegularExpressionValidator::validate(input, position);
+
     if (result == QValidator::Invalid)
     {
         QWidget* widget = qobject_cast<QWidget*>(parent());

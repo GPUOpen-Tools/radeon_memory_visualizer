@@ -174,7 +174,7 @@ QSize RMVColoredCheckbox::sizeHint() const
     // Width is defined by switch width (which is 2*height) plus kPaddingBetweenSwitchAndText, plus the width of the text.
     int   switch_width   = base_height * 2;
     qreal scaled_padding = this->style()->pixelMetric(QStyle::PM_CheckBoxLabelSpacing, nullptr, this);
-    int   text_width     = font_metrics.width(this->text());
+    int   text_width     = font_metrics.horizontalAdvance(this->text());
 
     return QSize(switch_width + scaled_padding + text_width, height);
 }

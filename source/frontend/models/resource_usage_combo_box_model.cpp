@@ -17,6 +17,8 @@
 
 #include "util/string_util.h"
 
+#include <cmath>
+
 // Set of resources that shouldn't be in the resource combo box.
 static const std::set<int> kExcludedResources = {kRmtResourceUsageTypeUnknown};
 
@@ -113,6 +115,25 @@ namespace rmv
         resource_filter += ")";
 
         return resource_filter;
+    }
+
+    uint64_t ResourceUsageComboBoxModel::GetFilterMask(const ArrowIconComboBox* combo_box)
+    {
+        RMT_ASSERT(combo_box != nullptr);
+
+        SetupState(combo_box);
+
+        uint64_t filter_mask = 0;
+
+        for (int usage_type = kRmtResourceUsageTypeFree; usage_type < kRmtResourceUsageTypeCount; usage_type++)
+        {
+            if (ItemInList(usage_type) == true)
+            {
+                filter_mask |= static_cast<uint64_t>(std::pow(2, usage_type - 1));
+            }
+        }
+
+        return filter_mask;
     }
 
     void ResourceUsageComboBoxModel::SetupState(const ArrowIconComboBox* combo_box)

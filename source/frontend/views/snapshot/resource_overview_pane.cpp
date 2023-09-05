@@ -279,6 +279,10 @@ void ResourceOverviewPane::ComboFiltersChanged(bool checked)
     RMT_UNUSED(checked);
 
     UpdateComboFilters();
+    const uint64_t         usage_mask    = tree_map_models_.resource_usage_model->GetFilterMask(ui_->resource_usage_combo_box_);
+    const RmtDataSnapshot* open_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
+    RmtVirtualAllocationListUpdateAliasedResourceSizes(&(open_snapshot->virtual_allocation_list), &(open_snapshot->resource_list), usage_mask);
+
     Refresh();
 
     selected_resource_ = nullptr;

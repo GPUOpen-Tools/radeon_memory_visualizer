@@ -37,7 +37,7 @@ RmtDataTimeline* RmtTraceLoaderGetTimeline()
 bool RmtTraceLoaderDataSetValid()
 {
     // The data set is considered valid if the file handle is non-null (for legacy traces) or the RDF trace flag is set.
-    if ((data_set_.file_handle != nullptr) || (data_set_.is_rdf_trace))
+    if ((data_set_.file_handle != nullptr) || (data_set_.flags.is_rdf_trace))
     {
         return true;
     }

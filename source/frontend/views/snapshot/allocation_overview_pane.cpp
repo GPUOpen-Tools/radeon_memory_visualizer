@@ -307,15 +307,16 @@ void AllocationOverviewPane::ResizeItems()
 {
     int allocation_offset = 0;
 
-    QScrollBar* scroll_bar = ui_->allocation_list_view_->verticalScrollBar();
+    const qreal       scaled_allocation_height = ScalingManager::Get().Scaled(allocation_height_);
+    const QScrollBar* scroll_bar               = ui_->allocation_list_view_->verticalScrollBar();
     if (scroll_bar != nullptr)
     {
-        allocation_offset = scroll_bar->value() / allocation_height_;
+        allocation_offset = scroll_bar->value() / scaled_allocation_height;
     }
 
     model_->GetAllocationBarModel()->SetAllocationOffset(allocation_offset);
 
-    int       y_offset        = allocation_offset * allocation_height_;
+    int       y_offset        = allocation_offset * scaled_allocation_height;
     const int scrollbar_width = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     const int view_width      = ui_->allocation_list_view_->width() - scrollbar_width - 2;
 
@@ -323,7 +324,7 @@ void AllocationOverviewPane::ResizeItems()
 
     for (size_t current_allocation_graphic_object_index = 0; current_allocation_graphic_object_index < num_objects; current_allocation_graphic_object_index++)
     {
-        allocation_graphic_objects_[current_allocation_graphic_object_index]->UpdateDimensions(view_width, allocation_height_);
+        allocation_graphic_objects_[current_allocation_graphic_object_index]->UpdateDimensions(view_width, scaled_allocation_height);
         allocation_graphic_objects_[current_allocation_graphic_object_index]->setPos(0, y_offset);
 
         // Move down based on the size of the item that was just added.
@@ -417,20 +418,21 @@ void AllocationOverviewPane::SelectResource(RmtResourceIdentifier resource_ident
     QScrollBar* scroll_bar = ui_->allocation_list_view_->verticalScrollBar();
     if (scroll_bar != nullptr && allocation_offset != UINT64_MAX)
     {
-        const int32_t view_height             = ui_->allocation_list_view_->height();
-        const int32_t scroll_bar_offset       = scroll_bar->value();
-        const int32_t top_allocation_index    = scroll_bar_offset / allocation_height_;
-        const int32_t bottom_allocation_index = (scroll_bar_offset + view_height) / allocation_height_;
+        const qreal   scaled_allocation_height = ScalingManager::Get().Scaled(allocation_height_);
+        const int32_t view_height              = ui_->allocation_list_view_->height();
+        const int32_t scroll_bar_offset        = scroll_bar->value();
+        const int32_t top_allocation_index     = scroll_bar_offset / scaled_allocation_height;
+        const int32_t bottom_allocation_index  = (scroll_bar_offset + view_height) / scaled_allocation_height;
 
         // If the allocation is outside the visible range, move the scrollbar so it's in range.
         // If the allocation is partially visible, move the scrollbar so it's all visible.
         if (static_cast<int32_t>(allocation_offset) <= top_allocation_index)
         {
-            scroll_bar->setValue(static_cast<int32_t>(allocation_offset) * allocation_height_);
+            scroll_bar->setValue(static_cast<int32_t>(allocation_offset) * scaled_allocation_height);
         }
         else if (static_cast<int32_t>(allocation_offset) >= bottom_allocation_index)
         {
-            int32_t offset = static_cast<int32_t>(allocation_offset) * allocation_height_;
+            int32_t offset = static_cast<int32_t>(allocation_offset) * scaled_allocation_height;
             offset -= view_height;
             offset += allocation_height_;
             scroll_bar->setValue(offset);

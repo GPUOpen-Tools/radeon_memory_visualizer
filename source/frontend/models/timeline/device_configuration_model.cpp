@@ -55,7 +55,7 @@ namespace rmv
             const RmtRdfSystemInfo& system_info        = data_set->system_info;
             const uint32_t          compound_device_id = ((system_info.device_id & 0xffff) << 8) | (system_info.pcie_revision_id & 0xff);
 
-            uint64_t video_memory_size = data_set->segment_info[kRmtHeapTypeLocal].size + data_set->segment_info[kRmtHeapTypeInvisible].size;
+            uint64_t video_memory_size = RmtDataSetGetTotalVideoMemoryInBytes(data_set);
 
             SetModelData(kDeviceConfigurationDeviceName, system_info.name);
             SetModelData(kDeviceConfigurationDeviceID, rmv::string_util::ToUpperCase(QString::number(compound_device_id, 16)).rightJustified(6, '0'));
@@ -73,10 +73,10 @@ namespace rmv
             uint64_t memory_bandwidth = system_info.memory_bandwidth;
             memory_bandwidth *= (1024 * 1024);
             SetModelData(kDeviceConfigurationLocalMemoryBandwidth, rmv::string_util::LocalizedValueMemory(memory_bandwidth, true, true) + QString("/s"));
-            SetModelData(kDeviceConfigurationLocalMemoryType, QString(system_info.memory_type_name).toUpper());
+            SetModelData(kDeviceConfigurationLocalMemoryType, QString(system_info.video_memory_type_name).toUpper());
             SetModelData(kDeviceConfigurationLocalMemoryBusWidth, QString::number(system_info.memory_bus_width) + QString("-bit"));
 
-            if (data_set->is_rdf_trace)
+            if (data_set->flags.is_rdf_trace)
             {
                 // CPU information.
                 SetModelData(kDeviceConfigurationCPUName, QString(system_info.cpu_name));
@@ -85,7 +85,9 @@ namespace rmv
                 SetModelData(kDeviceConfigurationCPULogicalCores, QString::number(system_info.num_logical_cores));
 
                 // System memory.
-                SetModelData(kDeviceConfigurationSystemMemorySize, rmv::string_util::LocalizedValueMemory(system_info.system_physical_memory_size, false, true));
+                SetModelData(
+                    kDeviceConfigurationSystemMemorySize,
+                    rmv::string_util::LocalizedValueMemory(system_info.system_physical_memory_size, false, true) + " " + system_info.system_memory_type_name);
 
                 // Driver information.
                 SetModelData(kDeviceConfigurationDriverPackagingVersion, QString(system_info.driver_packaging_version_name));
@@ -106,7 +108,7 @@ namespace rmv
             const RmtDataSet* data_set = trace_manager.GetDataSet();
             if (data_set)
             {
-                return data_set->is_rdf_trace;
+                return data_set->flags.is_rdf_trace;
             }
         }
         return false;

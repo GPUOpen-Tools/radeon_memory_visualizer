@@ -5,15 +5,21 @@
 /// @brief  Implementation of the virtual allocation list functions.
 //=============================================================================
 
-#include <math.h>
-
 #include "rmt_virtual_allocation_list.h"
-#include "rmt_resource_list.h"
-#include "rmt_page_table.h"
+
 #include "rmt_address_helper.h"
 #include "rmt_data_snapshot.h"
+#include "rmt_page_table.h"
+#include "rmt_resource_list.h"
+#include "rmt_resource_userdata.h"
+
 #include <rmt_assert.h>
+
+#include <map>
+#include <math.h>
+#include <set>
 #include <string.h>  // memcpy
+#include <unordered_map>
 
 // Helper function to improve tree balance by hashing the handles.
 static RmtGpuAddress HashGpuAddress(RmtGpuAddress address)
@@ -366,9 +372,8 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
     const size_t allocation_details_size                    = total_allocations * (sizeof(RmtVirtualAllocationInterval) + sizeof(RmtVirtualAllocation));
     virtual_allocation_list->resource_connectivity          = (RmtResource**)((uintptr_t)buffer + allocation_details_size);
     virtual_allocation_list->resource_connectivity_count    = maximum_concurrent_resources;
-    const size_t resource_connectivity_size                 = maximum_concurrent_resources * sizeof(RmtResource*);
-    virtual_allocation_list->unbound_memory_regions         = (RmtMemoryRegion*)((uintptr_t)buffer + allocation_details_size + resource_connectivity_size);
-    virtual_allocation_list->unbound_memory_region_count    = maximum_concurrent_resources + 1;
+    virtual_allocation_list->unbound_memory_regions         = nullptr;
+    virtual_allocation_list->unbound_memory_region_count    = 0;
 
     // initialize interval pool.
     RmtPoolInitialize(&virtual_allocation_list->allocation_interval_pool,
@@ -652,38 +657,38 @@ RmtErrorCode RmtVirtualAllocationListCompact(RmtVirtualAllocationList* virtual_a
 
     DropDeadAllocations(virtual_allocation_list);
 
-    // now perform compaction.
+    // Now perform compaction.
     for (int32_t current_virtual_allocation_index = 0; current_virtual_allocation_index < virtual_allocation_list->allocation_count;
          ++current_virtual_allocation_index)
     {
         RmtVirtualAllocation* current_virtual_allocation = &virtual_allocation_list->allocation_details[current_virtual_allocation_index];
 
-        // if the allocation is alive, then we can leave it be.
+        // If the allocation is alive, then we can leave it be.
         if ((current_virtual_allocation->flags & kRmtAllocationDetailIsDead) != kRmtAllocationDetailIsDead)
         {
             continue;
         }
 
-        // copy the allocation from the end of the list into this slot and then fix up
+        // Copy the allocation from the end of the list into this slot and then fix up
         // the boundAllocation pointers on each resource to point at the new location.
         DropDeadAllocations(virtual_allocation_list);
+
         const int32_t last_virtual_allocation_index = virtual_allocation_list->allocation_count - 1;
 
-        // special case for deleting the last element of the list.
-        if (current_virtual_allocation_index == last_virtual_allocation_index)
+        // If the current allocation index is at or past the end of the list, then we're done.
+        if (current_virtual_allocation_index >= last_virtual_allocation_index)
         {
-            virtual_allocation_list->allocation_count--;
             continue;
         }
 
-        // otherwise do a full copy and fix it all up.
+        // Otherwise do a full copy and fix it all up.
         const RmtVirtualAllocation* last_virtual_allocation = &virtual_allocation_list->allocation_details[last_virtual_allocation_index];
 
-        // get the original guid before copying so it can be fixed up
+        // Get the original guid before copying so it can be fixed up.
         int32_t guid = current_virtual_allocation->guid;
         memcpy(current_virtual_allocation, last_virtual_allocation, sizeof(RmtVirtualAllocation));
 
-        // fix up guid
+        // Fix up guid.
         current_virtual_allocation->guid = guid;
 
         RMT_ASSERT((current_virtual_allocation->flags & kRmtAllocationDetailIsDead) != kRmtAllocationDetailIsDead);
@@ -762,4 +767,181 @@ RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapsho
     }
 
     return kRmtOk;
+}
+
+// The ResourcePriorityComparator handles ordering resources in a std::set based on aliased resource priority.
+// A comparison is first made on the resource usage type enum value (highest to lowest).  If the two resources
+// being compared have the same usage type, the resources are compared by size (smallest size is highest priority).
+// If the size is also the same, then resource IDs are compared (largest value is highest priority).
+struct ResourcePriorityComparator
+{
+    bool operator()(const RmtResource* lhs, const RmtResource* rhs) const
+    {
+        bool result = false;
+
+        const RmtResourceUsageType lhs_usage_type = RmtResourceGetUsageType(lhs);
+        const RmtResourceUsageType rhs_usage_type = RmtResourceGetUsageType(rhs);
+
+        if (lhs_usage_type != rhs_usage_type)
+        {
+            // Compare by usage type.
+            result = lhs_usage_type > rhs_usage_type;
+        }
+        else
+        {
+            if (lhs->size_in_bytes != rhs->size_in_bytes)
+            {
+                // Compare by size.
+                result = lhs->size_in_bytes < rhs->size_in_bytes;
+            }
+            else
+            {
+                // Compare by resource identifier (last resort, other attributes are the same).
+                result = lhs->identifier > rhs->identifier;
+            }
+        }
+
+        return result;
+    }
+};
+
+// Algorithm to adjust the size of overlapping resources (i.e. resources that share part or all of the same allocated memory).
+// The resource_memory_segments map is used to split the memory allocation into segments at the start and end offsets of each bound resource.
+// Each segment contains a set of resources sorted by the alias priority.  The size of each segment is applied to the size of the top resource
+// in each segment's set.  These sizes are totaled up for each resource to obtain the resource's aliased size.
+static RmtErrorCode RmtVirtualAllocationUpdateAliasedResourceSizes(const RmtVirtualAllocation* allocation,
+                                                                   const RmtResourceList*      resource_list,
+                                                                   uint64_t                    resource_usage_mask)
+{
+    RMT_RETURN_ON_ERROR(allocation != nullptr, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(resource_list != nullptr, kRmtErrorInvalidPointer);
+
+    typedef std::set<const RmtResource*, ResourcePriorityComparator> PrioritizedResourceSetType;  // Set of resource objects sorted by priority.
+    std::map<uint64_t, PrioritizedResourceSetType> resource_memory_segments;  // Map resource object sets split into segments using bind offset as a key.
+    uint64_t                                       bind_offset     = 0;
+    uint64_t                                       bind_end_offset = 0;
+
+    // First pass: Split resource memory into segments for each of the resources starting offset.
+    // Add the resource to the segment's list.  Also create an empty segment for the resource's memory block ending offset.
+    for (int i = 0; i < allocation->resource_count; i++)
+    {
+        const RmtResource* resource = allocation->resources[i];
+        RMT_ASSERT(resource != nullptr);
+
+        // Reset the alias size.
+        RmtResourceUpdateAliasSize(resource->identifier, resource_list, 0);
+
+        // Skip this resource if it isn't bound to an allocation.
+        if (resource->bound_allocation == nullptr)
+        {
+            continue;
+        }
+
+        // Skip this resource if it is implicit.
+        if (RmtResourceUserDataIsResourceImplicit(resource->identifier) == true)
+        {
+            continue;
+        }
+
+        // Skip this resource if it is disabled by the usage filter.
+        RmtResourceUsageType usage_type = RmtResourceGetUsageType(resource);
+        if (!(RmtResourceGetUsageTypeMask(usage_type) & resource_usage_mask))
+        {
+            continue;
+        }
+
+        // Add a segment at the resource's starting offset (if one doesn't already exist) and add the resource to the segment's set of resources.
+        bind_offset = resource->address - resource->bound_allocation->base_address;
+        resource_memory_segments[bind_offset].insert(resource);
+
+        // Add a segment with an empty list of resources (if one doesn't already exist).  This marks the end of the resource's memory block.
+        bind_end_offset = bind_offset + resource->size_in_bytes;
+        resource_memory_segments[bind_end_offset];
+    }
+
+    // Second pass: For each segment except the first one, copy resources to the next segment's resource set if the resource's ending offset is greater than the segment's offset key.
+    for (std::map<uint64_t, PrioritizedResourceSetType>::iterator current_segment_iterator = resource_memory_segments.begin();
+         current_segment_iterator != resource_memory_segments.end();
+         current_segment_iterator++)
+    {
+        // Get the next segment.  If there are no more segments then exit the loop.
+        auto next_segment_iterator = std::next(current_segment_iterator);
+        if (next_segment_iterator == resource_memory_segments.end())
+        {
+            break;
+        }
+
+        // Copy resources from previous segment to next segment if the resource's ending range extends into this segment.
+        for (auto resource : current_segment_iterator->second)
+        {
+            const uint64_t resource_start_range = resource->address - resource->bound_allocation->base_address;
+            const uint64_t resource_end_range   = resource_start_range + resource->size_in_bytes;
+            if (resource_end_range > next_segment_iterator->first)
+            {
+                // The resource range extends into this segment.  Add it to the next segment's list of resources.
+                next_segment_iterator->second.insert(resource);
+            }
+        }
+    }
+
+    // Total up the segmented sizes of each resource.
+    std::unordered_map<const RmtResource*, uint64_t>         resource_alias_sizes;
+    std::map<uint64_t, PrioritizedResourceSetType>::iterator segment_iterator = resource_memory_segments.begin();
+
+    for (; segment_iterator != resource_memory_segments.end(); segment_iterator++)
+    {
+        if (segment_iterator->second.empty())
+        {
+            // Skipping since there are no resources in this segment.
+            continue;
+        }
+
+        // Get the top resource from this segment's resource set.
+        const RmtResource* top_resource = segment_iterator->second.begin().operator*();
+        RMT_ASSERT(top_resource != nullptr);
+
+        // Get the offset of the next segment so that the size of the current segment can be determined.
+        auto next_segment_iterator = std::next(segment_iterator);
+        if (next_segment_iterator == resource_memory_segments.end())
+        {
+            // End of segments reached.
+            break;
+        }
+
+        // Calculate the segment size.
+        const uint64_t next_segment_offset = next_segment_iterator->first;
+        const uint64_t segment_offset      = segment_iterator->first;
+        const uint64_t segment_size        = next_segment_offset - segment_offset;
+
+        // Add the segment's size to the resource's total alias size.
+        resource_alias_sizes[top_resource] += segment_size;
+    }
+
+    // Copy the aliased sizes to the resource objects.
+    for (auto alias_resource : resource_alias_sizes)
+    {
+        RmtResourceUpdateAliasSize(alias_resource.first->identifier, resource_list, alias_resource.second);
+    }
+
+    return kRmtOk;
+}
+
+RmtErrorCode RmtVirtualAllocationListUpdateAliasedResourceSizes(const RmtVirtualAllocationList* allocation_list,
+                                                                const RmtResourceList*          resource_list,
+                                                                const uint64_t                  resource_usage_mask)
+{
+    RMT_RETURN_ON_ERROR(allocation_list != nullptr, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(resource_list != nullptr, kRmtErrorInvalidPointer);
+
+    RmtErrorCode result = kRmtOk;
+    for (int32_t index = 0; index < allocation_list->allocation_count; index++)
+    {
+        result = RmtVirtualAllocationUpdateAliasedResourceSizes(&allocation_list->allocation_details[index], resource_list, resource_usage_mask);
+        if (result != kRmtOk)
+        {
+            break;
+        }
+    }
+
+    return result;
 }

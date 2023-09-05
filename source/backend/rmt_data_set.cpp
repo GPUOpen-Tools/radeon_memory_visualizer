@@ -10,6 +10,7 @@
 #include "rmt_adapter_info.h"
 #include "rmt_address_helper.h"
 #include "rmt_assert.h"
+#include "rmt_constants.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_data_timeline.h"
 #include "rmt_file_format.h"
@@ -22,12 +23,14 @@
 #include "rmt_token.h"
 #include "rmt_util.h"
 
-#include <unordered_map>
-#include <unordered_set>
+#include <algorithm>
 #include <stdlib.h>  // for malloc() / free()
 #include <string>
 #include <string.h>  // for memcpy()
 #include <time.h>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #ifdef _LINUX
 #include "rmt_trace_loader.h"
@@ -52,6 +55,41 @@ static bool IsFileReadOnly(const char* file_path)
     // The access() function will return 0 if successful, -1 on failure.
     return access(file_path, W_OK) == -1;
 #endif
+}
+
+/// @brief Determine if the trace file is an RGD crash dump.
+///
+/// @param [in]  path                           A pointer to the trace file path to be checked.
+///
+/// @return A flag that is true if the file is an RGD crash dump or false otherwise.
+///
+static bool IsCrashDumpFile(const char* path)
+{
+    // Workaround for -Werror=unused-variable compiler warning.
+    RMT_UNUSED(kRMVTraceFileExtension);
+
+    RMT_ASSERT(path);
+    bool result = false;
+
+    // Assuming the path has the ".rgd" extension, calculate the extension start and length.
+    size_t path_length      = strlen(path);
+    size_t extension_length = strlen(kRGDTraceFileExtension);
+
+    // Only compare the extension if the path has enough characters in it.
+    if (path_length >= extension_length)
+    {
+        size_t extension_start = path_length - extension_length;
+#ifdef _WIN32
+        if (_strcmpi(path + extension_start, kRGDTraceFileExtension) == 0)
+#else
+        if (strcasecmp(path + extension_start, kRGDTraceFileExtension) == 0)
+#endif
+        {
+            result = true;
+        }
+    }
+
+    return result;
 }
 
 // Portable copy file function.
@@ -248,10 +286,10 @@ static RmtErrorCode ParseAdapterInfoChunk(RmtDataSet* data_set, RmtFileChunkHead
     data_set->system_info.minimum_engine_clock = adapter_info_chunk.minimum_engine_clock;
     data_set->system_info.maximum_engine_clock = adapter_info_chunk.maximum_engine_clock;
 
-    strncpy_s(data_set->system_info.memory_type_name,
-              sizeof(data_set->system_info.memory_type_name),
+    strncpy_s(data_set->system_info.video_memory_type_name,
+              sizeof(data_set->system_info.video_memory_type_name),
               RmtAdapterInfoGetVideoMemoryType(static_cast<RmtAdapterInfoMemoryType>(adapter_info_chunk.memory_type)),
-              sizeof(data_set->system_info.memory_type_name) - 1);
+              sizeof(data_set->system_info.video_memory_type_name) - 1);
 
     data_set->system_info.memory_operations_per_clock = adapter_info_chunk.memory_operations_per_clock;
     data_set->system_info.memory_bus_width            = adapter_info_chunk.memory_bus_width;
@@ -420,11 +458,11 @@ static void CheckForSAMSupport(RmtDataSet* data_set)
 {
     if (data_set->segment_info[kRmtHeapTypeInvisible].size == 0)
     {
-        data_set->sam_enabled = true;
+        data_set->flags.sam_enabled = true;
     }
     else
     {
-        data_set->sam_enabled = false;
+        data_set->flags.sam_enabled = false;
     }
 }
 
@@ -436,7 +474,7 @@ static void BuildDataProfileParseUserdata(RmtDataSet* data_set, const RmtToken* 
 
     if (userdata->userdata_type == kRmtUserdataTypeCorrelation)
     {
-        data_set->contains_correlation_tokens = true;
+        data_set->flags.contains_correlation_tokens = true;
     }
     else if (userdata->userdata_type == kRmtUserdataTypeSnapshot)
     {
@@ -713,7 +751,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     {
         if (current_token->userdata_token.userdata_type == kRmtUserdataTypeName || current_token->userdata_token.userdata_type == kRmtUserdataTypeName_V2)
         {
-            if (!data_set->is_resource_name_processing_complete)
+            if (!data_set->flags.userdata_processed)
             {
                 // Get resource name from token. It'll be the first part of the payload, and null-terminated.
                 const char* resource_name = reinterpret_cast<const char*>(current_token->userdata_token.payload_cache);
@@ -729,7 +767,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         }
         else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeCorrelation)
         {
-            if (!data_set->is_resource_name_processing_complete)
+            if (!data_set->flags.userdata_processed)
             {
                 RmtResourceUserdataTrackResourceCorrelationToken(
                     current_token->userdata_token.resource_identifier, current_token->userdata_token.correlation_identifier, current_token->common.timestamp);
@@ -738,7 +776,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         else if (current_token->userdata_token.userdata_type == kRmtUserdataTypeMarkImplicitResource ||
                  current_token->userdata_token.userdata_type == kRmtUserdataTypeMarkImplicitResource_V2)
         {
-            if (!data_set->is_resource_name_processing_complete)
+            if (!data_set->flags.userdata_processed)
             {
                 RmtResourceUserdataTrackImplicitResourceToken(
                     current_token->userdata_token.resource_identifier, current_token->common.timestamp, current_token->userdata_token.time_delay);
@@ -929,7 +967,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         {
             error_code = RmtResourceListAddResourceCreate(&out_snapshot->resource_list, &current_token->resource_create_token);
 
-            if (!data_set->is_resource_name_processing_complete)
+            if (!data_set->flags.userdata_processed)
             {
                 RmtResourceUserdataTrackResourceCreateToken(current_token->resource_create_token.original_resource_identifier,
                                                             current_token->resource_create_token.resource_identifier,
@@ -979,7 +1017,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary)
 {
     RMT_ASSERT(data_set);
-    if (data_set->read_only)
+    if (data_set->flags.read_only)
     {
         return kRmtOk;
     }
@@ -992,7 +1030,7 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
         fclose((FILE*)data_set->file_handle);
         data_set->file_handle = NULL;
     }
-    else if (data_set->is_rdf_trace)
+    else if (data_set->flags.is_rdf_trace)
     {
         result = RmtRdfStreamClose();
     }
@@ -1014,7 +1052,7 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
         {
             // Failed to move backup trace file to original trace file.
             // The backup file is left for the user in case they want to recover any saved snapshots.
-            data_set->read_only = true;
+            data_set->flags.read_only = true;
         }
         else
         {
@@ -1022,13 +1060,13 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
             RMT_ASSERT(success);
             if (success == false)
             {
-                data_set->read_only = true;
+                data_set->flags.read_only = true;
             }
         }
 
-        if (data_set->is_rdf_trace)
+        if (data_set->flags.is_rdf_trace)
         {
-            result = RmtRdfStreamOpen(data_set->temporary_file_path, data_set->read_only);
+            result = RmtRdfStreamOpen(data_set->temporary_file_path, data_set->flags.read_only);
         }
         else
         {
@@ -1062,15 +1100,15 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     memcpy(data_set->file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
     memcpy(data_set->temporary_file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
 
-    data_set->file_handle  = NULL;
-    data_set->read_only    = false;
-    data_set->is_rdf_trace = false;
-    data_set->active_gpu   = 0;
+    data_set->file_handle        = NULL;
+    data_set->flags.read_only    = false;
+    data_set->flags.is_rdf_trace = false;
+    data_set->active_gpu         = 0;
     errno_t error_no;
     bool    file_transfer_result = false;
-    if (IsFileReadOnly(path))
+    if (IsFileReadOnly(path) || IsCrashDumpFile(path))
     {
-        data_set->read_only = true;
+        data_set->flags.read_only = true;
     }
     else
     {
@@ -1078,7 +1116,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
 #ifdef _LINUX
         if (RmtTraceLoaderIsTraceAlreadyInUse(data_set->temporary_file_path))
         {
-            data_set->read_only = true;
+            data_set->flags.read_only = true;
         }
         else
         {
@@ -1096,7 +1134,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
 
     // If the trace file is a standard RMV trace and it doesn't have the read-only attribute set, do an additional check here
     // to see if another instance of RMV already has the file open (this would be the .bak file).
-    if (!data_set->read_only)
+    if (!data_set->flags.read_only)
     {
         // Determine if the back up file or original file should be opened. If the backup file can't be opened with write privileges
         // (because another RMV instance already has opened it), set the read only flag and attempt to open the original file in read only mode.
@@ -1104,11 +1142,11 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
             // Set the read only flag so that opening the original file will be attempted.
-            data_set->read_only = true;
+            data_set->flags.read_only = true;
         }
     }
 
-    if (data_set->read_only)
+    if (data_set->flags.read_only)
     {
         // File is read-only.  Attempt to just read the original rmv trace file.
         file_access_mode = "rb";
@@ -1182,8 +1220,8 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
             CheckForSAMSupport(data_set);
 
             // Construct the data profile for subsequent data parsing.
-            data_set->contains_correlation_tokens = false;
-            error_code                            = BuildDataProfile(data_set);
+            data_set->flags.contains_correlation_tokens = false;
+            error_code                                  = BuildDataProfile(data_set);
             RMT_ASSERT(error_code == kRmtOk);
         }
     }
@@ -1198,15 +1236,15 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         }
 
         DestroySnapshotWriter(data_set);
-        data_set->is_rdf_trace = false;
+        data_set->flags.is_rdf_trace = false;
 
-        if (!data_set->read_only)
+        if (!data_set->flags.read_only)
         {
             DeleteTemporaryFile(trace_file);
         }
         else
         {
-            data_set->read_only = false;
+            data_set->flags.read_only = false;
         }
     }
 
@@ -1216,7 +1254,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
 // destroy the data set.
 RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
 {
-    data_set->is_resource_name_processing_complete = false;
+    data_set->flags.userdata_processed = false;
 
     if (data_set->file_handle != nullptr)
     {
@@ -1228,16 +1266,25 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
 
     CommitTemporaryFileEdits(data_set, true);
 
-    if (data_set->is_rdf_trace)
+    if (data_set->flags.is_rdf_trace)
     {
         RmtRdfFileParserDestroyAllDataStreams();
         RmtRdfStreamClose();
         DestroySnapshotWriter(data_set);
-        data_set->is_rdf_trace = false;
+        data_set->flags.is_rdf_trace = false;
     }
     data_set->stream_count = 0;
 
     data_set->file_handle = NULL;
+
+    // Delete the array of unbound memory regions for all virtual allocations.
+    for (int32_t i = 0; i < data_set->virtual_allocation_list.allocation_count; i++)
+    {
+        delete[] data_set->virtual_allocation_list.allocation_details[i].unbound_memory_regions;
+        data_set->virtual_allocation_list.allocation_details[i].unbound_memory_region_count = 0;
+    }
+    data_set->virtual_allocation_list.allocation_count = 0;
+
     return kRmtOk;
 }
 
@@ -1449,8 +1496,7 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     RMT_ASSERT(error_code == kRmtOk);
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-    // initialize this.
-    temp_snapshot->maximum_physical_memory_in_bytes = 0;
+    temp_snapshot->maximum_physical_memory_in_bytes = RmtDataSetGetTotalVideoMemoryInBytes(data_set);
 
     // initialize the page table.
     error_code = RmtPageTableInitialize(&temp_snapshot->page_table, data_set->segment_info, data_set->segment_info_count, data_set->target_process_id);
@@ -1508,10 +1554,10 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
         last_value_index = UpdateSeriesValuesFromCurrentSnapshot(temp_snapshot, timeline_type, last_value_index, out_timeline);
     }
 
-    if (!data_set->is_resource_name_processing_complete)
+    if (!data_set->flags.userdata_processed)
     {
-        RmtResourceUserdataProcessEvents(data_set->contains_correlation_tokens);
-        data_set->is_resource_name_processing_complete = true;
+        RmtResourceUserdataProcessEvents(data_set->flags.contains_correlation_tokens);
+        data_set->flags.userdata_processed = true;
     }
 
     // clean up temporary structures we allocated to construct the timeline.
@@ -1674,65 +1720,157 @@ static RmtErrorCode SnapshotGeneratorAddResourcePointers(RmtDataSnapshot* snapsh
     return kRmtOk;
 }
 
+// A structure that holds the start and end offsets for a region of memory.
+struct RegionOffsets
+{
+    uint64_t start_offset;
+    uint64_t end_offset;
+};
+
+// Merge overlapped resources into memory regions.
+static RmtErrorCode MergeResourceMemoryRegions(const RmtVirtualAllocation* virtual_allocation, std::vector<RmtMemoryRegion>& out_bound_regions)
+{
+    RMT_ASSERT(virtual_allocation != nullptr);
+    RMT_RETURN_ON_ERROR(virtual_allocation != nullptr, kRmtErrorInvalidPointer);
+
+    out_bound_regions.clear();
+    if (virtual_allocation->resource_count == 0)
+    {
+        return kRmtOk;
+    }
+
+    // Populate the memory region list from the resources bound to this virtual allocation.
+    std::vector<RegionOffsets> bound_memory_regions;
+    for (int32_t current_resource_index = 0; current_resource_index < virtual_allocation->resource_count; ++current_resource_index)
+    {
+        const RmtGpuAddress allocation_base_address = virtual_allocation->base_address;
+        const RmtResource*  current_resource        = virtual_allocation->resources[current_resource_index];
+        bound_memory_regions.push_back(RegionOffsets{current_resource->address - allocation_base_address,
+                                                     (current_resource->address - allocation_base_address) + current_resource->size_in_bytes});
+    }
+
+    // Sort the bound memory regions by starting offsets.
+    std::sort(
+        bound_memory_regions.begin(), bound_memory_regions.end(), [](RegionOffsets& lhs, RegionOffsets& rhs) { return lhs.start_offset < rhs.start_offset; });
+
+    // Process the bound memory regions, looking for gaps between the regions.  Combine the regions if they overlap.
+    std::vector<RegionOffsets>::iterator next_bound_memory_iterator  = bound_memory_regions.begin();
+    RegionOffsets                        current_bound_memory_region = *(next_bound_memory_iterator);
+    next_bound_memory_iterator++;
+    while (next_bound_memory_iterator != bound_memory_regions.end())
+    {
+        if (current_bound_memory_region.end_offset > next_bound_memory_iterator->start_offset)
+        {
+            // Extend the current memory region so that it is merged with the next memory region.
+            current_bound_memory_region.end_offset = RMT_MAXIMUM(current_bound_memory_region.end_offset, next_bound_memory_iterator->end_offset);
+        }
+        else
+        {
+            // There is a break between the current bound memory region and the next one.  Add this memory region to the output vector.
+            out_bound_regions.push_back(
+                RmtMemoryRegion{current_bound_memory_region.start_offset, current_bound_memory_region.end_offset - current_bound_memory_region.start_offset});
+            current_bound_memory_region = *(next_bound_memory_iterator);
+        }
+        next_bound_memory_iterator++;
+    }
+
+    // Add the last bound memory region.
+    out_bound_regions.push_back(
+        RmtMemoryRegion{current_bound_memory_region.start_offset, current_bound_memory_region.end_offset - current_bound_memory_region.start_offset});
+
+    return kRmtOk;
+}
+
 // add unbound resources to the virtual allocation, there should be one of these for every gap in the VA
 // address space.
 static RmtErrorCode SnapshotGeneratorAddUnboundResources(RmtDataSnapshot* snapshot)
 {
     RMT_ASSERT(snapshot);
 
-    // scan the VA range and look for holes in the address space where no resource is bound.
-    int32_t unbound_region_index = 0;
     for (int32_t current_virtual_allocation_index = 0; current_virtual_allocation_index < snapshot->virtual_allocation_list.allocation_count;
          ++current_virtual_allocation_index)
     {
-        RmtVirtualAllocation* current_virtual_allocation = &snapshot->virtual_allocation_list.allocation_details[current_virtual_allocation_index];
+        std::vector<RmtMemoryRegion> bound_regions;
+        RmtVirtualAllocation*        virtual_allocation = &snapshot->virtual_allocation_list.allocation_details[current_virtual_allocation_index];
 
-        // set the pointer to array of unbound regions to next in sequence.
-        current_virtual_allocation->unbound_memory_regions      = &snapshot->virtual_allocation_list.unbound_memory_regions[unbound_region_index];
-        current_virtual_allocation->unbound_memory_region_count = 0;
+        // Merge aliased resources into a list of ranges.
+        MergeResourceMemoryRegions(virtual_allocation, bound_regions);
 
-        // not interested in soon to be compacted out allocations.
-        if ((current_virtual_allocation->flags & kRmtAllocationDetailIsDead) == kRmtAllocationDetailIsDead)
+        // Use the list of bound resource memory regions to find the unbound gaps in the virtual allocation.
+        std::vector<RmtMemoryRegion> unbound_regions;  ///< The list of unbound memory regions.
+        uint64_t                     allocation_size_in_bytes = RmtGetAllocationSizeInBytes(virtual_allocation->size_in_4kb_page,
+                                                                        kRmtPageSize4Kb);  ///< The virtual allocation size in bytes.
+
+        if (bound_regions.size() < 1)
         {
-            continue;
+            // Create an unbound region covering the entire virtual allocation.
+            RmtMemoryRegion unbound_region;
+            unbound_region.offset = 0;
+            unbound_region.size   = allocation_size_in_bytes;
+            unbound_regions.push_back(unbound_region);
         }
-
-        // scan the list of resources looking for holes.
-        RmtGpuAddress last_resource_end = current_virtual_allocation->base_address;
-        for (int32_t current_resource_index = 0; current_resource_index < current_virtual_allocation->resource_count; ++current_resource_index)
+        else
         {
-            const RmtResource* current_resource = current_virtual_allocation->resources[current_resource_index];
+            // Find the memory region gaps.
 
-            // look for holes in the VA range.
-            if (current_resource->address > last_resource_end)
+            size_t          last_bound_region_index = bound_regions.size() - 1;  ///< The index of the last bound memory region.
+            RmtMemoryRegion previous_bound_region({bound_regions[0].offset, bound_regions[0].size});
+            for (size_t i = 1; i < bound_regions.size(); i++)
             {
-                const uint64_t delta = current_resource->address - last_resource_end;
-
-                // Create the unbound region.
-                RmtMemoryRegion* next_region = &snapshot->virtual_allocation_list.unbound_memory_regions[unbound_region_index++];
-                next_region->offset          = last_resource_end - current_virtual_allocation->base_address;
-                next_region->size            = delta;
-                current_virtual_allocation->unbound_memory_region_count++;
+                const RmtMemoryRegion current_bound_region             = bound_regions[i];
+                size_t                previous_bound_region_end_offset = previous_bound_region.offset + previous_bound_region.size;
+                RmtMemoryRegion       unbound_region;
+                unbound_region.offset = previous_bound_region_end_offset;
+                unbound_region.size   = current_bound_region.offset - previous_bound_region_end_offset;
+                unbound_regions.push_back(unbound_region);
+                previous_bound_region = current_bound_region;
             }
 
-            last_resource_end = current_resource->address + current_resource->size_in_bytes;
+            const RmtMemoryRegion last_bound_region = bound_regions[last_bound_region_index];
+            if ((last_bound_region_index == 0) && (last_bound_region.offset > 0))
+            {
+                // Add an unbound region from the start of the virtual allocation to the first bound region.
+                RmtMemoryRegion unbound_region;
+                unbound_region.offset = 0;
+                unbound_region.size   = last_bound_region.offset;
+                unbound_regions.push_back(unbound_region);
+            }
+
+            if ((last_bound_region.offset + last_bound_region.size) < allocation_size_in_bytes)
+            {
+                // Create an unbound region between the end of the last bound region and the end of the virtual allocation.
+                RmtMemoryRegion unbound_region;
+                unbound_region.offset = last_bound_region.offset + last_bound_region.size;
+                unbound_region.size   = allocation_size_in_bytes - unbound_region.offset;
+                unbound_regions.push_back(unbound_region);
+            }
         }
 
-        // check the ending region as a special case.
-        const RmtGpuAddress end_address = current_virtual_allocation->base_address + RmtVirtualAllocationGetSizeInBytes(current_virtual_allocation);
-        if (end_address > last_resource_end)
+        // Update the list of unbound memory regions for the virtual allocation object.
+        size_t unbound_region_count                     = unbound_regions.size();
+        virtual_allocation->unbound_memory_region_count = 0;
+        if (unbound_region_count > 0)
         {
-            const uint64_t delta = end_address - last_resource_end;
-
-            // Create the unbound region.
-            RmtMemoryRegion* next_region = &snapshot->virtual_allocation_list.unbound_memory_regions[unbound_region_index++];
-            next_region->offset          = last_resource_end - current_virtual_allocation->base_address;
-            next_region->size            = delta;
-            current_virtual_allocation->unbound_memory_region_count++;
+            virtual_allocation->unbound_memory_regions = new RmtMemoryRegion[unbound_region_count];
+            for (size_t i = 0; i < unbound_region_count; i++)
+            {
+                if (unbound_regions[i].size > 0)
+                {
+                    virtual_allocation->unbound_memory_regions[virtual_allocation->unbound_memory_region_count] = unbound_regions[i];
+                    virtual_allocation->unbound_memory_region_count++;
+                }
+            }
         }
     }
 
     return kRmtOk;
+}
+
+// Calculate the aliased size for each resource.
+static RmtErrorCode SnapshotGeneratorCalculateAliasedResourceSizes(RmtDataSnapshot* snapshot)
+{
+    uint64_t resource_usage_mask = (1ULL << (kRmtResourceUsageTypeCount - 1)) - 1;
+    return RmtVirtualAllocationListUpdateAliasedResourceSizes(&(snapshot->virtual_allocation_list), &snapshot->resource_list, resource_usage_mask);
 }
 
 // compact virtual allocations, removing dead ones.
@@ -1871,8 +2009,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     out_snapshot->timestamp = snapshot_point->timestamp;
     RmtErrorCode error_code = AllocateMemoryForSnapshot(data_set, out_snapshot);
 
-    // initialize this.
-    out_snapshot->maximum_physical_memory_in_bytes = 0;
+    out_snapshot->maximum_physical_memory_in_bytes = RmtDataSetGetTotalVideoMemoryInBytes(data_set);
 
     // initialize the page table.
     error_code = RmtPageTableInitialize(
@@ -1906,6 +2043,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     SnapshotGeneratorAddResourcePointers(out_snapshot);
     SnapshotGeneratorCompactVirtualAllocations(out_snapshot);
     SnapshotGeneratorAddUnboundResources(out_snapshot);
+    SnapshotGeneratorCalculateAliasedResourceSizes(out_snapshot);
     SnapshotGeneratorCalculateSummary(out_snapshot);
     SnapshotGeneratorCalculateCommitType(out_snapshot);
     SnapshotGeneratorAllocateRegionStack(out_snapshot);
@@ -1996,7 +2134,7 @@ static RmtErrorCode AddSnapshot(RmtDataSet* data_set, const char* name, uint64_t
         data_set->snapshots[snapshot_index].committed_memory[current_heap_type_index] = 0;
     }
 
-    if (!data_set->read_only)
+    if (!data_set->flags.read_only)
     {
         // Add the minimum timestamp to the snapshot timestamp so that rebase on load works.
         const uint64_t timestamp_with_offset = timestamp + data_set->stream_merger.minimum_start_timestamp;
@@ -2029,7 +2167,7 @@ static void RemoveSnapshot(RmtDataSet* data_set, const int32_t snapshot_index, R
     // Clear the snapshot name.  This marks it for deletion.
     data_set->snapshots[snapshot_index].name[0] = '\0';
 
-    if (!data_set->read_only)
+    if (!data_set->flags.read_only)
     {
         // Update the snapshots in file using which ever trace file format has been loaded.
         SnapshotWriterFromHandle(data_set->snapshot_writer_handle)->Remove(static_cast<int16_t>(snapshot_index));
@@ -2103,4 +2241,9 @@ int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t time
     RMT_UNUSED(data_set);
 
     return (int32_t)(timestamp / 3000);
+}
+
+uint64_t RmtDataSetGetTotalVideoMemoryInBytes(const RmtDataSet* data_set)
+{
+    return data_set->segment_info[kRmtHeapTypeLocal].size + data_set->segment_info[kRmtHeapTypeInvisible].size;
 }

@@ -88,7 +88,6 @@ namespace rmv
                                  uint64_t&                     total_physical_mapped_by_other_processes,
                                  RmtSegmentSubscriptionStatus& subscription_status) const;
 
-
         /// @brief Determines SAM (Smart Memory Access) was enabled when the memory trace was taken.
         ///
         /// @return If SAM is enabled, returns true, otherwise returns false.

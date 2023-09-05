@@ -112,14 +112,14 @@ void RMVCarouselAllocationSizes::DrawAllocationBar(QPainter* painter, int bar_wi
     QFontMetricsF scaled_font_metrics = ScalingManager::Get().ScaledFontMetrics(font);
 
     // Draw the text label under the bar.
-    qreal text_width    = scaled_font_metrics.width(label_string);
+    qreal text_width    = scaled_font_metrics.horizontalAdvance(label_string);
     int   text_x_offset = x_pos - (text_width / 2);
     int   text_y_offset = bar_top + bar_height + font_size;
     painter->drawText(text_x_offset, text_y_offset, label_string);
 
     // Draw the value string above the bar, centered.
     QString value_string = QString::number(value);
-    text_width           = scaled_font_metrics.width(value_string);
+    text_width           = scaled_font_metrics.horizontalAdvance(value_string);
     text_x_offset        = x_pos + ((bar_width - text_width) / 2);
     text_y_offset        = bar_top - (font_size / 2);
     painter->setPen(text_color);

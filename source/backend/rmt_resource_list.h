@@ -77,6 +77,8 @@ typedef struct RmtResource
     };
 
     RmtResourceIdNode* id_node;  ///< A pointer to the <c><i>RmtResourceIdNode</i></c> structure in the tree, used to quickly locate this resource by ID.
+
+    uint64_t adjusted_size_in_bytes;  ///< Adjusted size of the resource taking into account filtering and aliasing.
 } RmtResource;
 
 /// Get the resource usage type from the resource.
@@ -86,6 +88,14 @@ typedef struct RmtResource
 /// @returns
 /// The usage type of the resource.
 RmtResourceUsageType RmtResourceGetUsageType(const RmtResource* resource);
+
+/// Calculate a resource usage type bit mask from a usage type enumerated value.
+///
+/// @param [in] usage_type                          A usage type <c><i>RmtResourceUsageType</i></c> enum value.
+///
+/// @returns
+/// The usage type bit mask.
+uint64_t RmtResourceGetUsageTypeMask(const RmtResourceUsageType usage_type);
 
 /// Calculate the offset (in bytes) from the start of the base allocation that the resource is bound to.
 ///
@@ -275,6 +285,29 @@ bool RmtResourceGetName(const RmtResource* resource, int32_t buffer_size, char**
 /// @returns
 /// The heap type ID as an <c><i>RmtHeapType</i></c> type.
 RmtHeapType RmtResourceGetActualHeap(const RmtDataSnapshot* snapshot, const RmtResource* resource);
+
+/// Set the adjusted size of a resource taking into account alias with other overlapped resources.
+///
+/// @param [in] resource_id                         The resource ID of the resource to be updated.
+/// @param [in] resource_list                       A pointer to a <c><i>RmtResourceList</i></c> structure.
+/// @param [in] alias_size                          The alias size in bytes.
+///
+/// @retval
+/// kRmtOk                              The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer             The operation failed because <c><i>resource_list</i></c> is an invalid pointer.
+/// @retval
+/// kRmtErrorNoResourceFound            The operation failed because the resource can't be found.
+RmtErrorCode RmtResourceUpdateAliasSize(const RmtResourceIdentifier resource_id, const RmtResourceList* resource_list, const uint64_t alias_size);
+
+/// Determine if a resource is aliased (i.e. overlaps with other resources).
+///
+/// @param [in] resource                            A pointer to a <c><i>RmtResource</i></c> structure.
+///
+/// @returns
+///                                     If the resource is aliased, returns true.  Otherwise returns false.
+/// @retval
+bool RmtResourceIsAliased(const RmtResource* resource);
 
 #ifdef __cplusplus
 }

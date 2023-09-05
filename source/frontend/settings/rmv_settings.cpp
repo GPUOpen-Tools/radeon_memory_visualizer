@@ -332,7 +332,11 @@ namespace rmv
             {
                 return kTimeUnitTypeSecond;
             }
-            return kTimeUnitTypeMinute;
+            else if (value.compare(rmv::text::kSettingsUnitsMinutes) == 0)
+            {
+                return kTimeUnitTypeMinute;
+            }
+            return kTimeUnitTypeHour;
         }
         else
         {
@@ -387,8 +391,12 @@ namespace rmv
             break;
 
         case kTimeUnitTypeMinute:
-        default:
             AddPotentialSetting(default_settings_[kSettingGeneralTimeUnits].name, rmv::text::kSettingsUnitsMinutes);
+            break;
+
+        case kTimeUnitTypeHour:
+        default:
+            AddPotentialSetting(default_settings_[kSettingGeneralTimeUnits].name, rmv::text::kSettingsUnitsHours);
             break;
         }
         SaveSettings();
@@ -789,6 +797,9 @@ namespace rmv
             units = kTimeUnitTypeMinute;
             break;
         case kTimeUnitTypeMinute:
+            units = kTimeUnitTypeHour;
+            break;
+        case kTimeUnitTypeHour:
         default:
             units = kTimeUnitTypeClk;
             break;

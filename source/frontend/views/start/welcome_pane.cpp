@@ -53,13 +53,21 @@ WelcomePane::WelcomePane(QWidget* parent)
     ui_->quick_link_github_->SetDescLineOne("To provide feedback or suggestions, or to file a bug, visit our");
     ui_->quick_link_github_->SetDescLineTwo("GitHub page.");
 
-    ui_->quick_link_profiler_->SetTitle("Explore Radeon GPU Profiler");
-    ui_->quick_link_profiler_->SetDescLineOne("Find performance bottlenecks and fine tune your application");
-    ui_->quick_link_profiler_->SetDescLineTwo("using Radeon GPU Profiler. Available right now at GPUOpen.");
+    ui_->quick_link_rgp_->SetTitle("Explore Radeon GPU Profiler");
+    ui_->quick_link_rgp_->SetDescLineOne("Find performance bottlenecks and fine tune your application");
+    ui_->quick_link_rgp_->SetDescLineTwo("using Radeon GPU Profiler. Available right now at GPUOpen.");
 
-    ui_->quick_link_analyzer_->SetTitle("Explore Radeon GPU Analyzer");
-    ui_->quick_link_analyzer_->SetDescLineOne("Dig into the disassembly, resource utilization and register liveness of");
-    ui_->quick_link_analyzer_->SetDescLineTwo("your shaders using RGA. Available right now at GPUOpen.");
+    ui_->quick_link_rga_->SetTitle("Explore Radeon GPU Analyzer");
+    ui_->quick_link_rga_->SetDescLineOne("Dig into the disassembly, resource utilization and register liveness of");
+    ui_->quick_link_rga_->SetDescLineTwo("your shaders using RGA. Available right now at GPUOpen.");
+
+    ui_->quick_link_rgd_->SetTitle("Explore Radeon GPU Detective");
+    ui_->quick_link_rgd_->SetDescLineOne("Investigate GPU crashes, gather your evidence, and probe any page");
+    ui_->quick_link_rgd_->SetDescLineTwo("faults! Learn more on GPUOpen.");
+
+    ui_->quick_link_rra_->SetTitle("Explore Radeon Raytracing Analyzer");
+    ui_->quick_link_rra_->SetDescLineOne("Assess your acceleration structures and discover your ray traversal");
+    ui_->quick_link_rra_->SetDescLineTwo("hotspots! Available right now at GPUOpen.");
 
     ui_->quick_link_sample_trace_->SetTitle("Sample trace");
     ui_->quick_link_sample_trace_->SetDescLineOne("Still got your training wheels on? Check out a sample trace to see");
@@ -78,8 +86,10 @@ WelcomePane::WelcomePane(QWidget* parent)
     connect(ui_->open_rmv_help_button_, &QPushButton::clicked, this, &WelcomePane::OpenRmvHelp);
     connect(ui_->quick_link_gpu_open_, &QPushButton::clicked, this, &WelcomePane::OpenGPUOpenURL);
     connect(ui_->quick_link_github_, &QPushButton::clicked, this, &WelcomePane::OpenGitHubURL);
-    connect(ui_->quick_link_profiler_, &QPushButton::clicked, this, &WelcomePane::OpenRGPURL);
-    connect(ui_->quick_link_analyzer_, &QPushButton::clicked, this, &WelcomePane::OpenRGAURL);
+    connect(ui_->quick_link_rgp_, &QPushButton::clicked, this, &WelcomePane::OpenRGPURL);
+    connect(ui_->quick_link_rga_, &QPushButton::clicked, this, &WelcomePane::OpenRGAURL);
+    connect(ui_->quick_link_rgd_, &QPushButton::clicked, this, &WelcomePane::OpenRGDURL);
+    connect(ui_->quick_link_rra_, &QPushButton::clicked, this, &WelcomePane::OpenRRAURL);
     connect(ui_->quick_link_sample_trace_, &QPushButton::clicked, this, &WelcomePane::OpenSampleTrace);
     connect(ui_->quick_link_rdna_performance_, &QPushButton::clicked, this, &WelcomePane::OpenRDNAPerformanceURL);
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::RecentFileListChanged, this, &WelcomePane::SetupFileList, Qt::QueuedConnection);
@@ -136,7 +146,7 @@ void WelcomePane::SetupFileList()
     trace_widgets_.clear();
 
     // Create a widget for each recent file
-    int max_files_to_show                                    = 0;
+    int max_files_to_show = 0;
     files.size() > kMaxRecentFilesToShow ? max_files_to_show = kMaxRecentFilesToShow : max_files_to_show = files.size();
     for (int i = 0; i < max_files_to_show; i++)
     {
@@ -216,6 +226,16 @@ void WelcomePane::OpenRGPURL()
 void WelcomePane::OpenRGAURL()
 {
     QDesktopServices::openUrl(rmv::text::kRgaGpuOpenUrl);
+}
+
+void WelcomePane::OpenRGDURL()
+{
+    QDesktopServices::openUrl(rmv::text::kRgdGpuOpenUrl);
+}
+
+void WelcomePane::OpenRRAURL()
+{
+    QDesktopServices::openUrl(rmv::text::kRraGpuOpenUrl);
 }
 
 void WelcomePane::OpenSampleTrace()

@@ -96,8 +96,15 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
         }
 
         painter->setPen(Qt::black);
-        painter->drawText(x_pos, header_height, "Size");
+        painter->drawText(x_pos, header_height, "Actual size");
         painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValueMemory(size_in_bytes, false, false));
+
+        if (RmtResourceGetAliasCount(&config_.resource) > 0)
+        {
+            x_pos += ScalingManager::Get().Scaled(100);
+            painter->drawText(x_pos, header_height, "Aliased size");
+            painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValueMemory(config_.resource.adjusted_size_in_bytes, false, false));
+        }
 
         x_pos += ScalingManager::Get().Scaled(100);
         painter->drawText(x_pos, header_height, "Offset");

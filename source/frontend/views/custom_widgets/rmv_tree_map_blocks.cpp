@@ -26,6 +26,7 @@
 #include "managers/message_manager.h"
 #include "managers/trace_manager.h"
 #include "models/snapshot/resource_overview_model.h"
+#include "rmt_types.h"
 #include "settings/rmv_settings.h"
 
 // The mimimum area that a resource can use. Anything smaller than this is ignored.
@@ -47,7 +48,7 @@ const static char* kUnboundResourceName = "unbound";
 /// @return true if a1 > a2, false otherwise.
 static bool SortResourcesBySizeFunc(const RmtResource* a1, const RmtResource* a2)
 {
-    return a1->size_in_bytes > a2->size_in_bytes;
+    return a1->adjusted_size_in_bytes > a2->adjusted_size_in_bytes;
 }
 
 RMVTreeMapBlocks::RMVTreeMapBlocks(const RMVTreeMapBlocksConfig& config)
@@ -127,7 +128,7 @@ void RMVTreeMapBlocks::PaintClusterChildren(QPainter*              painter,
                 const QColor& curr_color = colorizer_->GetColor(resource->bound_allocation, resource);
 
                 // Figure out the brush style.
-                Qt::BrushStyle style = ((RmtResourceGetAliasCount(resource) > 0) ? Qt::BrushStyle::Dense1Pattern : Qt::BrushStyle::SolidPattern);
+                Qt::BrushStyle style = (RmtResourceIsAliased(resource) ? Qt::BrushStyle::Dense1Pattern : Qt::BrushStyle::SolidPattern);
                 const QBrush   curr_brush(curr_color, style);
 
                 painter->fillRect(block_rect, curr_brush);
@@ -184,6 +185,7 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     PaintClusterParents(painter, clusters_[kSliceTypeNone]);
 
+    const Qt::BrushStyle hover_style = (RmtResourceIsAliased(hovered_block.resource) ? Qt::BrushStyle::Dense1Pattern : Qt::BrushStyle::SolidPattern);
     if (hovered_block.resource && selected_block.resource && hovered_block.resource->identifier == selected_block.resource->identifier &&
         hovered_block.resource->bound_allocation == selected_block.resource->bound_allocation)
     {
@@ -194,7 +196,8 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             pen.setBrush(Qt::black);
             pen.setWidth(ScalingManager::Get().Scaled(2));
             painter->setPen(pen);
-            painter->setBrush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource).darker(rmv::kHoverDarkenColor));
+            QBrush brush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource).darker(rmv::kHoverDarkenColor), hover_style);
+            painter->setBrush(brush);
             painter->drawRect(selected_block.bounding_rect);
         }
     }
@@ -205,7 +208,9 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             if (hovered_block.resource->identifier != 0 || hovered_block.resource == hovered_resource_)
             {
                 painter->setPen(Qt::NoPen);
-                painter->setBrush(colorizer_->GetColor(hovered_block.resource->bound_allocation, hovered_block.resource).darker(rmv::kHoverDarkenColor));
+                QBrush brush(colorizer_->GetColor(hovered_block.resource->bound_allocation, hovered_block.resource).darker(rmv::kHoverDarkenColor),
+                             hover_style);
+                painter->setBrush(brush);
                 painter->drawRect(hovered_block.bounding_rect);
             }
         }
@@ -216,7 +221,8 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             pen.setBrush(Qt::black);
             pen.setWidth(ScalingManager::Get().Scaled(2));
             painter->setPen(pen);
-            painter->setBrush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource));
+            QBrush brush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource), hover_style);
+            painter->setBrush(brush);
             painter->drawRect(selected_block.bounding_rect);
         }
     }
@@ -445,7 +451,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
 
         if (existing_cut.is_null == false)
         {
-            int64_t attempted_cut_size = existing_cut.size_in_bytes + resource->size_in_bytes;
+            int64_t attempted_cut_size = existing_cut.size_in_bytes + resource->adjusted_size_in_bytes;
             double  total_cut_area     = attempted_cut_size / bytes_per_pixel;
             double  total_cut_width    = total_cut_area / existing_cut.bounding_rect.height();
             double  total_cut_height   = total_cut_area / existing_cut.bounding_rect.width();
@@ -453,7 +459,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
             if (existing_cut.is_vertical)
             {
                 // Does this improve aspect ratio of most significant rectangle?
-                double primary_cut_area       = existing_cut.resources[0]->size_in_bytes / bytes_per_pixel;
+                double primary_cut_area       = existing_cut.resources[0]->adjusted_size_in_bytes / bytes_per_pixel;
                 double primary_cut_new_height = primary_cut_area / total_cut_width;
                 double existing_aspect_ratio  = CalculateAspectRatio(existing_cut.rectangles[0].width(), existing_cut.rectangles[0].height());
                 double new_aspect_ratio       = CalculateAspectRatio(total_cut_width, primary_cut_new_height);
@@ -470,7 +476,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
                     // To accept the cut we have to re-evaluate all rectangles in the existing cut to account for new widths.
                     for (int32_t currentAllocationIndex = 0; currentAllocationIndex < existing_cut.resources.size(); ++currentAllocationIndex)
                     {
-                        double allocateArea        = existing_cut.resources[currentAllocationIndex]->size_in_bytes / bytes_per_pixel;
+                        double allocateArea        = existing_cut.resources[currentAllocationIndex]->adjusted_size_in_bytes / bytes_per_pixel;
                         double newAllocationWidth  = total_cut_width;
                         double newAllocationHeight = allocateArea / total_cut_width;
 
@@ -505,7 +511,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
             else
             {
                 // Does this improve aspect ratio of most significant rectangle?
-                double primary_cut_area      = existing_cut.resources[0]->size_in_bytes / bytes_per_pixel;
+                double primary_cut_area      = existing_cut.resources[0]->adjusted_size_in_bytes / bytes_per_pixel;
                 double primary_cut_new_width = primary_cut_area / total_cut_height;
                 double existing_aspect_ratio = CalculateAspectRatio(existing_cut.rectangles[0].width(), existing_cut.rectangles[0].height());
                 double new_aspect_ratio      = CalculateAspectRatio(primary_cut_new_width, total_cut_height);
@@ -522,7 +528,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
                     // To accept the cut we have to re-evaluate all rectangles in the existing cut to account for new widths.
                     for (int32_t currentAllocationIndex = 0; currentAllocationIndex < existing_cut.resources.size(); ++currentAllocationIndex)
                     {
-                        double allocateArea        = existing_cut.resources[currentAllocationIndex]->size_in_bytes / bytes_per_pixel;
+                        double allocateArea        = existing_cut.resources[currentAllocationIndex]->adjusted_size_in_bytes / bytes_per_pixel;
                         double newAllocationWidth  = allocateArea / total_cut_height;
                         double newAllocationHeight = total_cut_height;
                         QRectF newAllocationRectangle(currentX, currentY, (int32_t)newAllocationWidth, (int32_t)newAllocationHeight);
@@ -560,7 +566,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
         // Fall back to making a new cut.
         if (ShouldDrawVertically(draw_space.width(), draw_space.height()))
         {
-            double area  = (double)resource->size_in_bytes / bytes_per_pixel;
+            double area  = (double)resource->adjusted_size_in_bytes / bytes_per_pixel;
             double width = area / draw_space.height();
             QRectF allocation_rectangle(draw_space.x(), draw_space.y(), (int32_t)width, draw_space.height());
 
@@ -569,7 +575,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
             existing_cut.is_null       = false;
             existing_cut.bounding_rect = allocation_rectangle;
             existing_cut.is_vertical   = true;
-            existing_cut.size_in_bytes = resource->size_in_bytes;
+            existing_cut.size_in_bytes = resource->adjusted_size_in_bytes;
             existing_cut.rectangles.push_back(allocation_rectangle);
             existing_cut.resources.push_back(resource);
 
@@ -578,7 +584,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
         }
         else
         {
-            double area   = (double)resource->size_in_bytes / bytes_per_pixel;
+            double area   = (double)resource->adjusted_size_in_bytes / bytes_per_pixel;
             double height = area / draw_space.width();
             QRectF allocation_rectangle(draw_space.x(), draw_space.y(), draw_space.width(), (int32_t)height);
 
@@ -587,7 +593,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
             existing_cut.is_null       = false;
             existing_cut.bounding_rect = allocation_rectangle;
             existing_cut.is_vertical   = false;
-            existing_cut.size_in_bytes = resource->size_in_bytes;
+            existing_cut.size_in_bytes = resource->adjusted_size_in_bytes;
             existing_cut.rectangles.push_back(allocation_rectangle);
             existing_cut.resources.push_back(resource);
 
@@ -635,7 +641,7 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
                 RmtResource* resource = current_virtual_allocation->resources[j];
                 if (ResourceFiltered(overview_model, tree_map_models, open_snapshot, resource) == true)
                 {
-                    total_memory += resource->size_in_bytes;
+                    total_memory += resource->adjusted_size_in_bytes;
                 }
             }
 
@@ -676,12 +682,12 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
                 RmtResource* resource = current_virtual_allocation->resources[j];
                 if (ResourceFiltered(overview_model, tree_map_models, open_snapshot, resource) == true)
                 {
-                    const double total_cut_area = resource->size_in_bytes / bytes_per_pixel;
+                    const double total_cut_area = resource->adjusted_size_in_bytes / bytes_per_pixel;
 
                     // Only include allocations that could actually be visible.
                     if (total_cut_area >= kMinArea)
                     {
-                        parent_cluster.amount += resource->size_in_bytes;
+                        parent_cluster.amount += resource->adjusted_size_in_bytes;
                         parent_cluster.sorted_resources.push_back(resource);
                     }
                 }
@@ -711,12 +717,13 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
                     // Create a temporary 'unbound' resource so the unbound resource can be sorted along with other resources
                     // in the tree map. All unbound resources have a resource identifier of 0. Their base address and size are
                     // copied from their unbound region data.
-                    RmtResource* unbound_resource      = new RmtResource();
-                    unbound_resource->identifier       = 0;
-                    unbound_resource->size_in_bytes    = current_unbound_region->size;
-                    unbound_resource->address          = current_virtual_allocation->base_address + current_unbound_region->offset;
-                    unbound_resource->bound_allocation = current_virtual_allocation;
-                    unbound_resource->resource_type    = kRmtResourceTypeCount;
+                    RmtResource* unbound_resource            = new RmtResource();
+                    unbound_resource->identifier             = 0;
+                    unbound_resource->adjusted_size_in_bytes = current_unbound_region->size;
+                    unbound_resource->size_in_bytes          = current_unbound_region->size;
+                    unbound_resource->address                = current_virtual_allocation->base_address + current_unbound_region->offset;
+                    unbound_resource->bound_allocation       = current_virtual_allocation;
+                    unbound_resource->resource_type          = kRmtResourceTypeCount;
 #ifdef _DEBUG
                     unbound_resource->name = kUnboundResourceName;
 #endif
@@ -744,7 +751,7 @@ void RMVTreeMapBlocks::GenerateTreemap(const rmv::ResourceOverviewModel* overvie
             {
                 const RmtResource* resource = parent_cluster.sorted_resources[i];
 
-                parent_cluster.sub_clusters[kSliceTypeNone].amount += resource->size_in_bytes;
+                parent_cluster.sub_clusters[kSliceTypeNone].amount += resource->adjusted_size_in_bytes;
                 parent_cluster.sub_clusters[kSliceTypeNone].sorted_resources.push_back(resource);
             }
         }
@@ -765,7 +772,7 @@ bool RMVTreeMapBlocks::ResourceFiltered(const rmv::ResourceOverviewModel* overvi
     {
         return false;
     }
-    if (overview_model->IsSizeInSliderRange(resource->size_in_bytes) == false)
+    if (overview_model->IsSizeInSliderRange(resource->adjusted_size_in_bytes) == false)
     {
         return false;
     }
@@ -800,7 +807,7 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster,
         ResourceCluster subCluster = it_1.value();
 
         RmtResource* temp_resource   = new RmtResource();
-        temp_resource->size_in_bytes = subCluster.amount;
+        temp_resource->adjusted_size_in_bytes = subCluster.amount;
         temp_resources.push_back(temp_resource);
         temp_parent_allocs_size += subCluster.amount;
 
@@ -883,7 +890,7 @@ int32_t RMVTreeMapBlocks::GetSliceCount(const SliceType slice_type, const RmtDat
 
 void RMVTreeMapBlocks::AddClusterResource(ResourceCluster& parent_cluster, const int32_t slice_index, const RmtResource* resource, bool& resource_added) const
 {
-    parent_cluster.sub_clusters[slice_index].amount += resource->size_in_bytes;
+    parent_cluster.sub_clusters[slice_index].amount += resource->adjusted_size_in_bytes;
     parent_cluster.sub_clusters[slice_index].sorted_resources.push_back(resource);
     resource_added = true;
 }
@@ -1021,11 +1028,11 @@ void RMVTreeMapBlocks::FilterInPreferredHeap(ResourceCluster&       parent_clust
     RmtResourceGetBackingStorageHistogram(snapshot, resource, memory_segment_histogram);
 
     const RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
-    if (memory_segment_histogram[preferred_heap] != resource->size_in_bytes && slice_index == 0)
+    if (memory_segment_histogram[preferred_heap] != resource->adjusted_size_in_bytes && slice_index == 0)
     {
         AddClusterResource(parent_cluster, slice_index, resource, resource_added);
     }
-    else if (memory_segment_histogram[preferred_heap] == resource->size_in_bytes && slice_index == 1)
+    else if (memory_segment_histogram[preferred_heap] == resource->adjusted_size_in_bytes && slice_index == 1)
     {
         AddClusterResource(parent_cluster, slice_index, resource, resource_added);
     }

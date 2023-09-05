@@ -125,24 +125,27 @@ typedef enum RmtResourceType
 } RmtResourceType;
 
 /// An enumeration of abstract usage types.
+/// NOTE: Resource usage types are in order of alias importance (higher enum values have higher priority
+/// when calculating the size of overlapped resources).  When adding new usage types, care should be taken
+/// to insure they are placed in the correct order.
 typedef enum RmtResourceUsageType
 {
     kRmtResourceUsageTypeUnknown,           ///< The resource usage type is unknown.
-    kRmtResourceUsageTypeDepthStencil,      ///< The resource is a depth/stencil buffer.
-    kRmtResourceUsageTypeRenderTarget,      ///< The resource is a color target.
-    kRmtResourceUsageTypeTexture,           ///< The resource is a texture.
+    kRmtResourceUsageTypeFree,              ///< An additional type to represent memory that is allocated, but not bound to something.
+    kRmtResourceUsageTypeHeap,              ///< The resource is a memory heap.
+    kRmtResourceUsageTypeBuffer,            ///< The resource is a buffer.
     kRmtResourceUsageTypeVertexBuffer,      ///< The resource is a vertex buffer.
     kRmtResourceUsageTypeIndexBuffer,       ///< The resource is an index buffer.
     kRmtResourceUsageTypeRayTracingBuffer,  ///< The resource is a ray tracing-related buffer (ie BVH).
     kRmtResourceUsageTypeUav,               ///< The resource is an unordered access view.
-    kRmtResourceUsageTypeShaderPipeline,    ///< The resource is a shader pipeline.
-    kRmtResourceUsageTypeCommandBuffer,     ///< The resource is a command buffer.
-    kRmtResourceUsageTypeHeap,              ///< The resource is a memory heap.
-    kRmtResourceUsageTypeDescriptors,       ///< The resource is a descriptor heap/pool.
-    kRmtResourceUsageTypeBuffer,            ///< The resource is a buffer.
-    kRmtResourceUsageTypeGpuEvent,          ///< The resource is a GPU event.
-    kRmtResourceUsageTypeFree,              ///< An additional type to represent memory that is allocated, but not bound to something.
+    kRmtResourceUsageTypeTexture,           ///< The resource is a texture.
+    kRmtResourceUsageTypeRenderTarget,      ///< The resource is a color target.
+    kRmtResourceUsageTypeDepthStencil,      ///< The resource is a depth/stencil buffer.
     kRmtResourceUsageTypeInternal,
+    kRmtResourceUsageTypeCommandBuffer,   ///< The resource is a command buffer.
+    kRmtResourceUsageTypeDescriptors,     ///< The resource is a descriptor heap/pool.
+    kRmtResourceUsageTypeShaderPipeline,  ///< The resource is a shader pipeline.
+    kRmtResourceUsageTypeGpuEvent,        ///< The resource is a GPU event.
 
     // Add above this.
     kRmtResourceUsageTypeCount
@@ -188,7 +191,7 @@ typedef enum RmtCommitType
     kRmtCommitTypeCount
 } RmtCommitType;
 
-/// An enumeration of formats.
+/// An enumeration of texture formats.
 typedef enum RmtFormat
 {
     kRmtFormatUndefined             = 0,    ///< Format is UNDEFINED.
@@ -205,7 +208,7 @@ typedef enum RmtFormat
     kRmtFormatX5Y5Z5W1Uscaled       = 11,   ///< Format is X5Y5Z5W1 USCALED.
     kRmtFormatX1Y5Z5W5Unorm         = 12,   ///< Format is X1Y5Z5W5 UNORM.
     kRmtFormatX1Y5Z5W5Uscaled       = 13,   ///< Format is X1Y5Z5W5 USCALED.
-    kRmtFormatX8Xnorm               = 14,   ///< Format is X8 XNORM.
+    kRmtFormatX8Unorm               = 14,   ///< Format is X8 UNORM.
     kRmtFormatX8Snorm               = 15,   ///< Format is X8 SNORM.
     kRmtFormatX8Uscaled             = 16,   ///< Format is X8 USCALED.
     kRmtFormatX8Sscaled             = 17,   ///< Format is X8 SSCALED.
@@ -214,7 +217,7 @@ typedef enum RmtFormat
     kRmtFormatX8Srgb                = 20,   ///< Format is X8 SRGB.
     kRmtFormatA8Unorm               = 21,   ///< Format is A8 UNORM.
     kRmtFormatL8Unorm               = 22,   ///< Format is L8 UNORM.
-    kRmtFormatP8Uint                = 23,   ///< Format is P8 UINT.
+    kRmtFormatP8Unorm               = 23,   ///< Format is P8 UNORM.
     kRmtFormatX8Y8Unorm             = 24,   ///< Format is X8Y8 UNORM.
     kRmtFormatX8Y8Snorm             = 25,   ///< Format is X8Y8 SNORM.
     kRmtFormatX8Y8Uscaled           = 26,   ///< Format is X8Y8 USCALED.
@@ -276,7 +279,7 @@ typedef enum RmtFormat
     kRmtFormatX32Y32Z32W32Sint      = 82,   ///< Format is X32Y32Z32W32 SINT.
     kRmtFormatX32Y32Z32W32Float     = 83,   ///< Format is X32Y32Z32W32 FLOAT.
     kRmtFormatD16UnormS8Uint        = 84,   ///< Format is D16 UNORM S8 UINT.
-    kRmtFormatD32UnormS8Uint        = 85,   ///< Format is D32 UNORM S8 UINT.
+    kRmtFormatD32FloatS8Uint        = 85,   ///< Format is D32 FLOAT S8 UINT.
     kRmtFormatX9Y9Z9E5Float         = 86,   ///< Format is X9Y9Z9E5 FLOAT.
     kRmtFormatBC1Unorm              = 87,   ///< Format is BC1 UNORM.
     kRmtFormatBC1Srgb               = 88,   ///< Format is BC1 SRGB.
@@ -285,11 +288,11 @@ typedef enum RmtFormat
     kRmtFormatBC3Unorm              = 91,   ///< Format is BC3 UNORM.
     kRmtFormatBC3Srgb               = 92,   ///< Format is BC3 SRGB.
     kRmtFormatBC4Unorm              = 93,   ///< Format is BC4 UNORM.
-    kRmtFormatBC4Srgb               = 94,   ///< Format is BC4 SRGB.
+    kRmtFormatBC4Snorm              = 94,   ///< Format is BC4 SNORM.
     kRmtFormatBC5Unorm              = 95,   ///< Format is BC5 UNORM.
-    kRmtFormatBC5Srgb               = 96,   ///< Format is BC5 SRGB.
-    kRmtFormatBC6Unorm              = 97,   ///< Format is BC6 UNORM.
-    kRmtFormatBC6Srgb               = 98,   ///< Format is BC6 SRGB.
+    kRmtFormatBC5Snorm              = 96,   ///< Format is BC5 SNORM.
+    kRmtFormatBC6UFloat             = 97,   ///< Format is BC6 UFLOAT.
+    kRmtFormatBC6SFloat             = 98,   ///< Format is BC6 SFLOAT.
     kRmtFormatBC7Unorm              = 99,   ///< Format is BC7 UNORM.
     kRmtFormatBC7Srgb               = 100,  ///< Format is BC7 SRGB.
     kRmtFormatEtC2X8Y8Z8Unorm       = 101,  ///< Format is ETC2X8Y8Z8 UNORM.
@@ -323,40 +326,64 @@ typedef enum RmtFormat
     kRmtFormatAstcldR10X6Unorm      = 129,  ///< Format is ASTCLDR10X6 UNORM.
     kRmtFormatAstcldR10X6Srgb       = 130,  ///< Format is ASTCLDR10X6 SRGB.
     kRmtFormatAstcldR10X8Unorm      = 131,  ///< Format is ASTCLDR10X8 UNORM.
-    kRmtFormatAstcldR10X10Unorm     = 132,  ///< Format is ASTCLDR10X10 UNORM.
-    kRmtFormatAstcldR12X10Unorm     = 133,  ///< Format is ASTCLDR12X10 UNORM.
-    kRmtFormatAstcldR12X10Srgb      = 134,  ///< Format is ASTCLDR12X10 SRGB.
-    kRmtFormatAstcldR12X12Unorm     = 135,  ///< Format is ASTCLDR12X12 UNORM.
-    kRmtFormatAstcldR12X12Srgb      = 136,  ///< Format is ASTCLDR12X12 SRGB.
-    kRmtFormatAstchdR4x4Float       = 137,  ///< Format is ASTCHDR4x4 FLOAT.
-    kRmtFormatAstchdR5x4Float       = 138,  ///< Format is ASTCHDR5x4 FLOAT.
-    kRmtFormatAstchdR5x5Float       = 139,  ///< Format is ASTCHDR5x5 FLOAT.
-    kRmtFormatAstchdR6x5Float       = 140,  ///< Format is ASTCHDR6x5 FLOAT.
-    kRmtFormatAstchdR6x6Float       = 141,  ///< Format is ASTCHDR6x6 FLOAT.
-    kRmtFormatAstchdR8x5Float       = 142,  ///< Format is ASTCHDR8x5 FLOAT.
-    kRmtFormatAstchdR8x6Float       = 143,  ///< Format is ASTCHDR8x6 FLOAT.
-    kRmtFormatAstchdR8x8Float       = 144,  ///< Format is ASTCHDR8x8 FLOAT.
-    kRmtFormatAstchdR10x5Float      = 145,  ///< Format is ASTCHDR10x5 FLOAT.
-    kRmtFormatAstchdR10x6Float      = 146,  ///< Format is ASTCHDR10x6 FLOAT.
-    kRmtFormatAstchdR10x8Float      = 147,  ///< Format is ASTCHDR10x8 FLOAT.
-    kRmtFormatAstchdR10x10Float     = 148,  ///< Format is ASTCHDR10x10 FLOAT.
-    kRmtFormatAstchdR12x10Float     = 149,  ///< Format is ASTCHDR12x10 FLOAT.
-    kRmtFormatAstchdR12x12Float     = 150,  ///< Format is ASTCHDR12x12 FLOAT.
-    kRmtFormatX8Y8Z8Y8Unorm         = 151,  ///< Format is X8Y8 Z8Y8 UNORM.
-    kRmtFormatX8Y8Z8Y8Uscaled       = 152,  ///< Format is X8Y8 Z8Y8 USCALED.
-    kRmtFormatY8X8Y8Z8Unorm         = 153,  ///< Format is Y8X8 Y8Z8 UNORM.
-    kRmtFormatY8X8Y8Z8Uscaled       = 154,  ///< Format is Y8X8 Y8Z8 USCALED.
-    kRmtFormatAyuv                  = 155,  ///< Format is AYUV.
-    kRmtFormatUyvy                  = 156,  ///< Format is UYVY.
-    kRmtFormatVyuy                  = 157,  ///< Format is VYUY.
-    kRmtFormatYuY2                  = 158,  ///< Format is YUY2.
-    kRmtFormatYvY2                  = 159,  ///< Format is YVY2.
-    kRmtFormatYV12                  = 160,  ///< Format is YV12.
-    kRmtFormatNV11                  = 161,  ///< Format is NV11.
-    kRmtFormatNV12                  = 162,  ///< Format is NV12.
-    kRmtFormatNV21                  = 163,  ///< Format is NV21.
-    kRmtFormatP016                  = 164,  ///< Format is P016.
-    kRmtFormatP010                  = 165,  ///< Format is P010.
+    kRmtFormatAstcldR10X8Srgb       = 132,  ///< Format is ASTCLDR10X8 SRGB.
+    kRmtFormatAstcldR10X10Unorm     = 133,  ///< Format is ASTCLDR10X10 UNORM.
+    kRmtFormatAstcldR10X10Srgb      = 134,  ///< Format is ASTCLDR10X10 SRGB.
+    kRmtFormatAstcldR12X10Unorm     = 135,  ///< Format is ASTCLDR12X10 UNORM.
+    kRmtFormatAstcldR12X10Srgb      = 136,  ///< Format is ASTCLDR12X10 SRGB.
+    kRmtFormatAstcldR12X12Unorm     = 137,  ///< Format is ASTCLDR12X12 UNORM.
+    kRmtFormatAstcldR12X12Srgb      = 138,  ///< Format is ASTCLDR12X12 SRGB.
+    kRmtFormatAstchdR4x4Float       = 139,  ///< Format is ASTCHDR4X4 FLOAT.
+    kRmtFormatAstchdR5x4Float       = 140,  ///< Format is ASTCHDR5X4 FLOAT.
+    kRmtFormatAstchdR5x5Float       = 141,  ///< Format is ASTCHDR5X5 FLOAT.
+    kRmtFormatAstchdR6x5Float       = 142,  ///< Format is ASTCHDR6X5 FLOAT.
+    kRmtFormatAstchdR6x6Float       = 143,  ///< Format is ASTCHDR6X6 FLOAT.
+    kRmtFormatAstchdR8x5Float       = 144,  ///< Format is ASTCHDR8X5 FLOAT.
+    kRmtFormatAstchdR8x6Float       = 145,  ///< Format is ASTCHDR8X6 FLOAT.
+    kRmtFormatAstchdR8x8Float       = 146,  ///< Format is ASTCHDR8X8 FLOAT.
+    kRmtFormatAstchdR10x5Float      = 147,  ///< Format is ASTCHDR10X5 FLOAT.
+    kRmtFormatAstchdR10x6Float      = 148,  ///< Format is ASTCHDR10X6 FLOAT.
+    kRmtFormatAstchdR10x8Float      = 149,  ///< Format is ASTCHDR10X8 FLOAT.
+    kRmtFormatAstchdR10x10Float     = 150,  ///< Format is ASTCHDR10X10 FLOAT.
+    kRmtFormatAstchdR12x10Float     = 151,  ///< Format is ASTCHDR12X10 FLOAT.
+    kRmtFormatAstchdR12x12Float     = 152,  ///< Format is ASTCHDR12X12 FLOAT.
+    kRmtFormatX8Y8Z8Y8Unorm         = 153,  ///< Format is X8Y8 Z8Y8 UNORM.
+    kRmtFormatX8Y8Z8Y8Uscaled       = 154,  ///< Format is X8Y8 Z8Y8 USCALED.
+    kRmtFormatY8X8Y8Z8Unorm         = 155,  ///< Format is Y8X8 Y8Z8 UNORM.
+    kRmtFormatY8X8Y8Z8Uscaled       = 156,  ///< Format is Y8X8 Y8Z8 USCALED.
+    kRmtFormatAyuv                  = 157,  ///< Format is AYUV.
+    kRmtFormatUyvy                  = 158,  ///< Format is UYVY.
+    kRmtFormatVyuy                  = 159,  ///< Format is VYUY.
+    kRmtFormatYuY2                  = 160,  ///< Format is YUY2.
+    kRmtFormatYvY2                  = 161,  ///< Format is YVY2.
+    kRmtFormatYV12                  = 162,  ///< Format is YV12.
+    kRmtFormatNV11                  = 163,  ///< Format is NV11.
+    kRmtFormatNV12                  = 164,  ///< Format is NV12.
+    kRmtFormatNV21                  = 165,  ///< Format is NV21.
+    kRmtFormatP016                  = 166,  ///< Format is P016.
+    kRmtFormatP010                  = 167,  ///< Format is P010.
+    kRmtFormatP210                  = 168,  ///< Format is P210.
+    kRmtFormatX8MMUnorm             = 169,  ///< Format is X8 MM UNORM.
+    kRmtFormatX8MMUint              = 170,  ///< Format is X8 MM UINT.
+    kRmtFormatX8Y8MMUnorm           = 171,  ///< Format is X8Y8 MM UNORM.
+    kRmtFormatX8Y8MMUint            = 172,  ///< Format is X8Y8 MM UINT.
+    kRmtFormatX16MM10Unorm          = 173,  ///< Format is X16 MM10 UNORM.
+    kRmtFormatX16MM10Uint           = 174,  ///< Format is X16 MM10 UINT.
+    kRmtFormatX16Y16MM10Unorm       = 175,  ///< Format is X16Y16 MM10 UNORM.
+    kRmtFormatX16Y16MM10Uint        = 176,  ///< Format is X16Y16 MM10 UINT.
+    kRmtFormatP208                  = 177,  ///< Format is P208.
+    kRmtFormatX16MM12Unorm          = 178,  ///< Format is X16 MM12 UNORM.
+    kRmtFormatX16MM12Uint           = 179,  ///< Format is X16 MM12 UINT.
+    kRmtFormatX16Y16MM12Unorm       = 180,  ///< Format is X16Y16 MM12 UNORM.
+    kRmtFormatX16Y16MM12Uint        = 181,  ///< Format is X16Y16 MM12 UINT.
+    kRmtFormatP012                  = 182,  ///< Format is P012.
+    kRmtFormatP212                  = 183,  ///< Format is P212.
+    kRmtFormatP412                  = 184,  ///< Format is P412.
+    kRmtFormatX10Y10Z10W2Float      = 185,  ///< Format is X10Y10Z10W2 FLOAT.
+    kRmtFormatY216                  = 186,  ///< Format is Y216.
+    kRmtFormatY210                  = 187,  ///< Format is Y210.
+    kRmtFormatY416                  = 188,  ///< Format is Y416.
+    kRmtFormatY410                  = 189,  ///< Format is Y410.
 
     // add above this.
     kRmtFormatCount

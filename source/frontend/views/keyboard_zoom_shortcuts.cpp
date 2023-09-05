@@ -62,6 +62,7 @@ namespace rmv
 
     void KeyboardZoomShortcuts::SetupNavigationControl()
     {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         navigation_control_[Qt::CTRL | Qt::Key_Left]  = &KeyboardZoomShortcuts::OnScrollViewPageStepSub;
         navigation_control_[Qt::Key_Left]             = &KeyboardZoomShortcuts::OnScrollViewSingleStepSub;
         navigation_control_[Qt::CTRL | Qt::Key_Right] = &KeyboardZoomShortcuts::OnScrollViewPageStepAdd;
@@ -72,5 +73,17 @@ namespace rmv
         navigation_control_[Qt::Key_H]                = &KeyboardZoomShortcuts::OnResetView;
         navigation_control_[Qt::Key_S]                = &KeyboardZoomShortcuts::OnZoomInMoreShortCut;
         navigation_control_[Qt::Key_X]                = &KeyboardZoomShortcuts::OnZoomOutMoreShortCut;
+#else
+        navigation_control_[QKeyCombination(Qt::CTRL | Qt::Key_Left).toCombined()]  = &KeyboardZoomShortcuts::OnScrollViewPageStepSub;
+        navigation_control_[QKeyCombination(Qt::Key_Left).toCombined()]             = &KeyboardZoomShortcuts::OnScrollViewSingleStepSub;
+        navigation_control_[QKeyCombination(Qt::CTRL | Qt::Key_Right).toCombined()] = &KeyboardZoomShortcuts::OnScrollViewPageStepAdd;
+        navigation_control_[QKeyCombination(Qt::Key_Right).toCombined()]            = &KeyboardZoomShortcuts::OnScrollViewSingleStepAdd;
+        navigation_control_[QKeyCombination(Qt::Key_A).toCombined()]                = &KeyboardZoomShortcuts::OnZoomInShortCut;
+        navigation_control_[QKeyCombination(Qt::Key_Z).toCombined()]                = &KeyboardZoomShortcuts::OnZoomOutShortCut;
+        navigation_control_[QKeyCombination(Qt::CTRL | Qt::Key_Z).toCombined()]     = &KeyboardZoomShortcuts::OnZoomInSelection;
+        navigation_control_[QKeyCombination(Qt::Key_H).toCombined()]                = &KeyboardZoomShortcuts::OnResetView;
+        navigation_control_[QKeyCombination(Qt::Key_S).toCombined()]                = &KeyboardZoomShortcuts::OnZoomInMoreShortCut;
+        navigation_control_[QKeyCombination(Qt::Key_X).toCombined()]                = &KeyboardZoomShortcuts::OnZoomOutMoreShortCut;
+#endif
     }
 }  // namespace rmv

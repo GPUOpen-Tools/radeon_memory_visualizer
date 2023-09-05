@@ -29,7 +29,7 @@ public:
     /// @param [in] parent The delegate's parent.
     /// @param [in] option The style properties for the editor widget.
     /// @param [in] index  The model index requesting an edit widget.
-    /// 
+    ///
     /// @return The edit widget.
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const Q_DECL_OVERRIDE;
 

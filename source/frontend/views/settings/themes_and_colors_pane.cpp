@@ -78,7 +78,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
 
     // Slot/signal connection for various widgets.
     connect(ui_->color_widget_, &RMVColorPickerWidget::ColorSelected, this, &ThemesAndColorsPane::PickerColorSelected);
-    connect(&button_group_, SIGNAL(buttonClicked(int)), this, SLOT(ItemButtonClicked(int)));
+    connect(&button_group_, &QButtonGroup::idClicked, this, &ThemesAndColorsPane::ItemButtonClicked);
     connect(ui_->default_settings_button_, SIGNAL(clicked(bool)), this, SLOT(DefaultSettingsButtonClicked()));
     connect(ui_->default_palette_button_, SIGNAL(clicked(bool)), this, SLOT(DefaultPaletteButtonClicked()));
     connect(ui_->spin_box_color_red_, SIGNAL(valueChanged(int)), this, SLOT(RgbValuesChanged()));

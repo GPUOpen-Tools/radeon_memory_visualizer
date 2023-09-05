@@ -81,7 +81,8 @@ namespace rmv
             "of RMV";
 
         // Specific error messages.
-        static const QString kOpenTraceOutOfVirtualGPUMemory = "The trace file contains allocations requesting more than 64GB of GPU memory. Please reduce the video memory consumption.\n\n";
+        static const QString kOpenTraceOutOfVirtualGPUMemory =
+            "The trace file contains allocations requesting more than 64GB of GPU memory. Please reduce the video memory consumption.\n\n";
 
         // Open recent trace missing pop up dialog.
         static const QString kOpenRecentTraceTitle = "Trace not opened";
@@ -109,23 +110,27 @@ namespace rmv
         static const QString kSettingsUnitsMilliseconds = "Milliseconds";
         static const QString kSettingsUnitsSeconds      = "Seconds";
         static const QString kSettingsUnitsMinutes      = "Minutes";
+        static const QString kSettingsUnitsHours        = "Hours";
 
         // Help file locations for trace and RMV.
-        static const QString kTraceHelpFile       = "/docs/help/rdp/html/index.html";
-        static const QString kRmvHelpFile         = "/docs/help/rmv/html/index.html";
-        static const QString kRmvLicenseFile      = "/License.txt";
+        static const QString kTraceHelpFile       = "/help/rdp/index.html";
+        static const QString kRmvHelpFile         = "/help/rmv/index.html";
+        static const QString kRmvLicenseFile      = "/LICENSE.txt";
         static const QString kSampleTraceLocation = "/samples/sample_trace" + QString(kRMVTraceFileExtension);
 
-        static const QString kFileOpenFileTypes = "RMV trace files (*" + QString(kRMVTraceFileExtension) + ")";
+        static const QString kFileOpenFileTypes =
+            "RMV trace files (*" + QString(kRMVTraceFileExtension) + ") ;; RGD crash dump files (*" + kRGDTraceFileExtension + ")";
 
-        static const QString kMissingRmvTrace     = "Missing RMV sample trace: ";
-        static const QString kMissingRmvHelpFile  = "Missing RMV help file: ";
+        static const QString kMissingRmvTrace    = "Missing RMV sample trace: ";
+        static const QString kMissingRmvHelpFile = "Missing RMV help file: ";
 
         // External links.
         static const QUrl kGpuOpenUrl                = QUrl("https://gpuopen.com");
         static const QUrl kRmvGithubUrl              = QUrl("https://github.com/GPUOpen-Tools/radeon_memory_visualizer");
         static const QUrl kRgpGpuOpenUrl             = QUrl("https://gpuopen.com/rgp/");
         static const QUrl kRgaGpuOpenUrl             = QUrl("https://gpuopen.com/rga/");
+        static const QUrl kRgdGpuOpenUrl             = QUrl("https://gpuopen.com/radeon-gpu-detective/");
+        static const QUrl kRraGpuOpenUrl             = QUrl("https://gpuopen.com/rra/");
         static const QUrl kRdnaPerformanceGpuOpenUrl = QUrl("https://gpuopen.com/performance/");
     }  // namespace text
 

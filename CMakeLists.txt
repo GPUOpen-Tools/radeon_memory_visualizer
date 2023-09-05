@@ -7,7 +7,7 @@ project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 6)
+set(RMV_MINOR_VERSION 7)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -20,6 +20,11 @@ string(TIMESTAMP YEAR_STRING "\"%Y\"")
 
 configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR}/Buildinfo.properties")
 configure_file("${CMAKE_SOURCE_DIR}/source/frontend/util/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/util/version.h")
+
+# Add cmake utilities
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(devtools_qt_helper)
+include(dev_tools)
 
 option(RDF_ENABLE_CXX_BINDINGS "Allow usage of C++ interface for RDF library" ON)
 option(RDF_STATIC              "Build RDF as a static library" ON)
@@ -38,6 +43,9 @@ ENDIF()
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX)
 
+# Add cmake utilities
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 IF(WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../debug)
@@ -49,8 +57,8 @@ ENDIF(WIN32)
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
-include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
 include_directories("${PROJECT_SOURCE_DIR}/external/")
+include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
 include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
 
 # Global compiler options
@@ -96,8 +104,7 @@ ENDMACRO(SOURCE_GROUP_BY_FOLDER)
 # Define C++ standard for RMV
 set(CMAKE_CXX_STANDARD 17)
 
-add_subdirectory(external/qt_common/custom_widgets QtCommon/custom_widgets)
-add_subdirectory(external/qt_common/utils QtCommon/utils)
+add_subdirectory(external/qt_common qt_common)
 add_subdirectory(external/rdf/imported/zstd)
 add_subdirectory(external/rdf/rdf)
 add_subdirectory(external/system_info_utils)
@@ -148,9 +155,9 @@ source_group("sphinx" FILES ${ALL_SPHINX_FILES})
 # group release documents into a release_docs folder
 set (RELEASE_DOCS_IN_ROOT
      ${CMAKE_SOURCE_DIR}/README.md
-     ${CMAKE_SOURCE_DIR}/Release_Notes.txt
+     ${CMAKE_SOURCE_DIR}/RELEASE_NOTES.txt
      ${CMAKE_SOURCE_DIR}/NOTICES.txt
-     ${CMAKE_SOURCE_DIR}/License.txt
+     ${CMAKE_SOURCE_DIR}/LICENSE.txt
 )
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
@@ -170,20 +177,20 @@ if(SPHINX_EXECUTABLE)
     endif()
     add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
         COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
-        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/. -t ${SPHINX_OPTION}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/.doctrees
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/allocation_explorer.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/allocation_overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/capture.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/carousel.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/heap_overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/memory_leak_finder.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/resource_details.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/resource_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/resource_overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/settings.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/snapshot_delta.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rmv/html/timeline.html
+        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rmv/. -t ${SPHINX_OPTION}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rmv/.doctrees
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/allocation_explorer.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/allocation_overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/capture.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/carousel.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/heap_overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/memory_leak_finder.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/resource_details.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/resource_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/resource_overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/settings.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/snapshot_delta.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/timeline.html
     )
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
@@ -193,7 +200,6 @@ endif()
 
 add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "copying Documentation to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/docs
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples

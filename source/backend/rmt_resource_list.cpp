@@ -12,6 +12,7 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_address_helper.h"
 #include "rmt_print.h"
+
 #include <string.h>  // for memcpy()
 
 #ifndef _WIN32
@@ -863,4 +864,78 @@ RmtErrorCode RmtResourceListGetResourceByResourceId(const RmtResourceList* resou
     RMT_RETURN_ON_ERROR(resource, kRmtErrorNoResourceFound);
     *out_resource = resource;
     return kRmtOk;
+}
+
+bool RmtResourceIsAliased(const RmtResource* resource)
+{
+    RMT_RETURN_ON_ERROR(resource != nullptr, false);
+    RMT_RETURN_ON_ERROR(resource->bound_allocation != nullptr, false);
+    RMT_RETURN_ON_ERROR(resource->resource_type != kRmtResourceTypeHeap, false);
+
+    const RmtVirtualAllocation* virtual_allocation     = resource->bound_allocation;
+    const RmtGpuAddress         resource_start_address = resource->address;
+    const RmtGpuAddress         resource_end_address   = resource->address + resource->size_in_bytes;
+    bool is_aliased = false;
+
+    for (int32_t current_resource_index = 0; current_resource_index < virtual_allocation->resource_count; ++current_resource_index)
+    {
+        const RmtResource* current_resource = virtual_allocation->resources[current_resource_index];
+
+        if (current_resource == resource)
+        {
+            continue;
+        }
+
+        // Special handle for heaps.
+        if (current_resource->resource_type == kRmtResourceTypeHeap)
+        {
+            continue;
+        }
+
+        // Get the start and end address.
+        const RmtGpuAddress current_resource_start = current_resource->address;
+        const RmtGpuAddress current_resource_end   = current_resource->address + current_resource->size_in_bytes;
+        if (resource_start_address >= current_resource_end)
+        {
+            continue;
+        }
+
+        if (resource_end_address <= current_resource_start)
+        {
+            continue;
+        }
+
+        is_aliased = true;
+        break;
+    }
+
+    return is_aliased;
+}
+
+uint64_t RmtResourceGetUsageTypeMask(RmtResourceUsageType usage_type)
+{
+    RMT_ASSERT((usage_type >= 0) && (usage_type < 64));
+
+    uint64_t result = 0;
+    if (usage_type != kRmtResourceUsageTypeUnknown)
+    {
+        result = 1ULL << (usage_type - 1);
+    }
+
+    return result;
+}
+
+RmtErrorCode RmtResourceUpdateAliasSize(const RmtResourceIdentifier resource_id, const RmtResourceList* resource_list, const uint64_t alias_size)
+{
+    RMT_RETURN_ON_ERROR(resource_list != nullptr, kRmtErrorInvalidPointer);
+
+    RmtErrorCode result   = kRmtErrorNoResourceFound;
+    RmtResource* resource = FindResourceById(resource_list, resource_id);
+    if (resource != nullptr)
+    {
+        resource->adjusted_size_in_bytes = alias_size;
+        result                           = kRmtOk;
+    }
+
+    return result;
 }

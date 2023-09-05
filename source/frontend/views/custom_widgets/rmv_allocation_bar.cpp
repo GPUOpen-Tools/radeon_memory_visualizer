@@ -28,7 +28,7 @@ RMVAllocationBar::RMVAllocationBar(rmv::AllocationBarModel* model, int32_t alloc
     , item_width_(0)
     , item_height_(0)
     , max_bar_width_(0)
-    , allocation_bar_height_(kDefaultAllocationBarHeight)
+    , allocation_bar_height_(ScalingManager::Get().Scaled(kDefaultAllocationBarHeight))
 {
     setAcceptHoverEvents(true);
 
@@ -68,20 +68,23 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     {
         // Measure title text.
         QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
-        QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
+        QFontMetrics font_metrics = QFontMetrics(title_font_);
         QSize        title_size   = font_metrics.size(0, title_text);
+
+        const int width  = title_size.width();
+        const int height = title_size.height();
 
         // Draw title text.
         painter->setFont(title_font_);
-        painter->drawText(0, title_size.height(), title_text);
+        painter->drawText(0, height, title_text);
 
         // Draw description text.
         painter->setFont(description_font_);
         QString description_string = model_->GetDescriptionText(allocation_index_, model_index_);
-        painter->drawText(title_size.width(), title_size.height(), description_string);
+        painter->drawText(width, height, description_string);
 
         // Update bar y offset based on the font size.
-        scaled_bar_y_offset += title_size.height();
+        scaled_bar_y_offset += height;
     }
 
     // Calculate width of the current allocation bar.
@@ -155,8 +158,12 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
 void RMVAllocationBar::UpdateDimensions(const int width, const int height)
 {
-    int title_height   = ScalingManager::Get().ScaledFontMetrics(title_font_).height();
-    int scaled_padding = ScalingManager::Get().Scaled(kDefaultBarPadding);
+    const QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
+    const QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
+    const QSize        title_size   = font_metrics.size(0, title_text);
+
+    const int title_height   = title_size.height();
+    const int scaled_padding = ScalingManager::Get().Scaled(kDefaultBarPadding);
 
     // Let the scene know that this object is changing sizes.
     prepareGeometryChange();
@@ -203,12 +210,13 @@ void RMVAllocationBar::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
     if (model_->ShowDetails())
     {
         // Measure title text.
-        QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
-        QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
-        QSize        title_size   = font_metrics.size(0, title_text);
+        const QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
+        const QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
+        const QSize        title_size   = font_metrics.size(0, title_text);
 
         // Update bar y offset based on the font size.
-        scaled_bar_y_offset += title_size.height();
+        const int height = title_size.height();
+        scaled_bar_y_offset += height;
     }
 
     QPointF mouse_pos = QPointF(event->pos().x(), event->pos().y() - scaled_bar_y_offset);

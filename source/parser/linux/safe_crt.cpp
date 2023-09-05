@@ -27,17 +27,16 @@ static errno_t validate_string_params(char* destination, size_t size, const char
     else if (source == nullptr)
     {
         destination[0] = '\0';
-        result = EINVAL;
+        result         = EINVAL;
     }
     else if (size == 0)
     {
         result = ERANGE;
-
     }
     else if (strlen(source) > size)
     {
         destination[0] = '\0';
-        result = ERANGE;
+        result         = ERANGE;
     }
 
     return result;
@@ -153,6 +152,5 @@ errno_t strcat_s(char* destination, size_t size, const char* source)
 
     return result;
 }
-
 
 #endif  // !_WIN32
