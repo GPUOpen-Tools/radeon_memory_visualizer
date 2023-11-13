@@ -16,8 +16,8 @@ compare snapshots to check to see if memory is being release or whether there
 are memory leaks.
 
 Snapshots will be displayed in a table below the timeline graph. If there are
-no snapshots in the trace, the area under the timeline graph will indicate that
-there is nothing to show and offer some guidance of what may be required, as
+no snapshots contained in the trace, the area under the timeline graph will indicate
+that there is nothing to show and offer some guidance of what may be required, as
 shown above. There are other instances in the tool showing similar displays,
 such as a resource table being empty if the selected allocation contains no
 resources, or if a resource type has no additional properties to show.
@@ -27,15 +27,55 @@ graph and in the table below the graph.
 
 .. image:: media/timeline_1.png
 
-By default, the graph will be colored by resource type. A color legend below
-the timeline will indicate what resource these colors represent. The coloring
-mode can be changed by selecting from the combo box above the top-left of the
-timeline.
+Timeline graph
+--------------
+The **Timeline graph** displays a visual representation of memory related events
+contained in the trace that occurred over a period of time along the horizontal axis.
+There are four viewing modes:
+
+1. Committed (the default view)
+
+2. Resource usage count
+
+3. Virtual memory heap
+
+4. Resource usage size
+
+The viewing mode can be changed by selecting from the combo box above the top-left
+of the timeline. Note that with previous releases of RMV, the default Timeline view was
+"Resource usage size." The default mode is now "Committed."
+
+A color legend below the timeline will indicate what resources are represented by the
+colors in the timeline.
 
 When the mouse is over the timeline, the tooltip help will show information
 about the memory allocated at the time corresponding to the mouse position. The
 time can be seen from the ruler above the graph. The most abundant resources
 are listed and the rest are combined in the last entry as "Other".
+
+Starting with release 1.8, RMV takes overlapping resources (i.e., aliased
+resources) into account when calculating usage type sizes on the timeline. When
+RMV detects multiple resources that are bound to sections of virtual memory that
+overlap, the usage size is attributed to the resource with the highest importance.
+This is reflected in the height of bars on the "Resource usage size" timeline and
+also, the values displayed on the tooltip when the mouse hovers over a point on
+the timeline graph. The priority of resource importance's matches the order of
+resource types displayed on the legend below the "Resource usage size" timeline
+graph. Resource types towards the left side of the legend have higher priority
+and those towards the right have lower priority. In past releases of RMV, the
+legend order was reversed. The order of the stacked usage types on the timeline
+graph in prior releases was also reversed.
+
+Calculating usage sizes in this way gives a more accurate assessment of memory utilization
+and prevents memory from being counted multiple times. For a deeper explanation
+of how memory size is calculated for aliased resources, please see the **Resource overview**
+section in this document.
+
+The additional usage size calculations required to take aliased resources into
+account requires considerably more time to process. For this reason, a Cancel
+button has been added below the loading animation while the "Resource usage size"
+timeline is being generated. At any time during this processing, the user may
+click the Cancel button to revert to the previously displayed timeline mode.
 
 **Zoom controls**
 

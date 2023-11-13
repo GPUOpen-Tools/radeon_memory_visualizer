@@ -1,14 +1,11 @@
-Radeon™ Memory Visualizer V1.7 09/21/2023
+Radeon™ Memory Visualizer V1.8 12/07/2023
 -----------------------------------------
 
-V1.7 Changes
+V1.8 Changes
 ------------------------------------
-1) Aliased Resource size calculation improvements on Resource overview pane.
-2) Support for loading Radeon GPU Detective crash dump files.
-3) Resource naming and implicit buffer filtering made more reliable in DX12.
-4) Support for hours added (formatted as "H:MM:SS.clk_cycles" and included with the CTRL+T time-cycling shortcut keys).
-5) System memory type added to device configuration pane (e.g. DDR4).
-6) Bug/stability fixes.
+1) The Resource usage size timeline calculations take resource aliasing into account.
+2) Unbound memory sizes are included on the Resource usage size timeline.
+3) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -27,6 +24,15 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.7 Changes
+------------------------------------
+1) Aliased Resource size calculation improvements on Resource overview pane.
+2) Support for loading Radeon GPU Detective crash dump files.
+3) Resource naming and implicit buffer filtering made more reliable in DX12.
+4) Support for hours added (formatted as "H:MM:SS.clk_cycles" and included with the CTRL+T time-cycling shortcut keys).
+5) System memory type added to device configuration pane (e.g. DDR4).
+6) Bug/stability fixes.
 
 V1.6.1 Changes
 ------------------------------------
