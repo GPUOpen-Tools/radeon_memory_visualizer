@@ -7,6 +7,8 @@
 
 #include "managers/load_animation_manager.h"
 
+#include "managers/message_manager.h"
+
 #include <QApplication>
 
 #include "qt_common/utils/scaling_manager.h"
@@ -51,24 +53,30 @@ namespace rmv
         }
     }
 
-    void LoadAnimationManager::StartAnimation(QWidget* parent, int height_offset)
+    void LoadAnimationManager::StartAnimation(QWidget* parent, int height_offset, const bool can_cancel)
     {
         if (file_load_animation_ == nullptr)
         {
-            file_load_animation_ = new FileLoadingWidget(parent);
+            file_load_animation_ = new RmvCancellableLoadingWidget(parent, can_cancel);
             Resize(parent, height_offset);
 
             file_load_animation_->show();
             tab_widget_->setDisabled(true);
             file_menu_->setDisabled(true);
+            emit rmv::MessageManager::Get().ChangeActionsRequested(false);
 
             qApp->setOverrideCursor(Qt::BusyCursor);
+
+            if (can_cancel)
+            {
+                connect(file_load_animation_, &RmvCancellableLoadingWidget::CancelClicked, this, &LoadAnimationManager::AnimationCancelled);
+            }
         }
     }
 
     void LoadAnimationManager::StartAnimation()
     {
-        StartAnimation(tab_widget_, tab_widget_->TabHeight());
+        StartAnimation(tab_widget_, tab_widget_->TabHeight(), false);
     }
 
     void LoadAnimationManager::StopAnimation()
@@ -80,6 +88,7 @@ namespace rmv
 
             tab_widget_->setEnabled(true);
             file_menu_->setEnabled(true);
+            emit rmv::MessageManager::Get().ChangeActionsRequested(true);
 
             qApp->restoreOverrideCursor();
         }

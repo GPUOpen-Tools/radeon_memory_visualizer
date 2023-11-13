@@ -130,8 +130,9 @@ static RmtErrorCode LoadSegmentChunk(rdfChunkFile* chunk_file, RmtDataSet* data_
                 {
                     data_set->segment_info[count].base_address = data.physical_base_address;
                     data_set->segment_info[count].heap_type    = static_cast<RmtHeapType>(data.type);
-                    data_set->segment_info[count].index        = 0;
-                    data_set->segment_info[count].size         = data.size;
+                    data_set->segment_info[count].index =
+                        0;  /// TODO: This is missing from RDF spec (should be memory index, exposed by the Vulkan software stack)
+                    data_set->segment_info[count].size = data.size;
                     count++;
                 }
                 else
@@ -416,8 +417,10 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
                   system_info.driver.software_version.c_str(),
                   kRmtMaxDriverSoftwareVersionNameLength - 1);
 
-        strncpy_s(
-            data_set->system_info.system_memory_type_name, kRmtMaxMemoryTypeNameLength, system_info.os.memory.type.c_str(), kRmtMaxMemoryTypeNameLength - 1);
+        strncpy_s(data_set->system_info.system_memory_type_name,
+                  kRmtMaxMemoryTypeNameLength,
+                  system_info.os.memory.type.c_str(),
+                  kRmtMaxMemoryTypeNameLength - 1);
 
         result = kRmtOk;
     }

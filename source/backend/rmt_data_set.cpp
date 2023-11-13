@@ -9,6 +9,7 @@
 
 #include "rmt_adapter_info.h"
 #include "rmt_address_helper.h"
+#include "rmt_memory_aliasing_timeline.h"
 #include "rmt_assert.h"
 #include "rmt_constants.h"
 #include "rmt_data_snapshot.h"
@@ -165,6 +166,8 @@ RmtErrorCode DestroySnapshotWriter(RmtDataSet* data_set)
 
     return kRmtOk;
 }
+
+using namespace RmtMemoryAliasingTimelineAlgorithm;
 
 // Map used to lookup unique resource ID hash using the original resource ID as the key.
 static std::unordered_map<RmtResourceIdentifier, RmtResourceIdentifier> unique_resource_id_lookup_map;
@@ -653,7 +656,7 @@ static void PerformFree(RmtDataSet* data_set, void* pointer)
 }
 
 // Allocate memory for a snapshot.
-static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnapshot* out_snapshot)
+static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnapshot* out_snapshot, bool enable_aliased_resource_usage_sizes)
 {
     // Set a pointer to parent data set.
     out_snapshot->data_set = data_set;
@@ -687,7 +690,8 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
                                                                   out_snapshot->resource_list_buffer,
                                                                   resource_list_buffer_size,
                                                                   &out_snapshot->virtual_allocation_list,
-                                                                  data_set->data_profile.max_concurrent_resources);
+                                                                  data_set->data_profile.max_concurrent_resources,
+                                                                  enable_aliased_resource_usage_sizes);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
     }
@@ -710,7 +714,25 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     {
     case kRmtTokenTypeVirtualFree:
     {
-
+        const RmtVirtualAllocation* virtual_allocation = nullptr;
+        RmtErrorCode                result             = RmtVirtualAllocationListGetAllocationForAddress(
+            &(out_snapshot->virtual_allocation_list), current_token->virtual_free_token.virtual_address, &virtual_allocation);
+        // Remove the virtual allocation if it is being tracked and a virtual allocation could be found.
+        if ((result == kRmtOk) && (out_snapshot->resource_list.enable_aliased_resource_usage_sizes))
+        {
+            // Update memory sizes grouped by resource usage types taking into account overlapped aliased resources.
+            RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
+            RMT_ASSERT(memory_aliasing_calculator != nullptr);
+            memory_aliasing_calculator->DestroyAllocation(virtual_allocation->allocation_identifier);
+            SizePerResourceUsageType sizes_per_resource_usage_type;
+            SizeType                 unbound_size;
+            memory_aliasing_calculator->CalculateSizes(sizes_per_resource_usage_type, unbound_size);
+            for (int usage_index = 0; usage_index < RmtResourceUsageType::kRmtResourceUsageTypeCount; usage_index++)
+            {
+                out_snapshot->resource_list.total_resource_usage_aliased_size[usage_index] = sizes_per_resource_usage_type.size_[usage_index];
+            }
+            out_snapshot->resource_list.total_resource_usage_aliased_size[kRmtResourceUsageTypeFree] = unbound_size;
+        }
         error_code = RmtVirtualAllocationListRemoveAllocation(&out_snapshot->virtual_allocation_list, current_token->virtual_free_token.virtual_address);
         RMT_ASSERT(error_code == kRmtOk);
         //RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
@@ -826,6 +848,13 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                                    kDummyHeapPref,
                                                                    RmtOwnerType::kRmtOwnerTypeClientDriver,
                                                                    allocation_identifier);
+
+                if (out_snapshot->resource_list.enable_aliased_resource_usage_sizes)
+                {
+                    RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
+                    RMT_ASSERT(memory_aliasing_calculator != nullptr);
+                    memory_aliasing_calculator->CreateAllocation(allocation_identifier, current_token->resource_bind_token.size_in_bytes);
+                }
             }
             else if (error_code == kRmtErrorResourceAlreadyBound)
             {
@@ -925,9 +954,11 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     case kRmtTokenTypeVirtualAllocate:
     {
         // The byte offset of the token in the data stream is used to uniquely identify this allocation.
-        // The offset is used rather than the virtual allocation address in case there are allocations/frees then another allocation with the same base address.
+        // The offset is used rather than the virtual allocation address in case there are allocations/frees
+        // and then another allocation is made with the same base address.
         uint64_t allocation_identifier = current_token->common.offset;
-        error_code                     = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
+
+        error_code = RmtVirtualAllocationListAddAllocation(&out_snapshot->virtual_allocation_list,
                                                            current_token->common.timestamp,
                                                            current_token->virtual_allocate_token.virtual_address,
                                                            (int32_t)(current_token->virtual_allocate_token.size_in_bytes >> 12),
@@ -936,6 +967,14 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                            allocation_identifier);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+
+        if (out_snapshot->resource_list.enable_aliased_resource_usage_sizes)
+        {
+            // Track virtual allocation for aliased resource size calculation.
+            RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
+            RMT_ASSERT(memory_aliasing_calculator != nullptr);
+            memory_aliasing_calculator->CreateAllocation(allocation_identifier, current_token->virtual_allocate_token.size_in_bytes);
+        }
     }
     break;
 
@@ -1397,9 +1436,13 @@ static int32_t UpdateSeriesValuesFromCurrentSnapshot(const RmtDataSnapshot* curr
 
     case kRmtDataTimelineTypeResourceUsageVirtualSize:
     {
+        // For Resource Usage Virtual Size timeline type, aliased sizing should be enabled
+        // (disabled for all other timeline types).
+        RMT_ASSERT(current_snapshot->resource_list.enable_aliased_resource_usage_sizes);
+
         for (int32_t current_resource_index = 0; current_resource_index < kRmtResourceUsageTypeCount; ++current_resource_index)
         {
-            const uint64_t resource_size_for_usage_type = current_snapshot->resource_list.resource_usage_size[current_resource_index];
+            const uint64_t resource_size_for_usage_type = current_snapshot->resource_list.total_resource_usage_aliased_size[current_resource_index];
 
             // Write this to the correct slot in the series.
             if (current_resource_index == kRmtResourceUsageTypeHeap)
@@ -1488,11 +1531,15 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 {
     RMT_ASSERT(data_set);
 
+    // Reset the cancel flag.
+    data_set->flags.cancel_background_task_flag = false;
+
     // Allocate temporary snapshot.
     RmtDataSnapshot* temp_snapshot = (RmtDataSnapshot*)PerformAllocation(data_set, sizeof(RmtDataSnapshot), alignof(RmtDataSnapshot));
     RMT_ASSERT(temp_snapshot);
     RMT_RETURN_ON_ERROR(temp_snapshot, kRmtErrorOutOfMemory);
-    RmtErrorCode error_code = AllocateMemoryForSnapshot(data_set, temp_snapshot);
+    RmtErrorCode error_code =
+        AllocateMemoryForSnapshot(data_set, temp_snapshot, timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageVirtualSize);
     RMT_ASSERT(error_code == kRmtOk);
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
@@ -1534,7 +1581,7 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 
     // if the heap has something there, then add it.
     int32_t last_value_index = -1;
-    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger) && !RmtDataSetIsBackgroundTaskCancelled(data_set))
     {
         // grab the next token from the heap.
         RmtToken current_token = {};
@@ -1561,6 +1608,10 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     }
 
     // clean up temporary structures we allocated to construct the timeline.
+    if (timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageVirtualSize)
+    {
+        RmtMemoryAliasingCalculatorCleanup();
+    }
     RmtDataSnapshotDestroy(temp_snapshot);
     PerformFree(data_set, temp_snapshot);
     return kRmtOk;
@@ -1745,8 +1796,13 @@ static RmtErrorCode MergeResourceMemoryRegions(const RmtVirtualAllocation* virtu
     {
         const RmtGpuAddress allocation_base_address = virtual_allocation->base_address;
         const RmtResource*  current_resource        = virtual_allocation->resources[current_resource_index];
-        bound_memory_regions.push_back(RegionOffsets{current_resource->address - allocation_base_address,
-                                                     (current_resource->address - allocation_base_address) + current_resource->size_in_bytes});
+
+        // Skip over Heap type resources.
+        if (current_resource->resource_type != RmtResourceType::kRmtResourceTypeHeap)
+        {
+            bound_memory_regions.push_back(RegionOffsets{current_resource->address - allocation_base_address,
+                                                         (current_resource->address - allocation_base_address) + current_resource->size_in_bytes});
+        }
     }
 
     // Sort the bound memory regions by starting offsets.
@@ -1800,7 +1856,6 @@ static RmtErrorCode SnapshotGeneratorAddUnboundResources(RmtDataSnapshot* snapsh
         std::vector<RmtMemoryRegion> unbound_regions;  ///< The list of unbound memory regions.
         uint64_t                     allocation_size_in_bytes = RmtGetAllocationSizeInBytes(virtual_allocation->size_in_4kb_page,
                                                                         kRmtPageSize4Kb);  ///< The virtual allocation size in bytes.
-
         if (bound_regions.size() < 1)
         {
             // Create an unbound region covering the entire virtual allocation.
@@ -1866,7 +1921,7 @@ static RmtErrorCode SnapshotGeneratorAddUnboundResources(RmtDataSnapshot* snapsh
     return kRmtOk;
 }
 
-// Calculate the aliased size for each resource.
+// Calculate the size after aliasing for each resource.
 static RmtErrorCode SnapshotGeneratorCalculateAliasedResourceSizes(RmtDataSnapshot* snapshot)
 {
     uint64_t resource_usage_mask = (1ULL << (kRmtResourceUsageTypeCount - 1)) - 1;
@@ -2007,7 +2062,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     // set up the snapshot.
     memcpy(out_snapshot->name, snapshot_point->name, RMT_MINIMUM(strlen(snapshot_point->name), sizeof(out_snapshot->name)));
     out_snapshot->timestamp = snapshot_point->timestamp;
-    RmtErrorCode error_code = AllocateMemoryForSnapshot(data_set, out_snapshot);
+    RmtErrorCode error_code = AllocateMemoryForSnapshot(data_set, out_snapshot, false);
 
     out_snapshot->maximum_physical_memory_in_bytes = RmtDataSetGetTotalVideoMemoryInBytes(data_set);
 
@@ -2246,4 +2301,24 @@ int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t time
 uint64_t RmtDataSetGetTotalVideoMemoryInBytes(const RmtDataSet* data_set)
 {
     return data_set->segment_info[kRmtHeapTypeLocal].size + data_set->segment_info[kRmtHeapTypeInvisible].size;
+}
+
+void RmtDataSetCancelBackgroundTask(RmtDataSet* data_set)
+{
+    RMT_ASSERT(data_set != nullptr);
+    data_set->flags.cancel_background_task_flag = true;
+}
+
+bool RmtDataSetIsBackgroundTaskCancelled(const RmtDataSet* data_set)
+{
+    RMT_ASSERT(data_set != nullptr);
+
+    bool result = false;
+
+    if (data_set->flags.cancel_background_task_flag)
+    {
+        result = true;
+    }
+
+    return result;
 }

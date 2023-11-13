@@ -13,10 +13,11 @@
 #ifndef RMV_MANAGERS_LOAD_ANIMATION_MANAGER_H_
 #define RMV_MANAGERS_LOAD_ANIMATION_MANAGER_H_
 
+#include "views/custom_widgets/rmv_cancellable_loading_widget.h"
+
 #include <QObject>
 #include <QMenu>
 
-#include "qt_common/custom_widgets/file_loading_widget.h"
 #include "qt_common/custom_widgets/tab_widget.h"
 
 namespace rmv
@@ -52,7 +53,8 @@ namespace rmv
         ///
         /// @param [in] parent        The parent window.
         /// @param [in] height_offset The offset from the top of the parent widget.
-        void StartAnimation(QWidget* parent, int height_offset);
+        /// @param [in] can_cancel    If true, a cancel button is added allowing the user to abort.
+        void StartAnimation(QWidget* parent, int height_offset, const bool can_cancel = false);
 
         /// @brief Start the loading animation.
         ///
@@ -72,6 +74,10 @@ namespace rmv
         /// Make sure that the load animation is also resized.
         void ResizeAnimation();
 
+    signals:
+        /// @brief Indicates that the animation was cancelled by the user.
+        void AnimationCancelled();
+
     private:
         /// @brief Resize the loading animation.
         ///
@@ -79,9 +85,9 @@ namespace rmv
         /// @param [in] height_offset The offset from the top of the parent widget.
         void Resize(QWidget* parent, int height_offset);
 
-        TabWidget*         tab_widget_;           ///< The tab widget from the main window.
-        QMenu*             file_menu_;            ///< The file menu widget from the main window.
-        FileLoadingWidget* file_load_animation_;  ///< Widget to show animation.
+        TabWidget*                   tab_widget_;           ///< The tab widget from the main window.
+        QMenu*                       file_menu_;            ///< The file menu widget from the main window.
+        RmvCancellableLoadingWidget* file_load_animation_;  ///< Widget to show animation.
     };
 }  // namespace rmv
 

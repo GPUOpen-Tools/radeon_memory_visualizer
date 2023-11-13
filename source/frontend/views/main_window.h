@@ -63,6 +63,11 @@ public:
     /// This include references to models or event indices that rely on backend data.
     void ResetUI();
 
+    /// @brief Enable or disable shortcut keys.
+    ///
+    /// @param [in] enable                          If true, enables actions, otherwise disables actions.
+    void EnableActions(const bool enable);
+
 public slots:
     /// @brief Called when trace file finished loading.
     void OpenTrace();

@@ -13,7 +13,8 @@
 
 namespace rmv
 {
-    BackgroundTask::BackgroundTask()
+    BackgroundTask::BackgroundTask(const bool can_cancel)
+        : can_cancel_(can_cancel)
     {
     }
 
@@ -27,6 +28,15 @@ namespace rmv
         emit WorkerFinished();
     }
 
+    void BackgroundTask::Cancel()
+    {
+    }
+
+    bool BackgroundTask::CanCancel() const
+    {
+        return can_cancel_;
+    }
+
     ThreadController::ThreadController(QWidget* parent, BackgroundTask* background_task)
         : background_task_(background_task)
         , finished_(false)
@@ -38,7 +48,7 @@ namespace rmv
         }
         else
         {
-            rmv::LoadAnimationManager::Get().StartAnimation(parent, 0);
+            rmv::LoadAnimationManager::Get().StartAnimation(parent, 0, background_task->CanCancel());
         }
 
         // Create the thread. It will be setup to be deleted below when the thread has
@@ -53,7 +63,7 @@ namespace rmv
         // set up signal connections to automatically delete thread_ and background_task_ when work is done:
         connect(background_task_, &BackgroundTask::WorkerFinished, background_task_, &BackgroundTask::deleteLater);
         connect(thread_, &QThread::finished, thread_, &QThread::deleteLater);
-
+        connect(&rmv::LoadAnimationManager::Get(), &LoadAnimationManager::AnimationCancelled, this, &ThreadController::Cancelled);
         thread_->start();
     }
 
@@ -66,6 +76,12 @@ namespace rmv
         rmv::LoadAnimationManager::Get().StopAnimation();
         finished_ = true;
         emit ThreadFinished();
+    }
+
+    void ThreadController::Cancelled()
+    {
+        // Set cancel flag for the job.
+        emit ThreadCancelled();
     }
 
     bool ThreadController::Finished() const

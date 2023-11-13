@@ -34,6 +34,9 @@ const static QString kRenameAction  = "Rename snapshot";
 const static QString kDeleteAction  = "Delete snapshot";
 const static QString kCompareAction = "Compare snapshots";
 
+// The timeline type to revert to if calculating the resource usage size timeline type is cancelled.
+static int saved_timeline_type_index_ = 0;
+
 TimelinePane::TimelinePane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::TimelinePane)
@@ -92,10 +95,10 @@ TimelinePane::TimelinePane(QWidget* parent)
 
     // Set up a list of required timeline modes, in order.
     // The list is terminated with -1.
-    static const RmtDataTimelineType type_list[] = {kRmtDataTimelineTypeResourceUsageVirtualSize,
+    static const RmtDataTimelineType type_list[] = {kRmtDataTimelineTypeCommitted,
                                                     kRmtDataTimelineTypeResourceUsageCount,
                                                     kRmtDataTimelineTypeVirtualMemory,
-                                                    kRmtDataTimelineTypeCommitted,
+                                                    kRmtDataTimelineTypeResourceUsageVirtualSize,
                                                     // kRmtDataTimelineTypeProcess,
                                                     RmtDataTimelineType(-1)};
 
@@ -234,6 +237,7 @@ void TimelinePane::OnTraceLoad()
     colorizer_->UpdateLegends();
 
     UpdateTableDisplay();
+    saved_timeline_type_index_ = 0;
 }
 
 void TimelinePane::UpdateSnapshotMarkers()
@@ -677,19 +681,35 @@ void TimelinePane::TimelineTypeChanged()
             // When the worker thread has finished, a signal will be emitted. Wait for the signal here and update
             // the UI with the newly acquired data from the worker thread.
             connect(thread_controller_, &rmv::ThreadController::ThreadFinished, this, &TimelinePane::TimelineWorkerThreadFinished);
+            connect(thread_controller_, &rmv::ThreadController::ThreadCancelled, this, &TimelinePane::TimelineWorkerThreadCancelled);
         }
     }
+}
+
+void TimelinePane::TimelineWorkerThreadCancelled()
+{
+    model_->CancelBackgroundTask();
 }
 
 void TimelinePane::TimelineWorkerThreadFinished()
 {
     disconnect(thread_controller_, &rmv::ThreadController::ThreadFinished, this, &TimelinePane::TimelineWorkerThreadFinished);
+    disconnect(thread_controller_, &rmv::ThreadController::ThreadCancelled, this, &TimelinePane::TimelineWorkerThreadCancelled);
     thread_controller_->deleteLater();
     thread_controller_ = nullptr;
 
-    model_->UpdateMemoryGraph(ui_->timeline_view_->ViewableStartClk(), ui_->timeline_view_->ViewableEndClk());
-    ui_->timeline_view_->viewport()->update();
-    colorizer_->UpdateLegends();
+    if (model_->IsBackgroundTaskCancelled())
+    {
+        // If the background task was cancelled, revert to the previously selected timeline type.
+        ui_->timeline_type_combo_box_->SetSelectedRow(saved_timeline_type_index_);
+    }
+    else
+    {
+        model_->UpdateMemoryGraph(ui_->timeline_view_->ViewableStartClk(), ui_->timeline_view_->ViewableEndClk());
+        ui_->timeline_view_->viewport()->update();
+        colorizer_->UpdateLegends();
+        saved_timeline_type_index_ = ui_->timeline_type_combo_box_->CurrentRow();
+    }
 }
 
 void TimelinePane::ScrollToSelectedSnapshot()

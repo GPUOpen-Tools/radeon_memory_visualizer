@@ -48,7 +48,7 @@ void RMVTimelineGraph::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             QColor color  = config_.colorizer->GetColor(bucket_group_index);
             qreal  y_pos  = 0.0f;
             qreal  height = 0.0f;
-            success       = config_.model_data->GetHistogramData(bucket_group_index, bucket_index, y_pos, height);
+            success       = config_.model_data->GetHistogramData(bucket_group_index, bucket_index, config_.model_data->GetNumBucketGroups(), y_pos, height);
             if (success)
             {
                 QRectF rect;

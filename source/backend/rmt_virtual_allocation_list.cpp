@@ -20,6 +20,49 @@
 #include <set>
 #include <string.h>  // memcpy
 #include <unordered_map>
+#include <unordered_set>
+
+// The ResourcePriorityComparator handles ordering resources in a std::set based on aliased resource priority.
+// A comparison is first made on the resource usage type enum value (highest to lowest).  If the two resources
+// being compared have the same usage type, the resources are compared by size (smallest size is highest priority).
+// If the size is also the same, then resource IDs are compared (largest value is highest priority).
+struct ResourcePriorityComparator
+{
+    bool operator()(const RmtResource* lhs, const RmtResource* rhs) const
+    {
+        bool result = false;
+
+        const RmtResourceUsageType lhs_usage_type = RmtResourceGetUsageType(lhs);
+        const RmtResourceUsageType rhs_usage_type = RmtResourceGetUsageType(rhs);
+
+        if (lhs_usage_type != rhs_usage_type)
+        {
+            // Compare by usage type.
+            result = lhs_usage_type > rhs_usage_type;
+        }
+        else
+        {
+            if (lhs->size_in_bytes != rhs->size_in_bytes)
+            {
+                // Compare by size.
+                result = lhs->size_in_bytes < rhs->size_in_bytes;
+            }
+            else
+            {
+                // Compare by resource identifier (last resort, other attributes are the same).
+                result = lhs->identifier > rhs->identifier;
+            }
+        }
+
+        return result;
+    }
+};
+
+typedef std::set<const RmtResource*, ResourcePriorityComparator> PrioritizedResourceSetType;  // Set of resource objects sorted by priority.
+
+typedef std::map<uint64_t, PrioritizedResourceSetType> ResourceMemoryRegionsMap;  // Map resource object sets split into segments using bind offset as a key.
+static std::unordered_map<uint64_t, ResourceMemoryRegionsMap>
+    aliased_resource_memory_regions_for_allocations_;  // Map of all allocations, allocation id is used as the key.
 
 // Helper function to improve tree balance by hashing the handles.
 static RmtGpuAddress HashGpuAddress(RmtGpuAddress address)
@@ -383,6 +426,8 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
     virtual_allocation_list->root = NULL;
 
     memset(virtual_allocation_list->allocations_per_preferred_heap, 0, sizeof(virtual_allocation_list->allocations_per_preferred_heap));
+
+    aliased_resource_memory_regions_for_allocations_.clear();
     return kRmtOk;
 }
 
@@ -429,6 +474,7 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
     allocation_details->resource_count          = 0;
     allocation_details->next_resource_index     = 0;
     allocation_details->allocation_identifier   = allocation_identifier;
+    memset(allocation_details->resource_usage_aliased_size, 0, sizeof(allocation_details->resource_usage_aliased_size));
 
     for (int32_t current_heap_preference_index = 0; current_heap_preference_index < RMT_NUM_HEAP_PREFERENCES; ++current_heap_preference_index)
     {
@@ -769,57 +815,95 @@ RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapsho
     return kRmtOk;
 }
 
-// The ResourcePriorityComparator handles ordering resources in a std::set based on aliased resource priority.
-// A comparison is first made on the resource usage type enum value (highest to lowest).  If the two resources
-// being compared have the same usage type, the resources are compared by size (smallest size is highest priority).
-// If the size is also the same, then resource IDs are compared (largest value is highest priority).
-struct ResourcePriorityComparator
+static RmtErrorCode TrackResourceAdd(const RmtResource* resource, std::map<uint64_t, PrioritizedResourceSetType>& out_resource_memory_segments)
 {
-    bool operator()(const RmtResource* lhs, const RmtResource* rhs) const
+    RMT_ASSERT(resource != nullptr);
+
+    // Skip this resource if it isn't bound to an allocation.
+    if (resource->bound_allocation == nullptr)
     {
-        bool result = false;
-
-        const RmtResourceUsageType lhs_usage_type = RmtResourceGetUsageType(lhs);
-        const RmtResourceUsageType rhs_usage_type = RmtResourceGetUsageType(rhs);
-
-        if (lhs_usage_type != rhs_usage_type)
-        {
-            // Compare by usage type.
-            result = lhs_usage_type > rhs_usage_type;
-        }
-        else
-        {
-            if (lhs->size_in_bytes != rhs->size_in_bytes)
-            {
-                // Compare by size.
-                result = lhs->size_in_bytes < rhs->size_in_bytes;
-            }
-            else
-            {
-                // Compare by resource identifier (last resort, other attributes are the same).
-                result = lhs->identifier > rhs->identifier;
-            }
-        }
-
-        return result;
+        return kRmtErrorNoResourceFound;
     }
-};
 
-// Algorithm to adjust the size of overlapping resources (i.e. resources that share part or all of the same allocated memory).
+    if (RmtResourceGetUsageType(resource) == kRmtResourceUsageTypeHeap)
+    {
+        return kRmtErrorNoResourceFound;
+    }
+
+    // Skip this resource if it is implicit.
+    if (RmtResourceUserDataIsResourceImplicit(resource->identifier) == true)
+
+    {
+        return kRmtErrorNoResourceFound;
+    }
+
+    uint64_t allocation_size_in_bytes = RmtGetAllocationSizeInBytes(resource->bound_allocation->size_in_4kb_page, kRmtPageSize4Kb);
+
+    if (allocation_size_in_bytes < resource->size_in_bytes)
+    {
+        return kRmtErrorInvalidSize;
+    }
+
+    // Add a segment at the resource's starting offset (if one doesn't already exist) and add the resource to the segment's set of resources.
+    const uint64_t start_offset = resource->address - resource->bound_allocation->base_address;
+    out_resource_memory_segments[start_offset].insert(resource);
+
+    // Add a segment with an empty list of resources (if one doesn't already exist).  This marks the end of the resource's memory block.
+    const uint64_t end_offset = start_offset + resource->size_in_bytes;
+    out_resource_memory_segments[end_offset];
+
+    // Second pass: For each segment except the first one, copy resources to the next segment's resource set if the resource's ending offset is greater than the segment's offset key.
+    for (std::map<uint64_t, PrioritizedResourceSetType>::iterator current_segment_iterator = out_resource_memory_segments.begin();
+         current_segment_iterator != out_resource_memory_segments.end();
+         current_segment_iterator++)
+    {
+        // Get the next segment.  If there are no more segments then exit the loop.
+        auto next_segment_iterator = std::next(current_segment_iterator);
+        if (next_segment_iterator == out_resource_memory_segments.end())
+        {
+            break;
+        }
+
+        // Copy resources from previous segment to next segment if the resource's ending range extends into this segment.
+        for (const auto& resource_from_segment : current_segment_iterator->second)
+        {
+            if (resource_from_segment->bound_allocation != nullptr)
+            {
+                const uint64_t resource_start_range = resource_from_segment->address - resource_from_segment->bound_allocation->base_address;
+                const uint64_t resource_end_range   = resource_start_range + resource_from_segment->size_in_bytes;
+                if (resource_end_range > next_segment_iterator->first)
+                {
+                    // The resource range extends into this segment.  Add it to the next segment's list of resources.
+                    next_segment_iterator->second.insert(resource_from_segment);
+                }
+            }
+        }
+    }
+
+    return kRmtOk;
+}
+
+static RmtErrorCode AliasedResourceTrackerAddResource(const RmtResource* resource)
+{
+    const RmtVirtualAllocation* allocation = resource->bound_allocation;
+    if (allocation == nullptr)
+    {
+        return kRmtErrorNoAllocationFound;
+    }
+
+    return TrackResourceAdd(resource, aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier]);
+}
+
 // The resource_memory_segments map is used to split the memory allocation into segments at the start and end offsets of each bound resource.
 // Each segment contains a set of resources sorted by the alias priority.  The size of each segment is applied to the size of the top resource
-// in each segment's set.  These sizes are totaled up for each resource to obtain the resource's aliased size.
+// in each segment's set.  These sizes are totaled up for each resource to obtain the resource's size after aliasing.
+
 static RmtErrorCode RmtVirtualAllocationUpdateAliasedResourceSizes(const RmtVirtualAllocation* allocation,
                                                                    const RmtResourceList*      resource_list,
                                                                    uint64_t                    resource_usage_mask)
 {
     RMT_RETURN_ON_ERROR(allocation != nullptr, kRmtErrorInvalidPointer);
     RMT_RETURN_ON_ERROR(resource_list != nullptr, kRmtErrorInvalidPointer);
-
-    typedef std::set<const RmtResource*, ResourcePriorityComparator> PrioritizedResourceSetType;  // Set of resource objects sorted by priority.
-    std::map<uint64_t, PrioritizedResourceSetType> resource_memory_segments;  // Map resource object sets split into segments using bind offset as a key.
-    uint64_t                                       bind_offset     = 0;
-    uint64_t                                       bind_end_offset = 0;
 
     // First pass: Split resource memory into segments for each of the resources starting offset.
     // Add the resource to the segment's list.  Also create an empty segment for the resource's memory block ending offset.
@@ -831,18 +915,6 @@ static RmtErrorCode RmtVirtualAllocationUpdateAliasedResourceSizes(const RmtVirt
         // Reset the alias size.
         RmtResourceUpdateAliasSize(resource->identifier, resource_list, 0);
 
-        // Skip this resource if it isn't bound to an allocation.
-        if (resource->bound_allocation == nullptr)
-        {
-            continue;
-        }
-
-        // Skip this resource if it is implicit.
-        if (RmtResourceUserDataIsResourceImplicit(resource->identifier) == true)
-        {
-            continue;
-        }
-
         // Skip this resource if it is disabled by the usage filter.
         RmtResourceUsageType usage_type = RmtResourceGetUsageType(resource);
         if (!(RmtResourceGetUsageTypeMask(usage_type) & resource_usage_mask))
@@ -850,45 +922,15 @@ static RmtErrorCode RmtVirtualAllocationUpdateAliasedResourceSizes(const RmtVirt
             continue;
         }
 
-        // Add a segment at the resource's starting offset (if one doesn't already exist) and add the resource to the segment's set of resources.
-        bind_offset = resource->address - resource->bound_allocation->base_address;
-        resource_memory_segments[bind_offset].insert(resource);
-
-        // Add a segment with an empty list of resources (if one doesn't already exist).  This marks the end of the resource's memory block.
-        bind_end_offset = bind_offset + resource->size_in_bytes;
-        resource_memory_segments[bind_end_offset];
-    }
-
-    // Second pass: For each segment except the first one, copy resources to the next segment's resource set if the resource's ending offset is greater than the segment's offset key.
-    for (std::map<uint64_t, PrioritizedResourceSetType>::iterator current_segment_iterator = resource_memory_segments.begin();
-         current_segment_iterator != resource_memory_segments.end();
-         current_segment_iterator++)
-    {
-        // Get the next segment.  If there are no more segments then exit the loop.
-        auto next_segment_iterator = std::next(current_segment_iterator);
-        if (next_segment_iterator == resource_memory_segments.end())
-        {
-            break;
-        }
-
-        // Copy resources from previous segment to next segment if the resource's ending range extends into this segment.
-        for (auto resource : current_segment_iterator->second)
-        {
-            const uint64_t resource_start_range = resource->address - resource->bound_allocation->base_address;
-            const uint64_t resource_end_range   = resource_start_range + resource->size_in_bytes;
-            if (resource_end_range > next_segment_iterator->first)
-            {
-                // The resource range extends into this segment.  Add it to the next segment's list of resources.
-                next_segment_iterator->second.insert(resource);
-            }
-        }
+        AliasedResourceTrackerAddResource(resource);
     }
 
     // Total up the segmented sizes of each resource.
     std::unordered_map<const RmtResource*, uint64_t>         resource_alias_sizes;
-    std::map<uint64_t, PrioritizedResourceSetType>::iterator segment_iterator = resource_memory_segments.begin();
+    std::map<uint64_t, PrioritizedResourceSetType>::iterator segment_iterator =
+        aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier].begin();
 
-    for (; segment_iterator != resource_memory_segments.end(); segment_iterator++)
+    for (; segment_iterator != aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier].end(); segment_iterator++)
     {
         if (segment_iterator->second.empty())
         {
@@ -902,7 +944,7 @@ static RmtErrorCode RmtVirtualAllocationUpdateAliasedResourceSizes(const RmtVirt
 
         // Get the offset of the next segment so that the size of the current segment can be determined.
         auto next_segment_iterator = std::next(segment_iterator);
-        if (next_segment_iterator == resource_memory_segments.end())
+        if (next_segment_iterator == aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier].end())
         {
             // End of segments reached.
             break;
@@ -917,7 +959,7 @@ static RmtErrorCode RmtVirtualAllocationUpdateAliasedResourceSizes(const RmtVirt
         resource_alias_sizes[top_resource] += segment_size;
     }
 
-    // Copy the aliased sizes to the resource objects.
+    // Copy the size after aliasing to the resource objects.
     for (auto alias_resource : resource_alias_sizes)
     {
         RmtResourceUpdateAliasSize(alias_resource.first->identifier, resource_list, alias_resource.second);

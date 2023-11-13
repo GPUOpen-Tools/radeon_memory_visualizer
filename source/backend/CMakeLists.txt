@@ -6,17 +6,9 @@ include_directories(AFTER ../backend ../parser ../../external/rdf/rdf/inc)
 
 add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
 add_definitions(-DRDF_CXX_BINDINGS)
-IF(WIN32)
-    # Warnings as errors for Windows
-    add_compile_options(/W4 /WX)
-ELSEIF(UNIX)
-    # Remove warnings for Linux in backend
-    add_compile_options(-D_LINUX -Wall -Wextra -Werror)
-ENDIF(WIN32)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
-
 set( SOURCES
     "rmt_adapter_info.cpp"
     "rmt_adapter_info.h"
@@ -37,6 +29,8 @@ set( SOURCES
     "rmt_linear_buffer.h"
     "rmt_legacy_snapshot_writer.cpp"
     "rmt_legacy_snapshot_writer.h"
+    "rmt_memory_aliasing_timeline.cpp"
+    "rmt_memory_aliasing_timeline.h"
     "rmt_memory_event_history.cpp"
     "rmt_memory_event_history.h"
     "rmt_memory_event_history_impl.cpp"
@@ -101,3 +95,4 @@ foreach(source IN LISTS SOURCES)
 endforeach()
 ENDIF(WIN32)
 
+devtools_target_options(${PROJECT_NAME})

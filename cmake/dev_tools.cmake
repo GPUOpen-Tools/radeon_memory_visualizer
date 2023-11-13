@@ -30,10 +30,6 @@ function(devtools_target_options name)
                 -Wall
                 -Werror
                 -Wextra
-                -Wno-deprecated-declarations
-                -Wno-unused-variable
-                -Wno-missing-field-initializers
-                -Wno-unknown-pragmas
                 )
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(${name}

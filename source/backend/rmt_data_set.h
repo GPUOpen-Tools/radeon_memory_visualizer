@@ -62,6 +62,7 @@ struct RmtDataSetFlags
     bool is_rdf_trace : 1;                 ///< Whether the dataset is generated from an RDF file.
     bool userdata_processed : 1;           ///< Whether the userdata tokens have been processed yet.
     bool contains_correlation_tokens : 1;  ///< Whether the dataset contains any correlation tokens.
+    bool cancel_background_task_flag : 1;  ///< If true, indicates a background task has been cancelled.
 };
 
 /// A structure encapsulating a single RMT dataset.
@@ -270,6 +271,19 @@ int32_t RmtDataSetGetSeriesIndexForTimestamp(RmtDataSet* data_set, uint64_t time
 /// @returns                                                The amount of video memory, in bytes.
 
 uint64_t RmtDataSetGetTotalVideoMemoryInBytes(const RmtDataSet* data_set);
+
+/// Check the cancel flag for the datasets background task.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+///
+/// @returns                                                True if the cancel flag is set, otherwise false.
+bool RmtDataSetIsBackgroundTaskCancelled(const RmtDataSet* data_set);
+
+/// Set the cancel flag for a dataset background task.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+///
+void RmtDataSetCancelBackgroundTask(RmtDataSet* data_set);
 
 #ifdef __cplusplus
 }

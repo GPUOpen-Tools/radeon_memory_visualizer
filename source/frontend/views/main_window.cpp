@@ -161,6 +161,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(themes_and_colors_pane, &ThemesAndColorsPane::RefreshedColors, this, &MainWindow::BroadcastChangeColoring);
 
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ChangeActionsRequested, this, &MainWindow::EnableActions);
+
     // Connect to ScalingManager for notifications.
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
 }
@@ -353,6 +355,14 @@ void MainWindow::CreateActions()
     about_action_ = new QAction(tr("About Radeon Memory Visualizer"), this);
     about_action_->setShortcut(Qt::CTRL | Qt::Key_F2);
     connect(about_action_, &QAction::triggered, this, &MainWindow::OpenAboutPane);
+}
+
+void MainWindow::EnableActions(const bool enable)
+{
+    for (auto* action : actions())
+    {
+        action->setEnabled(enable);
+    }
 }
 
 void MainWindow::CycleTimeUnits()

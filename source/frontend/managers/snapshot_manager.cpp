@@ -24,7 +24,7 @@ public:
     /// @param [in] snapshot_base_point The object containing the snapshot information for the base snapshot.
     /// @param [in] snapshot_diff_point The object containing the snapshot information for the diff snapshot.
     explicit SnapshotWorker(RmtDataSet* data_set, RmtSnapshotPoint* snapshot_base_point, RmtSnapshotPoint* snapshot_diff_point)
-        : BackgroundTask()
+        : BackgroundTask(false)
     {
         data_set_                                  = data_set;
         snapshot_point_[rmv::kSnapshotCompareBase] = snapshot_base_point;

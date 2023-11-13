@@ -176,6 +176,9 @@ private slots:
     /// @brief Slot to handle what happens when the timeline worker thread has finished.
     void TimelineWorkerThreadFinished();
 
+    /// @brief Slot to handle cancelling the worker thread.
+    void TimelineWorkerThreadCancelled();
+
     /// @brief Slot to handle what happens after the resource list table is sorted.
     ///
     /// Make sure the selected item (if there is one) is visible.

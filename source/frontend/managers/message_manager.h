@@ -63,6 +63,11 @@ namespace rmv
 
         /// @brief Signal for when the hash values changed.
         void HashesChanged();
+
+        /// @brief Signal to request enabling or disabling UI actions.
+        ///
+        /// @param [in] enable                      If true, actions should be enabled.  Otherwise, actions should be disabled.
+        void ChangeActionsRequested(const bool enable);
     };
 }  // namespace rmv
 

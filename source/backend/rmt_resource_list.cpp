@@ -6,6 +6,8 @@
 //=============================================================================
 
 #include "rmt_resource_list.h"
+
+#include "rmt_memory_aliasing_timeline.h"
 #include "rmt_virtual_allocation_list.h"
 #include "rmt_assert.h"
 #include "rmt_page_table.h"
@@ -18,6 +20,8 @@
 #ifndef _WIN32
 #include "linux/safe_crt.h"
 #endif
+
+using namespace RmtMemoryAliasingTimelineAlgorithm;
 
 RmtResourceUsageType RmtResourceGetUsageType(const RmtResource* resource)
 {
@@ -512,12 +516,31 @@ static RmtErrorCode DestroyResource(RmtResourceList* resource_list, RmtResource*
     bool is_shareable = (resource->resource_type == kRmtResourceTypeImage) &&
                         ((resource->image.create_flags & kRmtImageCreationFlagShareable) == kRmtImageCreationFlagShareable);
 
-    if (!is_shareable)
+    RmtResourceUsageType resource_type = RmtResourceGetUsageType(resource);
+    if ((!is_shareable && (resource_list->enable_aliased_resource_usage_sizes) && resource->bound_allocation != nullptr) &&
+        (RmtResourceGetUsageType(resource) != RmtResourceUsageType::kRmtResourceUsageTypeHeap))
     {
-        RmtResourceUsageType resource_type = RmtResourceGetUsageType(resource);
-        RMT_ASSERT(resource_list->resource_usage_size[resource_type] >= resource->size_in_bytes);
-        resource_list->resource_usage_size[RmtResourceGetUsageType(resource)] -= resource->size_in_bytes;
+        RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
+        RMT_ASSERT(memory_aliasing_calculator != nullptr);
+        Allocation* aliased_resource_allocation = memory_aliasing_calculator->FindAllocation(resource->bound_allocation->allocation_identifier);
+        if (aliased_resource_allocation != nullptr)
+        {
+            aliased_resource_allocation->DestroyResource(
+                resource->address - resource->bound_allocation->base_address, resource->size_in_bytes, RmtResourceGetUsageType(resource));
+
+            SizePerResourceUsageType sizes_per_resource_usage_type;
+            SizeType                 unbound_size;
+            memory_aliasing_calculator->CalculateSizes(sizes_per_resource_usage_type, unbound_size);
+            for (int usage_index = 0; usage_index < RmtResourceUsageType::kRmtResourceUsageTypeCount; usage_index++)
+            {
+                resource_list->total_resource_usage_aliased_size[usage_index] = sizes_per_resource_usage_type.size_[usage_index];
+            }
+            resource_list->total_resource_usage_aliased_size[kRmtResourceUsageTypeFree] = unbound_size;
+        }
     }
+
+    RMT_ASSERT(resource_list->resource_usage_size[resource_type] >= resource->size_in_bytes);
+    resource_list->resource_usage_size[RmtResourceGetUsageType(resource)] -= resource->size_in_bytes;
 
     const int64_t hashed_identifier = GenerateResourceHandle(resource->identifier);
 
@@ -547,7 +570,8 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
                                        void*                           buffer,
                                        size_t                          buffer_size,
                                        const RmtVirtualAllocationList* virtual_allocation_list,
-                                       int32_t                         maximum_concurrent_resources)
+                                       int32_t                         maximum_concurrent_resources,
+                                       bool                            enable_aliased_resource_usage_sizes)
 {
     RMT_ASSERT(resource_list);
     RMT_RETURN_ON_ERROR(resource_list, kRmtErrorInvalidPointer);
@@ -556,10 +580,11 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
     RMT_RETURN_ON_ERROR(RmtResourceListGetBufferSize(maximum_concurrent_resources) <= buffer_size, kRmtErrorInvalidSize);
 
     // initialize the resource storage
-    resource_list->resources                    = (RmtResource*)buffer;
-    resource_list->resource_count               = 0;
-    resource_list->virtual_allocation_list      = virtual_allocation_list;
-    resource_list->maximum_concurrent_resources = maximum_concurrent_resources;
+    resource_list->resources                           = (RmtResource*)buffer;
+    resource_list->resource_count                      = 0;
+    resource_list->virtual_allocation_list             = virtual_allocation_list;
+    resource_list->maximum_concurrent_resources        = maximum_concurrent_resources;
+    resource_list->enable_aliased_resource_usage_sizes = enable_aliased_resource_usage_sizes;
 
     // initialize the acceleration structure.
     const uintptr_t resource_node_buffer      = ((uintptr_t)buffer) + (maximum_concurrent_resources * sizeof(RmtResource));
@@ -573,6 +598,7 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
 
     memset(resource_list->resource_usage_count, 0, sizeof(resource_list->resource_usage_count));
     memset(resource_list->resource_usage_size, 0, sizeof(resource_list->resource_usage_size));
+    memset(resource_list->total_resource_usage_aliased_size, 0, sizeof(resource_list->total_resource_usage_aliased_size));
 
     return kRmtOk;
 }
@@ -783,8 +809,10 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
     resource->size_in_bytes = resource_bind->size_in_bytes;
 
     // find the bound allocation
-    const RmtErrorCode error_code =
-        RmtVirtualAllocationListGetAllocationForAddress(resource_list->virtual_allocation_list, resource_bind->virtual_address, &resource->bound_allocation);
+    const RmtVirtualAllocation* allocation = nullptr;
+    const RmtErrorCode          error_code =
+        RmtVirtualAllocationListGetAllocationForAddress(resource_list->virtual_allocation_list, resource_bind->virtual_address, &allocation);
+    resource->bound_allocation = allocation;
 
     // look for externally shared resources.
     if ((error_code == kRmtErrorNoAllocationFound) && (resource->resource_type == kRmtResourceTypeImage) &&
@@ -798,6 +826,8 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
 
     // only external shared can fail to find the allocation.
     RMT_ASSERT(error_code == kRmtOk);
+
+    RmtResourceUsageType usage_type = RmtResourceGetUsageType(resource);
 
     // Count the resources on each allocation. We fill in pointers later
     // when we do the fix up pass in snapshot generation.
@@ -814,10 +844,31 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
 
         // update the commit type of the allocation
         UpdateCommitType(resource_list, resource);
+
+        if ((resource_list->enable_aliased_resource_usage_sizes) && (usage_type != RmtResourceUsageType::kRmtResourceUsageTypeHeap))
+        {
+            RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
+            RMT_ASSERT(memory_aliasing_calculator);
+            Allocation* aliased_resource_allocation = memory_aliasing_calculator->FindAllocation(resource->bound_allocation->allocation_identifier);
+            if (aliased_resource_allocation != nullptr)
+            {
+                aliased_resource_allocation->CreateResource(
+                    resource->address - resource->bound_allocation->base_address, resource->size_in_bytes, RmtResourceGetUsageType(resource));
+
+                SizePerResourceUsageType sizes_per_resource_type;
+                SizeType                 unbound_size;
+                memory_aliasing_calculator->CalculateSizes(sizes_per_resource_type, unbound_size);
+                for (int usage_index = 0; usage_index < RmtResourceUsageType::kRmtResourceUsageTypeCount; usage_index++)
+                {
+                    resource_list->total_resource_usage_aliased_size[usage_index] = sizes_per_resource_type.size_[usage_index];
+                }
+                resource_list->total_resource_usage_aliased_size[kRmtResourceUsageTypeFree] = unbound_size;
+            }
+        }
     }
 
     // track the bytes bound
-    resource_list->resource_usage_size[RmtResourceGetUsageType(resource)] += resource->size_in_bytes;
+    resource_list->resource_usage_size[usage_type] += resource->size_in_bytes;
 
     return kRmtOk;
 }
@@ -875,7 +926,7 @@ bool RmtResourceIsAliased(const RmtResource* resource)
     const RmtVirtualAllocation* virtual_allocation     = resource->bound_allocation;
     const RmtGpuAddress         resource_start_address = resource->address;
     const RmtGpuAddress         resource_end_address   = resource->address + resource->size_in_bytes;
-    bool is_aliased = false;
+    bool                        is_aliased             = false;
 
     for (int32_t current_resource_index = 0; current_resource_index < virtual_allocation->resource_count; ++current_resource_index)
     {

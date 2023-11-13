@@ -56,7 +56,7 @@ RmtErrorCode RmtTraceLoaderTraceLoad(const char* trace_file_name)
     }
 
     // Create the default timeline for the data set.
-    error_code = RmtDataSetGenerateTimeline(&data_set_, kRmtDataTimelineTypeResourceUsageVirtualSize, &timeline_);
+    error_code = RmtDataSetGenerateTimeline(&data_set_, kRmtDataTimelineTypeCommitted, &timeline_);
     return error_code;
 }
 

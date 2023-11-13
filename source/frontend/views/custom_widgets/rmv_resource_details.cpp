@@ -102,7 +102,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
         if (RmtResourceGetAliasCount(&config_.resource) > 0)
         {
             x_pos += ScalingManager::Get().Scaled(100);
-            painter->drawText(x_pos, header_height, "Aliased size");
+            painter->drawText(x_pos, header_height, "Size after aliasing");
             painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValueMemory(config_.resource.adjusted_size_in_bytes, false, false));
         }
 

@@ -29,7 +29,7 @@ namespace rmv
 
     public:
         /// @brief Constructor.
-        BackgroundTask();
+        BackgroundTask(const bool can_cancel);
 
         /// @brief Destructor.
         virtual ~BackgroundTask();
@@ -42,9 +42,20 @@ namespace rmv
         /// Calls the derived ThreadFunc() and cleans up afterwards.
         void Start();
 
+        /// @brief Indicates whether or no the background task can be cancelled.
+        ///
+        /// @return true if the background task can be cancelled, otherwise returns false.
+        bool CanCancel() const;
+
+        /// @brief Request the background thread to be cancelled.
+        virtual void Cancel();
+
     signals:
         /// @brief Indicate that initial processing of the pane has completed.
         void WorkerFinished();
+
+    private:
+        bool can_cancel_;  ///< A flag that indicates, if true, that the background task can be cancelled.
     };
 
     class ThreadController : public QObject
@@ -74,6 +85,13 @@ namespace rmv
     signals:
         /// @brief Indicate that the worker thread has finished.
         void ThreadFinished();
+
+        /// @brief Indicates that the worker thread has been cancelled.
+        void ThreadCancelled();
+
+    private slots:
+        /// @brief A slot that handles cancelling of the background task.
+        void Cancelled();
 
     private:
         QThread*        thread_;           ///< The worker thread.

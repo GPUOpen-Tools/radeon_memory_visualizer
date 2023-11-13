@@ -7,7 +7,7 @@ project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 7)
+set(RMV_MINOR_VERSION 8)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -32,14 +32,14 @@ option(RDF_STATIC              "Build RDF as a static library" ON)
 ## For RMV we only care about the Debug and Release configuration types
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
-## Determine build suffixes based on configuration, bitness and internal status
+## Determine build suffixes based on configuration and bitness
 ## These values will be inherited by all child projects
 set(ADT_PLATFORM_POSTFIX "-x86")
 IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(ADT_PLATFORM_POSTFIX "-x64")
 ENDIF()
 
-# As default for RMV, include the debug & internal status in filename - but not the platform bitness
+# As default for RMV, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX)
 
@@ -63,11 +63,10 @@ include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
 
 # Global compiler options
 IF(WIN32)
-    add_compile_options(/MP)
     # bump the stack size
     add_link_options(/STACK:16777216)
 ELSEIF(UNIX)
-    add_compile_options(-D_LINUX -mno-avx2)
+    add_compile_options(-mno-avx2)
     # Allow executable to be double clicked.
     add_link_options(-no-pie)
     # Use _DEBUG on Unix for Debug Builds (defined automatically on Windows)
@@ -100,9 +99,6 @@ MACRO(SOURCE_GROUP_BY_FOLDER target)
         SOURCE_GROUP("${last_dir}" FILES ${files})
     ENDIF (files)
 ENDMACRO(SOURCE_GROUP_BY_FOLDER)
-
-# Define C++ standard for RMV
-set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(external/qt_common qt_common)
 add_subdirectory(external/rdf/imported/zstd)

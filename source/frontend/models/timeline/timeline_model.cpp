@@ -39,7 +39,7 @@ namespace rmv
         /// @param [in] model         The model containing the timeline data to work with.
         /// @param [in] timeline_type The type of timeline being generated.
         explicit TimelineWorker(rmv::TimelineModel* model, RmtDataTimelineType timeline_type)
-            : BackgroundTask()
+            : BackgroundTask(timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageVirtualSize)
             , model_(model)
             , timeline_type_(timeline_type)
         {
@@ -54,6 +54,11 @@ namespace rmv
         virtual void ThreadFunc()
         {
             model_->GenerateTimeline(timeline_type_);
+        }
+
+        virtual void Cancel()
+        {
+            model_->CancelBackgroundTask();
         }
 
     private:
@@ -257,6 +262,22 @@ namespace rmv
         }
     }
 
+    void TimelineModel::CancelBackgroundTask()
+    {
+        TraceManager& trace_manager = TraceManager::Get();
+        RmtDataSet*   data_set      = trace_manager.GetDataSet();
+        RMT_ASSERT(data_set != nullptr);
+        RmtDataSetCancelBackgroundTask(data_set);
+    }
+
+    bool TimelineModel::IsBackgroundTaskCancelled() const
+    {
+        TraceManager& trace_manager = TraceManager::Get();
+        RmtDataSet*   data_set      = trace_manager.GetDataSet();
+        RMT_ASSERT(data_set != nullptr);
+        return RmtDataSetIsBackgroundTaskCancelled(data_set);
+    }
+
     void TimelineModel::UpdateMemoryGraph(uint64_t min_visible, uint64_t max_visible)
     {
         min_visible_ = min_visible;
@@ -403,7 +424,7 @@ namespace rmv
         return true;
     }
 
-    bool TimelineModel::GetHistogramData(int bucket_group_index, int bucket_index, qreal& out_y_pos, qreal& out_height)
+    bool TimelineModel::GetHistogramData(int bucket_group_index, int bucket_index, const int bucket_count, qreal& out_y_pos, qreal& out_height)
     {
         if (bucket_index < kNumBuckets)
         {
@@ -415,11 +436,25 @@ namespace rmv
             // need to be taken into account and used as an offset for the current bucket.
             out_y_pos             = 0.0;
             qreal histogram_value = 0.0;
-            for (int i = 0; i <= bucket_group_index; i++)
+
+            if (timeline->timeline_type == kRmtDataTimelineTypeResourceUsageVirtualSize)
             {
-                histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
-                histogram_value /= timeline->maximum_value_in_all_series;
-                out_y_pos += histogram_value;
+                // For the Resource Usage Size timeline view, reverse the order of the items in the stacked graph.
+                for (int i = bucket_count; i >= bucket_group_index; i--)
+                {
+                    histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
+                    histogram_value /= timeline->maximum_value_in_all_series;
+                    out_y_pos += histogram_value;
+                }
+            }
+            else
+            {
+                for (int i = 0; i <= bucket_group_index; i++)
+                {
+                    histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
+                    histogram_value /= timeline->maximum_value_in_all_series;
+                    out_y_pos += histogram_value;
+                }
             }
 
             // Height is just the data for this particular sub-bucket.

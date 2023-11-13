@@ -6,17 +6,8 @@ add_definitions(-DRDF_CXX_BINDINGS)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../parser)
 
-IF(WIN32)
-    # Warnings as errors for Windows
-    add_compile_options(/W4 /WX)
-ELSEIF(UNIX)
-    # Remove warnings for Linux in backend
-    add_compile_options(-D_LINUX -Wall -Wextra -Werror)
-ENDIF(WIN32)
-
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
-
 set( SOURCES
     "rmt_address_helper.cpp"
     "rmt_address_helper.h"
@@ -77,3 +68,4 @@ foreach(source IN LISTS SOURCES)
 endforeach()
 ENDIF(WIN32)
 
+devtools_target_options(${PROJECT_NAME})

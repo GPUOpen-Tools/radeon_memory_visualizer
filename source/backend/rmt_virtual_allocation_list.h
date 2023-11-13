@@ -66,6 +66,7 @@ typedef struct RmtVirtualAllocation
         unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing the unbound memory inside this virtual allocation.
     int32_t  unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
     uint64_t allocation_identifier;        ///< Uniquely identifies this virtual memory allocation.
+    uint64_t resource_usage_aliased_size[kRmtResourceUsageTypeCount];  ///< Aliased resource usage sizes for resource bound to this allocation.
 
 } RmtVirtualAllocation;
 

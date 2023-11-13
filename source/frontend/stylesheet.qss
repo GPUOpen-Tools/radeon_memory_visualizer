@@ -32,6 +32,11 @@ FileLoadingWidget
     color: gray;
 }
 
+QPushButton#cancel_button
+{
+    font: bold 14pt;
+}
+
 RecentTraceMiniWidget
 {
     font-size: 9.75pt;

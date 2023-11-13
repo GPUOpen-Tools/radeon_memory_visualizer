@@ -107,7 +107,7 @@ namespace rmv
 
             if (RmtResourceGetAliasCount(resource) > 0)
             {
-                text_string += "\nAliased size: " + rmv::string_util::LocalizedValueMemory(resource->adjusted_size_in_bytes, false, false);
+                text_string += "\nSize after aliasing: " + rmv::string_util::LocalizedValueMemory(resource->adjusted_size_in_bytes, false, false);
             }
 
             const uint64_t offset = RmtResourceGetOffsetFromBoundAllocation(resource);

@@ -116,10 +116,12 @@ namespace rmv
         ///
         /// @param [in]  bucket_group_index The sub-bucket index.
         /// @param [in]  bucket_index       The bucket index.
+        /// @param [in]  bucket_count       The total number of buckets.
         /// @param [out] out_y_pos          The y position offset for this bucket and sub-bucket.
         /// @param [out] out_height         The height for this bucket and sub-bucket.
+        ///
         /// @return true if bucket/sub-bucket is valid, false if not.
-        bool GetHistogramData(int bucket_group_index, int bucket_index, qreal& out_y_pos, qreal& out_height);
+        bool GetHistogramData(int bucket_group_index, int bucket_index, const int bucket_count, qreal& out_y_pos, qreal& out_height);
 
         /// @brief Get the number of buckets.
         ///
@@ -168,6 +170,14 @@ namespace rmv
         ///
         /// @return A pointer to the worker thread object.
         BackgroundTask* CreateWorkerThread(RmtDataTimelineType timeline_type);
+
+        /// @brief Flag that indicates the background task should be cancelled.
+        void CancelBackgroundTask();
+
+        /// @brief Check to see if the flag to cancel background task has been set.
+        ///
+        /// @return true if the background task should be cancelled, otherwise false.
+        bool IsBackgroundTaskCancelled() const;
 
     private slots:
         /// @brief Handle what happens when the model data changes.

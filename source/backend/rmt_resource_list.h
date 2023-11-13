@@ -50,11 +50,11 @@ typedef struct RmtResource
     uint64_t              address;        ///< The virtual address of the resource.
     uint64_t              size_in_bytes;  ///< The total size of the resource.
     const RmtVirtualAllocation*
-                    bound_allocation;  ///< An pointers to a <c><i>RmtAllocation</i></c> structure containing the virtual address allocation containing this resource. This is set to NULL if the resource isn't bound to a virtual address.
-    uint32_t        flags;             ///< Flags on the resource.
-    RmtCommitType   commit_type;       ///< The commit type of the resource.
-    RmtResourceType resource_type;     ///< The type of the resource.
-    RmtOwnerType    owner_type;        ///< The owner of the resource.
+        bound_allocation;  ///< An pointers to a <c><i>RmtAllocation</i></c> structure containing the virtual address allocation containing this resource. This is set to NULL if the resource isn't bound to a virtual address.
+    uint32_t        flags;          ///< Flags on the resource.
+    RmtCommitType   commit_type;    ///< The commit type of the resource.
+    RmtResourceType resource_type;  ///< The type of the resource.
+    RmtOwnerType    owner_type;     ///< The owner of the resource.
 
     union
     {
@@ -173,6 +173,8 @@ typedef struct RmtResourceList
 
     int32_t  resource_usage_count[kRmtResourceUsageTypeCount];  ///< The number of each resource usage currently in the list.
     uint64_t resource_usage_size[kRmtResourceUsageTypeCount];
+    uint64_t total_resource_usage_aliased_size[kRmtResourceUsageTypeCount];  ///< Resource usage sizes for all resources in the list.
+    bool     enable_aliased_resource_usage_sizes;  ///< A flag used to indicate that, if true, aliased usage sizes are being calculated.
 
 } RmtResourceList;
 
@@ -191,6 +193,7 @@ size_t RmtResourceListGetBufferSize(int32_t maximum_concurrent_resources);
 /// @param [in] buffer_size                         The buffer size, in bytes.
 /// @param [in] virtual_allocation_list             A pointer to a <c><i>RmtVirtualAllocationList</i></c> structure.
 /// @param [in] maximum_concurrent_resources        The maximum number of resources that can be in flight at once.
+/// @param [in] enable_aliased_resource_sizing      A flag that indicates, if true, that aliased resource usage sizes are to be calculated.
 ///
 /// @retval
 /// kRmtOk                          The operation completed successfully.
@@ -202,7 +205,8 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
                                        void*                           buffer,
                                        size_t                          buffer_size,
                                        const RmtVirtualAllocationList* virtual_allocation_list,
-                                       int32_t                         maximum_concurrent_resources);
+                                       int32_t                         maximum_concurrent_resources,
+                                       const bool                      enable_aliased_resource_sizing);
 
 /// Add a resource create to the list.
 ///

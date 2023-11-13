@@ -32,7 +32,7 @@ namespace rmv
     public:
         /// @brief Constructor.
         ResourceWorker(rmv::ResourceDetailsModel* model, RmtResourceIdentifier resource_identifier)
-            : BackgroundTask()
+            : BackgroundTask(false)
             , model_(model)
             , resource_identifier_(resource_identifier)
         {

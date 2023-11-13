@@ -359,7 +359,8 @@ namespace rmv
 
         case kColorModeResourceUsageType:
         {
-            for (int32_t index = 0; index < kRmtResourceUsageTypeCount; ++index)
+            // Note: Usage types on the legend are drawn in reverse order so that highest aliased priority usage are on the left, lowest on the right.
+            for (int32_t index = kRmtResourceUsageTypeCount - 1; index > -1; --index)
             {
                 if (index != kRmtResourceUsageTypeUnknown)
                 {
