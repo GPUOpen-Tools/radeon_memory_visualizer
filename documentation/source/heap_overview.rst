@@ -35,23 +35,20 @@ mean the application gets it. If the application requests too much memory,
 a warning message is displayed. The bar is also color coded to show whether
 the memory type is oversubscribed or is close to being oversubscribed.
 
-The 'total size' bar shows the total amount of physical memory in the heap.
+The **"Total size"** bar shows the total amount of physical memory in the heap.
 
-The "Requested" bar shows how much memory the application has requested. This
+The **"Requested"** bar shows how much memory the application has requested. This
 should give an indication of the memory footprint of the application.
+Memory is requested when allocations are made e.g. by creating ``ID3D12Heap`` (D3D12)
+or ``VkDeviceMemory`` (Vulkan).
 Memory requests typically request virtual memory under the hood and it is up
 to the driver to make sure that virtual memory is mapped to physical memory
 when and where appropriate.
+An allocation may not appear in RMV until a first resource is placed in it.
 
-The "Bound" bar shows how much memory has been bound to resources. If there is
+The **"Bound"** bar shows how much memory has been bound to resources, e.g. buffers or textures (images). If there is
 substantially more requested memory than bound memory, it may indicate that
 memory has been requested but is not actually being used by the application.
-
-The "Committed" bar shows how much memory has been mapped to physical memory.
-If the amount of committed memory is substantially less than the amount of
-memory requested, it may indicate that there are other tasks running on the
-system that are consuming memory or the application itself is using more
-memory than is physically available.
 
 The middle column shows a series of statistics for the heap memory type, such
 as where the memory resides (in system or video memory), whether it is mapped
@@ -61,3 +58,4 @@ The right column shows the makeup of the resource types in each of the heaps.
 From this, it can be determined if certain resource types are in the optimum
 memory type for the particular resource (maybe there's a render target in system
 memory when ideally it should be in local memory).
+

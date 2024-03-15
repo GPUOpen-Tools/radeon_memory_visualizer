@@ -31,19 +31,17 @@ Timeline graph
 --------------
 The **Timeline graph** displays a visual representation of memory related events
 contained in the trace that occurred over a period of time along the horizontal axis.
-There are four viewing modes:
+There are three viewing modes:
 
-1. Committed (the default view)
+1. Virtual memory heap
 
 2. Resource usage count
 
-3. Virtual memory heap
-
-4. Resource usage size
+3. Resource usage size
 
 The viewing mode can be changed by selecting from the combo box above the top-left
 of the timeline. Note that with previous releases of RMV, the default Timeline view was
-"Resource usage size." The default mode is now "Committed."
+"Resource usage size." The default mode is now "Virtual memory heap."
 
 A color legend below the timeline will indicate what resources are represented by the
 colors in the timeline.
@@ -51,7 +49,7 @@ colors in the timeline.
 When the mouse is over the timeline, the tooltip help will show information
 about the memory allocated at the time corresponding to the mouse position. The
 time can be seen from the ruler above the graph. The most abundant resources
-are listed and the rest are combined in the last entry as "Other".
+are listed and the rest are combined in the last entry as "Other."
 
 Starting with release 1.8, RMV takes overlapping resources (i.e., aliased
 resources) into account when calculating usage type sizes on the timeline. When
@@ -59,7 +57,7 @@ RMV detects multiple resources that are bound to sections of virtual memory that
 overlap, the usage size is attributed to the resource with the highest importance.
 This is reflected in the height of bars on the "Resource usage size" timeline and
 also, the values displayed on the tooltip when the mouse hovers over a point on
-the timeline graph. The priority of resource importance's matches the order of
+the timeline graph. The priority of resource importance's matches the order of 
 resource types displayed on the legend below the "Resource usage size" timeline
 graph. Resource types towards the left side of the legend have higher priority
 and those towards the right have lower priority. In past releases of RMV, the
@@ -183,3 +181,4 @@ memory trace was taken, showing such things as the name of the video card and
 the memory bandwidth.
 
 .. image:: media/device_config_1.png
+

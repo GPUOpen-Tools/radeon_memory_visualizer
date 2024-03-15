@@ -30,3 +30,4 @@ cycles, milliseconds, seconds or minutes very quickly.
 .. image:: media/settings/keyboard_shortcuts_1.png
 
 All users are encouraged to adopt these keystrokes while using RMV.
+

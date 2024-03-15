@@ -32,3 +32,4 @@ Mousing over a memory size cell in the table will display a tooltip showing the
 exact number of bytes.
 
 .. image:: media/snapshot/resource_list_1.png
+

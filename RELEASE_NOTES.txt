@@ -1,11 +1,15 @@
-Radeon™ Memory Visualizer V1.8 12/07/2023
+Radeon™ Memory Visualizer V1.9 04/24/2024
 -----------------------------------------
 
-V1.8 Changes
+V1.9 Changes
 ------------------------------------
-1) The Resource usage size timeline calculations take resource aliasing into account.
-2) Unbound memory sizes are included on the Resource usage size timeline.
-3) Bug/stability fixes.
+1) Improved resource list sorting.
+2) Implicit resource detection for heap resources.
+3) Conversion of heaps to resource buffers disabled if implicit heap detection is available.
+4) Improved "Filter by size" sliders shown with min and max values.
+5) Named virtual allocations.
+6) The default timeline has been changed to "Virtual memory heap" and the "Committed memory" timeline view has been removed.
+7) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -24,6 +28,12 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.8 Changes
+------------------------------------
+1) The Resource usage size timeline calculations take resource aliasing into account.
+2) Unbound memory sizes are included on the Resource usage size timeline.
+3) Bug/stability fixes.
 
 V1.7 Changes
 ------------------------------------

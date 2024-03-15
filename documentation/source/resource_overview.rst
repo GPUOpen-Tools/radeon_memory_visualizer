@@ -25,9 +25,19 @@ include in the resource view according to which heap was the preferred container
 for the resource at the time the resource was created. You can do this by
 checking one or more heaps you wish to include resources from.
 
-The resource usage drop down allows selection of resources according to their
-usage type. Again, this is achieved by checking one or more resource types. For
-example, unbound resources are not shown by default but this can be changed.
+The resource usage drop down allows filtering of resources according to their
+usage type. Again, this is achieved by checking or unchecking one or more
+resource types. For example, unchecking the Buffer checkbox will hide buffer
+resources from the diagram.
+
+In addition to the resource usage types, this drop down combo box also includes
+Heap and Unbound checkboxes to show heaps or unbound memory regions on the diagram.
+The Heap checkbox selection is mutually exclusive with the resource usage type
+checkboxes. The diagram can show either heaps or resource usage types. Note that
+the size of heap blocks displayed in the Resource overview diagram are calculated
+based on the total actual size. Overlapped resources are not taken into account
+when calculating the heap block size. DX12 heaps created implicitly for committed
+resources are not shown in this mode.
 
 These combo boxes appear on several of the UI's and they are all independent
 ie changing heap types on one pane won't affect the heap types on the other
@@ -84,8 +94,8 @@ resource blocks are displayed on the Resource overview pane and size of the bloc
 relative to other resources.  When there is an overlap with one or more resources,
 the overlapped portion of the resource with the highest priority is displayed.
 The priority is based on three factors. The first being the resource usage type
-in the order of importance listed in the resource type legend (the rightmost type
-is the highest priority and the leftmost is the lowest priority).  If overlapping
+in the order of importance listed in the resource type legend (the leftmost type
+is the highest priority and the rightmost is the lowest priority).  If overlapping
 resources have the same usage type, they are then compared by size.  The smallest
 sized resource has the highest priority.  If the size of the resources is also
 the same, the value of the resource identifier is used to make the final decision.
@@ -103,4 +113,5 @@ on the Resource overview pane.
 Note that the sum of the aliased resource sizes (2 KiB, 3 Kib 1 KiB and 2 KiB)
 total 8 KiB plus the non-aliased resource size of 2 KiB adds up to match the
 reported Total allocated and bound size.
+
 

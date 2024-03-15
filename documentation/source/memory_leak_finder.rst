@@ -17,3 +17,4 @@ allow the snapshot to be viewed in the SNAPSHOT tab. If a resource is common to
 both snapshots, the base snapshot will be used.
 
 .. image:: media/compare/memory_leak_finder_1.png
+

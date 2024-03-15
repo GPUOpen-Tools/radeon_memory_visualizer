@@ -30,3 +30,4 @@ The table under the allocation display shows a list of all the resources in the
 chosen allocation. These resources can be filtered using the search box text
 filter and also by size using the "**Filter by size**" slider on the right.
 Double-clicking on a resource will navigate to the **Resource details** pane.
+

@@ -48,3 +48,4 @@ box. This way, allocations can be filtered by size, heap type or number of
 resources.
 
 Double-clicking on a resource will jump to the **Allocation explorer**.
+

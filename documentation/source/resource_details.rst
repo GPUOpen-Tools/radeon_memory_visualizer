@@ -31,3 +31,4 @@ made resident at some point and then paged out).
 Not all events have all the parameters listed in the table. In this case, the
 entry will be marked as 'n/a' - not applicable. For example, the physical memory
 address isn't applicable for a virtual allocation event.
+

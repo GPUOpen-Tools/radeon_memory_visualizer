@@ -16,6 +16,10 @@ The **Committed memory** shows the amount of memory that this application has
 committed to physical memory for each of the heap types. Ideally, all memory
 that the application has requested should be in physical memory.
 
+Note that the amount of committed memory displayed across different tabs of RMV is calculated
+based on low-level data from the graphics driver and may not directly correspond to memory allocations/deallocations
+made using the graphics API.
+
 .. image:: media/snapshot/carousel_committed_memory.png
 
 The **Requested virtual memory** shows which memory was requested from which heap.
@@ -39,3 +43,4 @@ memory, this will be seen in the *Allocation overview* pane for each allocation.
 
 The carousel is also shown in the **Snapshot delta** pane but here it shows the
 differences between the 2 selected snapshots.
+

@@ -14,3 +14,4 @@ tab can be used to switch the snapshots.
 
 .. image:: media/compare/snapshot_delta_1.png
 
+

@@ -50,8 +50,8 @@ How to load a trace
 
 There are a few ways to load a trace into RMV.
 
-1) Use the “File/Open trace” pull down menu, or the “File/Recent
-   trace” pull down menu item.
+1) Use the "File/Open trace" pull down menu, or the "File/Recent
+   trace" pull down menu item.
    
   Note that RMV is also capable of loading Radeon GPU Detective (.rgd) files.
   In order to view .rgd file names in the File open dialog box, be sure to select
@@ -61,10 +61,10 @@ There are a few ways to load a trace into RMV.
 
 .. image:: media/open_file_rgd.png
 
-2) Go to the “Welcome” view and click on the “Open a Radeon Memory
-   trace…”
+2) Go to the "Welcome" view and click on the "Open a Radeon Memory
+   trace…"
 
-3) Go to the “Welcome” view and click on a trace that you have
+3) Go to the "Welcome" view and click on a trace that you have
    previously loaded in the Recent list.
 
 .. image:: media/welcome_1.png
@@ -210,13 +210,20 @@ specifically the section "Naming Objects"
 DirectX 12 resource naming
 --------------------------
 Memory traces for DirectX applications captured with the Radeon Developer Panel
-can include unique names for image-based resources.  Names can be assigned to
-DirectX resources using the ID3D12Object::SetName() method.  Calling the SetName()
-method results in ETW (Event Tracing for Windows) events being emitted and picked
-up by the Panel.  This resource naming information is then included in the RMV trace
-file.
-
+can include unique names for resources like heaps, buffers and textures.  Names can be assigned to
+DirectX resources using the ``ID3D12Object::SetName()`` method.
 For more information, please review the Microsoft DirectX 12 documentation.
+
+Calling the ``SetName()``
+method results in ETW (Event Tracing for Windows) events being emitted and picked
+up by the Panel. This resource naming information is then included in the RMV trace
+file.
+Due to the asynchronous nature of the event tracing, memory events that happen a short time before the process exit
+may show up incorrectly in RMV in terms of naming, as well as
+marking and filtering out implicit heaps (created for committed resources)
+and implicit buffers (that D3D12 runtime creates automatically for every explicitly created heap).
+To overcome this problem, it is recommended to introduce a delay of few seconds
+between memory events of interest and the process exit.
 
 Viewing resource names
 ----------------------
@@ -251,4 +258,5 @@ Microsoft is a registered trademark of Microsoft Corporation in the US and other
 Windows is a registered trademark of Microsoft Corporation in the US and other jurisdictions.
 
 
-© 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+© 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+
