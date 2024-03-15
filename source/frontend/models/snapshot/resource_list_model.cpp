@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for Resource List model.
@@ -11,6 +11,7 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 #include "rmt_util.h"
+#include "util/rmv_util.h"
 #include "rmt_virtual_allocation_list.h"
 
 #include "managers/trace_manager.h"
@@ -124,9 +125,8 @@ namespace rmv
 
     void ResourceListModel::FilterBySizeChanged(int min_value, int max_value)
     {
-        const SnapshotManager& snapshot_manager = SnapshotManager::Get();
-        const uint64_t         scaled_min       = snapshot_manager.GetSizeFilterThreshold(min_value);
-        const uint64_t         scaled_max       = snapshot_manager.GetSizeFilterThreshold(max_value);
+        const uint64_t scaled_min = rmv_util::CalculateSizeThresholdFromStepValue(min_value, rmv::kSizeSliderRange - 1);
+        const uint64_t scaled_max = rmv_util::CalculateSizeThresholdFromStepValue(max_value, rmv::kSizeSliderRange - 1);
 
         proxy_model_->SetSizeFilter(scaled_min, scaled_max);
         proxy_model_->invalidate();

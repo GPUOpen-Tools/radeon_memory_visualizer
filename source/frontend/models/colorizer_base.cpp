@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the colorizer base class.
@@ -115,17 +115,8 @@ namespace rmv
         case kRmtResourceUsageTypeTexture:
             out = rmv::RMVSettings::Get().GetColorResourceTexture();
             break;
-        case kRmtResourceUsageTypeVertexBuffer:
-            out = rmv::RMVSettings::Get().GetColorResourceVertexBuffer();
-            break;
-        case kRmtResourceUsageTypeIndexBuffer:
-            out = rmv::RMVSettings::Get().GetColorResourceIndexBuffer();
-            break;
         case kRmtResourceUsageTypeRayTracingBuffer:
             out = rmv::RMVSettings::Get().GetColorResourceRayTracingBuffer();
-            break;
-        case kRmtResourceUsageTypeUav:
-            out = rmv::RMVSettings::Get().GetColorResourceUAV();
             break;
         case kRmtResourceUsageTypeShaderPipeline:
             out = rmv::RMVSettings::Get().GetColorResourceShaderPipeline();
@@ -351,9 +342,9 @@ namespace rmv
         {
         case kColorModePreferredHeap:
         case kColorModeActualHeap:
+            legends_scene->AddColorLegendItem(rmv::RMVSettings::Get().GetColorHeapSystem(), RmtGetHeapTypeNameFromHeapType(kRmtHeapTypeSystem));
             legends_scene->AddColorLegendItem(rmv::RMVSettings::Get().GetColorHeapLocal(), RmtGetHeapTypeNameFromHeapType(kRmtHeapTypeLocal));
             legends_scene->AddColorLegendItem(rmv::RMVSettings::Get().GetColorHeapInvisible(), RmtGetHeapTypeNameFromHeapType(kRmtHeapTypeInvisible));
-            legends_scene->AddColorLegendItem(rmv::RMVSettings::Get().GetColorHeapSystem(), RmtGetHeapTypeNameFromHeapType(kRmtHeapTypeSystem));
             legends_scene->AddColorLegendItem(rmv::RMVSettings::Get().GetColorHeapUnspecified(), RmtGetHeapTypeNameFromHeapType(kRmtHeapTypeNone));
             break;
 

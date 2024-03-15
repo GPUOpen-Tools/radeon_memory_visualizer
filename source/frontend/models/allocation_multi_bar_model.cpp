@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the allocation multi bar model class.
@@ -19,6 +19,7 @@
 
 #include "managers/trace_manager.h"
 #include "models/snapshot/allocation_overview_model.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -55,50 +56,62 @@ namespace rmv
         /// @param [in] virtual_allocation_b Pointer to second RmtVirtualAllocation to compare.
         bool operator()(const RmtVirtualAllocation* virtual_allocation_a, const RmtVirtualAllocation* virtual_allocation_b) const
         {
-            uint64_t value_a = 0;
-            uint64_t value_b = 0;
-
-            // Decide which sort mode to use and calculate the comparison arguments.
-            switch (sort_mode_)
+            if (sort_mode_ == AllocationOverviewModel::kSortModeAllocationID)
             {
-            case AllocationOverviewModel::kSortModeAllocationID:
-                value_a = virtual_allocation_a->guid;
-                value_b = virtual_allocation_b->guid;
-                break;
+                const QString value_a = rmv_util::GetVirtualAllocationName(virtual_allocation_a);
+                const QString value_b = rmv_util::GetVirtualAllocationName(virtual_allocation_b);
 
-            case AllocationOverviewModel::kSortModeAllocationSize:
-                value_a = RmtVirtualAllocationGetSizeInBytes(virtual_allocation_a);
-                value_b = RmtVirtualAllocationGetSizeInBytes(virtual_allocation_b);
-                break;
+                
+                // Decide on whether ascending or descending sort is required and return the appropriate result.
+                if (ascending_)
+                {
+                    return value_a.compare(value_b, Qt::CaseInsensitive) < 0;
+                }
 
-            case AllocationOverviewModel::kSortModeAllocationAge:
-                value_a = virtual_allocation_a->timestamp;
-                value_b = virtual_allocation_b->timestamp;
-                break;
-
-            case AllocationOverviewModel::kSortModeResourceCount:
-                value_a = virtual_allocation_a->resource_count;
-                value_b = virtual_allocation_b->resource_count;
-                break;
-
-            case AllocationOverviewModel::kSortModeFragmentationScore:
-                value_a = RmtVirtualAllocationGetFragmentationQuotient(virtual_allocation_a);
-                value_b = RmtVirtualAllocationGetFragmentationQuotient(virtual_allocation_b);
-                break;
-
-            default:
-                // Should not get here.
-                RMT_ASSERT_MESSAGE(false, "Allocation overview pane: Invalid sort mode.");
-                break;
+                return value_a.compare(value_b, Qt::CaseInsensitive) > 0;
             }
-
-            // Decide on whether ascending or descending sort is required and return the appropriate result.
-            if (ascending_)
+            else
             {
-                return value_a < value_b;
-            }
+                uint64_t value_a = 0;
+                uint64_t value_b = 0;
 
-            return value_a > value_b;
+                // Decide which sort mode to use and calculate the comparison arguments.
+                switch (sort_mode_)
+                {
+                case AllocationOverviewModel::kSortModeAllocationSize:
+                    value_a = RmtVirtualAllocationGetSizeInBytes(virtual_allocation_a);
+                    value_b = RmtVirtualAllocationGetSizeInBytes(virtual_allocation_b);
+                    break;
+
+                case AllocationOverviewModel::kSortModeAllocationAge:
+                    value_a = virtual_allocation_a->timestamp;
+                    value_b = virtual_allocation_b->timestamp;
+                    break;
+
+                case AllocationOverviewModel::kSortModeResourceCount:
+                    value_a = virtual_allocation_a->resource_count;
+                    value_b = virtual_allocation_b->resource_count;
+                    break;
+
+                case AllocationOverviewModel::kSortModeFragmentationScore:
+                    value_a = RmtVirtualAllocationGetFragmentationQuotient(virtual_allocation_a);
+                    value_b = RmtVirtualAllocationGetFragmentationQuotient(virtual_allocation_b);
+                    break;
+
+                default:
+                    // Should not get here.
+                    RMT_ASSERT_MESSAGE(false, "Allocation overview pane: Invalid sort mode.");
+                    break;
+                }
+
+                // Decide on whether ascending or descending sort is required and return the appropriate result.
+                if (ascending_)
+                {
+                    return value_a < value_b;
+                }
+
+                return value_a > value_b;
+            }
         }
 
     private:

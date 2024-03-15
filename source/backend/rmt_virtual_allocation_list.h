@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for managing a virtual allocation list.
@@ -64,9 +64,10 @@ typedef struct RmtVirtualAllocation
     int32_t       next_resource_index;                         ///< The index of the new resource.
     RmtMemoryRegion*
         unbound_memory_regions;  ///< An array of <c><i>RmtUnboundMemoryRegion</i></c> structures representing the unbound memory inside this virtual allocation.
-    int32_t  unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
-    uint64_t allocation_identifier;        ///< Uniquely identifies this virtual memory allocation.
-    uint64_t resource_usage_aliased_size[kRmtResourceUsageTypeCount];  ///< Aliased resource usage sizes for resource bound to this allocation.
+    int32_t     unbound_memory_region_count;  ///< The number of <c><i>RmtUnboundMemoryRegion</i></c> structures inside <c><i>unboundMemoryRegions</i></c>.
+    uint64_t    allocation_identifier;        ///< Uniquely identifies this virtual memory allocation.
+    uint64_t    resource_usage_aliased_size[kRmtResourceUsageTypeCount];  ///< Aliased resource usage sizes for resource bound to this allocation.
+    const char* name;                                                     ///< Allocation name.
 
 } RmtVirtualAllocation;
 

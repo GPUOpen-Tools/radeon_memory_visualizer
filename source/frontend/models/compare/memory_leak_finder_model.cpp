@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Memory Leak Finder model.
@@ -32,10 +32,12 @@ namespace rmv
         : ModelViewMapper(kMemoryLeakFinderNumWidgets)
         , table_model_(nullptr)
         , proxy_model_(nullptr)
-        , resource_thresholds_{}
         , stats_in_both_{}
         , stats_in_base_only_{}
         , stats_in_diff_only_{}
+        , base_index_(kSnapshotCompareBase)
+        , diff_index_(kSnapshotCompareDiff)
+
     {
         ResetStats();
     }
@@ -63,8 +65,6 @@ namespace rmv
         table_model_->removeRows(0, table_model_->rowCount());
         table_model_->SetRowCount(0);
 
-        memset(resource_thresholds_, 0, sizeof(uint64_t) * (kSizeSliderRange + 1));
-
         SetModelData(kMemoryLeakFinderBaseStats, "-");
         SetModelData(kMemoryLeakFinderBothStats, "-");
         SetModelData(kMemoryLeakFinderDiffStats, "-");
@@ -76,20 +76,20 @@ namespace rmv
         SetModelData(kMemoryLeakFinderDiffSnapshot, "-");
     }
 
-    void MemoryLeakFinderModel::Update(SnapshotCompareId compare_filter)
+    bool MemoryLeakFinderModel::Update(SnapshotCompareId compare_filter)
     {
         if (!TraceManager::Get().DataSetValid())
         {
-            return;
+            return false;
         }
 
         const SnapshotManager& snapshot_manager = SnapshotManager::Get();
-        const RmtDataSnapshot* base_snapshot    = snapshot_manager.GetCompareSnapshot(kSnapshotCompareBase);
-        const RmtDataSnapshot* diff_snapshot    = snapshot_manager.GetCompareSnapshot(kSnapshotCompareDiff);
+        const RmtDataSnapshot* base_snapshot    = snapshot_manager.GetCompareSnapshot(base_index_);
+        const RmtDataSnapshot* diff_snapshot    = snapshot_manager.GetCompareSnapshot(diff_index_);
 
         if (base_snapshot == nullptr || diff_snapshot == nullptr)
         {
-            return;
+            return false;
         }
 
         RmtSnapshotPoint* base_snapshot_point = base_snapshot->snapshot_point;
@@ -97,7 +97,7 @@ namespace rmv
 
         if (base_snapshot_point == nullptr || diff_snapshot_point == nullptr)
         {
-            return;
+            return false;
         }
 
         const QString base_snapshot_name = QString(base_snapshot_point->name);
@@ -182,9 +182,18 @@ namespace rmv
         proxy_model_->UpdateCompareFilter(compare_filter);
         proxy_model_->invalidate();
 
-        UpdateResourceThresholds();
-
         UpdateLabels();
+
+        return true;
+    }
+
+    bool MemoryLeakFinderModel::SwapSnapshots(SnapshotCompareId compare_filter)
+    {
+        CompareSnapshots temp = diff_index_;
+        diff_index_           = base_index_;
+        base_index_           = temp;
+
+        return Update(compare_filter);
     }
 
     void MemoryLeakFinderModel::ResetStats()
@@ -195,26 +204,6 @@ namespace rmv
         stats_in_base_only_.size          = 0;
         stats_in_diff_only_.num_resources = 0;
         stats_in_diff_only_.size          = 0;
-    }
-
-    void MemoryLeakFinderModel::UpdateResourceThresholds()
-    {
-        uint32_t row_count = table_model_->rowCount();
-        if (row_count > 0)
-        {
-            std::vector<uint64_t> resource_sizes;
-            resource_sizes.reserve(row_count);
-
-            for (uint32_t loop = 0; loop < row_count; loop++)
-            {
-                QModelIndex model_index = table_model_->index(loop, kResourceColumnSize, QModelIndex());
-                if (model_index.isValid() == true)
-                {
-                    resource_sizes.push_back(table_model_->data(model_index, Qt::UserRole).toULongLong());
-                }
-            }
-            rmv_util::BuildResourceSizeThresholds(resource_sizes, resource_thresholds_);
-        }
     }
 
     void MemoryLeakFinderModel::UpdateLabels()
@@ -252,8 +241,8 @@ namespace rmv
 
     void MemoryLeakFinderModel::FilterBySizeChanged(int min_value, int max_value)
     {
-        const uint64_t scaled_min = resource_thresholds_[min_value];
-        const uint64_t scaled_max = resource_thresholds_[max_value];
+        const uint64_t scaled_min = rmv_util::CalculateSizeThresholdFromStepValue(min_value, rmv::kSizeSliderRange - 1);
+        const uint64_t scaled_max = rmv_util::CalculateSizeThresholdFromStepValue(max_value, rmv::kSizeSliderRange - 1);
 
         proxy_model_->SetSizeFilter(scaled_min, scaled_max);
         proxy_model_->invalidate();
@@ -287,11 +276,11 @@ namespace rmv
         // Use base snapshot if open or common to both.
         if ((compare_id & kSnapshotCompareIdOpen) != 0 || (compare_id & kSnapshotCompareIdCommon) != 0)
         {
-            snapshot = snapshot_manager.GetCompareSnapshot(kSnapshotCompareBase);
+            snapshot = snapshot_manager.GetCompareSnapshot(base_index_);
         }
         else
         {
-            snapshot = snapshot_manager.GetCompareSnapshot(kSnapshotCompareDiff);
+            snapshot = snapshot_manager.GetCompareSnapshot(diff_index_);
         }
 
         // Set up the single snapshot point for loading (if necessary).

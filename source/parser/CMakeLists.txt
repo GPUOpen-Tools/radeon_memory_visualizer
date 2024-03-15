@@ -1,3 +1,8 @@
+#######################################################################################################################
+### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+### \author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.10)
 project(RmvParser)
 
@@ -8,6 +13,7 @@ include_directories(AFTER ../parser)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 set( SOURCES
     "rmt_address_helper.cpp"
     "rmt_address_helper.h"
@@ -50,6 +56,7 @@ set( LINUX_SOURCES
     "linux/safe_crt.h"
 )
 
+
 # specify output library name
 IF(WIN32)
     add_library(${PROJECT_NAME} ${SOURCES})
@@ -69,3 +76,4 @@ endforeach()
 ENDIF(WIN32)
 
 devtools_target_options(${PROJECT_NAME})
+

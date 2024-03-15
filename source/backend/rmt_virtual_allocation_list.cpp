@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the virtual allocation list functions.
@@ -327,19 +327,19 @@ uint64_t RmtVirtualAllocationGetTotalUnboundSpaceInAllocation(const RmtDataSnaps
 uint64_t RmtVirtualAllocationGetAverageResourceSizeInBytes(const RmtDataSnapshot* snapshot, const RmtVirtualAllocation* virtual_allocation)
 {
     RMT_ASSERT(virtual_allocation);
-    if (virtual_allocation == NULL || virtual_allocation->resource_count == 0)
+    if (virtual_allocation == NULL || virtual_allocation->non_heap_resource_count == 0)
     {
         return 0;
     }
 
     const uint64_t total_resource_size = RmtVirtualAllocationGetTotalResourceMemoryInBytes(snapshot, virtual_allocation);
-    return total_resource_size / virtual_allocation->resource_count;
+    return total_resource_size / virtual_allocation->non_heap_resource_count;
 }
 
 uint64_t RmtVirtualAllocationGetResourceStandardDeviationInBytes(const RmtDataSnapshot* snapshot, const RmtVirtualAllocation* virtual_allocation)
 {
     RMT_ASSERT(virtual_allocation);
-    if (virtual_allocation == NULL || virtual_allocation->resource_count == 0)
+    if (virtual_allocation == NULL || virtual_allocation->non_heap_resource_count == 0)
     {
         return 0;
     }
@@ -348,10 +348,18 @@ uint64_t RmtVirtualAllocationGetResourceStandardDeviationInBytes(const RmtDataSn
     int64_t  avg_resource_size = RmtVirtualAllocationGetAverageResourceSizeInBytes(snapshot, virtual_allocation);
     for (int32_t current_resource_index = 0; current_resource_index < virtual_allocation->resource_count; ++current_resource_index)
     {
-        const int64_t diff = virtual_allocation->resources[current_resource_index]->size_in_bytes - avg_resource_size;
+        const RmtResource* current_resource = virtual_allocation->resources[current_resource_index];
+
+        if (current_resource->resource_type == RmtResourceType::kRmtResourceTypeHeap)
+        {
+            // Skip heaps.
+            continue;
+        }
+
+        const int64_t diff = current_resource->size_in_bytes - avg_resource_size;
         variance           = diff * diff;
     }
-    variance /= virtual_allocation->resource_count;
+    variance /= virtual_allocation->non_heap_resource_count;
 
     return (uint64_t)sqrt((double)variance);
 }
@@ -485,7 +493,7 @@ RmtErrorCode RmtVirtualAllocationListAddAllocation(RmtVirtualAllocationList* vir
     const RmtGpuAddress hashed_address = HashGpuAddress(address);
     AddAllocationToTree(virtual_allocation_list, hashed_address, size_in_4kb_pages, allocation_details);
 
-    const uint64_t size_in_bytes = (size_in_4kb_pages << 12);
+    const uint64_t size_in_bytes = (static_cast<uint64_t>(size_in_4kb_pages) << 12);
     virtual_allocation_list->total_allocated_bytes += size_in_bytes;
     virtual_allocation_list->allocations_per_preferred_heap[allocation_details->heap_preferences[0]] += size_in_bytes;
     return kRmtOk;
@@ -516,7 +524,7 @@ RmtErrorCode RmtVirtualAllocationListRemoveAllocation(RmtVirtualAllocationList* 
     current_allocation_interval->dead = 1;
     current_allocation_interval->allocation->flags |= kRmtAllocationDetailIsDead;
 
-    const uint64_t size_in_bytes = current_allocation_interval->allocation->size_in_4kb_page << 12;
+    const uint64_t size_in_bytes = static_cast<uint64_t>(current_allocation_interval->allocation->size_in_4kb_page) << 12;
     virtual_allocation_list->total_allocated_bytes -= size_in_bytes;
     virtual_allocation_list->allocations_per_preferred_heap[current_allocation_interval->allocation->heap_preferences[0]] -= size_in_bytes;
 
@@ -821,11 +829,6 @@ static RmtErrorCode TrackResourceAdd(const RmtResource* resource, std::map<uint6
 
     // Skip this resource if it isn't bound to an allocation.
     if (resource->bound_allocation == nullptr)
-    {
-        return kRmtErrorNoResourceFound;
-    }
-
-    if (RmtResourceGetUsageType(resource) == kRmtResourceUsageTypeHeap)
     {
         return kRmtErrorNoResourceFound;
     }

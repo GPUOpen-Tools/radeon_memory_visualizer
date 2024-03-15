@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes multiple columns.
@@ -53,7 +53,7 @@ namespace rmv
 
     void ResourceProxyModel::SetResourceUsageFilter(const QString& resource_usage_filter)
     {
-        resource_usage_filter_ = QRegularExpression(resource_usage_filter, QRegularExpression::CaseInsensitiveOption);
+        resource_usage_filter_ = QRegularExpression(QRegularExpression::anchoredPattern(resource_usage_filter), QRegularExpression::CaseInsensitiveOption);
     }
 
     bool ResourceProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
@@ -130,48 +130,85 @@ namespace rmv
         return true;
     }
 
+    bool ResourceProxyModel::SortIdentical(const QModelIndex& left, const QModelIndex& right) const
+    {
+        // Left and right are identical, so sort by heap first, then resources.
+        const QModelIndex left_index  = sourceModel()->index(left.row(), kResourceColumnUsage, QModelIndex());
+        const QModelIndex right_index = sourceModel()->index(right.row(), kResourceColumnUsage, QModelIndex());
+
+        const int left_resource  = left_index.data(Qt::UserRole).toInt();
+        const int right_resource = right_index.data(Qt::UserRole).toInt();
+        if (left_resource == kRmtResourceUsageTypeHeap)
+        {
+            return true;
+        }
+        else if (right_resource == kRmtResourceUsageTypeHeap)
+        {
+            return false;
+        }
+        return QSortFilterProxyModel::lessThan(left, right);
+    }
+
     bool ResourceProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
     {
         if ((left.column() == kResourceColumnVirtualAddress && right.column() == kResourceColumnVirtualAddress))
         {
             const qulonglong left_data  = left.data(Qt::UserRole).toULongLong();
             const qulonglong right_data = right.data(Qt::UserRole).toULongLong();
-
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
             return left_data < right_data;
         }
         else if ((left.column() == kResourceColumnSize && right.column() == kResourceColumnSize))
         {
             const qulonglong left_data  = left.data(Qt::UserRole).toULongLong();
             const qulonglong right_data = right.data(Qt::UserRole).toULongLong();
-
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
             return left_data < right_data;
         }
         else if ((left.column() == kResourceColumnMappedInvisible && right.column() == kResourceColumnMappedInvisible))
         {
             const double left_data  = left.data(Qt::UserRole).toDouble();
             const double right_data = right.data(Qt::UserRole).toDouble();
-
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
             return left_data < right_data;
         }
         else if ((left.column() == kResourceColumnMappedLocal && right.column() == kResourceColumnMappedLocal))
         {
             const double left_data  = left.data(Qt::UserRole).toDouble();
             const double right_data = right.data(Qt::UserRole).toDouble();
-
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
             return left_data < right_data;
         }
         else if ((left.column() == kResourceColumnMappedHost && right.column() == kResourceColumnMappedHost))
         {
             const double left_data  = left.data(Qt::UserRole).toDouble();
             const double right_data = right.data(Qt::UserRole).toDouble();
-
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
             return left_data < right_data;
         }
         else if ((left.column() == kResourceColumnMappedNone && right.column() == kResourceColumnMappedNone))
         {
             const double left_data  = left.data(Qt::UserRole).toDouble();
             const double right_data = right.data(Qt::UserRole).toDouble();
-
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
             return left_data < right_data;
         }
         return QSortFilterProxyModel::lessThan(left, right);

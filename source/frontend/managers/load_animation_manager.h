@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the file loading animation manager.
@@ -44,8 +44,7 @@ namespace rmv
         /// @brief Initialize the animation manager.
         ///
         /// @param [in] tab_widget The tab widget from the main window.
-        /// @param [in] file_menu  The file menu widget from the main window.
-        void Initialize(TabWidget* tab_widget, QMenu* file_menu);
+        void Initialize(TabWidget* tab_widget);
 
         /// @brief Start the loading animation.
         ///

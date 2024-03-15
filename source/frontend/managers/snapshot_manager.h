@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the Snapshot Manager.
@@ -153,18 +153,6 @@ namespace rmv
         /// @brief Clear the opened snapshot.
         void ClearOpenSnapshot();
 
-        /// @brief Get the 'filter by size' value based on where the slider is.
-        ///
-        /// The filtering used by the 'filter by size' slider is non-linear so this uses a
-        /// lookup to get the threshold values used to compare the resource sizes depending
-        /// on where the slider value is.
-        ///
-        /// @param [in] index The index position of the slider.
-        /// @param [in] include_unbound_resources If true, include unbound resources.
-        ///
-        /// @return The value of the filter threshold used for comparison.
-        uint64_t GetSizeFilterThreshold(int32_t index, bool include_unbound_resources = false) const;
-
         /// @brief Get the model responsible for managing resource aliasing.
         ///
         /// @return The alias model.
@@ -268,11 +256,8 @@ namespace rmv
         RmtSnapshotPoint*         selected_compared_snapshots_[kSnapshotCompareCount];  ///< The compare snapshots selected in the snapshot table.
         RmtDataSnapshot*          loaded_snapshot_;                                     ///< A pointer to the currently opened (loaded) snapshot.
         RmtDataSnapshot*          loaded_compared_snapshots_[kSnapshotCompareCount];    ///< Pointers to the currently opened (loaded) snapshots being compared.
-        uint64_t                  resource_thresholds_[rmv::kSizeSliderRange + 1];      ///< A list of resource size thresholds for the filter by size sliders.
-        uint64_t                  unbound_resource_thresholds_[rmv::kSizeSliderRange +
-                                              1];  ///< A list of resource size thresholds including unbound resources, for the filter by size sliders.
-        rmv::AliasedResourceModel alias_model_;                     ///< The model used for showing aliased resources.
-        RmtResourceIdentifier     resource_identifier_;             ///< The resource to select when opening the snapshot.
+        rmv::AliasedResourceModel alias_model_;                                         ///< The model used for showing aliased resources.
+        RmtResourceIdentifier     resource_identifier_;                                 ///< The resource to select when opening the snapshot.
     };
 }  // namespace rmv
 

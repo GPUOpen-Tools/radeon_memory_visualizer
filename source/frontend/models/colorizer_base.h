@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header file for the colorizer base class.
@@ -77,7 +77,7 @@ namespace rmv
         QColor GetColor(const uint32_t color_index);
 
         /// @brief Update color legends to the UI depending on the coloring mode.
-        void UpdateLegends();
+        virtual void UpdateLegends();
 
         /// @brief Get the resource usage color.
         ///

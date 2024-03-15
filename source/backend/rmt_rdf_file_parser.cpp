@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with the RDF file format.
@@ -130,8 +130,7 @@ static RmtErrorCode LoadSegmentChunk(rdfChunkFile* chunk_file, RmtDataSet* data_
                 {
                     data_set->segment_info[count].base_address = data.physical_base_address;
                     data_set->segment_info[count].heap_type    = static_cast<RmtHeapType>(data.type);
-                    data_set->segment_info[count].index =
-                        0;  /// TODO: This is missing from RDF spec (should be memory index, exposed by the Vulkan software stack)
+                    data_set->segment_info[count].index = 0;
                     data_set->segment_info[count].size = data.size;
                     count++;
                 }
@@ -164,7 +163,7 @@ RmtRdfDataStream* GetRdfDataStreamFromParser(const RmtParser* rmt_parser)
 // Delete all instantiated RDF data streams for a trace.
 RmtErrorCode RmtRdfFileParserDestroyAllDataStreams()
 {
-    for (auto data_stream : data_stream_map)
+    for (auto& data_stream : data_stream_map)
     {
         delete data_stream.second;
     }
@@ -295,7 +294,7 @@ static RmtErrorCode QueueDataStreamChunks(rdfChunkFile* chunk_file, RmtDataSet* 
             }
 
             // Initialize a parser for each stream and pre-load the first chunk.
-            for (auto data_stream_item : data_stream_map)
+            for (auto& data_stream_item : data_stream_map)
             {
                 const int32_t     stream_index = data_stream_item.first;
                 RmtRdfDataStream* data_stream  = data_stream_item.second;

@@ -345,7 +345,7 @@
            </widget>
           </item>
           <item>
-           <widget class="DoubleSliderWidget" name="size_slider_">
+           <widget class="RmvRangeSlider" name="size_slider_">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -509,9 +509,9 @@
    <header>qt_common/custom_widgets/text_search_widget.h</header>
   </customwidget>
   <customwidget>
-   <class>DoubleSliderWidget</class>
+   <class>RmvRangeSlider</class>
    <extends>QSlider</extends>
-   <header>qt_common/custom_widgets/double_slider_widget.h</header>
+   <header>views/custom_widgets/rmv_range_slider.h</header>
   </customwidget>
   <customwidget>
    <class>ScaledTableView</class>

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a heap overview memory bar.
@@ -18,6 +18,7 @@
 
 static const QColor kGrayProcessColor      = QColor(128, 128, 128);
 static const QColor kGrayOtherProcessColor = QColor(184, 184, 184);
+static const QColor kEmphasizedBarColor    = QColor(192, 192, 192);
 
 RMVHeapOverviewMemoryBar::RMVHeapOverviewMemoryBar(QWidget* parent)
     : QWidget(parent)
@@ -26,6 +27,7 @@ RMVHeapOverviewMemoryBar::RMVHeapOverviewMemoryBar(QWidget* parent)
     , max_size_(0)
     , has_subscription_(false)
     , subscription_status_(kRmtSegmentSubscriptionStatusUnderLimit)
+    , emphasize_(false)
 {
 }
 
@@ -63,7 +65,7 @@ void RMVHeapOverviewMemoryBar::paintEvent(QPaintEvent* event)
         int w = bound_rect.width();
         int h = bound_rect.height();
 
-        QColor bar_color = kGrayProcessColor;
+        QColor bar_color = emphasize_ ? kEmphasizedBarColor : kGrayProcessColor;
         if (has_subscription_)
         {
             switch (subscription_status_)
@@ -109,7 +111,8 @@ void RMVHeapOverviewMemoryBar::paintEvent(QPaintEvent* event)
         }
         else
         {
-            painter.setPen(Qt::white);
+            QColor pen_color = emphasize_ ? Qt::black : Qt::white;
+            painter.setPen(pen_color);
             painter.drawText(memory_rect, Qt::AlignCenter | Qt::AlignHCenter, rmv::string_util::LocalizedValueMemory(size_, false, false));
         }
     }
@@ -124,11 +127,13 @@ void RMVHeapOverviewMemoryBar::SetParameters(uint64_t                     size,
                                              uint64_t                     extra_size,
                                              uint64_t                     max_size,
                                              bool                         has_subscription,
-                                             RmtSegmentSubscriptionStatus subscription_status)
+                                             RmtSegmentSubscriptionStatus subscription_status,
+                                             bool                         emphasize)
 {
     size_                = size;
     extra_size_          = extra_size;
     max_size_            = max_size;
     has_subscription_    = has_subscription;
     subscription_status_ = subscription_status;
+    emphasize_           = emphasize;
 }

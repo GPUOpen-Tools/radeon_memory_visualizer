@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of rmv_util which holds useful utility functions.
@@ -25,6 +25,9 @@
 
 #include "settings/rmv_settings.h"
 #include "util/version.h"
+
+static const int32_t kThresholdStepOffset =
+    7;  ///< Used to adjust the unscaled step value when calculating scaled threshold value.
 
 /// @brief Get the brightness of a given color.
 ///
@@ -165,20 +168,41 @@ QColor rmv_util::GetDeltaChangeColor(DeltaChange delta)
     return out;
 }
 
-void rmv_util::BuildResourceSizeThresholds(std::vector<uint64_t>& resource_sizes, uint64_t* resource_thresholds)
+uint64_t rmv_util::CalculateSizeThresholdFromStepValue(const uint32_t step_value, const uint32_t max_steps)
 {
-    if (resource_sizes.size() == 0)
+    if (step_value == 0)
     {
-        return;
+        return 0;
     }
 
-    std::stable_sort(resource_sizes.begin(), resource_sizes.end());
-
-    float step_size = (resource_sizes.size() - 1) / static_cast<float>(rmv::kSizeSliderRange);
-    float index     = 0.0F;
-    for (int loop = 0; loop <= rmv::kSizeSliderRange; loop++)
+    if (step_value >= max_steps)
     {
-        resource_thresholds[loop] = resource_sizes[static_cast<int>(round(index))];
-        index += step_size;
+        return UINT64_MAX;
     }
+
+    // Calculate a threshold value ranging from 256 to 1073741824 (1 GB).  The lowest step value is 1.
+    // The threshold offset increases the first step to 8 so that 2 raised to the power of 8 results in a value of 256.
+    return pow(2, step_value + kThresholdStepOffset);
+}
+
+QString rmv_util::GetVirtualAllocationName(const RmtVirtualAllocation* virtual_allocation)
+{
+    QString allocation_name;
+    if (virtual_allocation != nullptr)
+    {
+        if (virtual_allocation->name != nullptr)
+        {
+            allocation_name = QString("'%1'").arg(virtual_allocation->name);
+        }
+        else
+        {
+            allocation_name = QString("0x") + QString::number(virtual_allocation->base_address, 16);
+        }
+    }
+    else
+    {
+        allocation_name = "Orphaned";
+    }
+
+    return allocation_name;
 }

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a proxy filter that processes multiple columns
@@ -75,6 +75,16 @@ namespace rmv
         virtual bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
 
     private:
+        /// @brief Handle sorting when two resource parameters are identical.
+        ///
+        /// In this case, the heap resource is listed first.
+        ///
+        /// @param [in] left  The left item to compare.
+        /// @param [in] right The right item to compare.
+        ///
+        /// @return true if left is less than right, false otherwise.
+        bool SortIdentical(const QModelIndex& left, const QModelIndex& right) const;
+
         QRegularExpression preferred_heap_filter_;  ///< The preferred heap filter regular expression.
         QRegularExpression resource_usage_filter_;  ///< The resource usage filter regular expression.
     };

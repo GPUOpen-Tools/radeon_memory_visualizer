@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Trace loader structures and functions.
@@ -56,7 +56,7 @@ RmtErrorCode RmtTraceLoaderTraceLoad(const char* trace_file_name)
     }
 
     // Create the default timeline for the data set.
-    error_code = RmtDataSetGenerateTimeline(&data_set_, kRmtDataTimelineTypeCommitted, &timeline_);
+    error_code = RmtDataSetGenerateTimeline(&data_set_, kRmtDataTimelineTypeVirtualMemory, &timeline_);
     return error_code;
 }
 

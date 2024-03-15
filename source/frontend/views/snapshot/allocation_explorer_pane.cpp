@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Allocation Explorer pane.
@@ -50,13 +50,17 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     // Initialize allocation table.
     model_->InitializeAllocationTableModel(ui_->allocation_table_view_, 0, rmv::kVirtualAllocationColumnCount);
     ui_->allocation_table_view_->setCursor(Qt::PointingHandCursor);
+    ui_->allocation_table_view_->sortByColumn(rmv::kVirtualAllocationColumnAllocationSize, Qt::DescendingOrder);
 
     // Initialize resource table.
     model_->InitializeResourceTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount);
     ui_->resource_table_view_->setCursor(Qt::PointingHandCursor);
+    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnVirtualAddress, Qt::AscendingOrder);
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->resource_search_box_, ui_->resource_size_slider_);
     rmv::widget_util::InitCommonFilteringComponents(ui_->allocation_search_box_, ui_->allocation_size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->resource_size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->allocation_size_slider_);
     ui_->aliased_resource_checkbox_->Initialize(false, rmv::kCheckboxEnableColor, Qt::black);
 
     colorizer_ = new rmv::Colorizer();
@@ -136,12 +140,9 @@ void AllocationExplorerPane::Refresh()
     // Prior to doing a table update, disable sorting since Qt is super slow about it.
     ui_->resource_table_view_->setSortingEnabled(false);
 
-    model_->BuildResourceSizeThresholds();
     int32_t resource_count = model_->UpdateResourceTable();
-    model_->ResourceSizeFilterChanged(ui_->resource_size_slider_->minimum(), ui_->resource_size_slider_->maximum());
-
+    ResourceSizeFilterChanged(ui_->resource_size_slider_->LowerValue(), ui_->resource_size_slider_->UpperValue());
     ui_->resource_table_view_->setSortingEnabled(true);
-    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnMappedInvisible, Qt::DescendingOrder);
     ui_->resource_table_view_->horizontalHeader()->adjustSize();
 
     ResizeItems();
@@ -169,11 +170,11 @@ void AllocationExplorerPane::Reset()
     model_->ResetModelValues();
 
     ui_->allocation_size_slider_->SetLowerValue(0);
-    ui_->allocation_size_slider_->SetUpperValue(rmv::kSizeSliderRange);
+    ui_->allocation_size_slider_->SetUpperValue(ui_->allocation_size_slider_->maximum());
     ui_->allocation_search_box_->setText("");
 
     ui_->resource_size_slider_->SetLowerValue(0);
-    ui_->resource_size_slider_->SetUpperValue(rmv::kSizeSliderRange);
+    ui_->resource_size_slider_->SetUpperValue(ui_->resource_size_slider_->maximum());
     ui_->resource_search_box_->setText("");
 
     SelectResource(0);
@@ -208,7 +209,6 @@ void AllocationExplorerPane::OpenSnapshot(RmtDataSnapshot* snapshot)
         ui_->allocation_table_view_->setSortingEnabled(false);
         model_->UpdateAllocationTable();
         ui_->allocation_table_view_->setSortingEnabled(true);
-        ui_->allocation_table_view_->sortByColumn(rmv::kVirtualAllocationColumnAllocationSize, Qt::DescendingOrder);
 
         // Select it.
         ui_->allocation_table_view_->selectRow(0);

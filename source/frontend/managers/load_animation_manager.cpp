@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the file loading animation manager.
@@ -26,7 +26,6 @@ namespace rmv
     LoadAnimationManager::LoadAnimationManager(QObject* parent)
         : QObject(parent)
         , tab_widget_(nullptr)
-        , file_menu_(nullptr)
         , file_load_animation_(nullptr)
     {
     }
@@ -35,10 +34,9 @@ namespace rmv
     {
     }
 
-    void LoadAnimationManager::Initialize(TabWidget* tab_widget, QMenu* file_menu)
+    void LoadAnimationManager::Initialize(TabWidget* tab_widget)
     {
         tab_widget_ = tab_widget;
-        file_menu_  = file_menu;
     }
 
     void LoadAnimationManager::ResizeAnimation()
@@ -62,7 +60,6 @@ namespace rmv
 
             file_load_animation_->show();
             tab_widget_->setDisabled(true);
-            file_menu_->setDisabled(true);
             emit rmv::MessageManager::Get().ChangeActionsRequested(false);
 
             qApp->setOverrideCursor(Qt::BusyCursor);
@@ -87,7 +84,6 @@ namespace rmv
             file_load_animation_ = nullptr;
 
             tab_widget_->setEnabled(true);
-            file_menu_->setEnabled(true);
             emit rmv::MessageManager::Get().ChangeActionsRequested(true);
 
             qApp->restoreOverrideCursor();

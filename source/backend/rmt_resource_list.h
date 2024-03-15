@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a resource list.
@@ -166,15 +166,13 @@ typedef struct RmtResourceList
     RmtPool            resource_id_node_pool;  ///< The pool allocator for the memory buffer pointed to be <c><i>resourceIdNodes</i></c>.
 
     // Storage for resources.
-    RmtResource*                    resources;                     ///< A buffer of extra resource details.
-    int32_t                         resource_count;                ///< The number of live resources in the list.
-    int32_t                         maximum_concurrent_resources;  ///< The maximum number of resources that can be in flight at once.
-    const RmtVirtualAllocationList* virtual_allocation_list;       ///< The virtual allocation to query for bindings.
-
-    int32_t  resource_usage_count[kRmtResourceUsageTypeCount];  ///< The number of each resource usage currently in the list.
-    uint64_t resource_usage_size[kRmtResourceUsageTypeCount];
-    uint64_t total_resource_usage_aliased_size[kRmtResourceUsageTypeCount];  ///< Resource usage sizes for all resources in the list.
-    bool     enable_aliased_resource_usage_sizes;  ///< A flag used to indicate that, if true, aliased usage sizes are being calculated.
+    RmtResource*                    resources;                                         ///< A buffer of extra resource details.
+    int32_t                         resource_count;                                    ///< The number of live resources in the list.
+    int32_t                         maximum_concurrent_resources;                      ///< The maximum number of resources that can be in flight at once.
+    const RmtVirtualAllocationList* virtual_allocation_list;                           ///< The virtual allocation to query for bindings.
+    int32_t                         resource_usage_count[kRmtResourceUsageTypeCount];  ///< The number of each resource usage currently in the list.
+    uint64_t                        total_resource_usage_aliased_size[kRmtResourceUsageTypeCount];  ///< Resource usage sizes for all resources in the list.
+    bool                            enable_aliased_resource_usage_sizes;  ///< A flag used to indicate that, if true, aliased usage sizes are being calculated.
 
 } RmtResourceList;
 
@@ -223,7 +221,8 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
 ///
 /// @param [in] resource_list                       A pointer to a <c><i>RmtResourceList</i></c> structure.
 /// @param [in] resource_bind                       A pointer to a <c><i>RmtTokenResourceBind</i></c> structure.
-///
+/// @param [in] track_user_data                     A flag that indicates, if true, that the bind needs to be tracked for user data processing.
+/// 
 /// @retval
 /// kRmtOk                              The operation completed successfully.
 /// @retval
@@ -232,7 +231,7 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
 /// kRmtErrorNoResourceFound            The operation failed because the resource in <c><i>resource_bind</i></c> can't be found.
 /// @retval
 /// kRmtErrorResourceAlreadyBound       The operation failed because the resource in <c><i>resource_bind</i></c> is already bound.
-RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, const RmtTokenResourceBind* resource_bind);
+RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, const RmtTokenResourceBind* resource_bind, const bool track_user_data);
 
 /// Add a resource destroy to the list.
 ///

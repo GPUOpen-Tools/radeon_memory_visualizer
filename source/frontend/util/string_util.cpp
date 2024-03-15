@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a number of string utilities.
@@ -69,7 +69,7 @@ QString rmv::string_util::LocalizedValuePrecise(double value)
     return str;
 }
 
-QString rmv::string_util::LocalizedValueMemory(double value, bool base_10, bool use_round)
+QString rmv::string_util::LocalizedValueMemory(const double value, const bool base_10, const bool use_round, const bool include_decimal)
 {
     double multiple;
     if (base_10)
@@ -107,7 +107,7 @@ QString rmv::string_util::LocalizedValueMemory(double value, bool base_10, bool 
 
     // Display value string to 2 decimal places if not bytes. No fractional part for bytes.
     QString value_string;
-    if (postfix_index != 0)
+    if ((postfix_index != 0) && (include_decimal))
     {
         value_string = LocalizedValuePrecise(scaled_size);
     }
@@ -135,4 +135,43 @@ QString rmv::string_util::LocalizedValueAddress(RmtGpuAddress address)
 QString rmv::string_util::LocalizedValueBytes(int64_t value)
 {
     return rmv::string_util::LocalizedValue(value) + " bytes";
+}
+
+QString rmv::string_util::GetMemoryRangeString(const uint64_t min_memory_size, const uint64_t max_memory_size)
+{
+    const static char kHyphen[]   = " - ";
+    const static char kInfinity[] = "\xE2\x88\x9E";
+    QString           range_string;
+    int               width = 0;
+
+    // Append string for range start.
+    if (min_memory_size == UINT64_MAX)
+    {
+        range_string += kInfinity;
+        width++;
+    }
+    else
+    {
+        QString value = string_util::LocalizedValueMemory(min_memory_size, false, false, false);
+        width += value.length();
+        range_string += value;
+    }
+
+    range_string += kHyphen;
+    width += sizeof(kHyphen);
+
+    // Append string for range end.
+    if (max_memory_size == UINT64_MAX)
+    {
+        range_string += kInfinity;
+        width++;
+    }
+    else
+    {
+        QString value = string_util::LocalizedValueMemory(max_memory_size, false, false, false);
+        width += value.length();
+        range_string += value;
+    }
+
+    return range_string;
 }

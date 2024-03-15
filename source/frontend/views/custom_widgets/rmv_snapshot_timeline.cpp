@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2017-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the snapshot timeline visualization.
@@ -33,7 +33,14 @@ RMVSnapshotTimeline::~RMVSnapshotTimeline()
 
 void RMVSnapshotTimeline::mousePressEvent(QMouseEvent* event)
 {
-    TimelineView::mousePressEvent(event);
+    if (this->dragMode() == QGraphicsView::NoDrag)
+    {
+        TimelineView::mousePressEvent(event);
+    }
+    else
+    {
+        QGraphicsView::mousePressEvent(event);
+    }
 
     emit UpdateSelectedDuration(selected_end_clock_ - selected_start_clock_);
     emit UpdateHoverClock(last_hovered_clock_);

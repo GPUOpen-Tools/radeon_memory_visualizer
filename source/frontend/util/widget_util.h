@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of a number of widget utilities.
@@ -11,6 +11,8 @@
 #ifndef RMV_UTIL_WIDGET_UTIL_H_
 #define RMV_UTIL_WIDGET_UTIL_H_
 
+#include "views/custom_widgets/rmv_range_slider.h"
+
 #include <QWidget>
 #include <QString>
 #include <QGraphicsView>
@@ -18,7 +20,6 @@
 #include <stdint.h>
 
 #include "qt_common/custom_widgets/text_search_widget.h"
-#include "qt_common/custom_widgets/double_slider_widget.h"
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/colored_legend_scene.h"
 
@@ -26,10 +27,10 @@ namespace rmv
 {
     namespace widget_util
     {
-        /// @brief Initialize a double-slider widget.
+        /// @brief Initialize a range slider widget.
         ///
-        /// @param [in,out] double_slider_widget The slider to initialize
-        void InitDoubleSlider(DoubleSliderWidget* double_slider_widget);
+        /// @param [in,out] range_slider            A pointer to the RmvRangeSlider widget to initialize.
+        void InitRangeSlider(RmvRangeSlider* slider_widget);
 
         /// @brief Initialize an ArrowIconComboBox for single selection.
         ///

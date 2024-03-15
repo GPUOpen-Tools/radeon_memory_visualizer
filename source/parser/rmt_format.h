@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions of the RMT format.
@@ -65,14 +65,15 @@ typedef enum RmtTokenType
 /// An enumeration of user data types.
 typedef enum RmtUserdataType
 {
-    kRmtUserdataTypeName                    = 0,  ///< The user data contains a string which is relevant to the following sequence of tokens.
-    kRmtUserdataTypeSnapshot                = 1,  ///< The user data contains a string which names a specific momemnt in time.
-    kRmtUserdataTypeBinary                  = 2,  ///< The user data contains a blind binary payload.
-    kRmtUserdataTypeReserved                = 3,  ///< Reserved for future expansion.
-    kRmtUserdataTypeCorrelation             = 4,  ///< The user data contains 2 32-bit handles for matching resource names to DX12 resources.
-    kRmtUserdataTypeMarkImplicitResource    = 5,  ///< The user data contains a 32-bit resource ID that should be filtered because it was created implicitly.
-    kRmtUserdataTypeName_V2                 = 6,  ///< The user data contains a string and a time delay.
-    kRmtUserdataTypeMarkImplicitResource_V2 = 7   ///< The user data contains a 32-bit implicit resource ID, with time delay.
+    kRmtUserdataTypeName                 = 0,  ///< The user data contains a string which is relevant to the following sequence of tokens.
+    kRmtUserdataTypeSnapshot             = 1,  ///< The user data contains a string which names a specific momemnt in time.
+    kRmtUserdataTypeBinary               = 2,  ///< The user data contains a blind binary payload.
+    kRmtUserdataTypeReserved             = 3,  ///< Reserved for future expansion.
+    kRmtUserdataTypeCorrelation          = 4,  ///< The user data contains 2 32-bit handles for matching resource names to DX12 resources.
+    kRmtUserdataTypeMarkImplicitResource = 5,  ///< The user data contains a 32-bit resource ID that should be filtered because it was created implicitly.
+    kRmtUserdataTypeName_V2              = 6,  ///< The user data contains a string and a time delay.
+    kRmtUserdataTypeMarkImplicitResource_V2 =
+        7  ///< The user data contains a 32-bit implicit resource ID, with time delay.  RMT Spec version 1.9+ also contains implicit resource type.
 } RmtUserdataType;
 
 /// An enumeration of miscellaenous events.
@@ -130,17 +131,16 @@ typedef enum RmtResourceType
 /// to insure they are placed in the correct order.
 typedef enum RmtResourceUsageType
 {
-    kRmtResourceUsageTypeUnknown,           ///< The resource usage type is unknown.
-    kRmtResourceUsageTypeFree,              ///< An additional type to represent memory that is allocated, but not bound to something.
-    kRmtResourceUsageTypeHeap,              ///< The resource is a memory heap.
-    kRmtResourceUsageTypeBuffer,            ///< The resource is a buffer.
-    kRmtResourceUsageTypeVertexBuffer,      ///< The resource is a vertex buffer.
-    kRmtResourceUsageTypeIndexBuffer,       ///< The resource is an index buffer.
-    kRmtResourceUsageTypeRayTracingBuffer,  ///< The resource is a ray tracing-related buffer (ie BVH).
-    kRmtResourceUsageTypeUav,               ///< The resource is an unordered access view.
-    kRmtResourceUsageTypeTexture,           ///< The resource is a texture.
-    kRmtResourceUsageTypeRenderTarget,      ///< The resource is a color target.
-    kRmtResourceUsageTypeDepthStencil,      ///< The resource is a depth/stencil buffer.
+    kRmtResourceUsageTypeUnknown,                                     ///< The resource usage type is unknown.
+    kRmtResourceUsageTypeFree,                                        ///< An additional type to represent memory that is allocated, but not bound to something.
+    kRmtResourceUsageTypeHeap,                                        ///< The resource is a memory heap.
+    kRmtResourceUsageTypeBuffer,                                      ///< The resource is a buffer.
+    kRmtResourceUsageTypeVertexBuffer = kRmtResourceUsageTypeBuffer,  ///< The resource is a vertex buffer (not used).
+    kRmtResourceUsageTypeIndexBuffer  = kRmtResourceUsageTypeBuffer,  ///< The resource is an index buffer (not used).
+    kRmtResourceUsageTypeRayTracingBuffer,                            ///< The resource is a ray tracing-related buffer (ie BVH).
+    kRmtResourceUsageTypeTexture,                                     ///< The resource is a texture.
+    kRmtResourceUsageTypeRenderTarget,                                ///< The resource is a color target.
+    kRmtResourceUsageTypeDepthStencil,                                ///< The resource is a depth/stencil buffer.
     kRmtResourceUsageTypeInternal,
     kRmtResourceUsageTypeCommandBuffer,   ///< The resource is a command buffer.
     kRmtResourceUsageTypeDescriptors,     ///< The resource is a descriptor heap/pool.
@@ -148,7 +148,8 @@ typedef enum RmtResourceUsageType
     kRmtResourceUsageTypeGpuEvent,        ///< The resource is a GPU event.
 
     // Add above this.
-    kRmtResourceUsageTypeCount
+    kRmtResourceUsageTypeCount,
+    kRmtResourceUsageTypeAll = kRmtResourceUsageTypeCount  ///< A value used to indicates all usage types are selected.
 } RmtResourceUsageType;
 
 /// An enumeration of process events.
@@ -169,6 +170,24 @@ typedef enum RmtOwnerType
     // add above this.
     kRmtOwnerTypeCount
 } RmtOwnerType;
+
+/// An enumeration of the various heap types for a resource.
+typedef enum RmtResourceHeapType
+{
+    kRmtResourceHeapTypeImmutable         = 0,  ///< Placed Resource (many placed resources can be immutably joined with a fully created heap).
+    kRmtResourceHeapTypeImplicitHeap      = 1,  ///< Committed Resource.
+    kRmtResourceHeapTypeResource          = 2,  ///< An API Heap.
+    kRmtResourceHeapTypeReserved          = 3,  ///< Page-mapped to one or more heaps, or nothing at all.
+    kRmtResourceHeapTypeImmutableResource = 4   ///< Placed texture on a reserved buffer which is page-mapped to one or more heaps, or nothing at all.
+} RmtResourceHeapType;
+
+/// An enumeration of the implicit resource types.
+typedef enum RmtImplicitResourceType
+{
+    kRmtImplicitResourceTypeUnused           = 0,  ///< The resource is not marked implicit.
+    kRmtImplicitResourceTypeImplicitHeap     = 1,  ///< The resource is marked as an implicit heap.
+    kRmtImplicitResourceTypeImplicitResource = 2,  ///< The resource is marked as an implicit image or buffer.
+} RmtImplicitResourceType;
 
 /// An enumeraetion of the various commit types for a resource.
 typedef enum RmtCommitType

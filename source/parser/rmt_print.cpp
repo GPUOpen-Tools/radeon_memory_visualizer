@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of printing helper functions for RMT.
@@ -91,7 +91,7 @@ const char* RmtGetResourceUsageTypeNameFromResourceUsageType(const RmtResourceUs
     switch (usage_type)
     {
     case kRmtResourceUsageTypeDepthStencil:
-        return "Depth stencil buffer";
+        return "Depth stencil texture";
 
     case kRmtResourceUsageTypeRenderTarget:
         return "Render target";
@@ -99,17 +99,8 @@ const char* RmtGetResourceUsageTypeNameFromResourceUsageType(const RmtResourceUs
     case kRmtResourceUsageTypeTexture:
         return "Texture";
 
-    case kRmtResourceUsageTypeVertexBuffer:
-        return "Vertex buffer";
-
-    case kRmtResourceUsageTypeIndexBuffer:
-        return "Index buffer";
-
     case kRmtResourceUsageTypeRayTracingBuffer:
-        return "Ray tracing";
-
-    case kRmtResourceUsageTypeUav:
-        return "UAV";
+        return "Acceleration structure";
 
     case kRmtResourceUsageTypeShaderPipeline:
         return "Shader pipeline";
@@ -124,7 +115,7 @@ const char* RmtGetResourceUsageTypeNameFromResourceUsageType(const RmtResourceUs
         return "Descriptors";
 
     case kRmtResourceUsageTypeBuffer:
-        return "Multi-use buffer";
+        return "Buffer";
 
     case kRmtResourceUsageTypeFree:
         return "Unbound";

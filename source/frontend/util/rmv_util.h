@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for rmv_util which holds useful utility functions.
@@ -10,6 +10,7 @@
 
 #include <vector>
 
+#include "rmt_virtual_allocation_list.h"
 #include "util/definitions.h"
 
 /// @brief The state of a snapshot in the timeline pane.
@@ -75,11 +76,20 @@ namespace rmv_util
     /// @return a QColor assigned to the delta type.
     QColor GetDeltaChangeColor(DeltaChange delta);
 
-    /// @brief Build a list of resource thresholds used by the 'filter by size' slider.
+    /// @brief Calculate the logarithmically scaled value given a step value.
     ///
-    /// @param [in] resource_sizes      An vector containing a list of resource sizes.
-    /// @param [in] resource_thresholds An array to accept the resource thresholds.
-    void BuildResourceSizeThresholds(std::vector<uint64_t>& resource_sizes, uint64_t* resource_thresholds);
+    /// @param [in]  step_value                     An unscaled whole number used to calculate a scaled threshold value.
+    /// @param [in]  max_steps                      The maximum number of steps in the range.
+    ///
+    /// @return The calculated value.
+    uint64_t CalculateSizeThresholdFromStepValue(const uint32_t step_value, const uint32_t max_steps);
+
+    /// @brief Retrieves the name of a virtual allocation or a string containing the base address in hexadecimal form.
+    ///
+    /// @param [in] virtual_allocation              A pointer to the virtual allocation object.
+    ///
+    /// @return The virtual allocation name string.
+    QString GetVirtualAllocationName(const RmtVirtualAllocation* virtual_allocation);
 
 };  // namespace rmv_util
 

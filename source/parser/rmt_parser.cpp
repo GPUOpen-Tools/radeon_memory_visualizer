@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for parsing RMT data.
@@ -613,24 +613,50 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
         const RmtResourceIdentifier resource_identifier = static_cast<RmtResourceIdentifier>(resource_id_value);
         out_userdata_token->resource_identifier         = resource_identifier;
         out_userdata_token->time_delay                  = 0;
+        out_userdata_token->implicit_resource_type      = RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource;
 #ifdef _IMPLICIT_RESOURCE_LOGGING
         RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx", out_userdata_token->resource_identifier);
 #endif  // _IMPLICIT_RESOURCE_LOGGING
     }
     else if (out_userdata_token->userdata_type == kRmtUserdataTypeMarkImplicitResource_V2)
     {
-        typedef uint64_t NameTimeDelay;
+        // Parse the resource identifier from the payload.
+        typedef uint32_t               DriverResourceIdentifier;
+        const uintptr_t                resource_id_address = (reinterpret_cast<uintptr_t>(payload));
+        const DriverResourceIdentifier resource_id_value   = *(reinterpret_cast<uint32_t*>(resource_id_address));
+        out_userdata_token->resource_identifier            = static_cast<RmtResourceIdentifier>(resource_id_value);
 
-        const uintptr_t             resource_id_address = (reinterpret_cast<uintptr_t>(payload));
-        const uint32_t              resource_id_value   = *(reinterpret_cast<uint32_t*>(resource_id_address));
-        const RmtResourceIdentifier resource_identifier = static_cast<RmtResourceIdentifier>(resource_id_value);
-        out_userdata_token->resource_identifier         = resource_identifier;
+        // Parse the time delay from the payload.
+        typedef uint64_t     TokenTimeDelay;
+        const uintptr_t      time_delay_address = ((uintptr_t)payload) + sizeof(uint32_t);
+        const TokenTimeDelay time_delay_value   = *((TokenTimeDelay*)time_delay_address);
+        out_userdata_token->time_delay          = time_delay_value;
 
-        const uintptr_t     time_delay_address = ((uintptr_t)payload) + sizeof(uint32_t);
-        const NameTimeDelay time_delay_value   = *((NameTimeDelay*)time_delay_address);
-        out_userdata_token->time_delay         = time_delay_value;
+        // Set the default implicit resource type value.
+        out_userdata_token->implicit_resource_type = RmtImplicitResourceType::kRmtImplicitResourceTypeUnused;
+
+        // Check to see if the MarkImplicitResource UserData token contains a HeapType property.
+        typedef uint8_t ResourceHeapType;
+        if (static_cast<uint64_t>(out_userdata_token->size_in_bytes) >= (sizeof(DriverResourceIdentifier) + sizeof(TokenTimeDelay) + sizeof(ResourceHeapType)))
+        {
+            // Parse the implicit resource type from the payload if its present.
+            const uintptr_t resource_heap_type_address = (reinterpret_cast<uintptr_t>(payload) + sizeof(resource_id_value) + sizeof(time_delay_value));
+            const uint8_t   resource_heap_type_value   = *(reinterpret_cast<uint8_t*>(resource_heap_type_address));
+            if (resource_heap_type_value == RmtResourceHeapType::kRmtResourceHeapTypeImplicitHeap)
+            {
+                out_userdata_token->implicit_resource_type = RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitHeap;
+            }
+            else if (resource_heap_type_value == RmtResourceHeapType::kRmtResourceHeapTypeResource)
+            {
+                out_userdata_token->implicit_resource_type = RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource;
+            }
+        }
+
 #ifdef _IMPLICIT_RESOURCE_LOGGING
-        RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx", out_userdata_token->resource_identifier);
+        RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx, time_delay = %ull, implicit_resource_type = %i",
+                 out_userdata_token->resource_identifier,
+                 out_userdata_token->time_delay,
+                 out_userdata_token->implicit_resource_type);
 #endif  // _IMPLICIT_RESOURCE_LOGGING
     }
 
@@ -1568,8 +1594,7 @@ RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtPar
     out_token->type               = token_type;
 
     // Assert that if this is the first token in the stream (i.e. the offset is 0) that the token type is a timestamp.
-    RMT_ASSERT((rmt_parser->stream_current_offset > 0) ||
-               ((rmt_parser->stream_current_offset == 0) && token_type == kRmtTokenTypeTimestamp));
+    RMT_ASSERT((rmt_parser->stream_current_offset > 0) || ((rmt_parser->stream_current_offset == 0) && token_type == kRmtTokenTypeTimestamp));
 
     switch (token_type)
     {

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource details pane.
@@ -227,7 +227,7 @@ void ResourceDetailsPane::Refresh()
         ui_->resource_timeline_table_view_->sortByColumn(rmv::kResourceHistoryColumnTime, Qt::AscendingOrder);
         rmv::widget_util::SetWidgetBackgroundColor(ui_->residency_donut_, Qt::white);
 
-        int     value;
+        float   value;
         QString name;
         QColor  color;
 
@@ -244,7 +244,7 @@ void ResourceDetailsPane::Refresh()
             value = 0;
             if (model_->GetResidencyData(resource_identifier_, heapTypes[i], value, name, color) == true)
             {
-                legends_scene_heaps_[i]->AddColorLegendItem(color, name + QString(" (%1%)").arg(value));
+                legends_scene_heaps_[i]->AddColorLegendItem(color, name + " (" + QString::number(value, 'f', 2) + "%)");
                 ui_->residency_donut_->SetIndexValue(i, value);
                 ui_->residency_donut_->SetIndexColor(i, color);
             }

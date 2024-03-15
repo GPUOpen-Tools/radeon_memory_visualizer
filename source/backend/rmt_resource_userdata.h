@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Function definitions for any resource sideband data.
@@ -82,7 +82,7 @@ RmtErrorCode RmtResourceUserdataTrackResourceNameToken(const RmtCorrelationIdent
                                                        const RmtTimestamp             delay_time);
 
 /// @brief Lookup the name associated with a resource and update the resource object.
-
+///
 /// @param [in]  resource_list                  A pointer to the list of resource objects.
 /// @param [in]  internal_resource_id           The internal resource identifier of the resource to be updated.
 ///
@@ -99,12 +99,27 @@ RmtErrorCode RmtResourceUserdataUpdateResourceName(const RmtResourceList* resour
 /// @param [in]  correlation_id                 The correlation ID.
 /// @param [in]  timestamp                      The timestamp for the token.
 /// @param [in]  delay_time                     The delay between when the data for the token was generated and when the token was emitted.
+/// @param [in]  implicit_resource_type         The type of implicit resource.
 ///
 /// @retval
 /// kRmtOk                                      The operation completed successfully.
 /// @retval
 /// kRmtErrorMalformedData                      An invalid delay_time was specified.
-RmtErrorCode RmtResourceUserdataTrackImplicitResourceToken(RmtResourceIdentifier correlation_id, uint64_t timestamp, uint64_t delay_time);
+RmtErrorCode RmtResourceUserdataTrackImplicitResourceToken(const RmtResourceIdentifier   correlation_id,
+                                                           const uint64_t                timestamp,
+                                                           const uint64_t                delay_time,
+                                                           const RmtImplicitResourceType implicit_resource_type);
+
+/// @brief Track when a resource is bound to an allocation.
+///
+/// @param [in]  resource                       A pointer to a resource object.
+/// @param [in]  allocation_identifier          A unique identifier for the allocation this resource is bound to.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The resource pointer is invalid.
+RmtErrorCode RmtResourceUserDataTrackBoundResource(const RmtResource* resource, const uint64_t allocation_identifier);
 
 /// @brief Retrieve the resource name associated with a resource.
 ///
@@ -125,6 +140,23 @@ RmtErrorCode RmtResourceUserdataGetResourceName(const RmtResourceIdentifier inte
 ///
 /// @returns                                    true if resource is implicit, false otherwise.
 bool RmtResourceUserDataIsResourceImplicit(const RmtResourceIdentifier resource_id);
+
+/// @brief Retrieve the resource ID for a paired heap or image/buffer resource.
+///
+/// @param [in]  internal_resource_id               The resource identifier to match against.
+/// @param [out] out_paired_internal_resource_id    The resource identifier of the paired heap or image/buffer resource.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The out_heap_internal_resource_id pointer is invalid.
+/// @retval
+/// kRmtErrorResourceNotFound                   A resource could not be found for the <c><i>internal_resource_id</i></c> specified.
+RmtErrorCode RmtResourceUserDataFindPairedResource(const RmtResourceIdentifier internal_resource_id, RmtResourceIdentifier* out_paired_internal_resource_id);
+
+/// @brief Clear internal UserData lookup maps.
+///
+void RmtResourceUserDataCleanup();
 
 #ifdef __cplusplus
 }

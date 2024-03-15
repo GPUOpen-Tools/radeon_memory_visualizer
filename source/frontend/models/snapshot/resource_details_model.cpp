@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource details model.
@@ -20,6 +20,7 @@
 #include "managers/trace_manager.h"
 #include "models/colorizer.h"
 #include "settings/rmv_settings.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 #include "util/time_util.h"
 
@@ -177,17 +178,8 @@ namespace rmv
             const char* buf_ptr                         = &buffer[0];
             RmtResourceGetName(resource, RMT_MAXIMUM_NAME_LENGTH, (char**)&buf_ptr);
             SetModelData(kResourceDetailsResourceName, buffer);
-
-            const uint64_t base_address = (resource->bound_allocation != nullptr) ? resource->bound_allocation->base_address : 0;
-            if (base_address != 0)
-            {
-                SetModelData(kResourceDetailsAllocationBaseAddress, QString("0x") + QString::number(base_address, 16));
-            }
-            else
-            {
-                SetModelData(kResourceDetailsAllocationBaseAddress, QString("Orphaned"));
-            }
-            SetModelData(kResourceDetailsAllocationOffset, rmv::string_util::LocalizedValue(RmtResourceGetOffsetFromBoundAllocation(resource)));
+            SetModelData(kResourceDetailsAllocationBaseAddress, rmv_util::GetVirtualAllocationName(resource->bound_allocation));
+            SetModelData(kResourceDetailsAllocationOffset, rmv::string_util::LocalizedValueAddress(RmtResourceGetOffsetFromBoundAllocation(resource)));
             SetModelData(kResourceDetailsBaseAddress, QString("0x") + QString::number(resource->address, 16));
             SetModelData(kResourceDetailsSize, rmv::string_util::LocalizedValueMemory(resource->size_in_bytes, false, false));
             SetModelData(kResourceDetailsType, RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceGetUsageType(resource)));
@@ -447,7 +439,7 @@ namespace rmv
         return true;
     }
 
-    bool ResourceDetailsModel::GetResidencyData(RmtResourceIdentifier resource_identifier, int index, int& value, QString& name, QColor& color) const
+    bool ResourceDetailsModel::GetResidencyData(RmtResourceIdentifier resource_identifier, int index, float& value, QString& name, QColor& color) const
     {
         if (index < 0 || index >= kRmtResourceBackingStorageCount)
         {
@@ -471,10 +463,10 @@ namespace rmv
         const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
         RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
 
-        value = 0;
+        value = 0.0f;
         if (resource->size_in_bytes > 0)
         {
-            value = (memory_segment_histogram[index] * 100) / resource->size_in_bytes;
+            value = (memory_segment_histogram[index] * 100.0f) / resource->size_in_bytes;
         }
 
         color = Colorizer::GetHeapColor(static_cast<RmtHeapType>(index));

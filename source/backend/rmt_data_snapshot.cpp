@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Functions working on a snapshot.
@@ -433,14 +433,15 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
 
     out_segment_status->total_physical_size        = snapshot->data_set->segment_info[heap_type].size;
     out_segment_status->total_bound_virtual_memory = 0;
+    out_segment_status->allocation_count           = 0;
+    out_segment_status->resource_count             = 0;
 
     // calculate data for the segment info fields.
     uint64_t max_virtual_allocation_size      = 0;
     uint64_t min_virtual_allocation_size      = UINT64_MAX;
     uint64_t total_virtual_memory_requested   = 0;
     uint64_t total_physical_mapped_by_process = snapshot->page_table.mapped_per_heap[heap_type];
-
-    uint64_t allocation_count = 0;
+    uint64_t allocation_count                 = 0;
 
     // set the resource committed memory values.
     for (int32_t current_resource_usage_index = 0; current_resource_usage_index < kRmtResourceUsageTypeCount; ++current_resource_usage_index)
@@ -466,6 +467,8 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
             uint64_t memory_region_size = RmtVirtualAllocationGetTotalResourceMemoryInBytes(snapshot, current_virtual_allocation);
             out_segment_status->total_bound_virtual_memory += memory_region_size;
             RMT_ASSERT(size_in_bytes >= memory_region_size);
+
+            out_segment_status->resource_count += current_virtual_allocation->non_heap_resource_count;
         }
 
         // Walk each resource in the allocation and work out what heap each resource is in.
@@ -499,6 +502,8 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
     out_segment_status->total_physical_mapped_by_other_processes = 0;
     out_segment_status->max_allocation_size                      = max_virtual_allocation_size;
     out_segment_status->min_allocation_size                      = min_virtual_allocation_size;
+    out_segment_status->committed_size                           = snapshot->snapshot_point->committed_memory[heap_type];
+    out_segment_status->allocation_count                         = allocation_count;
     if (allocation_count > 0)
     {
         out_segment_status->mean_allocation_size = total_virtual_memory_requested / allocation_count;

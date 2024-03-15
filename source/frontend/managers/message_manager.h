@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the MessageManager.
@@ -61,12 +61,15 @@ namespace rmv
         /// @param [in] pane The pane to navigate to.
         void PaneSwitchRequested(rmv::RMVPaneId pane);
 
+        /// @brief Signal to requested that snapshots be switched (from the Snapshot delta pane).
+        void SwapSnapshotsRequested();
+
         /// @brief Signal for when the hash values changed.
         void HashesChanged();
 
         /// @brief Signal to request enabling or disabling UI actions.
         ///
-        /// @param [in] enable                      If true, actions should be enabled.  Otherwise, actions should be disabled.
+        /// @param [in] enable  If true, actions should be enabled.  Otherwise, actions should be disabled.
         void ChangeActionsRequested(const bool enable);
     };
 }  // namespace rmv

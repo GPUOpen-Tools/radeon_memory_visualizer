@@ -398,7 +398,7 @@
                </widget>
               </item>
               <item row="1" column="7">
-               <widget class="DoubleSliderWidget" name="size_slider_">
+               <widget class="RmvRangeSlider" name="size_slider_">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -564,9 +564,9 @@
    <header>qt_common/custom_widgets/colored_legend_graphics_view.h</header>
   </customwidget>
   <customwidget>
-   <class>DoubleSliderWidget</class>
+   <class>RmvRangeSlider</class>
    <extends>QSlider</extends>
-   <header>qt_common/custom_widgets/double_slider_widget.h</header>
+   <header>views/custom_widgets/rmv_range_slider.h</header>
   </customwidget>
   <customwidget>
    <class>ScaledLabel</class>

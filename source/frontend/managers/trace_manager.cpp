@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Trace Manager.
@@ -99,6 +99,10 @@ namespace rmv
             if (return_code == kRmtErrorPageTableSizeExceeded)
             {
                 return kTraceLoadReturnOutOfVirtualGPUMemory;
+            }
+            else if (return_code == kRmtErrorTraceFileNotSupported)
+            {
+                return kTraceLoadReturnFileNotSupported;
             }
             return kTraceLoadReturnFail;
         }
@@ -212,24 +216,40 @@ namespace rmv
 
         if (error_code != kTraceLoadReturnSuccess)
         {
-            // If the trace file doesn't exist, ask the user if they want to remove it from
-            // the recent traces list. This has to be done from the main thread.
+            // If there's an error loading the trace and it is already in the recent traces list,
+            // ask the user if they want to remove it. This has to be done from the main thread.
             QFileInfo file_info(active_trace_path_);
-            QString   text("");
+            QString   text(rmv::text::kOpenTraceErrorText.arg(file_info.fileName()));
 
             if (error_code == kTraceLoadReturnOutOfVirtualGPUMemory)
             {
                 text += rmv::text::kOpenTraceOutOfVirtualGPUMemory;
             }
-
-            text += rmv::text::kDeleteRecentTraceText.arg(file_info.fileName());
-
-            const int ret =
-                QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Yes | QMessageBox::No, QMessageBox::Question, rmv::text::kDeleteRecentTraceTitle, text);
-
-            if (ret == QMessageBox::Yes)
+            else if (error_code == kTraceLoadReturnFileNotSupported)
             {
-                remove_from_list = true;
+                text += rmv::text::kOpenTraceFileNotSupported;
+            }
+
+            if (RMVSettings::Get().DoesFileExistInRecentList(active_trace_path_.toStdString().c_str()))
+            {
+                text += rmv::text::kDeleteRecentTraceText;
+
+                const int ret = QtCommon::QtUtils::ShowMessageBox(
+                    parent_, QMessageBox::Yes | QMessageBox::No, QMessageBox::Question, rmv::text::kDeleteRecentTraceTitle, text);
+
+                if (ret == QMessageBox::Yes)
+                {
+                    // Remove the file from the recent file list.
+                    RMVSettings::Get().TraceLoaded(active_trace_path_.toLatin1().data(), nullptr, true);
+                    RMVSettings::Get().SaveSettings();
+
+                    // Notify the view to refresh the list.
+                    emit TraceOpenFailed();
+                }
+            }
+            else
+            {
+                QtCommon::QtUtils::ShowMessageBox(parent_, QMessageBox::Ok, QMessageBox::Warning, rmv::text::kOpenTraceErrorTitle, text);
             }
         }
 
@@ -251,7 +271,6 @@ namespace rmv
             }
         }
         rmv::LoadAnimationManager::Get().StopAnimation();
-
         disconnect(this, &TraceManager::TraceLoadThreadFinished, this, &TraceManager::FinalizeTraceLoading);
 
         // Defer deleting of this object until later, in case the thread is still executing something

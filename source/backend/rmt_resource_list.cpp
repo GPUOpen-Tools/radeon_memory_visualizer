@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the resource list functions.
@@ -14,6 +14,7 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_address_helper.h"
 #include "rmt_print.h"
+#include "rmt_resource_userdata.h"
 
 #include <string.h>  // for memcpy()
 
@@ -501,6 +502,19 @@ static RmtErrorCode RemoveResourceFromTree(RmtResourceList* resource_list, RmtRe
     return kRmtOk;
 }
 
+void UpdateTotalResourceUsageAliasedSize(RmtResourceList*                                                 resource_list,
+                                         RmtMemoryAliasingTimelineAlgorithm::RmtMemoryAliasingCalculator* memory_aliasing_calculator)
+{
+    SizePerResourceUsageType sizes_per_resource_usage_type;
+    SizeType                 unbound_size;
+    memory_aliasing_calculator->CalculateSizes(sizes_per_resource_usage_type, unbound_size);
+    for (int usage_index = 0; usage_index < RmtResourceUsageType::kRmtResourceUsageTypeCount; usage_index++)
+    {
+        resource_list->total_resource_usage_aliased_size[usage_index] = sizes_per_resource_usage_type.size_[usage_index];
+    }
+    resource_list->total_resource_usage_aliased_size[kRmtResourceUsageTypeFree] = unbound_size;
+}
+
 // destroy a resource
 static RmtErrorCode DestroyResource(RmtResourceList* resource_list, RmtResource* resource)
 {
@@ -516,7 +530,6 @@ static RmtErrorCode DestroyResource(RmtResourceList* resource_list, RmtResource*
     bool is_shareable = (resource->resource_type == kRmtResourceTypeImage) &&
                         ((resource->image.create_flags & kRmtImageCreationFlagShareable) == kRmtImageCreationFlagShareable);
 
-    RmtResourceUsageType resource_type = RmtResourceGetUsageType(resource);
     if ((!is_shareable && (resource_list->enable_aliased_resource_usage_sizes) && resource->bound_allocation != nullptr) &&
         (RmtResourceGetUsageType(resource) != RmtResourceUsageType::kRmtResourceUsageTypeHeap))
     {
@@ -527,20 +540,9 @@ static RmtErrorCode DestroyResource(RmtResourceList* resource_list, RmtResource*
         {
             aliased_resource_allocation->DestroyResource(
                 resource->address - resource->bound_allocation->base_address, resource->size_in_bytes, RmtResourceGetUsageType(resource));
-
-            SizePerResourceUsageType sizes_per_resource_usage_type;
-            SizeType                 unbound_size;
-            memory_aliasing_calculator->CalculateSizes(sizes_per_resource_usage_type, unbound_size);
-            for (int usage_index = 0; usage_index < RmtResourceUsageType::kRmtResourceUsageTypeCount; usage_index++)
-            {
-                resource_list->total_resource_usage_aliased_size[usage_index] = sizes_per_resource_usage_type.size_[usage_index];
-            }
-            resource_list->total_resource_usage_aliased_size[kRmtResourceUsageTypeFree] = unbound_size;
+            UpdateTotalResourceUsageAliasedSize(resource_list, memory_aliasing_calculator);
         }
     }
-
-    RMT_ASSERT(resource_list->resource_usage_size[resource_type] >= resource->size_in_bytes);
-    resource_list->resource_usage_size[RmtResourceGetUsageType(resource)] -= resource->size_in_bytes;
 
     const int64_t hashed_identifier = GenerateResourceHandle(resource->identifier);
 
@@ -597,7 +599,6 @@ RmtErrorCode RmtResourceListInitialize(RmtResourceList*                resource_
     resource_list->root = NULL;
 
     memset(resource_list->resource_usage_count, 0, sizeof(resource_list->resource_usage_count));
-    memset(resource_list->resource_usage_size, 0, sizeof(resource_list->resource_usage_size));
     memset(resource_list->total_resource_usage_aliased_size, 0, sizeof(resource_list->total_resource_usage_aliased_size));
 
     return kRmtOk;
@@ -768,7 +769,7 @@ static void UpdateCommitType(RmtResourceList* resource_list, RmtResource* resour
     // snapshotGeneratorCalculateCommitType in rmt_data_set.cpp.
 }
 
-RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, const RmtTokenResourceBind* resource_bind)
+RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, const RmtTokenResourceBind* resource_bind, const bool track_user_data)
 {
     RMT_ASSERT(resource_list);
     RMT_RETURN_ON_ERROR(resource_list, kRmtErrorInvalidPointer);
@@ -854,21 +855,16 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
             {
                 aliased_resource_allocation->CreateResource(
                     resource->address - resource->bound_allocation->base_address, resource->size_in_bytes, RmtResourceGetUsageType(resource));
-
-                SizePerResourceUsageType sizes_per_resource_type;
-                SizeType                 unbound_size;
-                memory_aliasing_calculator->CalculateSizes(sizes_per_resource_type, unbound_size);
-                for (int usage_index = 0; usage_index < RmtResourceUsageType::kRmtResourceUsageTypeCount; usage_index++)
-                {
-                    resource_list->total_resource_usage_aliased_size[usage_index] = sizes_per_resource_type.size_[usage_index];
-                }
-                resource_list->total_resource_usage_aliased_size[kRmtResourceUsageTypeFree] = unbound_size;
+                UpdateTotalResourceUsageAliasedSize(resource_list, memory_aliasing_calculator);
             }
         }
-    }
 
-    // track the bytes bound
-    resource_list->resource_usage_size[usage_type] += resource->size_in_bytes;
+        if ((track_user_data) && (resource->address == allocation->base_address))
+        {
+            // Keep track of resources bound to a virtual allocation.
+            RmtResourceUserDataTrackBoundResource(resource, allocation->allocation_identifier);
+        }
+    }
 
     return kRmtOk;
 }
@@ -984,8 +980,18 @@ RmtErrorCode RmtResourceUpdateAliasSize(const RmtResourceIdentifier resource_id,
     RmtResource* resource = FindResourceById(resource_list, resource_id);
     if (resource != nullptr)
     {
-        resource->adjusted_size_in_bytes = alias_size;
-        result                           = kRmtOk;
+        if (resource->resource_type == RmtResourceType::kRmtResourceTypeHeap)
+        {
+            // Heap resources are a special case.
+            // Overlapping resources are not considered when calculating heap memory adjusted for aliasing.
+            resource->adjusted_size_in_bytes = resource->size_in_bytes;
+        }
+        else
+        {
+            resource->adjusted_size_in_bytes = alias_size;
+        }
+
+        result = kRmtOk;
     }
 
     return result;

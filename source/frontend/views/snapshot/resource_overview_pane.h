@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Resource Overview pane.
@@ -91,6 +91,12 @@ private slots:
     ///
     /// @param [in] checked Whether the checkbox is checked or unchecked.
     void ComboFiltersChanged(bool checked);
+
+    /// @brief Handle what happens when a checkbox in the resource usage type filter dropdown is checked or unchecked.
+    ///
+    /// @param [in] checked            Whether the checkbox is checked or unchecked.
+    /// @param [in] changed_item_index The index of the check box in the combo box that changed.
+    void ResourceComboFiltersChanged(bool checked, int changed_item_index);
 
     /// @brief The slicing level changed.
     void SlicingLevelChanged();

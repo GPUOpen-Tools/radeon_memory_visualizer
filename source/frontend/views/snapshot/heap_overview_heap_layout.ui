@@ -195,22 +195,29 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="1">
-               <widget class="RMVHeapOverviewMemoryBar" name="bar_total_size_" native="true">
+              <item row="2" column="0">
+               <widget class="ScaledLabel" name="label_bound_">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
                 </property>
                 <property name="toolTip">
-                 <string>The total size of the memory in this heap</string>
+                 <string>The amount of memory in this heap that has bound resources</string>
+                </property>
+                <property name="text">
+                 <string>Bound</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
                </widget>
               </item>
@@ -240,51 +247,6 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="1">
-               <widget class="RMVHeapOverviewMemoryBar" name="bar_requested_" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>The amount of memory in this heap requested by the application</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="ScaledLabel" name="label_bound_">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>8</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="toolTip">
-                 <string>The amount of memory in this heap that has bound resources</string>
-                </property>
-                <property name="text">
-                 <string>Bound</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="1">
                <widget class="RMVHeapOverviewMemoryBar" name="bar_bound_" native="true">
                 <property name="sizePolicy">
@@ -304,34 +266,8 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="ScaledLabel" name="label_committed_">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>8</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="toolTip">
-                 <string>The amount of memory in this heap that has been committed to physical memory</string>
-                </property>
-                <property name="text">
-                 <string>Committed</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="RMVHeapOverviewMemoryBar" name="bar_committed_" native="true">
+              <item row="1" column="1">
+               <widget class="RMVHeapOverviewMemoryBar" name="bar_requested_" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -345,7 +281,26 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>The amount of memory in this heap that has been committed to physical memory</string>
+                 <string>The amount of memory in this heap requested by the application</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="RMVHeapOverviewMemoryBar" name="bar_total_size_" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>The total size of the memory in this heap</string>
                 </property>
                </widget>
               </item>
@@ -506,8 +461,8 @@
              <property name="spacing">
               <number>10</number>
              </property>
-             <item row="6" column="0">
-              <widget class="ScaledLabel" name="label_largest_allocation_">
+             <item row="10" column="1">
+              <widget class="ScaledLabel" name="content_mean_allocation_">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -515,51 +470,12 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Largest allocation:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="1">
-              <widget class="ScaledLabel" name="content_largest_allocation_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>largest</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="ScaledLabel" name="label_gpu_visible_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>GPU Visible:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="ScaledLabel" name="label_cpu_cached_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>CPU Cached:</string>
+                <string>mean</string>
                </property>
               </widget>
              </item>
              <item row="5" column="0">
-              <widget class="ScaledLabel" name="label_smallest_allocation_">
+              <widget class="ScaledLabel" name="label_resource_count_">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -567,72 +483,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Smallest allocation:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="ScaledLabel" name="content_location_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>location</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="ScaledLabel" name="label_cpu_visible_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>CPU Visible:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="ScaledLabel" name="content_cpu_cached_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>yes / no</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="ScaledLabel" name="content_smallest_allocation_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>smallest</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="ScaledLabel" name="content_cpu_visible_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>yes / no</string>
+                <string>Resource count:</string>
                </property>
               </widget>
              </item>
@@ -649,6 +500,84 @@
                </property>
               </widget>
              </item>
+             <item row="5" column="1">
+              <widget class="ScaledLabel" name="content_resource_count_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>resource count</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="ScaledLabel" name="label_cpu_visible_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>CPU Visible:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="1">
+              <widget class="ScaledLabel" name="content_largest_allocation_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>largest</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="1">
+              <widget class="ScaledLabel" name="content_smallest_allocation_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>smallest</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="ScaledLabel" name="label_cpu_cached_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>CPU Cached:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
+              <widget class="ScaledLabel" name="label_smallest_allocation_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Smallest allocation:</string>
+               </property>
+              </widget>
+             </item>
              <item row="3" column="1">
               <widget class="ScaledLabel" name="content_gpu_cached_">
                <property name="sizePolicy">
@@ -662,8 +591,47 @@
                </property>
               </widget>
              </item>
+             <item row="0" column="1">
+              <widget class="ScaledLabel" name="content_location_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>location</string>
+               </property>
+              </widget>
+             </item>
              <item row="4" column="1">
               <widget class="ScaledLabel" name="content_gpu_visible_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>yes / no</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="ScaledLabel" name="label_gpu_visible_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>GPU Visible:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="ScaledLabel" name="content_cpu_visible_">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -688,7 +656,20 @@
                </property>
               </widget>
              </item>
-             <item row="7" column="0">
+             <item row="6" column="1">
+              <widget class="ScaledLabel" name="content_committed_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>committed</string>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="0">
               <widget class="ScaledLabel" name="label_mean_allocation_">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -701,8 +682,8 @@
                </property>
               </widget>
              </item>
-             <item row="7" column="1">
-              <widget class="ScaledLabel" name="content_mean_allocation_">
+             <item row="9" column="0">
+              <widget class="ScaledLabel" name="label_largest_allocation_">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -710,7 +691,59 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>mean</string>
+                <string>Largest allocation:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="ScaledLabel" name="label_committed_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Committed:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="ScaledLabel" name="content_cpu_cached_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>yes / no</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="ScaledLabel" name="label_allocation_count_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Allocation count:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <widget class="ScaledLabel" name="content_allocation_count_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>allocation count</string>
                </property>
               </widget>
              </item>
@@ -787,6 +820,16 @@
                  <width>180</width>
                  <height>180</height>
                 </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_resource_donut_description_">
+               <property name="text">
+                <string>Committed memory description</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -934,15 +977,15 @@
    <header>qt_common/custom_widgets/colored_legend_graphics_view.h</header>
   </customwidget>
   <customwidget>
+   <class>ScaledLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
    <class>DonutPieWidget</class>
    <extends>QWidget</extends>
    <header>qt_common/custom_widgets/donut_pie_widget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ScaledLabel</class>
-   <extends>QLabel</extends>
-   <header>qt_common/custom_widgets/scaled_label.h</header>
   </customwidget>
   <customwidget>
    <class>RMVHeapOverviewMemoryBar</class>

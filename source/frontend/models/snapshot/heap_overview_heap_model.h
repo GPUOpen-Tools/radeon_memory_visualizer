@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a model for a heap layout for the Heap Overview pane.
@@ -32,9 +32,12 @@ namespace rmv
         kHeapOverviewCpuVisible,
         kHeapOverviewGpuCached,
         kHeapOverviewGpuVisible,
+        kHeapOverviewAllocationCount,
         kHeapOverviewSmallestAllocation,
         kHeapOverviewLargestAllocation,
         kHeapOverviewMeanAllocation,
+        kHeapOverviewResourceCount,
+        kHeapOverviewCommitted,
 
         kHeapOverviewNumWidgets,
     };

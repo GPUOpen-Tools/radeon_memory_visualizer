@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions of the RMT token.
@@ -74,6 +74,7 @@ typedef struct RmtTokenUserdata
         resource_identifier;  ///< The identifier used to match a name to a non-DX resource, only valid when usedataType is RMT_USERDATA_TYPE_NAME.
     RmtCorrelationIdentifier correlation_identifier;        ///< The identifier used to match correlation ID for DX traces.
     RmtResourceIdentifier    original_resource_identifier;  ///< The Original Resource ID contained in the RESOURCE_CREATE token.
+    RmtImplicitResourceType  implicit_resource_type;        ///< The type of implicit resource.
 } RmtTokenUserdata;
 
 /// A structure encapsulating misc data.

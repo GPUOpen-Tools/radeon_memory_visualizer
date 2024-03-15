@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a resource item model.
@@ -17,6 +17,7 @@
 #include "rmt_util.h"
 
 #include "managers/trace_manager.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -154,7 +155,7 @@ namespace rmv
             {
                 if (resource->bound_allocation != nullptr)
                 {
-                    return QString::number(resource->bound_allocation->guid);
+                    return rmv_util::GetVirtualAllocationName(resource->bound_allocation);
                 }
                 else
                 {
@@ -188,6 +189,11 @@ namespace rmv
                 return QVariant::fromValue<qulonglong>(cache_[row].host_bytes);
             case kResourceColumnMappedNone:
                 return QVariant::fromValue<qulonglong>(cache_[row].unmapped_bytes);
+            case kResourceColumnUsage:
+            {
+                const RmtResourceUsageType resource_usage_type = RmtResourceGetUsageType(resource);
+                return QVariant::fromValue<int>(resource_usage_type);
+            }
             case kResourceColumnGlobalId:
                 return QVariant::fromValue<qulonglong>(resource->identifier);
 

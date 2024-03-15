@@ -1,6 +1,6 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief Script to perform all necessary pre build steps. This includes:
@@ -66,7 +66,6 @@ else:
 parser.add_argument("--qt", default="5.15.2", help="specify the version of QT to be used with the script (default: 5.15.2)" )
 parser.add_argument("--clean", action="store_true", help="delete any directories created by this script")
 parser.add_argument("--no-qt", action="store_true", help="build a headless version (not applicable for all products)")
-parser.add_argument("--build-number", default="0", help="specify the build number, primarily to be used by build machines to produce versioned builds")
 parser.add_argument("--update", action="store_true", help="Force fetch_dependencies script to update all dependencies")
 parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of PreBuild.py script)")
 parser.add_argument("--build", action="store_true", help="build all supported configurations on completion of prebuild step")
@@ -263,8 +262,6 @@ def generate_config(config):
         if args.qt_system:
             cmake_args.extend(["-DQT_SYSTEM:BOOL=TRUE"])
 
-    cmake_args.extend(["-DRMV_BUILD_NUMBER=" + str(args.build_number)])
-
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=" + debug_output_dir])
@@ -387,3 +384,4 @@ if (args.build):
 minutes, seconds = divmod(time.time() - start_time, 60)
 log_print("Successfully completed in {0:.0f} minutes, {1:.1f} seconds".format(minutes,seconds))
 sys.exit(0)
+

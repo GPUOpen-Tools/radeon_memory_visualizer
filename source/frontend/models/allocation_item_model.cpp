@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for an allocation item model.
@@ -16,6 +16,7 @@
 
 #include "managers/trace_manager.h"
 #include "models/snapshot/allocation_explorer_model.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -90,7 +91,7 @@ namespace rmv
             switch (index.column())
             {
             case kVirtualAllocationColumnId:
-                return QString::number(cache.virtual_allocation->base_address);
+                return rmv_util::GetVirtualAllocationName(cache.virtual_allocation);
             case kVirtualAllocationColumnAllocationSize:
                 return rmv::string_util::LocalizedValueMemory(cache.allocation_size, false, false);
             case kVirtualAllocationColumnBound:

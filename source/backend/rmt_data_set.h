@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -63,6 +63,7 @@ struct RmtDataSetFlags
     bool userdata_processed : 1;           ///< Whether the userdata tokens have been processed yet.
     bool contains_correlation_tokens : 1;  ///< Whether the dataset contains any correlation tokens.
     bool cancel_background_task_flag : 1;  ///< If true, indicates a background task has been cancelled.
+    bool implicit_heap_detection : 1;      ///< If true, indicates the trace includes data that can be used to determine if a heap is implicit.
 };
 
 /// A structure encapsulating a single RMT dataset.

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the allocation bar model base class.
@@ -18,6 +18,7 @@
 #include "rmt_types.h"
 #include "rmt_data_snapshot.h"
 
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 #include "managers/trace_manager.h"
@@ -51,7 +52,7 @@ namespace rmv
 
     QString AllocationBarModel::GetTitleText(const RmtVirtualAllocation* allocation) const
     {
-        return "Allocation: " + QString::number(allocation->base_address) +
+        return "Allocation: " + rmv_util::GetVirtualAllocationName(allocation) +
                " - Heap: " + QString(RmtGetHeapTypeNameFromHeapType(allocation->heap_preferences[0]));
     }
 

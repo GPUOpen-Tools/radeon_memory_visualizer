@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the Trace Manager.
@@ -24,6 +24,7 @@ enum TraceLoadReturnCode
     kTraceLoadReturnError,
     kTraceLoadReturnSuccess,
     kTraceLoadReturnFail,
+    kTraceLoadReturnFileNotSupported,
     kTraceLoadReturnAlreadyOpened,
     kTraceLoadReturnOutOfVirtualGPUMemory,
 };
@@ -110,6 +111,9 @@ namespace rmv
         /// @brief Signal to indicate that a trace file has been loaded and opened
         /// and is ready to show in the UI.
         void TraceOpened();
+
+        /// @brief Signal to indicate that a trace file failed to open due to an error.
+        void TraceOpenFailed();
 
         /// @brief Signal to indicate that a trace file has been closed and should be
         /// disabled in the UI.

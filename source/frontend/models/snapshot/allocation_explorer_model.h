@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Allocation explorer model.
@@ -117,9 +117,6 @@ namespace rmv
         /// @return The number of resources in the allocation.
         int32_t UpdateResourceTable();
 
-        /// @brief Build a list of resource size thresholds for the filter by size slider.
-        void BuildResourceSizeThresholds();
-
         /// @brief Get the allocation proxy model.
         ///
         /// Used to set up a connection between the table being sorted and the UI update.
@@ -138,14 +135,13 @@ namespace rmv
         AllocationBarModel* GetAllocationBarModel() const;
 
     private:
-        AllocationBarModel*   allocation_bar_model_;                       ///< The model for the allocation bar graph.
-        AllocationItemModel*  allocation_table_model_;                     ///< Holds the allocation table data.
-        ResourceItemModel*    resource_table_model_;                       ///< Holds the resource table data.
-        AllocationProxyModel* allocation_proxy_model_;                     ///< Allocation table proxy model.
-        ResourceProxyModel*   resource_proxy_model_;                       ///< Resource table proxy model.
-        uint64_t              resource_thresholds_[kSizeSliderRange + 1];  ///< List of resource size thresholds for the filter by size sliders.
-        uint64_t              minimum_allocation_size_;                    ///< The size of the smallest allocation.
-        uint64_t              maximum_allocation_size_;                    ///< The size of the largest allocation.
+        AllocationBarModel*   allocation_bar_model_;     ///< The model for the allocation bar graph.
+        AllocationItemModel*  allocation_table_model_;   ///< Holds the allocation table data.
+        ResourceItemModel*    resource_table_model_;     ///< Holds the resource table data.
+        AllocationProxyModel* allocation_proxy_model_;   ///< Allocation table proxy model.
+        ResourceProxyModel*   resource_proxy_model_;     ///< Resource table proxy model.
+        uint64_t              minimum_allocation_size_;  ///< The size of the smallest allocation.
+        uint64_t              maximum_allocation_size_;  ///< The size of the largest allocation.
     };
 }  // namespace rmv
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource List pane.
@@ -21,6 +21,7 @@
 #include "models/resource_item_model.h"
 #include "models/snapshot/resource_list_model.h"
 #include "settings/rmv_settings.h"
+#include "util/string_util.h"
 
 ResourceListPane::ResourceListPane(QWidget* parent)
     : BasePane(parent)
@@ -40,6 +41,7 @@ ResourceListPane::ResourceListPane(QWidget* parent)
 
     model_->InitializeTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount);
     ui_->resource_table_view_->setCursor(Qt::PointingHandCursor);
+    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnVirtualAddress, Qt::AscendingOrder);
 
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->preferred_heap_combo_box_, rmv::text::kPreferredHeap);
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->resource_usage_combo_box_, rmv::text::kResourceUsage);
@@ -62,11 +64,13 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     ui_->carousel_view_->setScene(carousel_->Scene());
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->search_box_, ui_->size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->size_slider_);
 
     connect(ui_->size_slider_, &DoubleSliderWidget::SpanChanged, this, &ResourceListPane::FilterBySizeSliderChanged);
     connect(ui_->search_box_, &QLineEdit::textChanged, this, &ResourceListPane::SearchBoxChanged);
     connect(ui_->resource_table_view_, &QTableView::clicked, this, &ResourceListPane::TableClicked);
     connect(ui_->resource_table_view_, &QTableView::doubleClicked, this, &ResourceListPane::TableDoubleClicked);
+    ui_->dump_resources_button_->hide();
 
     // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetResourceProxyModel(), &rmv::ResourceProxyModel::layoutChanged, this, &ResourceListPane::ScrollToSelectedResource);
@@ -116,6 +120,7 @@ void ResourceListPane::Refresh()
     model_->UpdatePreferredHeapList(heap_filter_string);
     QString resource_filter_string = resource_usage_combo_box_model_->GetFilterString(ui_->resource_usage_combo_box_);
     model_->UpdateResourceUsageList(resource_filter_string);
+    FilterBySizeSliderChanged(ui_->size_slider_->LowerValue(), ui_->size_slider_->UpperValue());
 }
 
 void ResourceListPane::OnTraceClose()
@@ -131,7 +136,7 @@ void ResourceListPane::Reset()
     selected_resource_identifier_ = 0;
 
     ui_->size_slider_->SetLowerValue(0);
-    ui_->size_slider_->SetUpperValue(rmv::kSizeSliderRange);
+    ui_->size_slider_->SetUpperValue(ui_->size_slider_->maximum());
     ui_->search_box_->setText("");
 
     carousel_->ClearData();
@@ -188,7 +193,6 @@ void ResourceListPane::PopulateResourceTable()
     ui_->resource_table_view_->setSortingEnabled(false);
     model_->Update();
     ui_->resource_table_view_->setSortingEnabled(true);
-    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnName, Qt::DescendingOrder);
     ui_->resource_table_view_->horizontalHeader()->adjustSize();
     model_valid_ = true;
     SelectResourceInTable();
@@ -222,11 +226,12 @@ void ResourceListPane::HeapChanged(bool checked)
     SetMaximumResourceTableHeight();
 }
 
-void ResourceListPane::ResourceChanged(bool checked)
+void ResourceListPane::ResourceChanged(bool checked, int changed_item_index)
 {
-    // Rebuild the table depending on what the state of the combo box items is.
     RMT_UNUSED(checked);
 
+    // Rebuild the table depending on what the state of the combo box items is.
+    resource_usage_combo_box_model_->UpdateCheckboxes(changed_item_index, ui_->resource_usage_combo_box_);
     QString filter_string = resource_usage_combo_box_model_->GetFilterString(ui_->resource_usage_combo_box_);
     model_->UpdateResourceUsageList(filter_string);
     SetMaximumResourceTableHeight();

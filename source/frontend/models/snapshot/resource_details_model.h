@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Resource details model.
@@ -164,7 +164,7 @@ namespace rmv
         /// @param [out] color               The color to use for the heap specified.
         ///
         /// @return true if residency data was found, false if error.
-        bool GetResidencyData(RmtResourceIdentifier resource_identifier, int index, int& value, QString& name, QColor& color) const;
+        bool GetResidencyData(RmtResourceIdentifier resource_identifier, int index, float& value, QString& name, QColor& color) const;
 
         /// @brief Get the data for the unmapped memory.
         ///

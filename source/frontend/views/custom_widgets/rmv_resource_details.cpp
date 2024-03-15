@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the resource details widget.
@@ -13,6 +13,7 @@
 #include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_print.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 RMVResourceDetails::RMVResourceDetails(const RMVResourceDetailsConfig& config)
@@ -63,11 +64,11 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
                     painter->drawText(
                         0,
                         header_height,
-                        "Resource ID " + QString::number(identifier) + " in allocation " + QString::number(static_cast<qulonglong>(allocation->base_address)));
+                        "Resource ID " + QString::number(identifier) + " in allocation " + rmv_util::GetVirtualAllocationName(allocation));
                 }
                 else
                 {
-                    painter->drawText(0, header_height, "Unbound resource in allocation " + QString::number(static_cast<qulonglong>(allocation->base_address)));
+                    painter->drawText(0, header_height, "Unbound resource in allocation " + rmv_util::GetVirtualAllocationName(allocation));
                 }
             }
             else
@@ -108,7 +109,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
 
         x_pos += ScalingManager::Get().Scaled(100);
         painter->drawText(x_pos, header_height, "Offset");
-        painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValue(offset));
+        painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValueAddress(offset));
 
         x_pos += ScalingManager::Get().Scaled(250);
         painter->drawText(x_pos, header_height, "Usage");

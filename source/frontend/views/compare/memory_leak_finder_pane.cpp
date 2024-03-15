@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Memory leak finder pane.
@@ -43,6 +43,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
 
     model_->InitializeTableModel(ui_->resource_table_view_, 0, rmv::kResourceColumnCount, rmv::kSnapshotCompareIdCommon);
     ui_->resource_table_view_->setCursor(Qt::PointingHandCursor);
+    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnVirtualAddress, Qt::AscendingOrder);
 
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->preferred_heap_combo_box_, rmv::text::kPreferredHeap);
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->resource_usage_combo_box_, rmv::text::kResourceUsage);
@@ -62,6 +63,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     ui_->resource_table_view_->verticalHeader()->setDefaultSectionSize(compare_id_delegate_->DefaultSizeHint().height());
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->search_box_, ui_->size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->size_slider_);
 
     ui_->base_allocations_checkbox_->Initialize(false, rmv::RMVSettings::Get().GetColorSnapshotViewed(), Qt::black);
     ui_->both_allocations_checkbox_->Initialize(
@@ -81,6 +83,8 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetResourceProxyModel(), &rmv::MemoryLeakFinderProxyModel::layoutChanged, this, &MemoryLeakFinderPane::ScrollToSelectedResource);
 
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::SwapSnapshotsRequested, this, &MemoryLeakFinderPane::SwitchSnapshots);
+
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MemoryLeakFinderPane::OnScaleFactorChanged);
 }
 
@@ -97,7 +101,7 @@ MemoryLeakFinderPane::~MemoryLeakFinderPane()
 void MemoryLeakFinderPane::showEvent(QShowEvent* event)
 {
     HeapChanged(false);
-    ResourceChanged(false);
+    ResourceChanged(false, -1);
     Update(false);
 
     QWidget::showEvent(event);
@@ -114,6 +118,15 @@ void MemoryLeakFinderPane::OnScaleFactorChanged()
     // Update the table row height according to the compare ID column delegate (which is dependent on DPI scale).
     // This item is the tallest object in the table, so this height is a good one to use.
     ui_->resource_table_view_->verticalHeader()->setDefaultSectionSize(checkmark_icon_height);
+}
+
+void MemoryLeakFinderPane::SwitchSnapshots()
+{
+    const rmv::SnapshotCompareId compare_filter = GetCompareIdFilter();
+    if (model_->SwapSnapshots(compare_filter) == true)
+    {
+        Update(false);
+    }
 }
 
 void MemoryLeakFinderPane::Refresh()
@@ -160,8 +173,6 @@ void MemoryLeakFinderPane::Update(bool reset_filters)
 
     ui_->resource_table_view_->setSortingEnabled(true);
 
-    ui_->resource_table_view_->sortByColumn(rmv::kResourceColumnName, Qt::DescendingOrder);
-
     SetMaximumResourceTableHeight();
 }
 
@@ -176,7 +187,7 @@ void MemoryLeakFinderPane::Reset()
     model_->ResetModelValues();
 
     ui_->size_slider_->SetLowerValue(0);
-    ui_->size_slider_->SetUpperValue(rmv::kSizeSliderRange);
+    ui_->size_slider_->SetUpperValue(ui_->size_slider_->maximum());
     ui_->search_box_->setText("");
 }
 
@@ -215,11 +226,12 @@ void MemoryLeakFinderPane::HeapChanged(bool checked)
     SetMaximumResourceTableHeight();
 }
 
-void MemoryLeakFinderPane::ResourceChanged(bool checked)
+void MemoryLeakFinderPane::ResourceChanged(bool checked, int changed_item_index)
 {
-    // Rebuild the table depending on what the state of the combo box items is.
     RMT_UNUSED(checked);
 
+    // Rebuild the table depending on what the state of the combo box items is.
+    resource_usage_combo_box_model_->UpdateCheckboxes(changed_item_index, ui_->resource_usage_combo_box_);
     QString filter_string = resource_usage_combo_box_model_->GetFilterString(ui_->resource_usage_combo_box_);
     model_->UpdateResourceUsageList(filter_string);
     SetMaximumResourceTableHeight();

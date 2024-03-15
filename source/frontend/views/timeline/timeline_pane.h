@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Timeline pane.
@@ -226,19 +226,24 @@ private:
     /// @param [in] shown Should the context menu be shown.
     void UpdateTimelineScrollbarContextMenu(bool shown);
 
+    /// @brief Update the label used to display the selection duration and mouse hover position on the timeline.
+    void UpdateClockAndSelectionLabel();
+
     /// @brief Helper function to set the maximum height of the table so it only contains rows with valid data.
     inline void SetMaximumSnapshotTableHeight()
     {
         ui_->snapshot_table_view_->setMaximumHeight(rmv::widget_util::GetTableHeight(ui_->snapshot_table_view_, model_->RowCount()));
     }
 
-    Ui::TimelinePane*                   ui_;                       ///< Pointer to the Qt UI design.
-    ZoomIconGroupManager*               zoom_icon_manager_;        ///< The object responsible for the zoom icon status.
-    rmv::TimelineModel*                 model_;                    ///< Container class for the widget models.
-    ColoredLegendScene*                 snapshot_legends_;         ///< Snapshot legends above the timeline.
-    rmv::KeyboardZoomShortcutsTimeline* keyboard_zoom_shortcuts_;  ///< Keyboard shortcut handler.
-    rmv::TimelineColorizer*             colorizer_;                ///< The colorizer used by the 'timeline type' combo box.
-    rmv::ThreadController*              thread_controller_;        ///< The thread for processing backend data.
+    Ui::TimelinePane*                   ui_;                            ///< Pointer to the Qt UI design.
+    ZoomIconGroupManager*               zoom_icon_manager_;             ///< The object responsible for the zoom icon status.
+    rmv::TimelineModel*                 model_;                         ///< Container class for the widget models.
+    ColoredLegendScene*                 snapshot_legends_;              ///< Snapshot legends above the timeline.
+    rmv::KeyboardZoomShortcutsTimeline* keyboard_zoom_shortcuts_;       ///< Keyboard shortcut handler.
+    rmv::TimelineColorizer*             colorizer_;                     ///< The colorizer used by the 'timeline type' combo box.
+    rmv::ThreadController*              thread_controller_;             ///< The thread for processing backend data.
+    uint64_t                            hover_clock_;                   ///< The mouse position in clocks on the timeline.
+    uint64_t                            selection_duration_in_clocks_;  ///< The duration of the timeline selection in clocks.
 };
 
 #endif  // RMV_VIEWS_TIMELINE_TIMELINE_PANE_H_

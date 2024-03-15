@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model for a heap layout for the Heap Overview
@@ -61,6 +61,9 @@ namespace rmv
         SetModelData(kHeapOverviewCpuVisible, "-");
         SetModelData(kHeapOverviewGpuCached, "-");
         SetModelData(kHeapOverviewGpuVisible, "-");
+        SetModelData(kHeapOverviewCommitted, "-");
+        SetModelData(kHeapOverviewResourceCount, "-");
+        SetModelData(kHeapOverviewAllocationCount, "-");
         SetModelData(kHeapOverviewSmallestAllocation, "-");
         SetModelData(kHeapOverviewLargestAllocation, "-");
         SetModelData(kHeapOverviewMeanAllocation, "-");
@@ -129,9 +132,12 @@ namespace rmv
         SetModelData(kHeapOverviewCpuVisible, ((segment_status_.flags & kRmtSegmentStatusFlagCpuVisible) != 0) ? "Yes" : "No");
         SetModelData(kHeapOverviewGpuCached, ((segment_status_.flags & kRmtSegmentStatusFlagGpuCached) != 0) ? "Yes" : "No");
         SetModelData(kHeapOverviewGpuVisible, ((segment_status_.flags & kRmtSegmentStatusFlagGpuVisible) != 0) ? "Yes" : "No");
+        SetModelData(kHeapOverviewCommitted, rmv::string_util::LocalizedValueMemory(segment_status_.committed_size, false, false));
+        SetModelData(kHeapOverviewAllocationCount, rmv::string_util::LocalizedValue(segment_status_.allocation_count));
         SetModelData(kHeapOverviewSmallestAllocation, rmv::string_util::LocalizedValueMemory(segment_status_.min_allocation_size, false, false));
         SetModelData(kHeapOverviewLargestAllocation, rmv::string_util::LocalizedValueMemory(segment_status_.max_allocation_size, false, false));
         SetModelData(kHeapOverviewMeanAllocation, rmv::string_util::LocalizedValueMemory(segment_status_.mean_allocation_size, false, false));
+        SetModelData(kHeapOverviewResourceCount, rmv::string_util::LocalizedValue(segment_status_.resource_count));
     }
 
     void HeapOverviewHeapModel::GetMemoryParameters(uint64_t&                     total_physical_size,

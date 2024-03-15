@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource Overview model.
@@ -14,6 +14,7 @@
 #include "rmt_print.h"
 
 #include "managers/trace_manager.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 namespace rmv
@@ -52,14 +53,14 @@ namespace rmv
         }
     }
 
-    void ResourceOverviewModel::FilterBySizeChanged(int32_t min_value, int32_t max_value, bool use_unbound)
+    void ResourceOverviewModel::FilterBySizeChanged(int32_t min_value, int32_t max_value)
     {
         const SnapshotManager& snapshot_manager = SnapshotManager::Get();
         const RmtDataSnapshot* open_snapshot    = snapshot_manager.GetOpenSnapshot();
         if (TraceManager::Get().DataSetValid() && (open_snapshot != nullptr))
         {
-            min_resource_size_ = snapshot_manager.GetSizeFilterThreshold(min_value, use_unbound);
-            max_resource_size_ = snapshot_manager.GetSizeFilterThreshold(max_value, use_unbound);
+            min_resource_size_ = rmv_util::CalculateSizeThresholdFromStepValue(min_value, rmv::kSizeSliderRange - 1);
+            max_resource_size_ = rmv_util::CalculateSizeThresholdFromStepValue(max_value, rmv::kSizeSliderRange - 1);
         }
     }
 
@@ -111,12 +112,14 @@ namespace rmv
             }
 
             const uint64_t offset = RmtResourceGetOffsetFromBoundAllocation(resource);
-            text_string += "\nOffset: " + rmv::string_util::LocalizedValue(offset);
+            text_string += "\nOffset: " + rmv::string_util::LocalizedValueAddress(offset);
 
             const RmtVirtualAllocation* allocation = resource->bound_allocation;
             if (allocation != nullptr)
             {
-                text_string += "\nAllocation " + QString::number(static_cast<qulonglong>(allocation->base_address));
+                text_string += "\nAllocation " + rmv_util::GetVirtualAllocationName(resource->bound_allocation);
+
+                // A resource identifier of zero signifies that a 'dummy' resource is being used to represent an unbound memory block.
                 if (resource->identifier == 0)
                 {
                     text_string += " (unbound)";

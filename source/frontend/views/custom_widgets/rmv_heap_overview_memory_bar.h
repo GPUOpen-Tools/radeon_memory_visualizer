@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a heap overview memory bar.
@@ -50,7 +50,13 @@ public:
     /// @param [in] has_subscription    Does this bar need to take into account memory subscription?
     ///  If so it will be colored based on its subscription status, otherwise it will be gray.
     /// @param [in] subscription_status The current subscription status showing if the memory is oversubscribed or not.
-    void SetParameters(uint64_t size, uint64_t extra_size, uint64_t max_size, bool has_subscription, RmtSegmentSubscriptionStatus subscription_status);
+    /// @param [in] emphasize           If true, the bar is highlighted with a lighter color.
+    void SetParameters(uint64_t                     size,
+                       uint64_t                     extra_size,
+                       uint64_t                     max_size,
+                       bool                         has_subscription,
+                       RmtSegmentSubscriptionStatus subscription_status,
+                       bool                         emphasize);
 
 protected:
     /// @brief Implementation of Qt's paint event.
@@ -69,6 +75,7 @@ private:
     uint64_t                     max_size_;             ///< Max size of bar. Used to scale all bars.
     bool                         has_subscription_;     ///< Does this bar need subscription coloring.
     RmtSegmentSubscriptionStatus subscription_status_;  ///< Subscription(none, over, under, near). Will determine bar color.
+    bool                         emphasize_;            ///< If true, the bar is highlighted with a lighter color.
 };
 
 #endif  // RMV_VIEWS_CUSTOM_WIDGETS_RMV_HEAP_OVERVIEW_MEMORY_BAR_H_

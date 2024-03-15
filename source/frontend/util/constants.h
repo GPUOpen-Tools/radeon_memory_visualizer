@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -53,7 +53,7 @@ namespace rmv
     static const int kAllocationHeight      = 100;
     static const int kHeapComboBoxWidth     = 140;
     static const int kResourceComboBoxWidth = 140;
-    static const int kSizeSliderRange       = 100;
+    static const int kSizeSliderRange       = 25;
 
     // Control window sizes.
     static const int   kDesktopMargin                      = 25;
@@ -72,17 +72,25 @@ namespace rmv
 
     namespace text
     {
+        // Generic error message.
+        static const QString kOpenTraceErrorTitle = "Error";
+        static const QString kOpenTraceErrorText  = "The trace file, %1, failed to load.";
+
         // Delete recent file pop up dialog.
         static const QString kDeleteRecentTraceTitle        = "Error";
-        static const QString kDeleteRecentTraceText         = "The trace failed to load. Do you want to remove the trace %1 from the recent files list?";
+        static const QString kDeleteRecentTraceText         = "\n\nDo you want to remove it from the recent files list?";
+
         static const QString kRecentTraceAlreadyOpenedTitle = "Warning";
         static const QString kRecentTraceAlreadyOpenedText =
             "Opening the trace file as read-only (snapshot edits will not be saved). The RMV file is either read only or has been opened in another instance "
             "of RMV";
 
-        // Specific error messages.
+        // Specific error messages (appended to generic error message).
         static const QString kOpenTraceOutOfVirtualGPUMemory =
-            "The trace file contains allocations requesting more than 64GB of GPU memory. Please reduce the video memory consumption.\n\n";
+            "\n\nThe trace file contains allocations requesting more than 64GB of GPU memory. Please reduce the video memory consumption.";
+
+        static const QString kOpenTraceFileNotSupported =
+            "\n\nThe trace file is no longer supported. Please load it using an older version of the Radeon Memory Visualizer.";
 
         // Open recent trace missing pop up dialog.
         static const QString kOpenRecentTraceTitle = "Trace not opened";

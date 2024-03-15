@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model corresponding to a resource combo box.
@@ -19,16 +19,26 @@
 
 #include <cmath>
 
-// Set of resources that shouldn't be in the resource combo box.
-static const std::set<int> kExcludedResources = {kRmtResourceUsageTypeUnknown};
+// Set of resources that shouldn't be in the resource combo box or are specially managed.
+static const std::set<int> kExcludedResources = {RmtResourceUsageType::kRmtResourceUsageTypeUnknown,
+                                                 RmtResourceUsageType::kRmtResourceUsageTypeHeap,
+                                                 RmtResourceUsageType::kRmtResourceUsageTypeAll};
 
 // Set of resources that should be disabled in the resource combo box.
 static const std::set<int> kDisabledResources = {kRmtResourceUsageTypeHeap, kRmtResourceUsageTypeFree};
+
+// Indentation string for checkbox labels.
+static const QString kCheckboxIndentationString("> ");
+
+// Indicates an invalid index for the combobox.
+static const int kInvalidIndex = -1;
 
 namespace rmv
 {
     ResourceUsageComboBoxModel::ResourceUsageComboBoxModel()
         : ComboBoxModel()
+        , heap_checkbox_item_index_(kInvalidIndex)
+        , all_checkbox_item_index_(kInvalidIndex)
     {
         // Inform the model which entries are ignored in the UI.
         SetupExcludeIndexList(kExcludedResources);
@@ -40,25 +50,40 @@ namespace rmv
 
     void ResourceUsageComboBoxModel::SetupResourceComboBox(ArrowIconComboBox* combo_box)
     {
-        // Add the "All" entry to the combo box.
-        QCheckBox* checkbox = combo_box->AddCheckboxItem("All", QVariant(), false, true);
+        // Add the "Heap" checkbox to the combo box.
+        heap_checkbox_item_index_ = combo_box->RowCount();
+        QCheckBox* checkbox = combo_box->AddCheckboxItem(RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceUsageType::kRmtResourceUsageTypeHeap),
+                                                         RmtResourceUsageType::kRmtResourceUsageTypeHeap,
+                                                         false,
+                                                         false);
         RMT_ASSERT(checkbox != nullptr);
         if (checkbox != nullptr)
         {
-            connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true); });
+            connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true, heap_checkbox_item_index_); });
+        }
+
+        // Add the "All" checkbox to the combo box.
+        all_checkbox_item_index_ = combo_box->RowCount();
+        checkbox                 = combo_box->AddCheckboxItem("All resource usage types", RmtResourceUsageType::kRmtResourceUsageTypeCount, false, false);
+        RMT_ASSERT(checkbox != nullptr);
+        if (checkbox != nullptr)
+        {
+            connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true, all_checkbox_item_index_); });
         }
 
         // Add resources if they are not excluded.
-        for (int i = 0; i < static_cast<int>(kRmtResourceUsageTypeCount); i++)
+        for (int i = 0; i < static_cast<int>(RmtResourceUsageType::kRmtResourceUsageTypeCount); i++)
         {
-            auto it = kExcludedResources.find(i);
+            const auto it = kExcludedResources.find(i);
             if (it == kExcludedResources.end())
             {
-                checkbox = combo_box->AddCheckboxItem(RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceUsageType(i)), QVariant(), false, false);
+                checkbox = combo_box->AddCheckboxItem(
+                    kCheckboxIndentationString + RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceUsageType(i)), i, false, false);
                 RMT_ASSERT(checkbox != nullptr);
                 if (checkbox != nullptr)
                 {
-                    connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true); });
+                    const int item_index = combo_box->RowCount() - 1;
+                    connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true, item_index); });
                 }
             }
         }
@@ -67,34 +92,35 @@ namespace rmv
 
     void ResourceUsageComboBoxModel::ResetResourceComboBox(ArrowIconComboBox* combo_box)
     {
-        // Index 0 is the "all" combo box entry.
+        combo_box->SetChecked(heap_checkbox_item_index_, false);
+
         if (kDisabledResources.size() > 0)
         {
-            // If there are disabled resources, then disable the "All" checkbox.
-            int combo_box_row = 0;
-            combo_box->SetChecked(combo_box_row, false);
-            combo_box_row++;
-
-            for (int i = 0; i < static_cast<int>(kRmtResourceUsageTypeCount); i++)
+            const int item_count = combo_box->RowCount();
+            for (int i = 0; i < item_count; i++)
             {
+                const RmtResourceUsageType usage_type = static_cast<RmtResourceUsageType>(combo_box->ItemData(i).toInt());
+
+                const auto disabled_it = kDisabledResources.find(usage_type);
+                if (disabled_it != kDisabledResources.end())
+                {
+                    combo_box->SetChecked(i, false);
+                }
+                else
+                {
+                    combo_box->SetChecked(i, true);
+                }
+
                 // If this resource is excluded, skip it.
-                auto exclude_it = kExcludedResources.find(i);
+                const auto exclude_it = kExcludedResources.find(usage_type);
                 if (exclude_it != kExcludedResources.end())
                 {
                     continue;
                 }
-
-                auto disabled_it = kDisabledResources.find(i);
-                if (disabled_it != kDisabledResources.end())
-                {
-                    combo_box->SetChecked(combo_box_row, false);
-                }
-                else
-                {
-                    combo_box->SetChecked(combo_box_row, true);
-                }
-                combo_box_row++;
             }
+
+            // Since there are some unchecked usage types, the "All" checkbox needs to be uncheck.
+            combo_box->SetChecked(all_checkbox_item_index_, false);
         }
         SetupState(combo_box);
     }
@@ -105,12 +131,10 @@ namespace rmv
 
         // Build the resource filter.
         QString resource_filter = QString("(=");
-        for (int resource = 0; resource < kRmtResourceUsageTypeCount; resource++)
+
+        for (auto item_usage_type : checked_resource_usage_types_)
         {
-            if (ItemInList(resource) == true)
-            {
-                resource_filter += "|" + QString(RmtGetResourceUsageTypeNameFromResourceUsageType(static_cast<RmtResourceUsageType>(resource)));
-            }
+            resource_filter += "|" + QString(RmtGetResourceUsageTypeNameFromResourceUsageType(item_usage_type));
         }
         resource_filter += ")";
 
@@ -125,9 +149,16 @@ namespace rmv
 
         uint64_t filter_mask = 0;
 
-        for (int usage_type = kRmtResourceUsageTypeFree; usage_type < kRmtResourceUsageTypeCount; usage_type++)
+        const int item_count = combo_box->RowCount();
+        for (int i = 0; i < item_count; i++)
         {
-            if (ItemInList(usage_type) == true)
+            if (i == all_checkbox_item_index_)
+            {
+                continue;
+            }
+
+            const RmtResourceUsageType usage_type = static_cast<RmtResourceUsageType>(combo_box->ItemData(i).toInt());
+            if (combo_box->IsChecked(i))
             {
                 filter_mask |= static_cast<uint64_t>(std::pow(2, usage_type - 1));
             }
@@ -136,9 +167,121 @@ namespace rmv
         return filter_mask;
     }
 
-    void ResourceUsageComboBoxModel::SetupState(const ArrowIconComboBox* combo_box)
+    bool ResourceUsageComboBoxModel::ItemInList(int usage_type) const
     {
-        ComboBoxModel::SetupState(combo_box, true);
+        bool result = false;
+
+        for (auto item_usage_type : checked_resource_usage_types_)
+        {
+            if (item_usage_type == usage_type)
+            {
+                result = true;
+                break;
+            }
+        }
+
+        return result;
     }
 
+    void ResourceUsageComboBoxModel::SetupState(const ArrowIconComboBox* combo_box)
+    {
+        checked_resource_usage_types_.clear();
+        if (combo_box->IsChecked(heap_checkbox_item_index_))
+        {
+            checked_resource_usage_types_.insert(RmtResourceUsageType::kRmtResourceUsageTypeHeap);
+        }
+        else
+        {
+            const int item_count = combo_box->RowCount();
+            for (int i = 0; i < item_count; i++)
+            {
+                if (i == all_checkbox_item_index_)
+                {
+                    continue;
+                }
+
+                const RmtResourceUsageType usage_type = static_cast<RmtResourceUsageType>(combo_box->ItemData(i).toInt());
+                if (combo_box->IsChecked(i))
+                {
+                    checked_resource_usage_types_.insert(usage_type);
+                }
+            }
+        }
+    }
+
+    void ResourceUsageComboBoxModel::UpdateCheckboxes(const int changed_item_index, ArrowIconComboBox* combo_box)
+    {
+        const int item_count = combo_box->RowCount();
+
+        if (changed_item_index == all_checkbox_item_index_)
+        {
+            // Handle case where "All" checkbox changed.  Uncheck Heap and either check or uncheck all other checkbox items.
+            const bool all_usage_types_checked = combo_box->IsChecked(changed_item_index);
+
+            for (int index = 0; index < item_count; index++)
+            {
+                if (index == changed_item_index)
+                {
+                    continue;
+                }
+
+                RmtResourceUsageType item_resource_usage_type = static_cast<RmtResourceUsageType>(combo_box->ItemData(index).toInt());
+
+                if ((all_usage_types_checked) && (item_resource_usage_type == RmtResourceUsageType::kRmtResourceUsageTypeHeap))
+                {
+                    combo_box->SetChecked(index, false);
+                }
+                else
+                {
+                    // Handle all other checkbox items.
+                    combo_box->SetChecked(index, all_usage_types_checked);
+                }
+            }
+        }
+        else
+        {
+            // Uncheck "All" checkbox item.
+            combo_box->SetChecked(all_checkbox_item_index_, false);
+
+            if (changed_item_index == heap_checkbox_item_index_)
+            {
+                if (combo_box->IsChecked(changed_item_index))
+                {
+                    // Handle case where "Heap" checked.  Uncheck all other items.
+                    for (int index = 0; index < item_count; index++)
+                    {
+                        if (index == heap_checkbox_item_index_)  // skip heap checkbox.
+                        {
+                            continue;
+                        }
+
+                        combo_box->SetChecked(index, false);
+                    }
+                }
+            }
+            else
+            {
+                // A usage type checkbox was checked so uncheck the "Heap" checkbox.
+                combo_box->SetChecked(heap_checkbox_item_index_, false);
+
+                // If all usage types are checked, also check the "All" checkbox.  Otherwise, uncheck the "All" checkbox.
+                bool all_usage_types_checked = true;
+                for (int index = 0; index < item_count; index++)
+                {
+                    if (index == heap_checkbox_item_index_)
+                    {
+                        continue;
+                    }
+
+                    if (index == all_checkbox_item_index_)
+                    {
+                        continue;
+                    }
+
+                    all_usage_types_checked &= combo_box->IsChecked(index);
+                }
+                combo_box->SetChecked(all_checkbox_item_index_, all_usage_types_checked);
+            }
+        }
+    }
 }  // namespace rmv

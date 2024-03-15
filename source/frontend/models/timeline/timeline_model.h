@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Timeline model.
@@ -114,19 +114,26 @@ namespace rmv
 
         /// @brief Function to return histogram data.
         ///
-        /// @param [in]  bucket_group_index The sub-bucket index.
-        /// @param [in]  bucket_index       The bucket index.
-        /// @param [in]  bucket_count       The total number of buckets.
-        /// @param [out] out_y_pos          The y position offset for this bucket and sub-bucket.
-        /// @param [out] out_height         The height for this bucket and sub-bucket.
+        /// @param [in]  bucket_group_number The sub-bucket number (i.e. stacked bar on the graph).
+        /// @param [in]  bucket_index               The bucket index.
+        /// @param [in]  bucket_group_count         The total number of buckets in the group.
+        /// @param [out] out_y_pos                  The y position offset for this bucket and sub-bucket.
+        /// @param [out] out_height                 The height for this bucket and sub-bucket.
         ///
         /// @return true if bucket/sub-bucket is valid, false if not.
-        bool GetHistogramData(int bucket_group_index, int bucket_index, const int bucket_count, qreal& out_y_pos, qreal& out_height);
+        bool GetHistogramData(int bucket_group_number, int bucket_index, const int bucket_group_count, qreal& out_y_pos, qreal& out_height);
 
         /// @brief Get the number of buckets.
         ///
         /// @return The number of buckets.
         int GetNumBuckets() const;
+
+        /// @brief Remaps a bucket number to an index ordered as displayed on the graph.
+        ///
+        /// @param [in]  bucket_group_number        The sub-bucket number (i.e. stacked bar on the graph).
+        ///
+        /// @return The bucket group index mapped from the bucket group number.
+        int RemapBucketGroupNumberToIndex(const int bucket_group_number) const;
 
         /// @brief Get the number of grouping modes.
         ///
@@ -179,6 +186,11 @@ namespace rmv
         /// @return true if the background task should be cancelled, otherwise false.
         bool IsBackgroundTaskCancelled() const;
 
+        /// @brief Used to determine of background threads are generating the timeline.
+        ///
+        /// @return true if the background task is in the process of generating the timeline, otherwise false.
+        bool IsTimelineGenerationInProgress() const;
+
     private slots:
         /// @brief Handle what happens when the model data changes.
         ///
@@ -197,6 +209,14 @@ namespace rmv
         /// @return The value as a string.
         QString GetValueString(int64_t value, bool display_as_memory) const;
 
+        /// @brief Build text and color strings for a tooltip.
+        ///
+        /// @param [in] heap_type                   The type of heap to generate tooltip info for.
+        /// @param [in] bucket_index                The horizontal position on the timeline to retrieve the value for.
+        /// @param [out] out_text_string            The string to receive the tooltip info text (text is appended to existing string).
+        /// @param [out] out_color_string           The string to receive the tooltip coloring (text is appended to existing string).
+        void BuildToolTipInfoString(const RmtHeapType heap_type, const int bucket_index, QString& out_text_string, QString& out_color_string);
+
         /// @brief Get the resource-specific tool tip Info.
         ///
         /// Sort the resources into numerical order and show details in the tooltip (color swatch and text).
@@ -207,13 +227,20 @@ namespace rmv
         /// @param [out] color_string A string to receive the tooltip colors.
         void GetResourceTooltipInfo(int bucket_index, bool display_as_memory, QString& text_string, QString& color_string);
 
-        SnapshotItemModel*          table_model_;    ///< Holds snapshot table data.
-        SnapshotTimelineProxyModel* proxy_model_;    ///< Table proxy.
-        uint64_t                    min_visible_;    ///< Minimum visible timestamp.
-        uint64_t                    max_visible_;    ///< Maximum visible timestamp.
-        RmtDataTimelineHistogram    histogram_;      ///< The histogram to render.
-        RmtDataTimelineType         timeline_type_;  ///< The timeline type.
-        RmtJobQueue                 job_queue_;      ///< The job queue.
+        /// @brief Set the flag that indicates timeline generation is in progress.
+        void TimelineGenerationBegin();
+
+        /// @brief Clear the flag that indicates timeline generation is in progress.
+        void TimelineGenerationEnd();
+
+        SnapshotItemModel*          table_model_;                        ///< Holds snapshot table data.
+        SnapshotTimelineProxyModel* proxy_model_;                        ///< Table proxy.
+        uint64_t                    min_visible_;                        ///< Minimum visible timestamp.
+        uint64_t                    max_visible_;                        ///< Maximum visible timestamp.
+        RmtDataTimelineHistogram    histogram_;                          ///< The histogram to render.
+        RmtDataTimelineType         timeline_type_;                      ///< The timeline type.
+        RmtJobQueue                 job_queue_;                          ///< The job queue.
+        bool                        is_timeline_generation_in_progress;  ///< Indicates, if true, that the timeline is currently being generated.
     };
 }  // namespace rmv
 

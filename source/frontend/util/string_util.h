@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of a number of string utilities.
@@ -55,11 +55,13 @@ namespace rmv
         /// be selected. Base 2 uses 1024 rather than 1000. Units are appended to
         /// display XB for base 10 or XiB for base 2.
         ///
-        /// @param [in] value   The value to display.
-        /// @param [in] base_10 If true, use base 10 values, otherwise base 2.
+        /// @param [in] value                       The value to display.
+        /// @param [in] base_10                     If true, use base 10 values, otherwise base 2.
+        /// @param [in] use_round                   If true and units aren't in bytes, round up the value.
+        /// @param [in] include_decimal             If true, include the fractional part of the value.
         ///
         /// @return The localized string.
-        QString LocalizedValueMemory(double value, bool base_10, bool use_round);
+        QString LocalizedValueMemory(const double value, const bool base_10, const bool use_round, const bool include_decimal = true);
 
         /// @brief Format an address for printing.
         ///
@@ -76,6 +78,14 @@ namespace rmv
         ///
         /// @return The localized string.
         QString LocalizedValueBytes(int64_t value);
+
+        /// @brief Builds a range string for the memory size thresholds.
+        ///
+        /// @param [in] min_memory_size           The lower value of the range.
+        /// @param [in] max_memory_size           The upper value of the range.
+        ///
+        /// @return The localized string.
+        QString GetMemoryRangeString(const uint64_t min_memory_size, const uint64_t max_memory_size);
 
     }  // namespace string_util
 }  // namespace rmv

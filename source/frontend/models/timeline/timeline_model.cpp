@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Timeline model.
@@ -84,6 +84,7 @@ namespace rmv
         , max_visible_(0)
         , histogram_{}
         , timeline_type_(kRmtDataTimelineTypeResourceUsageVirtualSize)
+        , is_timeline_generation_in_progress(false)
     {
         const RmtErrorCode error_code = RmtJobQueueInitialize(&job_queue_, kThreadCount);
         RMT_ASSERT(error_code == kRmtOk);
@@ -110,6 +111,8 @@ namespace rmv
 
         if (trace_manager.DataSetValid())
         {
+            TimelineGenerationBegin();
+
             // Recreate the timeline for the data set.
             RmtDataSet*      data_set   = trace_manager.GetDataSet();
             RmtDataTimeline* timeline   = trace_manager.GetTimeline();
@@ -119,6 +122,7 @@ namespace rmv
             error_code = RmtDataSetGenerateTimeline(data_set, timeline_type, timeline);
             RMT_UNUSED(error_code);
             RMT_ASSERT_MESSAGE(error_code == kRmtOk, "Error generating new timeline type");
+            TimelineGenerationEnd();
         }
     }
 
@@ -278,6 +282,21 @@ namespace rmv
         return RmtDataSetIsBackgroundTaskCancelled(data_set);
     }
 
+    void TimelineModel::TimelineGenerationBegin()
+    {
+        is_timeline_generation_in_progress = true;
+    }
+
+    void TimelineModel::TimelineGenerationEnd()
+    {
+        is_timeline_generation_in_progress = false;
+    }
+
+    bool TimelineModel::IsTimelineGenerationInProgress() const
+    {
+        return is_timeline_generation_in_progress;
+    }
+
     void TimelineModel::UpdateMemoryGraph(uint64_t min_visible, uint64_t max_visible)
     {
         min_visible_ = min_visible;
@@ -308,6 +327,38 @@ namespace rmv
     int TimelineModel::GetNumBuckets() const
     {
         return kNumBuckets;
+    }
+
+    int TimelineModel::RemapBucketGroupNumberToIndex(const int bucket_group_number) const
+    {
+        // Lookup table to re-order heap types displayed on the timeline graph.
+        static int heap_bucket_order_[] = {
+            RmtHeapType::kRmtHeapTypeSystem,
+            RmtHeapType::kRmtHeapTypeLocal,
+            RmtHeapType::kRmtHeapTypeInvisible,
+            RmtHeapType::kRmtHeapTypeNone,
+        };
+
+        // Get the number of heap type items in the lookup table.
+        static int          heap_type_count       = static_cast<int>(sizeof(heap_bucket_order_) / sizeof(int));
+        int                 bucket_group_index    = bucket_group_number;
+        RmtDataTimelineType current_timeline_type = histogram_.timeline->timeline_type;
+
+        if ((current_timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeCommitted) ||
+            (current_timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeVirtualMemory))
+        {
+            if ((bucket_group_number < 0) || (bucket_group_number >= heap_type_count))
+            {
+                RMT_ASSERT_MESSAGE(false, "Invalid heap type");
+                bucket_group_index = RmtHeapType::kRmtHeapTypeNone;
+            }
+            else
+            {
+                bucket_group_index = heap_bucket_order_[bucket_group_number];
+            }
+        }
+
+        return bucket_group_index;
     }
 
     int TimelineModel::GetNumBucketGroups() const
@@ -341,10 +392,11 @@ namespace rmv
         // Build an array of resource type to count.
         for (int i = 0; i < GetNumBucketGroups(); i++)
         {
-            if (i == kRmtResourceUsageTypeUnknown)
+            if ((i == kRmtResourceUsageTypeUnknown) || (i == RmtResourceUsageType::kRmtResourceUsageTypeHeap))
             {
                 continue;
             }
+
             sorter.AddResource((RmtResourceUsageType)i, RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i));
         }
 
@@ -370,6 +422,20 @@ namespace rmv
         color_string += QString("#%1").arg(QString::number(Colorizer::GetResourceUsageColor(kRmtResourceUsageTypeFree).rgb(), 16));
     }
 
+    void TimelineModel::BuildToolTipInfoString(const RmtHeapType heap_type, const int bucket_index, QString& out_text_string, QString& out_color_string)
+    {
+        const int64_t value = RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, heap_type);
+        if (!out_text_string.isEmpty())
+        {
+            out_text_string += QString("\n");
+            out_color_string += QString("\n");
+        }
+
+        out_text_string +=
+            QString("%1: %2").arg(RmtGetHeapTypeNameFromHeapType(RmtHeapType(heap_type))).arg(rmv::string_util::LocalizedValueMemory(value, false, false));
+        out_color_string += QString("#%1").arg(QString::number(Colorizer::GetHeapColor(static_cast<RmtHeapType>(heap_type)).rgb(), 16));
+    }
+
     bool TimelineModel::GetTimelineTooltipInfo(qreal x_pos, QString& text_string, QString& color_string)
     {
         int bucket_index = x_pos * kNumBuckets;
@@ -387,34 +453,11 @@ namespace rmv
             break;
 
         case kRmtDataTimelineTypeVirtualMemory:
-            // Calculate memory in each heap.
-            for (int i = 0; i < GetNumBucketGroups(); i++)
-            {
-                int64_t value = RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
-                if (i > 0)
-                {
-                    text_string += QString("\n");
-                    color_string += QString("\n");
-                }
-                text_string +=
-                    QString("%1: %2").arg(RmtGetHeapTypeNameFromHeapType(RmtHeapType(i))).arg(rmv::string_util::LocalizedValueMemory(value, false, false));
-                color_string += QString("#%1").arg(QString::number(Colorizer::GetHeapColor(static_cast<RmtHeapType>(i)).rgb(), 16));
-            }
-            break;
-
         case kRmtDataTimelineTypeCommitted:
-            for (int i = 0; i < GetNumBucketGroups(); i++)
-            {
-                int64_t value = RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
-                if (i > 0)
-                {
-                    text_string += QString("\n");
-                    color_string += QString("\n");
-                }
-                text_string +=
-                    QString("%1: %2").arg(RmtGetHeapTypeNameFromHeapType(RmtHeapType(i))).arg(rmv::string_util::LocalizedValueMemory(value, false, false));
-                color_string += QString("#%1").arg(QString::number(Colorizer::GetHeapColor(static_cast<RmtHeapType>(i)).rgb(), 16));
-            }
+            BuildToolTipInfoString(RmtHeapType::kRmtHeapTypeNone, bucket_index, text_string, color_string);
+            BuildToolTipInfoString(RmtHeapType::kRmtHeapTypeInvisible, bucket_index, text_string, color_string);
+            BuildToolTipInfoString(RmtHeapType::kRmtHeapTypeLocal, bucket_index, text_string, color_string);
+            BuildToolTipInfoString(RmtHeapType::kRmtHeapTypeSystem, bucket_index, text_string, color_string);
             break;
 
         default:
@@ -424,7 +467,7 @@ namespace rmv
         return true;
     }
 
-    bool TimelineModel::GetHistogramData(int bucket_group_index, int bucket_index, const int bucket_count, qreal& out_y_pos, qreal& out_height)
+    bool TimelineModel::GetHistogramData(int bucket_group_number, int bucket_index, const int bucket_group_count, qreal& out_y_pos, qreal& out_height)
     {
         if (bucket_index < kNumBuckets)
         {
@@ -437,10 +480,11 @@ namespace rmv
             out_y_pos             = 0.0;
             qreal histogram_value = 0.0;
 
-            if (timeline->timeline_type == kRmtDataTimelineTypeResourceUsageVirtualSize)
+            if ((timeline->timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageVirtualSize) ||
+                (timeline->timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageCount))
             {
                 // For the Resource Usage Size timeline view, reverse the order of the items in the stacked graph.
-                for (int i = bucket_count; i >= bucket_group_index; i--)
+                for (int i = bucket_group_count; i >= bucket_group_number; i--)
                 {
                     histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
                     histogram_value /= timeline->maximum_value_in_all_series;
@@ -449,9 +493,9 @@ namespace rmv
             }
             else
             {
-                for (int i = 0; i <= bucket_group_index; i++)
+                for (int i = 0; i <= bucket_group_number; i++)
                 {
-                    histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
+                    histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, RemapBucketGroupNumberToIndex(i));
                     histogram_value /= timeline->maximum_value_in_all_series;
                     out_y_pos += histogram_value;
                 }

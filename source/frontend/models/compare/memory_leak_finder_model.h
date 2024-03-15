@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Memory Leak Finder model.
@@ -15,6 +15,7 @@
 #include "rmt_resource_list.h"
 #include "rmt_virtual_allocation_list.h"
 
+#include "managers/snapshot_manager.h"
 #include "models/proxy_models/memory_leak_finder_proxy_model.h"
 #include "models/resource_item_model.h"
 #include "util/constants.h"
@@ -58,7 +59,16 @@ namespace rmv
         /// @brief Update the model.
         ///
         /// @param [in] compare_filter The compare filter ID, to indicate which resources are to be displayed.
-        void Update(SnapshotCompareId compare_filter);
+        ///
+        /// @return true if the model was updated successfully, false otherwise.
+        bool Update(SnapshotCompareId compare_filter);
+
+        /// @brief Swap the snapshots.
+        ///
+        /// @param [in] compare_filter The compare filter ID, to indicate which resources are to be displayed.
+        ///
+        /// @return true if the snapshots were swapped successfully, false otherwise.
+        bool SwapSnapshots(SnapshotCompareId compare_filter);
 
         /// @brief Initialize blank data for the model.
         void ResetModelValues();
@@ -101,20 +111,14 @@ namespace rmv
         RmtSnapshotPoint* FindSnapshot(const QModelIndex& index) const;
 
     private:
-        /// @brief Update the resource size buckets.
-        ///
-        /// This is used by the double-slider to group the resource sizes. Called whenever the table data changes.
-        void UpdateResourceThresholds();
-
         /// @brief Update labels at the bottom.
         void UpdateLabels();
 
         /// @brief Reset the snapshot stats.
         void ResetStats();
 
-        ResourceItemModel*          table_model_;                                ///< The data for the resource table.
-        MemoryLeakFinderProxyModel* proxy_model_;                                ///< The proxy model for the resource table.
-        uint64_t                    resource_thresholds_[kSizeSliderRange + 1];  ///< List of resource size thresholds for the filter by size sliders.
+        ResourceItemModel*          table_model_;  ///< The data for the resource table.
+        MemoryLeakFinderProxyModel* proxy_model_;  ///< The proxy model for the resource table.
 
         /// @brief struct to describe the snapshot statistics
         struct SnapshotStats
@@ -126,6 +130,9 @@ namespace rmv
         SnapshotStats stats_in_both_;       ///< Attributes in both snapshots.
         SnapshotStats stats_in_base_only_;  ///< Attributes in the base snapshot only.
         SnapshotStats stats_in_diff_only_;  ///< Attributes in the diff snapshot only.
+
+        CompareSnapshots base_index_;  ///< The index of the base snapshot.
+        CompareSnapshots diff_index_;  ///< The index of the diff snapshot.
     };
 }  // namespace rmv
 

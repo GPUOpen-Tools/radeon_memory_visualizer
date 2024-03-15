@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Colors and Themes pane.
@@ -34,10 +34,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     button_group_.addButton(ui_->button_resource_depth_stencil_buffer_, kSettingThemesAndColorsResourceDsBuffer);
     button_group_.addButton(ui_->button_resource_render_target_, kSettingThemesAndColorsResourceRenderTarget);
     button_group_.addButton(ui_->button_resource_texture_, kSettingThemesAndColorsResourceTexture);
-    button_group_.addButton(ui_->button_resource_vertex_buffer_, kSettingThemesAndColorsResourceVertexBuffer);
-    button_group_.addButton(ui_->button_resource_index_buffer_, kSettingThemesAndColorsResourceIndexBuffer);
     button_group_.addButton(ui_->button_resource_ray_tracing_buffer_, kSettingThemesAndColorsResourceRayTracingBuffer);
-    button_group_.addButton(ui_->button_resource_uav_, kSettingThemesAndColorsResourceUav);
     button_group_.addButton(ui_->button_resource_shader_pipeline_, kSettingThemesAndColorsResourceShaderPipeline);
     button_group_.addButton(ui_->button_resource_command_buffer_, kSettingThemesAndColorsResourceCommandBuffer);
     button_group_.addButton(ui_->button_resource_heap_, kSettingThemesAndColorsResourceHeap);

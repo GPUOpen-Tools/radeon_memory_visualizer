@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions related to RMT token structures.
@@ -92,6 +92,7 @@ void RmtTokenCopy(RmtToken* dest, const RmtToken* src)
         dest->userdata_token.size_in_bytes                = src->userdata_token.size_in_bytes;
         dest->userdata_token.userdata_type                = src->userdata_token.userdata_type;
         dest->userdata_token.time_delay                   = src->userdata_token.time_delay;
+        dest->userdata_token.implicit_resource_type       = src->userdata_token.implicit_resource_type;
 
         if ((dest->userdata_token.userdata_type == kRmtUserdataTypeName || dest->userdata_token.userdata_type == kRmtUserdataTypeName_V2) &&
             (dest->userdata_token.size_in_bytes > 0))

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the settings.
@@ -86,6 +86,20 @@ namespace rmv
                 break;
             }
         }
+    }
+
+    bool RMVSettings::DoesFileExistInRecentList(const char* file_path)
+    {
+        const int num_recent_files = recent_files_.size();
+        for (int loop = 0; loop < num_recent_files; loop++)
+        {
+            if (file_path != nullptr && recent_files_[loop].path.compare(file_path) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void RMVSettings::RemoveRecentFile(const QString& trace_name)

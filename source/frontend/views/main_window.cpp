@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -112,7 +112,7 @@ MainWindow::MainWindow(QWidget* parent)
     SetupTabBar();
     CreateActions();
     CreateMenus();
-    rmv::LoadAnimationManager::Get().Initialize(ui_->main_tab_widget_, file_menu_);
+    rmv::LoadAnimationManager::Get().Initialize(ui_->main_tab_widget_);
 
     ResetUI();
 
@@ -152,6 +152,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(&rmv::TraceManager::Get(), &rmv::TraceManager::TraceOpened, this, &MainWindow::OpenTrace);
     connect(&rmv::TraceManager::Get(), &rmv::TraceManager::TraceClosed, this, &MainWindow::CloseTrace);
+    connect(&rmv::TraceManager::Get(), &rmv::TraceManager::TraceOpenFailed, this, &MainWindow::SetupRecentTracesMenu);
 
     connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::SnapshotOpened, this, &MainWindow::OpenSnapshotPane);
     connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::CompareSnapshotsOpened, this, &MainWindow::OpenComparePane);
@@ -162,6 +163,9 @@ MainWindow::MainWindow(QWidget* parent)
     connect(themes_and_colors_pane, &ThemesAndColorsPane::RefreshedColors, this, &MainWindow::BroadcastChangeColoring);
 
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ChangeActionsRequested, this, &MainWindow::EnableActions);
+
+    ui_->save_testkit_json_->hide();
+    ui_->top_spacer_label_->hide();
 
     // Connect to ScalingManager for notifications.
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
@@ -359,6 +363,7 @@ void MainWindow::CreateActions()
 
 void MainWindow::EnableActions(const bool enable)
 {
+    close_trace_action_->setEnabled(enable);
     for (auto* action : actions())
     {
         action->setEnabled(enable);
@@ -414,9 +419,9 @@ void MainWindow::CreateMenus()
     file_menu_->addSeparator();
     file_menu_->addAction(exit_action_);
 
-    file_menu_ = menuBar()->addMenu(tr("Help"));
-    file_menu_->addAction(help_action_);
-    file_menu_->addAction(about_action_);
+    help_menu_ = menuBar()->addMenu(tr("Help"));
+    help_menu_->addAction(help_action_);
+    help_menu_->addAction(about_action_);
 
     SetupRecentTracesMenu();
 }

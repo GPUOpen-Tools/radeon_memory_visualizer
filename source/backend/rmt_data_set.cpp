@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -703,6 +703,9 @@ static RmtErrorCode AllocateMemoryForSnapshot(RmtDataSet* data_set, RmtDataSnaps
     return kRmtOk;
 }
 
+void UpdateTotalResourceUsageAliasedSize(RmtResourceList*                                                 resource_list,
+                                         RmtMemoryAliasingTimelineAlgorithm::RmtMemoryAliasingCalculator* memory_aliasing_calculator);
+
 // consume next RMT token for snapshot generation.
 static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* current_token, RmtDataSnapshot* out_snapshot)
 {
@@ -724,14 +727,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
             RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
             RMT_ASSERT(memory_aliasing_calculator != nullptr);
             memory_aliasing_calculator->DestroyAllocation(virtual_allocation->allocation_identifier);
-            SizePerResourceUsageType sizes_per_resource_usage_type;
-            SizeType                 unbound_size;
-            memory_aliasing_calculator->CalculateSizes(sizes_per_resource_usage_type, unbound_size);
-            for (int usage_index = 0; usage_index < RmtResourceUsageType::kRmtResourceUsageTypeCount; usage_index++)
-            {
-                out_snapshot->resource_list.total_resource_usage_aliased_size[usage_index] = sizes_per_resource_usage_type.size_[usage_index];
-            }
-            out_snapshot->resource_list.total_resource_usage_aliased_size[kRmtResourceUsageTypeFree] = unbound_size;
+            UpdateTotalResourceUsageAliasedSize(&out_snapshot->resource_list, memory_aliasing_calculator);
         }
         error_code = RmtVirtualAllocationListRemoveAllocation(&out_snapshot->virtual_allocation_list, current_token->virtual_free_token.virtual_address);
         RMT_ASSERT(error_code == kRmtOk);
@@ -800,8 +796,19 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         {
             if (!data_set->flags.userdata_processed)
             {
-                RmtResourceUserdataTrackImplicitResourceToken(
-                    current_token->userdata_token.resource_identifier, current_token->common.timestamp, current_token->userdata_token.time_delay);
+                // If the HeapType is missing from the MarkImplicitResource token (traces prior to RMT Spec version 1.9), assume the implicit resource is a buffer or image.
+                if (current_token->userdata_token.implicit_resource_type == RmtImplicitResourceType::kRmtImplicitResourceTypeUnused)
+                {
+                    current_token->userdata_token.implicit_resource_type = RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource;
+                }
+                else
+                {
+                    data_set->flags.implicit_heap_detection = true;
+                }
+                RmtResourceUserdataTrackImplicitResourceToken(current_token->userdata_token.resource_identifier,
+                                                              current_token->common.timestamp,
+                                                              current_token->userdata_token.time_delay,
+                                                              current_token->userdata_token.implicit_resource_type);
             }
         }
     }
@@ -829,7 +836,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         if (!RmtResourceUserDataIsResourceImplicit(current_token->resource_bind_token.resource_identifier))
         {
 
-            error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
+            error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token, !data_set->flags.userdata_processed);
 
             if (error_code == kRmtErrorSharedAllocationNotFound)
             {
@@ -903,7 +910,8 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                     if (!(current_token->resource_bind_token.is_system_memory && current_token->resource_bind_token.virtual_address == 0))
                     {
                         // Re-bind the resource to its new virtual memory allocation.
-                        error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token);
+                        error_code = RmtResourceListAddResourceBind(
+                            &out_snapshot->resource_list, &current_token->resource_bind_token, !data_set->flags.userdata_processed);
                         RMT_ASSERT(error_code == kRmtOk);
                     }
                 }
@@ -1139,10 +1147,12 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     memcpy(data_set->file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
     memcpy(data_set->temporary_file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
 
-    data_set->file_handle        = NULL;
-    data_set->flags.read_only    = false;
-    data_set->flags.is_rdf_trace = false;
-    data_set->active_gpu         = 0;
+    data_set->file_handle                   = NULL;
+    data_set->flags.read_only               = false;
+    data_set->flags.is_rdf_trace            = false;
+    data_set->flags.implicit_heap_detection = false;
+    data_set->active_gpu                    = 0;
+
     errno_t error_no;
     bool    file_transfer_result = false;
     if (IsFileReadOnly(path) || IsCrashDumpFile(path))
@@ -1254,6 +1264,12 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
             }
         }
 
+        // Vega and older GPUs are no longer supported.
+        if (error_code == kRmtOk && data_set->system_info.pcie_family_id < kGfx10AsicFamily)
+        {
+            error_code = kRmtErrorTraceFileNotSupported;
+        }
+
         if (error_code == kRmtOk)
         {
             CheckForSAMSupport(data_set);
@@ -1324,6 +1340,7 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
     }
     data_set->virtual_allocation_list.allocation_count = 0;
 
+    RmtResourceUserDataCleanup();
     return kRmtOk;
 }
 
@@ -1686,6 +1703,9 @@ static RmtErrorCode SnapshotGeneratorConvertHeapsToBuffers(RmtDataSnapshot* snap
         current_resource->buffer.usage_flags   = 0;
         current_resource->buffer.size_in_bytes = heap_size_in_bytes;
         current_resource->resource_type        = kRmtResourceTypeBuffer;
+
+        // Increment the non-heap count since the heap has been converted to a buffer resource.
+        current_virtual_allocation->non_heap_resource_count++;
     }
 
     return kRmtOk;
@@ -1785,7 +1805,7 @@ static RmtErrorCode MergeResourceMemoryRegions(const RmtVirtualAllocation* virtu
     RMT_RETURN_ON_ERROR(virtual_allocation != nullptr, kRmtErrorInvalidPointer);
 
     out_bound_regions.clear();
-    if (virtual_allocation->resource_count == 0)
+    if (virtual_allocation->non_heap_resource_count == 0)
     {
         return kRmtOk;
     }
@@ -1870,6 +1890,16 @@ static RmtErrorCode SnapshotGeneratorAddUnboundResources(RmtDataSnapshot* snapsh
 
             size_t          last_bound_region_index = bound_regions.size() - 1;  ///< The index of the last bound memory region.
             RmtMemoryRegion previous_bound_region({bound_regions[0].offset, bound_regions[0].size});
+
+            if (previous_bound_region.offset > 0)
+            {
+                // Create an unbound region before the first bound region.
+                RmtMemoryRegion unbound_region;
+                unbound_region.offset = 0;
+                unbound_region.size   = previous_bound_region.offset;
+                unbound_regions.push_back(unbound_region);
+            }
+
             for (size_t i = 1; i < bound_regions.size(); i++)
             {
                 const RmtMemoryRegion current_bound_region             = bound_regions[i];
@@ -2049,6 +2079,72 @@ static RmtErrorCode SnapshotGeneratorCalculateSnapshotPointSummary(RmtDataSnapsh
     return kRmtOk;
 }
 
+/// @brief Update the names of virtual allocations if a named heap resource is bound to it.
+///
+/// @param [in/out]  out_snapshot                   A pointer to the snapshot to be updated.
+///
+/// @retval
+/// kRmtOk                                  The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                 The operation failed because <c><i>out_snapshot</i></c> was <c><i>NULL</i></c>.
+///
+static RmtErrorCode SnapshotGeneratorUpdateNamedHeaps(RmtDataSnapshot* out_snapshot)
+{
+    RMT_RETURN_ON_ERROR(out_snapshot, kRmtErrorInvalidPointer);
+
+    const int32_t allocation_count = out_snapshot->virtual_allocation_list.allocation_count;
+    for (int32_t allocation_index = 0; allocation_index < allocation_count; allocation_index++)
+    {
+        // Get a reference to the allocation object so that its name can be updated.
+        RmtVirtualAllocation& allocation          = out_snapshot->virtual_allocation_list.allocation_details[allocation_index];
+        const int             heap_resource_count = allocation.resource_count - allocation.non_heap_resource_count;
+        RMT_ASSERT(heap_resource_count <= 1);
+
+        const RmtResource* first_heap_resource          = nullptr;
+        const RmtResource* first_non_heap_resource      = nullptr;
+        const char*        first_heap_resource_name     = nullptr;
+        const char*        first_non_heap_resource_name = nullptr;
+
+        for (int resource_index = 0; resource_index < allocation.resource_count; resource_index++)
+        {
+            const RmtResource* resource = allocation.resources[resource_index];
+            if (resource->resource_type == RmtResourceType::kRmtResourceTypeHeap)
+            {
+                first_heap_resource = resource;
+                RmtResourceUserdataGetResourceName(first_heap_resource->identifier, &first_heap_resource_name);
+                if (first_non_heap_resource != nullptr)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                first_non_heap_resource = resource;
+                RmtResourceUserdataGetResourceName(first_non_heap_resource->identifier, &first_non_heap_resource_name);
+                if (first_heap_resource != nullptr)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (heap_resource_count == 1 && first_heap_resource_name != nullptr)
+        {
+            allocation.name = first_heap_resource_name;
+        }
+        else if (allocation.non_heap_resource_count == 1 && first_non_heap_resource_name != NULL && first_non_heap_resource->address == allocation.base_address)
+        {
+            allocation.name = first_non_heap_resource_name;
+        }
+        else
+        {
+            allocation.name = nullptr;
+        }
+    }
+
+    return kRmtOk;
+}
+
 // function to generate a snapshot.
 RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* snapshot_point, RmtDataSnapshot* out_snapshot)
 {
@@ -2094,7 +2190,13 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
         RMT_ASSERT(error_code == kRmtOk);
     }
 
-    SnapshotGeneratorConvertHeapsToBuffers(out_snapshot);
+    if (!data_set->flags.implicit_heap_detection)
+    {
+        // If the heap_type flag is missing from MarkImplicitResource tokens (as is the case with older traces),
+        // convert solitary heaps in an allocation into buffers.
+        SnapshotGeneratorConvertHeapsToBuffers(out_snapshot);
+    }
+
     SnapshotGeneratorAddResourcePointers(out_snapshot);
     SnapshotGeneratorCompactVirtualAllocations(out_snapshot);
     SnapshotGeneratorAddUnboundResources(out_snapshot);
@@ -2103,6 +2205,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     SnapshotGeneratorCalculateCommitType(out_snapshot);
     SnapshotGeneratorAllocateRegionStack(out_snapshot);
     SnapshotGeneratorCalculateSnapshotPointSummary(out_snapshot, snapshot_point);
+    SnapshotGeneratorUpdateNamedHeaps(out_snapshot);
 
     return kRmtOk;
 }

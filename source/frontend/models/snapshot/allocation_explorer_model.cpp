@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Allocation explorer model.
@@ -28,7 +28,6 @@ namespace rmv
         , resource_table_model_(nullptr)
         , allocation_proxy_model_(nullptr)
         , resource_proxy_model_(nullptr)
-        , resource_thresholds_{}
         , minimum_allocation_size_(0)
         , maximum_allocation_size_(0)
     {
@@ -52,7 +51,6 @@ namespace rmv
         resource_table_model_->SetRowCount(0);
         allocation_proxy_model_->invalidate();
         resource_proxy_model_->invalidate();
-        memset(resource_thresholds_, 0, sizeof(uint64_t) * (kSizeSliderRange + 1));
         allocation_bar_model_->ClearSelectionState();
     }
 
@@ -171,9 +169,8 @@ namespace rmv
 
     void VirtualAllocationExplorerModel::AllocationSizeFilterChanged(int min_value, int max_value) const
     {
-        const uint64_t diff       = maximum_allocation_size_ - minimum_allocation_size_;
-        const uint64_t scaled_min = ((min_value * diff) / kSizeSliderRange) + minimum_allocation_size_;
-        const uint64_t scaled_max = ((max_value * diff) / kSizeSliderRange) + minimum_allocation_size_;
+        const uint64_t scaled_min = rmv_util::CalculateSizeThresholdFromStepValue(min_value, rmv::kSizeSliderRange - 1);
+        const uint64_t scaled_max = rmv_util::CalculateSizeThresholdFromStepValue(max_value, rmv::kSizeSliderRange - 1);
 
         allocation_proxy_model_->SetSizeFilter(scaled_min, scaled_max);
         allocation_proxy_model_->invalidate();
@@ -189,8 +186,8 @@ namespace rmv
     {
         if (allocation_bar_model_->GetAllocation(0, 0) != nullptr)
         {
-            const uint64_t scaled_min = resource_thresholds_[min_value];
-            const uint64_t scaled_max = resource_thresholds_[max_value];
+            const uint64_t scaled_min = rmv_util::CalculateSizeThresholdFromStepValue(min_value, rmv::kSizeSliderRange - 1);
+            const uint64_t scaled_max = rmv_util::CalculateSizeThresholdFromStepValue(max_value, rmv::kSizeSliderRange - 1);
 
             resource_proxy_model_->SetSizeFilter(scaled_min, scaled_max);
             resource_proxy_model_->invalidate();
@@ -205,24 +202,6 @@ namespace rmv
     ResourceProxyModel* VirtualAllocationExplorerModel::GetResourceProxyModel() const
     {
         return resource_proxy_model_;
-    }
-
-    void VirtualAllocationExplorerModel::BuildResourceSizeThresholds()
-    {
-        std::vector<uint64_t> resource_sizes;
-
-        const RmtVirtualAllocation* selected_allocation = allocation_bar_model_->GetAllocation(0, 0);
-
-        if (selected_allocation != nullptr && selected_allocation->resource_count > 0)
-        {
-            int32_t resource_count = selected_allocation->resource_count;
-            resource_sizes.reserve(resource_count);
-            for (int current_resource_index = 0; current_resource_index < selected_allocation->resource_count; current_resource_index++)
-            {
-                resource_sizes.push_back(selected_allocation->resources[current_resource_index]->size_in_bytes);
-            }
-            rmv_util::BuildResourceSizeThresholds(resource_sizes, resource_thresholds_);
-        }
     }
 
     AllocationBarModel* VirtualAllocationExplorerModel::GetAllocationBarModel() const

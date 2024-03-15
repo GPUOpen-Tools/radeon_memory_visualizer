@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the timeline colorizer control.
@@ -17,6 +17,7 @@
 #include <QString>
 
 #include "rmt_assert.h"
+#include "rmt_print.h"
 
 #include "util/widget_util.h"
 
@@ -91,6 +92,30 @@ namespace rmv
         }
 
         ColorizerBase::Initialize(combo_box, legends_view);
+    }
+
+    void TimelineColorizer::UpdateLegends()
+    {
+        if (color_mode_ == ColorMode::kColorModeResourceUsageType)
+        {
+            // Handle special case for TimelineColorizer: hide heap resource type on legend.
+            legends_scene_->Clear();
+
+            // Note: Usage types on the legend are drawn in reverse order so that highest aliased priority usage are on the left, lowest on the right.
+            for (int32_t index = kRmtResourceUsageTypeCount - 1; index > -1; --index)
+            {
+                if ((index != RmtResourceUsageType::kRmtResourceUsageTypeUnknown) && (index != RmtResourceUsageType::kRmtResourceUsageTypeHeap))
+                {
+                    const RmtResourceUsageType resource_usage_type = (RmtResourceUsageType)index;
+                    legends_scene_->AddColorLegendItem(GetResourceUsageColor(resource_usage_type),
+                                                       RmtGetResourceUsageTypeNameFromResourceUsageType(resource_usage_type));
+                }
+            }
+        }
+        else
+        {
+            ColorizerBase::UpdateLegends(legends_scene_, color_mode_);
+        }
     }
 
     RmtDataTimelineType TimelineColorizer::ApplyColorMode(int index)

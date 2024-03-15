@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Define the settings and information about recently opened traces.
@@ -156,6 +156,11 @@ namespace rmv
         ///
         /// @param [in] trace_name The name of the file to remove.
         void RemoveRecentFile(const QString& trace_name);
+
+        /// @brief Determines if a file path exists in recent files list.
+        ///
+        /// @return If file is found, returns true.  Otherwise returns false.
+        bool DoesFileExistInRecentList(const char* file_path);
 
         /// @brief Get a reference to the settings.
         ///

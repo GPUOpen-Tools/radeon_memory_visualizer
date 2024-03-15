@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Timeline pane.
@@ -34,6 +34,11 @@ const static QString kRenameAction  = "Rename snapshot";
 const static QString kDeleteAction  = "Delete snapshot";
 const static QString kCompareAction = "Compare snapshots";
 
+// Constants for building the selection duration and timeline hover position string.
+const static QString kSelectionString         = "Selection: ";
+const static QString kDurationAndClockDivider = " | ";
+const static QString kTimestampPadding        = "   ";  // Extra padding to compensate for non-proportional font.
+
 // The timeline type to revert to if calculating the resource usage size timeline type is cancelled.
 static int saved_timeline_type_index_ = 0;
 
@@ -41,6 +46,8 @@ TimelinePane::TimelinePane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::TimelinePane)
     , thread_controller_(nullptr)
+    , hover_clock_(0)
+    , selection_duration_in_clocks_(0)
 {
     ui_->setupUi(this);
 
@@ -95,9 +102,8 @@ TimelinePane::TimelinePane(QWidget* parent)
 
     // Set up a list of required timeline modes, in order.
     // The list is terminated with -1.
-    static const RmtDataTimelineType type_list[] = {kRmtDataTimelineTypeCommitted,
+    static const RmtDataTimelineType type_list[] = {kRmtDataTimelineTypeVirtualMemory,
                                                     kRmtDataTimelineTypeResourceUsageCount,
-                                                    kRmtDataTimelineTypeVirtualMemory,
                                                     kRmtDataTimelineTypeResourceUsageVirtualSize,
                                                     // kRmtDataTimelineTypeProcess,
                                                     RmtDataTimelineType(-1)};
@@ -272,21 +278,35 @@ void TimelinePane::OnTraceClose()
     ui_->timeline_view_->Clear();
 }
 
-void TimelinePane::UpdateSelectedDuration(uint64_t duration)
+void TimelinePane::UpdateClockAndSelectionLabel()
 {
-    QString text = "-";
+    QString duration_and_clock_text = kSelectionString;
 
-    if (duration != 0)
+    if (selection_duration_in_clocks_ == 0)
     {
-        text = rmv::time_util::ClockToTimeUnit(duration);
+        duration_and_clock_text += "-";
+    }
+    else
+    {
+        duration_and_clock_text += rmv::time_util::ClockToTimeUnit(selection_duration_in_clocks_);
     }
 
-    ui_->selection_clock_label_->setText(text);
+    duration_and_clock_text += kDurationAndClockDivider;
+    duration_and_clock_text += rmv::time_util::ClockToTimeUnit(hover_clock_);
+
+    ui_->hover_clock_and_selection_label_->setText(duration_and_clock_text);
+}
+
+void TimelinePane::UpdateSelectedDuration(uint64_t duration)
+{
+    selection_duration_in_clocks_ = duration;
+    UpdateClockAndSelectionLabel();
 }
 
 void TimelinePane::UpdateHoverClock(uint64_t clock)
 {
-    ui_->hover_clock_label_->setText(rmv::time_util::ClockToTimeUnit(clock));
+    hover_clock_ = clock;
+    UpdateClockAndSelectionLabel();
 }
 
 void TimelinePane::Reset()
@@ -307,6 +327,12 @@ void TimelinePane::SwitchTimeUnits()
     double ratio = rmv::time_util::TimeToClockRatio();
     ui_->timeline_view_->UpdateTimeUnits(rmv::RMVSettings::Get().GetUnits(), ratio);
     model_->Update();
+
+    // Set the maximum length of the string used for the hover clock and selection label.
+    const QString max_timestamp_string = rmv::time_util::ClockToTimeUnit(model_->GetMaxTimestamp());
+    const QString max_hover_clock_and_selection_string =
+        kTimestampPadding + kSelectionString + max_timestamp_string + kDurationAndClockDivider + max_timestamp_string;
+    ui_->hover_clock_and_selection_label_->SetWidestTextString(max_hover_clock_and_selection_string);
 }
 
 void TimelinePane::ChangeColoring()
@@ -330,7 +356,8 @@ void TimelinePane::ZoomReset()
     zoom_icon_manager_->ZoomReset();
     UpdateTimelineScrollbarContextMenu(false);
 
-    ui_->selection_clock_label_->setText("-");
+    selection_duration_in_clocks_ = 0;
+    UpdateClockAndSelectionLabel();
 
     ui_->timeline_view_->ZoomReset();
     model_->UpdateMemoryGraph(ui_->timeline_view_->ViewableStartClk(), ui_->timeline_view_->ViewableEndClk());

@@ -1,13 +1,19 @@
+#######################################################################################################################
+### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+### \author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.11)
 
 set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
+
 
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 8)
+set(RMV_MINOR_VERSION 9)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -53,6 +59,7 @@ ELSE(WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug)
 ENDIF(WIN32)
+
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
@@ -116,13 +123,6 @@ set_target_properties(QtCustomWidgets
     PROPERTIES
     FOLDER Dependencies
 )
-ELSEIF(APPLE)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(QtCustomWidgets
-                      QtUtils
-    PROPERTIES
-    FOLDER Dependencies
-)
 ENDIF()
 
 IF(WIN32)
@@ -136,11 +136,7 @@ ENDIF(WIN32)
 # This is evaluated at project build time - not at CMake generation time
 set(BUILD_ROOT $<$<CONFIG:debug>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}>$<$<CONFIG:release>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}>)
 
-if(APPLE)
-    set(DOCS_OUTPUT_DIR $<TARGET_FILE_DIR:RadeonMemoryVisualizer>/../Resources)
-else()
-    set(DOCS_OUTPUT_DIR ${BUILD_ROOT})
-endif()
+set(DOCS_OUTPUT_DIR ${BUILD_ROOT})
 
 # group sphinx source files into a sphinx folder
 file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_SOURCE_DIR}/documentation/source/*.rst)
@@ -168,9 +164,6 @@ if(SPHINX_EXECUTABLE)
     # Sphinx has proper dependency checking, so this works as expected.
     # Once built, clean up any unneeded files.
     add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
-    if(APPLE)
-        add_dependencies(Documentation RadeonMemoryVisualizer)
-    endif()
     add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
         COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
         COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rmv/. -t ${SPHINX_OPTION}
@@ -201,3 +194,5 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sample_trace.rmv  ${DOCS_OUTPUT_DIR}/samples/.
 )
+
+

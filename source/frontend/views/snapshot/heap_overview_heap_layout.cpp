@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a single heap in the heap overview pane.
@@ -16,6 +16,9 @@
 #include "settings/rmv_settings.h"
 #include "util/string_util.h"
 #include "util/widget_util.h"
+
+// A string used to describe the data presented by the resource usage donut.
+static const QString kResourceDonutDescription = "Committed %1 memory\nGrouped by Resource usage";
 
 HeapOverviewHeapLayout::HeapOverviewHeapLayout(QWidget* parent)
     : QWidget(parent)
@@ -66,9 +69,17 @@ void HeapOverviewHeapLayout::Initialize(RmtHeapType heap)
     model_->InitializeModel(ui_->content_cpu_visible_, rmv::kHeapOverviewCpuVisible, "text");
     model_->InitializeModel(ui_->content_gpu_cached_, rmv::kHeapOverviewGpuCached, "text");
     model_->InitializeModel(ui_->content_gpu_visible_, rmv::kHeapOverviewGpuVisible, "text");
+    model_->InitializeModel(ui_->content_committed_, rmv::kHeapOverviewCommitted, "text");
+    model_->InitializeModel(ui_->content_allocation_count_, rmv::kHeapOverviewAllocationCount, "text");
     model_->InitializeModel(ui_->content_smallest_allocation_, rmv::kHeapOverviewSmallestAllocation, "text");
     model_->InitializeModel(ui_->content_largest_allocation_, rmv::kHeapOverviewLargestAllocation, "text");
     model_->InitializeModel(ui_->content_mean_allocation_, rmv::kHeapOverviewMeanAllocation, "text");
+    model_->InitializeModel(ui_->content_resource_count_, rmv::kHeapOverviewResourceCount, "text");
+
+    ui_->label_resource_donut_description_->setText(kResourceDonutDescription.arg(RmtGetHeapTypeNameFromHeapType(heap)));
+
+    ui_->content_committed_->hide();
+    ui_->label_committed_->hide();
 }
 
 int HeapOverviewHeapLayout::GetDonutSectionWidth() const
@@ -190,16 +201,14 @@ void HeapOverviewHeapLayout::Update()
     }
 
     // Apply memory parameters to the memory bars.
-    ui_->bar_requested_->SetParameters(total_virtual_memory_requested, 0, max_size, true, subscription_status);
-    ui_->bar_bound_->SetParameters(total_bound_virtual_memory, 0, max_size, false, subscription_status);
-    ui_->bar_total_size_->SetParameters(total_physical_size, 0, max_size, false, subscription_status);
-    ui_->bar_committed_->SetParameters(total_physical_mapped_by_process, total_physical_mapped_by_other_processes, max_size, false, subscription_status);
+    ui_->bar_requested_->SetParameters(total_virtual_memory_requested, 0, max_size, true, subscription_status, false);
+    ui_->bar_bound_->SetParameters(total_bound_virtual_memory, 0, max_size, false, subscription_status, false);
+    ui_->bar_total_size_->SetParameters(total_physical_size, 0, max_size, false, subscription_status, true);
 
     // Update the various UI elements.
     ui_->bar_requested_->update();
     ui_->bar_bound_->update();
     ui_->bar_total_size_->update();
-    ui_->bar_committed_->update();
 
     ui_->donut_widget_->update();
 }

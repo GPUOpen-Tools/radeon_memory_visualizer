@@ -164,6 +164,11 @@ RMVColoredCheckbox
 /* MainWindow
 /*************************************/
 
+MainWindow QWidget#top_spacer_label_
+{
+    background-color: rgb(240, 240, 240);
+}
+
 MainWindow QWidget#snapshot_label_
 {
     background-color: rgb(240, 240, 240);

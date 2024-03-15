@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Snapshot delta pane.
@@ -9,6 +9,7 @@
 
 #include "qt_common/utils/scaling_manager.h"
 
+#include "managers/message_manager.h"
 #include "util/rmv_util.h"
 #include "util/widget_util.h"
 
@@ -67,7 +68,8 @@ SnapshotDeltaPane::SnapshotDeltaPane(QWidget* parent)
     ui_->legends_view_->setFixedSize(legend_rect.toRect().size());
     ui_->legends_view_->setSceneRect(legend_rect);
 
-    connect(ui_->switch_button_, &QPushButton::pressed, this, &SnapshotDeltaPane::SwitchSnapshots);
+    connect(ui_->switch_button_, &QPushButton::pressed, [=]() { emit rmv::MessageManager::Get().SwapSnapshotsRequested(); });
+    connect(&rmv::MessageManager::Get(), &rmv::MessageManager::SwapSnapshotsRequested, this, &SnapshotDeltaPane::SwitchSnapshots);
 
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &SnapshotDeltaPane::OnScaleFactorChanged);
 }

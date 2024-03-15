@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Resource Overview model.
@@ -40,8 +40,7 @@ namespace rmv
         ///
         /// @param [in] min_value Minimum value of slider span.
         /// @param [in] max_value Maximum value of slider span.
-        /// @param [in] use_unbound Use unbound resources when considering the size slider.
-        void FilterBySizeChanged(int32_t min_value, int32_t max_value, bool use_unbound);
+        void FilterBySizeChanged(int32_t min_value, int32_t max_value);
 
         /// @brief Check to see if a resource size is within the slider range.
         ///

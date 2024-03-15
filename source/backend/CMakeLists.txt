@@ -1,14 +1,20 @@
+#######################################################################################################################
+### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+### \author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.10)
 project(RmvBackend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories(AFTER ../backend ../parser ../../external/rdf/rdf/inc)
+include_directories(AFTER ../backend ../parser ../../external/rdf/rdf/inc ../third_party)
 
 add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
 add_definitions(-DRDF_CXX_BINDINGS)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 set( SOURCES
     "rmt_adapter_info.cpp"
     "rmt_adapter_info.h"
@@ -73,9 +79,9 @@ set( SOURCES
 )
 
 set( LINUX_SOURCES
-    "../third_party/pevents/pevents.cpp"
-    "../third_party/pevents/pevents.h"
+    "rmt_include_pevents.cpp"
 )
+
 
 # specify output library name
 IF(WIN32)
@@ -96,3 +102,4 @@ endforeach()
 ENDIF(WIN32)
 
 devtools_target_options(${PROJECT_NAME})
+

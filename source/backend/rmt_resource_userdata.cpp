@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Function implementation for any resource userdata.
@@ -9,18 +9,40 @@
 
 #include "rmt_assert.h"
 #include "rmt_print.h"
+#include "rmt_resource_list.h"
 #include "rmt_string_memory_pool.h"
+#include "rmt_virtual_allocation_list.h"
 
+#include <cmath>
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+
+// Constant used when matching implicit resources to heaps.  The creation times must be equal or less than this value to be considered a pair.
+static const size_t kImplicitResourceCheckClockTicksThreshold = 2;
 
 // Constant used to indicate an unknown driver resource ID.
 static const RmtResourceIdentifier kUnknownDriverResourceId = 0;
 
 // Constant used to indicate an unknown correlation ID.
 static const RmtCorrelationIdentifier kUnknownCorrelationId = 0;
+
+// A structure that contains the information needed for matching a heap with an image or buffer resource.
+typedef struct PairedResourceAndHeapInfo
+{
+    RmtResourceIdentifier heap_internal_resource_id;
+    RmtResourceIdentifier image_buffer_internal_resource_id;
+} PairedResourceAndHeapInfo;
+
+// A map used to match an allocation with a heap or image/buffer resource using the allocation's unique ID.
+std::unordered_map<uint64_t, PairedResourceAndHeapInfo> paired_resources_and_heaps;
+
+// A lookup map used to locate an image/buffer resource using a heap resource ID as the key.
+std::unordered_map<RmtResourceIdentifier, RmtResourceIdentifier> paired_heap_to_resource_map;
+
+// A lookup map used to locate a heap using an image/buffer resource ID as the key.
+std::unordered_map<RmtResourceIdentifier, RmtResourceIdentifier> paired_resource_to_heap_map;
 
 // UserData related Token types
 enum TokenType
@@ -35,12 +57,13 @@ enum TokenType
 // A structure used to hold information about the tokens that are processed.
 struct TokenData
 {
-    TokenType             token_type;
-    RmtResourceType       resource_type;
-    RmtResourceIdentifier internal_resource_id;
-    RmtResourceIdentifier driver_resource_id;
-    RmtResourceIdentifier correlation_id;
-    char*                 resource_name;
+    TokenType               token_type;
+    RmtResourceType         resource_type;
+    RmtResourceIdentifier   internal_resource_id;
+    RmtResourceIdentifier   driver_resource_id;
+    RmtResourceIdentifier   correlation_id;
+    char*                   resource_name;
+    RmtImplicitResourceType implicit_resource_type;
 };
 
 // An ID used for tracking resource names.
@@ -63,8 +86,8 @@ static std::unordered_map<RmtCorrelationIdentifier, char*> correlation_id_to_res
 // This is the one that sticks around. Map of resource id to string.  This is used to patch everything up in after processing completes.
 static std::unordered_map<RmtResourceIdentifier, char*> internal_resource_id_to_resource_name;
 
-// Set of implicit resources.
-static std::unordered_set<RmtResourceIdentifier> resource_identifier_implicit;
+// Lookup map of implicit resources using an internal resource identifier as the key.
+static std::unordered_map<RmtResourceIdentifier, RmtImplicitResourceType> resource_identifier_implicit;
 
 // Set of resources needing correlations.
 static std::unordered_set<RmtResourceIdentifier> internal_resource_ids_needing_correlation;
@@ -77,6 +100,54 @@ static RmtStringMemoryPool resource_name_string_pool(kMemoryPoolBlockSize);
 
 // Flag indicating, if true, that Name UserData tokens have been parsed.
 static bool resource_name_token_tracked = false;
+
+// @brief Stores an implicit resource in a map.
+//
+// If the resource being stored is an image or buffer and the implicit resource type is implicit heap then a search is performed to locate a heap resource that
+// matches the buffer resource's virtual address.  If a matching heap resource is found, the heap resource ID is stored in the implicit
+// resource list instead of the buffer resource's ID.
+//
+// If the resource being stored is a buffer and the implicit resource type is implicit resource then it is stored in the implicit resource list (there
+// is no need to match it with a heap resource).
+//
+// If the image/buffer resource's ID was previously stored in the implicit resource list, it is marked unused (this indicates an unused duplicate token was generated).
+static void StoreImplicitResource(const RmtResourceIdentifier internal_resource_id, const RmtImplicitResourceType implicit_resource_type)
+{
+    // Set a flag to true if a token was previously processed with this same resource ID.
+    const auto& previous_implicit_resource_iterator = resource_identifier_implicit.find(internal_resource_id);
+    const bool  previous_implicit_resource_found    = previous_implicit_resource_iterator != resource_identifier_implicit.end();
+    const auto& heap_lookup_iterator                = paired_resource_to_heap_map.find(internal_resource_id);
+
+    // Check for implicit image/buffer resource (also, make sure a duplicate hasn't already been stored in the resource_identifier_implicit map).
+    if ((implicit_resource_type == RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource) && !previous_implicit_resource_found)
+    {
+        // Only store this resource ID if a paired heap wasn't already marked implicit.  This is a workaround in case there are multiple
+        // MarkResourceImplicit UserData tokens for this resource originating from ETW.  If a token with an kRmtImplicitResourceTypeImplicitHeap
+        // type is processed, ignore any other tokens with the kRmtImplicitResourceTypeImplicitResource type.
+        if ((heap_lookup_iterator == paired_resource_to_heap_map.end()) || !(RmtResourceUserDataIsResourceImplicit(heap_lookup_iterator->second)))
+        {
+            // Store this ID in the list of implicit resources.
+            // Note: This maybe updated later if a duplicate MarkImplicitResource token is processed with this same resource ID.
+            resource_identifier_implicit[internal_resource_id] = RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource;
+        }
+    }
+    else if (implicit_resource_type == RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitHeap)
+    {
+        // Find the heap associated with this resource and add its resource ID to the implicit resource map.
+        if (heap_lookup_iterator != paired_resource_to_heap_map.end())
+        {
+            const RmtResourceIdentifier heap_resource_id   = heap_lookup_iterator->second;
+            resource_identifier_implicit[heap_resource_id] = implicit_resource_type;
+
+            // Workaround for duplicate MarkImplicitResource UserData tokens: If the buffer resource associated with this implicit heap was already
+            // marked implicit, change the buffer resource's implicit type to unused since the heap and buffer resource can't both be implicit.
+            if (previous_implicit_resource_found)
+            {
+                resource_identifier_implicit[internal_resource_id] = RmtImplicitResourceType::kRmtImplicitResourceTypeUnused;
+            }
+        }
+    }
+}
 
 static RmtResourceNameHash ResourceNamingGenerateHash(RmtResourceIdentifier resource_id, RmtCorrelationIdentifier correlation_id)
 {
@@ -241,7 +312,7 @@ static void ProcessImplicitResourceToken(const TokenData& token_data, bool any_c
             if (internal_resource_ids_needing_correlation.find(internal_resource_identifier) == internal_resource_ids_needing_correlation.end())
             {
                 // Mark this resource as implicit.
-                resource_identifier_implicit.insert(internal_resource_identifier);
+                StoreImplicitResource(internal_resource_identifier, token_data.implicit_resource_type);
                 return;
             }
         }
@@ -257,7 +328,7 @@ static void ProcessImplicitResourceToken(const TokenData& token_data, bool any_c
             {
                 // The internal resource ID was found. Mark this resource as implicit.
                 const RmtResourceIdentifier internal_resource_identifier = (*internal_resource_id_iterator2).second;
-                resource_identifier_implicit.insert(internal_resource_identifier);
+                StoreImplicitResource(internal_resource_identifier, token_data.implicit_resource_type);
             }
         }
     }
@@ -272,7 +343,7 @@ static void ProcessImplicitResourceToken(const TokenData& token_data, bool any_c
         {
             // The internal resource ID was found. Mark this resource as implicit.
             const RmtResourceIdentifier internal_resource_identifier = (*it).second;
-            resource_identifier_implicit.insert(internal_resource_identifier);
+            StoreImplicitResource(internal_resource_identifier, token_data.implicit_resource_type);
         }
     }
 }
@@ -314,6 +385,7 @@ RmtErrorCode RmtResourceUserdataProcessEvents(const bool any_correlations)
     internal_resource_id_to_resource_hash_id.clear();
     correlation_id_to_resource_name.clear();
     internal_resource_ids_needing_correlation.clear();
+    paired_resources_and_heaps.clear();
     tokens.clear();
 
     // Clear the flag that indicates there are Name UserData tokens waiting to be processed.
@@ -409,17 +481,67 @@ RmtErrorCode RmtResourceUserdataTrackResourceNameToken(const RmtCorrelationIdent
     return result;
 }
 
-RmtErrorCode RmtResourceUserdataTrackImplicitResourceToken(RmtResourceIdentifier correlation_id, uint64_t timestamp, uint64_t delay_time)
+RmtErrorCode RmtResourceUserdataTrackImplicitResourceToken(const RmtResourceIdentifier   correlation_id,
+                                                           const uint64_t                timestamp,
+                                                           const uint64_t                delay_time,
+                                                           const RmtImplicitResourceType implicit_resource_type)
 {
     if (timestamp - delay_time <= timestamp)
     {
-        TokenData token_data      = {};
-        token_data.token_type     = kResourceImplicit;
-        token_data.correlation_id = correlation_id;
+        TokenData token_data              = {};
+        token_data.token_type             = kResourceImplicit;
+        token_data.correlation_id         = correlation_id;
+        token_data.implicit_resource_type = implicit_resource_type;
+
         tokens.insert(std::make_pair(timestamp - delay_time, token_data));
         return kRmtOk;
     }
     return kRmtErrorMalformedData;
+}
+
+RmtErrorCode RmtResourceUserDataTrackBoundResource(const RmtResource* resource, const uint64_t allocation_identifier)
+{
+    RMT_RETURN_ON_ERROR(resource != nullptr, kRmtErrorInvalidPointer);
+
+    auto paired_heap_and_resource_info = paired_resources_and_heaps.find(allocation_identifier);
+    if (resource->resource_type == RmtResourceType::kRmtResourceTypeHeap)
+    {
+        const RmtResource* heap_resource = resource;
+        if (paired_heap_and_resource_info == paired_resources_and_heaps.end())
+        {
+            // A matching image/buffer hasn't been processed yet.  Just store the heap info for now.
+            paired_resources_and_heaps[allocation_identifier].heap_internal_resource_id = heap_resource->identifier;
+        }
+        else
+        {
+            // Heap is paired with resource.  Update lookup tables.
+            paired_resource_to_heap_map[paired_heap_and_resource_info->second.image_buffer_internal_resource_id] = heap_resource->identifier;
+            paired_heap_to_resource_map[heap_resource->identifier] = paired_heap_and_resource_info->second.image_buffer_internal_resource_id;
+
+            // Remove from paired resources and heaps since a match has been found.
+            paired_resources_and_heaps.erase(allocation_identifier);
+        }
+    }
+    else if ((resource->resource_type == RmtResourceType::kRmtResourceTypeBuffer) || (resource->resource_type == RmtResourceType::kRmtResourceTypeImage))
+    {
+        const RmtResource* image_buffer_resource = resource;
+        if (paired_heap_and_resource_info == paired_resources_and_heaps.end())
+        {
+            // A matching heap hasn't been processed yet.  Just store the image/buffer resource info for now.
+            paired_resources_and_heaps[allocation_identifier].image_buffer_internal_resource_id = image_buffer_resource->identifier;
+        }
+        else
+        {
+            // Heap is paired with an image/buffer resource.
+            paired_heap_to_resource_map[paired_heap_and_resource_info->second.heap_internal_resource_id] = image_buffer_resource->identifier;
+            paired_resource_to_heap_map[image_buffer_resource->identifier] = paired_heap_and_resource_info->second.heap_internal_resource_id;
+
+            // Remove from paired resources and heaps since a match has been found.
+            paired_resources_and_heaps.erase(allocation_identifier);
+        }
+    }
+
+    return kRmtOk;
 }
 
 RmtErrorCode RmtResourceUserdataGetResourceName(const RmtResourceIdentifier resource_id, const char** out_resource_name)
@@ -460,9 +582,55 @@ RmtErrorCode RmtResourceUserdataUpdateResourceName(const RmtResourceList* resour
 
 bool RmtResourceUserDataIsResourceImplicit(const RmtResourceIdentifier resource_id)
 {
-    if (resource_identifier_implicit.find(resource_id) != resource_identifier_implicit.end())
+    const auto implicit_resource_info = resource_identifier_implicit.find(resource_id);
+    if (implicit_resource_info != resource_identifier_implicit.end())
     {
-        return true;
+        if ((implicit_resource_info->second == RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitHeap) ||
+            (implicit_resource_info->second == RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource))
+        {
+            return true;
+        }
     }
     return false;
+}
+
+RmtErrorCode RmtResourceUserDataFindPairedResource(const RmtResourceIdentifier internal_resource_id, RmtResourceIdentifier* out_paired_internal_resource_id)
+{
+    RmtErrorCode result                 = kRmtErrorNoResourceFound;
+    const auto&  heap_resource_iterator = paired_resource_to_heap_map.find(internal_resource_id);
+    if (heap_resource_iterator != paired_resource_to_heap_map.end())
+    {
+        *out_paired_internal_resource_id = heap_resource_iterator->second;
+        result                           = kRmtOk;
+    }
+    else
+    {
+        const auto& image_buffer_resource_iterator = paired_heap_to_resource_map.find(internal_resource_id);
+        if (image_buffer_resource_iterator != paired_heap_to_resource_map.end())
+        {
+            *out_paired_internal_resource_id = image_buffer_resource_iterator->second;
+            result                           = kRmtOk;
+        }
+    }
+
+    return result;
+}
+
+void RmtResourceUserDataCleanup()
+{
+    // Clear temporary lookup maps (in case processing fails before loading the trace file completes).
+    correlation_id_to_resource_hash.clear();
+    resource_hash_to_correlation_id.clear();
+    resource_hash_to_internal_resource_id.clear();
+    internal_resource_id_to_resource_hash_id.clear();
+    correlation_id_to_resource_name.clear();
+    internal_resource_ids_needing_correlation.clear();
+    paired_resources_and_heaps.clear();
+    tokens.clear();
+
+    // Clear lookup maps used after the trace file has been processed.
+    resource_identifier_implicit.clear();
+    internal_resource_id_to_resource_name.clear();
+    paired_heap_to_resource_map.clear();
+    paired_resource_to_heap_map.clear();
 }

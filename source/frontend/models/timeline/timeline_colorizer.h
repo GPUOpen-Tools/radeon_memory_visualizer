@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header file for the timeline colorizer control.
@@ -53,6 +53,9 @@ namespace rmv
         ///
         /// @return The new timeline type selected.
         RmtDataTimelineType ApplyColorMode(int index);
+
+        /// @brief Override method to update color legends on the UI depending on the coloring mode (hides heap resource type).
+        virtual void UpdateLegends() Q_DECL_OVERRIDE;
 
     private:
         RmtDataTimelineType timeline_type_;                                 ///< The timeline type.

@@ -1,3 +1,8 @@
+#######################################################################################################################
+### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+### \author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.11)
 
 project(RadeonMemoryVisualizer)
@@ -39,6 +44,7 @@ ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 
 set( SOURCES
     "main.cpp"
@@ -186,8 +192,12 @@ set( SOURCES
     "views/custom_widgets/rmv_delta_display.h"
     "views/custom_widgets/rmv_delta_display_widget.cpp"
     "views/custom_widgets/rmv_delta_display_widget.h"
+    "views/custom_widgets/rmv_fixed_width_label.cpp"
+    "views/custom_widgets/rmv_fixed_width_label.h"
     "views/custom_widgets/rmv_heap_overview_memory_bar.cpp"
     "views/custom_widgets/rmv_heap_overview_memory_bar.h"
+    "views/custom_widgets/rmv_range_slider.cpp"
+    "views/custom_widgets/rmv_range_slider.h"
     "views/custom_widgets/rmv_resource_details.cpp"
     "views/custom_widgets/rmv_resource_details.h"
     "views/custom_widgets/rmv_resource_timeline.cpp"
@@ -294,6 +304,7 @@ set( WINDOWS_SOURCES
     "windows/rmv_icon.ico"
 )
 
+
 # Filter out the UI files and get the list of generated files
 set(UI_FILES ${SOURCES})
 list(FILTER UI_FILES INCLUDE REGEX "\.ui$")
@@ -385,6 +396,7 @@ IF(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 
+
     # Add the Debug-Only custom commands.
     # This functionality requires CMake 3.8 or higher.
     add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
@@ -421,3 +433,4 @@ IF(UNIX AND NOT APPLE)
 ENDIF(UNIX AND NOT APPLE)
 
 devtools_target_options(${PROJECT_NAME})
+

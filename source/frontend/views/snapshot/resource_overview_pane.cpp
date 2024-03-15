@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource Overview pane.
@@ -23,6 +23,7 @@
 #include "models/snapshot/resource_overview_model.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"
+
 #include "views/custom_widgets/rmv_colored_checkbox.h"
 
 ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
@@ -68,7 +69,7 @@ ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
     connect(tree_map_models_.actual_heap_model, &rmv::HeapComboBoxModel::FilterChanged, this, &ResourceOverviewPane::ComboFiltersChanged);
 
     tree_map_models_.resource_usage_model->SetupResourceComboBox(ui_->resource_usage_combo_box_);
-    connect(tree_map_models_.resource_usage_model, &rmv::ResourceUsageComboBoxModel::FilterChanged, this, &ResourceOverviewPane::ComboFiltersChanged);
+    connect(tree_map_models_.resource_usage_model, &rmv::ResourceUsageComboBoxModel::FilterChanged, this, &ResourceOverviewPane::ResourceComboFiltersChanged);
 
     // Set up a list of required coloring modes, in order.
     // The list is terminated with kColorModeCount.
@@ -145,7 +146,7 @@ ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
 
     ui_->resource_details_checkbox_->Initialize(true, rmv::kCheckboxEnableColor, Qt::black);
 
-    rmv::widget_util::InitDoubleSlider(ui_->size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->size_slider_);
 
     connect(ui_->size_slider_, &DoubleSliderWidget::SpanChanged, this, &ResourceOverviewPane::FilterBySizeSliderChanged);
 
@@ -175,6 +176,7 @@ void ResourceOverviewPane::Refresh()
 {
     bool use_unbound = tree_map_models_.resource_usage_model->ItemInList(kRmtResourceUsageTypeFree);
     model_->Update(use_unbound);
+    FilterBySizeSliderChanged(ui_->size_slider_->LowerValue(), ui_->size_slider_->UpperValue());
 }
 
 void ResourceOverviewPane::showEvent(QShowEvent* event)
@@ -206,6 +208,9 @@ void ResourceOverviewPane::Reset()
     selected_resource_ = nullptr;
     resource_details_->UpdateResource(selected_resource_);
 
+    ui_->size_slider_->SetLowerValue(0);
+    ui_->size_slider_->SetUpperValue(ui_->size_slider_->maximum());
+
     ui_->slicing_button_one_->SetSelectedRow(GetRowForSliceType(RMVTreeMapBlocks::kSliceTypePreferredHeap));
     ui_->slicing_button_two_->SetSelectedRow(GetRowForSliceType(RMVTreeMapBlocks::kSliceTypeVirtualAllocation));
     ui_->slicing_button_three_->SetSelectedRow(GetRowForSliceType(RMVTreeMapBlocks::kSliceTypeResourceUsageType));
@@ -216,8 +221,6 @@ void ResourceOverviewPane::Reset()
 
     ui_->color_combo_box_->SetSelectedRow(0);
     colorizer_->ApplyColorMode();
-    ui_->size_slider_->SetLowerValue(0);
-    ui_->size_slider_->SetUpperValue(rmv::kSizeSliderRange);
 
     UpdateDetailsTitle();
 }
@@ -289,6 +292,12 @@ void ResourceOverviewPane::ComboFiltersChanged(bool checked)
     resource_details_->UpdateResource(selected_resource_);
     UpdateDetailsTitle();
     ui_->tree_map_view_->UpdateTreeMap();
+}
+
+void ResourceOverviewPane::ResourceComboFiltersChanged(bool checked, int changed_item_index)
+{
+    tree_map_models_.resource_usage_model->UpdateCheckboxes(changed_item_index, ui_->resource_usage_combo_box_);
+    ComboFiltersChanged(checked);
 }
 
 void ResourceOverviewPane::UpdateSlicingLevel()
@@ -402,8 +411,7 @@ void ResourceOverviewPane::SelectUnboundResource(const RmtResource* unbound_reso
 
 void ResourceOverviewPane::FilterBySizeSliderChanged(int min_value, int max_value)
 {
-    bool use_unbound = tree_map_models_.resource_usage_model->ItemInList(kRmtResourceUsageTypeFree);
-    model_->FilterBySizeChanged(min_value, max_value, use_unbound);
+    model_->FilterBySizeChanged(min_value, max_value);
     ui_->tree_map_view_->UpdateTreeMap();
 }
 

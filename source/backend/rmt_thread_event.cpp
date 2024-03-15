@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of platform-specific thread events.
@@ -12,7 +12,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
-#include "../third_party/pevents/pevents.h"
+#include "pevents/src/pevents.h"
 #endif  // #ifdef _WIN32
 
 // structure for thread event

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Memory leak finder pane.
@@ -80,8 +80,9 @@ private slots:
 
     /// @brief Handle what happens when a checkbox in the resource dropdown is checked or unchecked.
     ///
-    /// @param [in] checked Whether the checkbox is checked or unchecked.
-    void ResourceChanged(bool checked);
+    /// @param [in] checked            Whether the checkbox is checked or unchecked.
+    /// @param [in] changed_item_index The index of the checkbox in the combo box that was changed.
+    void ResourceChanged(bool checked, int changed_item_index);
 
     /// @brief Slot to handle what happens when a resource in the table is double-clicked on.
     ///
@@ -89,6 +90,9 @@ private slots:
     ///
     /// @param [in] index the model index of the selected item in the table.
     void TableDoubleClicked(const QModelIndex& index);
+
+    /// @brief Switch snapshots.
+    void SwitchSnapshots();
 
 private:
     /// @brief Refresh what's visible on the UI.

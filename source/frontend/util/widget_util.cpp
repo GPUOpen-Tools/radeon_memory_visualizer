@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a number of widget utilities.
@@ -18,14 +18,14 @@
 
 namespace rmv
 {
-    void widget_util::InitDoubleSlider(DoubleSliderWidget* double_slider_widget)
+    void widget_util::InitRangeSlider(RmvRangeSlider* slider_widget)
     {
-        double_slider_widget->setFixedWidth(ScalingManager::Get().Scaled(rmv::kDoubleSliderWidth));
-        double_slider_widget->setFixedHeight(ScalingManager::Get().Scaled(rmv::kDoubleSliderHeight));
-        double_slider_widget->setCursor(Qt::PointingHandCursor);
-        double_slider_widget->setMinimum(0);
-        double_slider_widget->setMaximum(kSizeSliderRange);
-        double_slider_widget->Init();
+        slider_widget->setFixedWidth(ScalingManager::Get().Scaled(rmv::kDoubleSliderWidth));
+        slider_widget->setFixedHeight(ScalingManager::Get().Scaled(rmv::kDoubleSliderHeight));
+        slider_widget->setCursor(Qt::PointingHandCursor);
+        slider_widget->setMinimum(0);
+        slider_widget->setMaximum(kSizeSliderRange - 1);
+        slider_widget->Init();
     }
 
     void widget_util::InitSingleSelectComboBox(QWidget*           parent,

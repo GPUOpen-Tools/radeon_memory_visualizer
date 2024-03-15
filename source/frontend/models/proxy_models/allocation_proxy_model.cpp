@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes multiple columns
@@ -67,12 +67,9 @@ namespace rmv
 
     bool AllocationProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
     {
-        if ((left.column() == kVirtualAllocationColumnId && right.column() == kVirtualAllocationColumnId))
+        if ((left.column() == kVirtualAllocationColumnId) && (right.column() == kVirtualAllocationColumnId))
         {
-            const qulonglong addr_left  = left.data().toULongLong();
-            const qulonglong addr_right = right.data().toULongLong();
-
-            return addr_left < addr_right;
+            return left.data().toString().compare(right.data().toString(), Qt::CaseInsensitive) < 0;
         }
         else if ((left.column() == kVirtualAllocationColumnAllocationSize && right.column() == kVirtualAllocationColumnAllocationSize))
         {

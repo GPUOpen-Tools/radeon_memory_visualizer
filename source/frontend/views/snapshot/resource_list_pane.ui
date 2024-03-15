@@ -126,7 +126,7 @@
                </widget>
               </item>
               <item>
-               <widget class="DoubleSliderWidget" name="size_slider_">
+               <widget class="RmvRangeSlider" name="size_slider_">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -270,6 +270,19 @@
                 </property>
                </spacer>
               </item>
+              <item>
+               <widget class="ScaledPushButton" name="dump_resources_button_">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Dump resource table</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>
@@ -291,9 +304,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>DoubleSliderWidget</class>
+   <class>RmvRangeSlider</class>
    <extends>QSlider</extends>
-   <header>qt_common/custom_widgets/double_slider_widget.h</header>
+   <header>views/custom_widgets/rmv_range_slider.h</header>
   </customwidget>
   <customwidget>
    <class>GraphicsView</class>

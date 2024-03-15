@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Snapshot Manager.
@@ -110,8 +110,6 @@ namespace rmv
         , selected_compared_snapshots_{}
         , loaded_snapshot_(nullptr)
         , loaded_compared_snapshots_{}
-        , resource_thresholds_{}
-        , unbound_resource_thresholds_{}
         , resource_identifier_(0)
     {
     }
@@ -348,50 +346,7 @@ namespace rmv
     void SnapshotManager::CacheResourceData()
     {
         // Snapshot is loaded at this point.
-        // Deselect any selected resource.
-        memset(resource_thresholds_, 0, sizeof(uint64_t) * (rmv::kSizeSliderRange + 1));
-        memset(unbound_resource_thresholds_, 0, sizeof(uint64_t) * (rmv::kSizeSliderRange + 1));
-
         RmtDataSnapshot* snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
-
-        std::vector<uint64_t> resource_sizes;
-
-        const RmtResourceList& resource_list  = snapshot->resource_list;
-        int                    resource_count = resource_list.resource_count;
-        if (resource_count > 0)
-        {
-            // Build a list of all resources and calculate the size thresholds for the resource size slider.
-            for (int loop = 0; loop < resource_count; loop++)
-            {
-                const RmtResource& resource = resource_list.resources[loop];
-                const uint64_t     size     = resource.adjusted_size_in_bytes;
-                if (size > 0)
-                {
-                    resource_sizes.push_back(size);
-                }
-            }
-            rmv_util::BuildResourceSizeThresholds(resource_sizes, resource_thresholds_);
-
-            // Add unbound resources to the existing resource list so it will contain bound and unbound resources.
-            // Recompute the size thresholds for the resource size slider.
-            int32_t allocation_count = snapshot->virtual_allocation_list.allocation_count;
-            for (int32_t current_virtual_allocation_index = 0; current_virtual_allocation_index < allocation_count; ++current_virtual_allocation_index)
-            {
-                const RmtVirtualAllocation* current_virtual_allocation =
-                    &snapshot->virtual_allocation_list.allocation_details[current_virtual_allocation_index];
-
-                int32_t unbound_region_count = current_virtual_allocation->unbound_memory_region_count;
-                for (int32_t unbound_region_index = 0; unbound_region_index < unbound_region_count; ++unbound_region_index)
-                {
-                    uint64_t size = current_virtual_allocation->unbound_memory_regions[unbound_region_index].size;
-                    if (size > 0)
-                    {
-                        resource_sizes.push_back(size);
-                    }
-                }
-            }
-            rmv_util::BuildResourceSizeThresholds(resource_sizes, unbound_resource_thresholds_);
-        }
 
         const RmtVirtualAllocationList& allocation_list  = snapshot->virtual_allocation_list;
         const int32_t                   allocation_count = allocation_list.allocation_count;
@@ -402,18 +357,6 @@ namespace rmv
             {
                 alias_model_.Generate(&allocation_list.allocation_details[loop]);
             }
-        }
-    }
-
-    uint64_t SnapshotManager::GetSizeFilterThreshold(int32_t index, bool include_unbound_resources) const
-    {
-        if (include_unbound_resources)
-        {
-            return unbound_resource_thresholds_[index];
-        }
-        else
-        {
-            return resource_thresholds_[index];
         }
     }
 
