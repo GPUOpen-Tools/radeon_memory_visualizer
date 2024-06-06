@@ -1,3 +1,6 @@
+The Timeline windows
+====================
+
 The timeline tab shows the overview of the trace and the system.
 
 Snapshot generation
@@ -74,6 +77,15 @@ account requires considerably more time to process. For this reason, a Cancel
 button has been added below the loading animation while the "Resource usage size"
 timeline is being generated. At any time during this processing, the user may
 click the Cancel button to revert to the previously displayed timeline mode.
+
+.. image:: media/timeline_resource_usage_filter.png
+
+As shown in the screenshot above, the Resource usage size timeline view provides
+the option of showing or hiding the various usage types. Click the "Resource usage filter"
+drop down combo box to view a list of checkboxes. This can be helpful when viewing some
+resource usage sizes that have small values relative to other usage sizes on the graph.
+The "Resource usage filter" is available in the Resource usage count timeline view 
+as well.
 
 **Zoom controls**
 
@@ -181,4 +193,3 @@ memory trace was taken, showing such things as the name of the video card and
 the memory bandwidth.
 
 .. image:: media/device_config_1.png
-

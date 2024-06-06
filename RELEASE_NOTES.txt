@@ -1,15 +1,11 @@
-Radeon™ Memory Visualizer V1.9 04/24/2024
------------------------------------------
+Radeon™ Memory Visualizer V1.10 07/01/2024
+------------------------------------------
 
-V1.9 Changes
+V1.10 Changes
 ------------------------------------
-1) Improved resource list sorting.
-2) Implicit resource detection for heap resources.
-3) Conversion of heaps to resource buffers disabled if implicit heap detection is available.
-4) Improved "Filter by size" sliders shown with min and max values.
-5) Named virtual allocations.
-6) The default timeline has been changed to "Virtual memory heap" and the "Committed memory" timeline view has been removed.
-7) Bug/stability fixes.
+1) Updated to use Qt 6.7.0.
+2) Show/hide usage types on the Resource usage size and Resource usage count timeline views.
+3) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -28,6 +24,16 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.9 Changes
+------------------------------------
+1) Improved resource list sorting.
+2) Implicit resource detection for heap resources.
+3) Conversion of heaps to resource buffers disabled if implicit heap detection is available.
+4) Improved "Filter by size" sliders shown with min and max values.
+5) Named virtual allocations.
+6) The default timeline has been changed to "Virtual memory heap" and the "Committed memory" timeline view has been removed.
+7) Bug/stability fixes.
 
 V1.8 Changes
 ------------------------------------

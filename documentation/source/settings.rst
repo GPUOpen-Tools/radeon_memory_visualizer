@@ -1,3 +1,6 @@
+Settings
+========
+
 General
 -------
 **Check for updates** If checked, the Radeon Memory Visualizer will alert you
@@ -31,3 +34,18 @@ cycles, milliseconds, seconds or minutes very quickly.
 
 All users are encouraged to adopt these keystrokes while using RMV.
 
+UI Navigation
+-------------
+
+In an effort to improve workflow, RMV supports keyboard shortcuts and
+back and forward history to quickly navigate throughout the UI.
+
+Back and forward navigation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RMV tracks navigation history, which allows users to navigate back and
+forward between all of RMV’s panes. This is achieved using global
+navigation **hotkeys** shown above, or the back and forward **buttons**
+on all panes in the top left below the file menu.
+
+Currently, back and forward navigation is restricted to pane switches.
