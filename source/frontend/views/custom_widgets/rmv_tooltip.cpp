@@ -14,8 +14,6 @@
 
 #include "views/custom_widgets/rmv_tooltip.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "views/custom_widgets/rmv_color_swatch_tooltip_item.h"
 
 // Slightly transparent white background color for the custom tooltip.
@@ -70,19 +68,24 @@ void RMVTooltip::CreateToolTip(QGraphicsScene* scene, bool color_swatch)
     // Make sure the tooltip is on top of everything else in the scene.
     tooltip_background_->setZValue(1.0);
     tooltip_contents_->setZValue(1.0);
+
+    // Don't scale the tooltip's border.
+    auto pen = tooltip_background_->pen();
+    pen.setCosmetic(true);
+    tooltip_background_->setPen(pen);
 }
 
 void RMVTooltip::SetText(const QString& text_string)
 {
     QFont font = tooltip_contents_->font();
-    font.setPixelSize(ScalingManager::Get().Scaled(kDefaultFontSize));
+    font.setPixelSize(kDefaultFontSize);
     tooltip_contents_->setFont(font);
     tooltip_contents_->setText(text_string);
 
     // The method setText() will update the bounding rectangle for tooltip_contents, so update
     // the background rectangle. Add a small margin so text is not overlapping the outline.
     QRectF      rect   = tooltip_contents_->boundingRect();
-    const qreal offset = ScalingManager::Get().Scaled(2.0 * kTooltipBorderWidth);
+    const qreal offset = 2.0 * kTooltipBorderWidth;
     rect.setWidth(rect.width() + offset);
     rect.setHeight(rect.height() + offset);
     tooltip_background_->setRect(rect);

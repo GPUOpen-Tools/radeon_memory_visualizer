@@ -130,6 +130,7 @@ static RmtErrorCode LoadSegmentChunk(rdfChunkFile* chunk_file, RmtDataSet* data_
                 {
                     data_set->segment_info[count].base_address = data.physical_base_address;
                     data_set->segment_info[count].heap_type    = static_cast<RmtHeapType>(data.type);
+
                     data_set->segment_info[count].index = 0;
                     data_set->segment_info[count].size = data.size;
                     count++;

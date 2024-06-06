@@ -53,9 +53,6 @@ private slots:
     /// @brief Handle what happens when user changes the filter.
     void SearchBoxChanged();
 
-    /// @brief Update UI elements as needed due to DPI scale factor changes.
-    void OnScaleFactorChanged();
-
     /// @brief Slot to handle what happens when the 'filter by size' slider changes.
     ///
     /// @param [in] min_value Minimum value of slider span.

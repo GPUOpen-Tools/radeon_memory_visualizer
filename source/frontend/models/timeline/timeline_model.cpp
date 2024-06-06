@@ -29,6 +29,9 @@
 
 namespace rmv
 {
+    // The tooltip string to display if no resources are selected.
+    static const QString kNoResourcesSelected = "No resources selected";
+
     /// @brief Worker class definition to do the processing of the timeline generation
     /// on a separate thread.
     class TimelineWorker : public rmv::BackgroundTask
@@ -38,10 +41,11 @@ namespace rmv
         ///
         /// @param [in] model         The model containing the timeline data to work with.
         /// @param [in] timeline_type The type of timeline being generated.
-        explicit TimelineWorker(rmv::TimelineModel* model, RmtDataTimelineType timeline_type)
+        explicit TimelineWorker(rmv::TimelineModel* model, RmtDataTimelineType timeline_type, const uint32_t filter_mask)
             : BackgroundTask(timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageVirtualSize)
             , model_(model)
             , timeline_type_(timeline_type)
+            , filter_mask_(filter_mask)
         {
         }
 
@@ -53,7 +57,7 @@ namespace rmv
         /// @brief Worker thread function.
         virtual void ThreadFunc()
         {
-            model_->GenerateTimeline(timeline_type_);
+            model_->GenerateTimeline(timeline_type_, filter_mask_);
         }
 
         virtual void Cancel()
@@ -64,6 +68,7 @@ namespace rmv
     private:
         rmv::TimelineModel* model_;          ///< Pointer to the model data.
         RmtDataTimelineType timeline_type_;  ///< The timeline type.
+        uint64_t            filter_mask_;    ///< A bit mask used to show or hide series on the timeline (true = show, false = hide).
     };
 
     // Thread count for the job queue.
@@ -84,6 +89,7 @@ namespace rmv
         , max_visible_(0)
         , histogram_{}
         , timeline_type_(kRmtDataTimelineTypeResourceUsageVirtualSize)
+        , timeline_series_filter_(UINT32_MAX)
         , is_timeline_generation_in_progress(false)
     {
         const RmtErrorCode error_code = RmtJobQueueInitialize(&job_queue_, kThreadCount);
@@ -102,10 +108,13 @@ namespace rmv
         table_model_->SetRowCount(0);
         proxy_model_->invalidate();
 
+        // Reset the series filter so that all strips appear on the timeline.
+        timeline_series_filter_ = UINT32_MAX;
+
         SetModelData(kTimelineSnapshotCount, "-");
     }
 
-    void TimelineModel::GenerateTimeline(RmtDataTimelineType timeline_type)
+    void TimelineModel::GenerateTimeline(RmtDataTimelineType timeline_type, const uint32_t filter_mask)
     {
         TraceManager& trace_manager = TraceManager::Get();
 
@@ -123,6 +132,7 @@ namespace rmv
             RMT_UNUSED(error_code);
             RMT_ASSERT_MESSAGE(error_code == kRmtOk, "Error generating new timeline type");
             TimelineGenerationEnd();
+            SetTimelineSeriesFilter(filter_mask, timeline);
         }
     }
 
@@ -322,6 +332,9 @@ namespace rmv
 
         RMT_ASSERT(error_code == kRmtOk);
         RMT_UNUSED(error_code);
+
+        // Set the filter used to show/hide strips on the timeline graph and update the maximum height of the data in the timeline.
+        SetTimelineSeriesFilter(timeline_series_filter_, timeline);
     }
 
     int TimelineModel::GetNumBuckets() const
@@ -371,6 +384,32 @@ namespace rmv
         timeline_type_ = new_timeline_type;
     }
 
+    RmtErrorCode TimelineModel::SetTimelineSeriesFilter(const uint32_t new_filter_mask, RmtDataTimeline* out_timeline)
+    {
+        RMT_RETURN_ON_ERROR(out_timeline != nullptr, kRmtErrorInvalidPointer);
+
+        timeline_series_filter_                   = new_filter_mask;
+        out_timeline->filter_mask                 = new_filter_mask;
+        out_timeline->maximum_value_in_all_series = 0;
+        for (int64_t value_index = 0; value_index < histogram_.bucket_count; value_index++)
+        {
+            uint64_t total_for_all_series = 0;
+            for (int32_t current_series_index = 0; current_series_index < histogram_.bucket_group_count; ++current_series_index)
+            {
+                if (new_filter_mask & (static_cast<uint32_t>(1 << current_series_index)))
+                {
+                    int32_t histogram_index = RmtDataTimelineHistogramGetIndex(&histogram_, value_index, current_series_index);
+                    total_for_all_series += histogram_.bucket_data[histogram_index];
+                }
+            }
+
+            // Track the maximum value for all series.
+            out_timeline->maximum_value_in_all_series = RMT_MAXIMUM(out_timeline->maximum_value_in_all_series, total_for_all_series);
+        }
+
+        return kRmtOk;
+    }
+
     QString TimelineModel::GetValueString(int64_t value, bool display_as_memory) const
     {
         QString value_string;
@@ -385,7 +424,7 @@ namespace rmv
         return value_string;
     }
 
-    void TimelineModel::GetResourceTooltipInfo(int bucket_index, bool display_as_memory, QString& text_string, QString& color_string)
+    void TimelineModel::GetResourceTooltipInfo(const int bucket_index, const bool display_as_memory, QString& out_text_string, QString& out_color_string)
     {
         ResourceSorter sorter;
 
@@ -397,29 +436,57 @@ namespace rmv
                 continue;
             }
 
+            if (!(timeline_series_filter_ & (static_cast<uint32_t>(1 << i))))
+            {
+                // Skip usage types that have been filtered.
+                continue;
+            }
+
             sorter.AddResource((RmtResourceUsageType)i, RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i));
         }
 
-        sorter.Sort();
-
-        // Take the top n values and show them.
-        size_t  count = std::min<size_t>(kMaxTooltipLines - 1, sorter.GetNumResources());
-        int64_t value = 0;
-
-        for (size_t i = 0; i < count; i++)
+        const size_t num_resources = sorter.GetNumResources();
+        if (num_resources < 1)
         {
-            value    = sorter.GetResourceValue(i);
-            int type = sorter.GetResourceType(i);
-            text_string += QString("%1: %2\n")
-                               .arg(RmtGetResourceUsageTypeNameFromResourceUsageType(static_cast<RmtResourceUsageType>(type)))
-                               .arg(GetValueString(value, display_as_memory));
-            color_string += QString("#%1\n").arg(QString::number(Colorizer::GetResourceUsageColor(static_cast<RmtResourceUsageType>(type)).rgb(), 16));
+            out_text_string = kNoResourcesSelected;
         }
+        else
+        {
+            // Take the top n values and show them.
+            const size_t count = std::min<size_t>(kMaxTooltipLines - 1, sorter.GetNumResources());
+            int64_t      value = 0;
 
-        // Total up the rest and show them as "Other".
-        value = sorter.GetRemainder(kMaxTooltipLines - 1);
-        text_string += QString("Other: %1").arg(GetValueString(value, display_as_memory));
-        color_string += QString("#%1").arg(QString::number(Colorizer::GetResourceUsageColor(kRmtResourceUsageTypeFree).rgb(), 16));
+            for (size_t i = 0; i < count; i++)
+            {
+                value          = sorter.GetResourceValue(i);
+                const int type = sorter.GetResourceType(i);
+                out_text_string += QString("%1: %2")
+                                       .arg(RmtGetResourceUsageTypeNameFromResourceUsageType(static_cast<RmtResourceUsageType>(type)))
+                                       .arg(GetValueString(value, display_as_memory));
+                out_color_string += QString("#%1").arg(QString::number(Colorizer::GetResourceUsageColor(static_cast<RmtResourceUsageType>(type)).rgb(), 16));
+
+                // Add a newline unless this is the last item.
+                if ((i + 1) < count)
+                {
+                    out_text_string += "\n";
+                    out_color_string += "\n";
+                }
+            }
+
+            // Only show the "Other" value if there are more than one resource types.
+            if (num_resources > 1)
+            {
+                // Total up the rest and show them as "Other".
+                value = sorter.GetRemainder(kMaxTooltipLines - 1);
+
+                // Only display the "Other values" on the tooltip if they are greater than zero.
+                if (value > 0)
+                {
+                    out_text_string += QString("\nOther: %1").arg(GetValueString(value, display_as_memory));
+                    out_color_string += QString("\n#%1").arg(QString::number(Colorizer::GetResourceUsageColor(kRmtResourceUsageTypeFree).rgb(), 16));
+                }
+            }
+        }
     }
 
     void TimelineModel::BuildToolTipInfoString(const RmtHeapType heap_type, const int bucket_index, QString& out_text_string, QString& out_color_string)
@@ -486,7 +553,14 @@ namespace rmv
                 // For the Resource Usage Size timeline view, reverse the order of the items in the stacked graph.
                 for (int i = bucket_group_count; i >= bucket_group_number; i--)
                 {
-                    histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
+                    if ((static_cast<uint32_t>(1 << i)) & timeline->filter_mask)
+                    {
+                        histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, i);
+                    }
+                    else
+                    {
+                        histogram_value = 0;
+                    }
                     histogram_value /= timeline->maximum_value_in_all_series;
                     out_y_pos += histogram_value;
                 }
@@ -495,7 +569,14 @@ namespace rmv
             {
                 for (int i = 0; i <= bucket_group_number; i++)
                 {
-                    histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, RemapBucketGroupNumberToIndex(i));
+                    if ((static_cast<uint32_t>(1 << i)) & timeline->filter_mask)
+                    {
+                        histogram_value = (double)RmtDataTimelineHistogramGetValue(&histogram_, bucket_index, RemapBucketGroupNumberToIndex(i));
+                    }
+                    else
+                    {
+                        histogram_value = 0;
+                    }
                     histogram_value /= timeline->maximum_value_in_all_series;
                     out_y_pos += histogram_value;
                 }
@@ -552,9 +633,9 @@ namespace rmv
         return 0;
     }
 
-    BackgroundTask* TimelineModel::CreateWorkerThread(RmtDataTimelineType timeline_type)
+    BackgroundTask* TimelineModel::CreateWorkerThread(RmtDataTimelineType timeline_type, const uint32_t filter_mask)
     {
-        return new TimelineWorker(this, timeline_type);
+        return new TimelineWorker(this, timeline_type, filter_mask);
     }
 
 }  // namespace rmv

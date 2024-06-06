@@ -14,7 +14,6 @@
 
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/load_animation_manager.h"
 #include "managers/message_manager.h"
@@ -163,24 +162,11 @@ MainWindow::MainWindow(QWidget* parent)
     connect(themes_and_colors_pane, &ThemesAndColorsPane::RefreshedColors, this, &MainWindow::BroadcastChangeColoring);
 
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ChangeActionsRequested, this, &MainWindow::EnableActions);
-
-    ui_->save_testkit_json_->hide();
-    ui_->top_spacer_label_->hide();
-
-    // Connect to ScalingManager for notifications.
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
 }
 
 MainWindow::~MainWindow()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
-
     delete ui_;
-}
-
-void MainWindow::OnScaleFactorChanged()
-{
-    ResizeNavigationLists();
 }
 
 void MainWindow::ResizeNavigationLists()

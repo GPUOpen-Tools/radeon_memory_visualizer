@@ -10,7 +10,6 @@
 #include <QPainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/snapshot_manager.h"
 #include "util/rmv_util.h"
@@ -64,7 +63,7 @@ void RMVSnapshotMarker::paint(QPainter* painter, const QStyleOptionGraphicsItem*
     if (darken)
     {
         QPen pen;
-        pen.setWidth(ScalingManager::Get().Scaled(2));
+        pen.setWidth(2);
         pen.setBrush(Qt::black);
         painter->setPen(pen);
         setZValue(0.99);
@@ -81,7 +80,7 @@ void RMVSnapshotMarker::paint(QPainter* painter, const QStyleOptionGraphicsItem*
     painter->drawPolygon(polygon);
 
     QFont font;
-    font.setPixelSize(ScalingManager::Get().Scaled(10));
+    font.setPixelSize(10);
     painter->setFont(font);
 
     QPen pen;

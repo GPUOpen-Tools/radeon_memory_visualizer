@@ -9,8 +9,6 @@
 
 #include <QGraphicsSceneEvent>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "rmt_util.h"
 
 #include "managers/message_manager.h"
@@ -28,7 +26,7 @@ RMVAllocationBar::RMVAllocationBar(rmv::AllocationBarModel* model, int32_t alloc
     , item_width_(0)
     , item_height_(0)
     , max_bar_width_(0)
-    , allocation_bar_height_(ScalingManager::Get().Scaled(kDefaultAllocationBarHeight))
+    , allocation_bar_height_(kDefaultAllocationBarHeight)
 {
     setAcceptHoverEvents(true);
 
@@ -61,7 +59,7 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         return;
     }
 
-    double scaled_bar_y_offset = ScalingManager::Get().Scaled(kDefaultBarPadding);
+    double scaled_bar_y_offset = kDefaultBarPadding;
 
     // Draw the details if necessary.
     if (model_->ShowDetails())
@@ -135,11 +133,11 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             QPen resource_border_pen(Qt::black);
             if (current_resource_index == model_->GetSelectedResourceForAllocation(allocation_index_, model_index_))
             {
-                resource_border_pen.setWidth(ScalingManager::Get().Scaled(2));
+                resource_border_pen.setWidth(2);
             }
             else
             {
-                resource_border_pen.setWidth(ScalingManager::Get().Scaled(1));
+                resource_border_pen.setWidth(1);
             }
             painter->setPen(resource_border_pen);
 
@@ -159,11 +157,11 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 void RMVAllocationBar::UpdateDimensions(const int width, const int height)
 {
     const QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
-    const QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
+    const QFontMetrics font_metrics = QFontMetrics(title_font_);
     const QSize        title_size   = font_metrics.size(0, title_text);
 
     const int title_height   = title_size.height();
-    const int scaled_padding = ScalingManager::Get().Scaled(kDefaultBarPadding);
+    const int scaled_padding = kDefaultBarPadding;
 
     // Let the scene know that this object is changing sizes.
     prepareGeometryChange();
@@ -206,12 +204,12 @@ void RMVAllocationBar::UpdateDimensions(const int width, const int height)
 
 void RMVAllocationBar::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
 {
-    qreal scaled_bar_y_offset = ScalingManager::Get().Scaled(kDefaultBarPadding);
+    qreal scaled_bar_y_offset = kDefaultBarPadding;
     if (model_->ShowDetails())
     {
         // Measure title text.
         const QString      title_text   = model_->GetTitleText(allocation_index_, model_index_);
-        const QFontMetrics font_metrics = ScalingManager::Get().ScaledFontMetrics(title_font_);
+        const QFontMetrics font_metrics = QFontMetrics(title_font_);
         const QSize        title_size   = font_metrics.size(0, title_text);
 
         // Update bar y offset based on the font size.

@@ -80,6 +80,7 @@ typedef struct RmtDataTimeline
     int32_t*              series_memory_buffer;                      ///< The size of the series memory buffer. This is subdivided into the series and levels.
     uint64_t              maximum_value_in_all_series;               ///< The maxim value seen at any one time in all series.
     RmtDataTimelineType   timeline_type;                             ///< The type of timeline.
+    uint32_t              filter_mask;                               ///< Bit mask used to filter one or more of the series.
 } RmtDataTimeline;
 
 /// Destroy the timeline (and free underlaying memory allocated for this).

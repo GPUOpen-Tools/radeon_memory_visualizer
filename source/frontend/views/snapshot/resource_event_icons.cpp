@@ -9,8 +9,6 @@
 
 #include <QPainterPath>
 
-#include "qt_common/utils/scaling_manager.h"
-
 namespace rmv
 {
     ResourceEventIcons::ResourceEventIcons()

@@ -51,7 +51,8 @@ namespace rmv
         /// @brief Call the backend to create the graphical representation of the timeline.
         ///
         /// @param [in] timeline_type The timeline type.
-        void GenerateTimeline(RmtDataTimelineType timeline_type);
+        /// @param [in] filter_mask   The bit mask filter used to hide or show series on the timeline (true = show, false = hide).
+        void GenerateTimeline(RmtDataTimelineType timeline_type, const uint32_t filter_mask);
 
         /// @brief Update the model.
         void Update();
@@ -145,6 +146,14 @@ namespace rmv
         /// @param [in] new_timeline_type The new timeline type.
         void SetTimelineType(RmtDataTimelineType new_timeline_type);
 
+        /// @brief Set the timeline filter and update the maximum value on the vertical axis of the timeline.
+        ///
+        /// @param [in] new_filter_mask The new bit mask filter for the timeline.
+        /// @param [out] out_timeline The timeline to update.
+        ///
+        /// @return The error code.
+        RmtErrorCode SetTimelineSeriesFilter(const uint32_t new_filter_mask, RmtDataTimeline* out_timeline);
+
         /// @brief Get the tooltip string for the timeline.
         ///
         /// @param [in] x_pos The x position of the mouse on the scene in logical coordinates
@@ -174,9 +183,10 @@ namespace rmv
         /// @brief Create a worker thread to process the backend data and build the timeline.
         ///
         /// @param [in] timeline_type The type of timeline to create.
+        /// @param [in] filter_mask   The bit mask filter for the timeline.
         ///
         /// @return A pointer to the worker thread object.
-        BackgroundTask* CreateWorkerThread(RmtDataTimelineType timeline_type);
+        BackgroundTask* CreateWorkerThread(RmtDataTimelineType timeline_type, const uint32_t filter_mask);
 
         /// @brief Flag that indicates the background task should be cancelled.
         void CancelBackgroundTask();
@@ -221,11 +231,11 @@ namespace rmv
         ///
         /// Sort the resources into numerical order and show details in the tooltip (color swatch and text).
         ///
-        /// @param [in]  bucket_index The bucket index.
-        /// @param [in]  display_as_memory If true, display the value as an amount of memory (ie KB, MB etc).
-        /// @param [out] text_string A string to receive the tooltip text.
-        /// @param [out] color_string A string to receive the tooltip colors.
-        void GetResourceTooltipInfo(int bucket_index, bool display_as_memory, QString& text_string, QString& color_string);
+        /// @param [in]  bucket_index               The bucket index.
+        /// @param [in]  display_as_memory          If true, display the value as an amount of memory (ie KB, MB etc).
+        /// @param [out] out_text_string            A string to receive the tooltip text.
+        /// @param [out] out_color_string           A string to receive the tooltip colors.
+        void GetResourceTooltipInfo(const int bucket_index, const bool display_as_memory, QString& out_text_string, QString& out_color_string);
 
         /// @brief Set the flag that indicates timeline generation is in progress.
         void TimelineGenerationBegin();
@@ -239,6 +249,7 @@ namespace rmv
         uint64_t                    max_visible_;                        ///< Maximum visible timestamp.
         RmtDataTimelineHistogram    histogram_;                          ///< The histogram to render.
         RmtDataTimelineType         timeline_type_;                      ///< The timeline type.
+        uint32_t                    timeline_series_filter_;             ///< A bit mask used to filter which series are rendered on the timeline.
         RmtJobQueue                 job_queue_;                          ///< The job queue.
         bool                        is_timeline_generation_in_progress;  ///< Indicates, if true, that the timeline is currently being generated.
     };

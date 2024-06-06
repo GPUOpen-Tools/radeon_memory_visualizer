@@ -18,8 +18,6 @@
 #include <QMap>
 #include <math.h>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "rmt_assert.h"
 #include "rmt_data_snapshot.h"
 
@@ -84,7 +82,7 @@ void RMVTreeMapBlocks::PaintClusterParents(QPainter* painter, const ResourceClus
 {
     // This paints the borders around slicing modes.
     QPen pen;
-    pen.setWidth(ScalingManager::Get().Scaled(2));
+    pen.setWidth(2);
     pen.setColor(Qt::black);
     painter->setPen(pen);
     painter->setBrush(Qt::NoBrush);
@@ -194,7 +192,7 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         {
             QPen pen;
             pen.setBrush(Qt::black);
-            pen.setWidth(ScalingManager::Get().Scaled(2));
+            pen.setWidth(2);
             painter->setPen(pen);
             QBrush brush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource).darker(rmv::kHoverDarkenColor), hover_style);
             painter->setBrush(brush);
@@ -219,7 +217,7 @@ void RMVTreeMapBlocks::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         {
             QPen pen;
             pen.setBrush(Qt::black);
-            pen.setWidth(ScalingManager::Get().Scaled(2));
+            pen.setWidth(2);
             painter->setPen(pen);
             QBrush brush(colorizer_->GetColor(selected_block.resource->bound_allocation, selected_block.resource), hover_style);
             painter->setBrush(brush);
@@ -349,12 +347,12 @@ void RMVTreeMapBlocks::UpdateDimensions(int width, int height)
 
 int32_t RMVTreeMapBlocks::ScaledHeight() const
 {
-    return ScalingManager::Get().Scaled(config_.height);
+    return config_.height;
 }
 
 int32_t RMVTreeMapBlocks::ScaledWidth() const
 {
-    return ScalingManager::Get().Scaled(config_.width);
+    return config_.width;
 }
 
 void RMVTreeMapBlocks::ResetSelections()

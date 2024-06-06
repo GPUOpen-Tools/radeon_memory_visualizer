@@ -43,6 +43,7 @@
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <corecrt_io.h>
 #endif  // #ifdef _LINUX
 
 // Determine if a file is read only.
@@ -56,6 +57,30 @@ static bool IsFileReadOnly(const char* file_path)
     // The access() function will return 0 if successful, -1 on failure.
     return access(file_path, W_OK) == -1;
 #endif
+}
+
+/// @brief Opens a file with the option of preventing other processes from inheriting the handle.
+///
+// @param [out] file_descriptor                 A pointer to the file descriptor to be opened.
+// @param [in]  file_name                       A pointer to the file name to be opened.
+// @param [in]  mode                            The mode to open the file in.
+// @param [in]  prevent_inheritance             A flag that, if true, prevents inheritance of the file handle.
+///
+/// @return An error code indicating the result of the operation (0 indicates success).
+///
+static errno_t OpenFile(FILE** file_descriptor, char const* file_name, char const* mode, bool prevent_inheritance)
+{
+    errno_t error_no = fopen_s(file_descriptor, file_name, mode);
+#ifdef WIN32
+    if ((error_no == 0) && (prevent_inheritance))
+    {
+        // Disable inheritance of the file handle.
+        SetHandleInformation((HANDLE)_get_osfhandle(_fileno(*file_descriptor)), HANDLE_FLAG_INHERIT, 0);
+    }
+#else
+    RMT_UNUSED(prevent_inheritance);
+#endif
+    return error_no;
 }
 
 /// @brief Determine if the trace file is an RGD crash dump.
@@ -1118,7 +1143,7 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
         else
         {
             data_set->file_handle = NULL;
-            errno_t error_no      = fopen_s((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+");
+            errno_t error_no      = OpenFile((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+", true);
 
             RMT_ASSERT(data_set->file_handle);
             RMT_ASSERT(error_no == 0);
@@ -1187,7 +1212,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     {
         // Determine if the back up file or original file should be opened. If the backup file can't be opened with write privileges
         // (because another RMV instance already has opened it), set the read only flag and attempt to open the original file in read only mode.
-        error_no = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
+        error_no = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
             // Set the read only flag so that opening the original file will be attempted.
@@ -1200,7 +1225,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         // File is read-only.  Attempt to just read the original rmv trace file.
         file_access_mode = "rb";
         trace_file       = data_set->file_path;
-        error_no         = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
+        error_no         = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
             error_code = kRmtErrorFileNotOpen;
@@ -1227,7 +1252,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         if (error_code != kRmtOk)
         {
             // Loading as an RDF file failed, attempt to open the trace file using the legacy format.
-            error_no = fopen_s((FILE**)&data_set->file_handle, trace_file, file_access_mode);
+            error_no = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true);
             if ((data_set->file_handle != nullptr) && (error_no == 0))
             {
                 error_code = kRmtOk;

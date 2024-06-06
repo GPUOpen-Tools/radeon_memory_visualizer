@@ -10,7 +10,6 @@
 #include <QDebug>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_assert.h"
 

@@ -10,7 +10,6 @@
 #include <QPainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_print.h"
 #include "util/rmv_util.h"
@@ -37,11 +36,11 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
 
     if (config_.resource_valid == true)
     {
-        const int header_height = ScalingManager::Get().Scaled(20);
-        const int value_height  = ScalingManager::Get().Scaled(40);
-        const int bar_width     = ScalingManager::Get().Scaled(500);
-        const int bar_height    = ScalingManager::Get().Scaled(15);
-        const int bar_y_pos     = ScalingManager::Get().Scaled(30);
+        const int header_height = 20;
+        const int value_height  = 40;
+        const int bar_width     = 500;
+        const int bar_height    = 15;
+        const int bar_y_pos     = 30;
 
         const RmtVirtualAllocation* allocation      = config_.resource.bound_allocation;
         const uint64_t              allocation_size = RmtVirtualAllocationGetSizeInBytes(allocation);
@@ -88,12 +87,12 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
 
                 QPen pen;
                 pen.setBrush(Qt::black);
-                pen.setWidth(ScalingManager::Get().Scaled(1.0));
+                pen.setWidth(1.0);
                 painter->setPen(pen);
                 painter->setBrush(config_.colorizer->GetColor(allocation, &config_.resource));
-                painter->drawRect((offset * pixels_per_byte) + ScalingManager::Get().Scaled(1.0), bar_y_pos, width, bar_height);
+                painter->drawRect((offset * pixels_per_byte) + 1.0, bar_y_pos, width, bar_height);
             }
-            x_pos += ScalingManager::Get().Scaled(550);
+            x_pos += 550;
         }
 
         painter->setPen(Qt::black);
@@ -102,16 +101,16 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
 
         if (RmtResourceGetAliasCount(&config_.resource) > 0)
         {
-            x_pos += ScalingManager::Get().Scaled(100);
+            x_pos += 100;
             painter->drawText(x_pos, header_height, "Size after aliasing");
             painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValueMemory(config_.resource.adjusted_size_in_bytes, false, false));
         }
 
-        x_pos += ScalingManager::Get().Scaled(100);
+        x_pos += 100;
         painter->drawText(x_pos, header_height, "Offset");
         painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValueAddress(offset));
 
-        x_pos += ScalingManager::Get().Scaled(250);
+        x_pos += 250;
         painter->drawText(x_pos, header_height, "Usage");
         painter->drawText(x_pos, value_height, RmtGetResourceUsageTypeNameFromResourceUsageType(usage_type));
     }
@@ -122,11 +121,11 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
         const uint32_t x_pos                   = config_.width / 2 - string_length / 2;
 
         QFont font = painter->font();
-        font.setPixelSize(ScalingManager::Get().Scaled(18));
+        font.setPixelSize(18);
 
         painter->setFont(font);
         painter->setPen(Qt::gray);
-        painter->drawText(x_pos, ScalingManager::Get().Scaled(30), nothing_selected_string);
+        painter->drawText(x_pos, 30, nothing_selected_string);
     }
 }
 

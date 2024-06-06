@@ -10,8 +10,6 @@
 #include <QApplication>
 #include <QMainWindow>
 
-#include "qt_common/utils/scaling_manager.h"
-
 // The space between the bottom of the animation and the top of the cancel button.
 static const int kCancelButtonVerticalSpace = 4;
 
@@ -69,7 +67,7 @@ void RmvCancellableLoadingWidget::resizeEvent(QResizeEvent* event)
         int      animation_width  = geometry().width() - (margins.left() + margins.right());
         int      animation_height = geometry().height() - (margins.top() + margins.bottom());
         int      x_position       = geometry().x() + margins.left() + ((animation_width / 2) - (cancel_button_->geometry().width() / 2));
-        int      y_position       = geometry().y() + margins.top() + animation_height + ScalingManager::Get().Scaled(kCancelButtonVerticalSpace);
+        int      y_position       = geometry().y() + margins.top() + animation_height + kCancelButtonVerticalSpace;
         QPoint   button_position(x_position, y_position);
         button_position = mapToGlobal(button_position);
         button_position = cancel_button_->parentWidget()->mapFromGlobal(button_position);

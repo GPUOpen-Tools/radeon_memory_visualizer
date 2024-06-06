@@ -7,8 +7,6 @@
 
 #include "views/snapshot/heap_overview_pane.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "managers/snapshot_manager.h"
 #include "models/snapshot/heap_overview_heap_model.h"
 #include "util/widget_util.h"

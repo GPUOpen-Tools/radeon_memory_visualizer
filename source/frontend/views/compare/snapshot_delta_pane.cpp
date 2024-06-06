@@ -7,8 +7,6 @@
 
 #include "views/compare/snapshot_delta_pane.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "managers/message_manager.h"
 #include "util/rmv_util.h"
 #include "util/widget_util.h"
@@ -48,7 +46,7 @@ SnapshotDeltaPane::SnapshotDeltaPane(QWidget* parent)
         delta_line_pairs_[current_heap_index].display->Init(model_->GetHeapName(current_heap_index), delta_items_);
     }
 
-    rmv::widget_util::InitGraphicsView(ui_->carousel_view_, ScalingManager::Get().Scaled(kCarouselItemHeight));
+    rmv::widget_util::InitGraphicsView(ui_->carousel_view_, kCarouselItemHeight);
 
     RMVCarouselConfig config = {};
     config.height            = ui_->carousel_view_->height();
@@ -70,13 +68,10 @@ SnapshotDeltaPane::SnapshotDeltaPane(QWidget* parent)
 
     connect(ui_->switch_button_, &QPushButton::pressed, [=]() { emit rmv::MessageManager::Get().SwapSnapshotsRequested(); });
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::SwapSnapshotsRequested, this, &SnapshotDeltaPane::SwitchSnapshots);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &SnapshotDeltaPane::OnScaleFactorChanged);
 }
 
 SnapshotDeltaPane::~SnapshotDeltaPane()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &SnapshotDeltaPane::OnScaleFactorChanged);
     delete carousel_;
     delete model_;
 }
@@ -86,22 +81,6 @@ void SnapshotDeltaPane::showEvent(QShowEvent* event)
     Refresh();
 
     QWidget::showEvent(event);
-}
-
-void SnapshotDeltaPane::OnScaleFactorChanged()
-{
-    // Carousel.
-    ui_->carousel_view_->setFixedHeight(ScalingManager::Get().Scaled(kCarouselItemHeight));
-
-    // Legend.
-    QRectF legend_rect = legends_->itemsBoundingRect();
-    ui_->legends_view_->setFixedSize(legend_rect.toRect().size());
-    ui_->legends_view_->setSceneRect(legend_rect);
-
-    // Delta Displays.
-    ui_->delta_view_heap_0_->setFixedHeight(ScalingManager::Get().Scaled(kHeapDeltaWidgetHeight));
-    ui_->delta_view_heap_1_->setFixedHeight(ScalingManager::Get().Scaled(kHeapDeltaWidgetHeight));
-    ui_->delta_view_heap_2_->setFixedHeight(ScalingManager::Get().Scaled(kHeapDeltaWidgetHeight));
 }
 
 void SnapshotDeltaPane::SwitchSnapshots()

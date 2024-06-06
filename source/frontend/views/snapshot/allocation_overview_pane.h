@@ -76,9 +76,6 @@ private slots:
     /// @param [in] checked Whether the checkbox is checked or unchecked.
     void HeapChanged(bool checked);
 
-    /// @brief Resize UI elements when the DPI scale factor changes.
-    void OnScaleFactorChanged();
-
     /// @brief Select a resource on this pane.
     ///
     /// This is usually called when selecting a resource on a different pane to make sure the

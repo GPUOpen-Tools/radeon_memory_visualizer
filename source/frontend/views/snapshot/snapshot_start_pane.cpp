@@ -9,8 +9,6 @@
 
 #include "rmt_data_snapshot.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "managers/message_manager.h"
 #include "managers/pane_manager.h"
 #include "settings/rmv_settings.h"
@@ -26,8 +24,8 @@ SnapshotStartPane::SnapshotStartPane(QWidget* parent)
 
     rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
 
-    ui_->graphics_view_->setFixedWidth(ScalingManager::Get().Scaled(kCircleDiameter));
-    rmv::widget_util::InitGraphicsView(ui_->graphics_view_, ScalingManager::Get().Scaled(kCircleDiameter));
+    ui_->graphics_view_->setFixedWidth(kCircleDiameter);
+    rmv::widget_util::InitGraphicsView(ui_->graphics_view_, kCircleDiameter);
 
     scene_ = new QGraphicsScene();
     ui_->graphics_view_->setScene(scene_);
@@ -41,8 +39,6 @@ SnapshotStartPane::SnapshotStartPane(QWidget* parent)
     snapshot_widget_  = new RMVCameraSnapshotWidget(config);
 
     scene_->addItem(snapshot_widget_);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &SnapshotStartPane::OnScaleFactorChanged);
 }
 
 SnapshotStartPane::~SnapshotStartPane()
@@ -65,11 +61,6 @@ void SnapshotStartPane::ResizeGraphicsView()
     QRectF scene_rect = scene_->itemsBoundingRect();
     ui_->graphics_view_->setSceneRect(scene_rect);
     ui_->graphics_view_->setFixedSize(scene_rect.toRect().size());
-}
-
-void SnapshotStartPane::OnScaleFactorChanged()
-{
-    ResizeGraphicsView();
 }
 
 void SnapshotStartPane::Reset()

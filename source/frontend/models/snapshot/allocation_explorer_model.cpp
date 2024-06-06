@@ -12,8 +12,6 @@
 #include <QHeaderView>
 #include <QSortFilterProxyModel>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "rmt_assert.h"
 #include "rmt_print.h"
 

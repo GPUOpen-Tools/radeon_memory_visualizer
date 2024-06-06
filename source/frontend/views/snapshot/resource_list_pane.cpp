@@ -12,7 +12,6 @@
 #include <QCheckBox>
 
 #include "qt_common/custom_widgets/double_slider_widget.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
 #include "managers/pane_manager.h"
@@ -51,10 +50,10 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     connect(preferred_heap_combo_box_model_, &rmv::HeapComboBoxModel::FilterChanged, this, &ResourceListPane::HeapChanged);
 
     resource_usage_combo_box_model_ = new rmv::ResourceUsageComboBoxModel();
-    resource_usage_combo_box_model_->SetupResourceComboBox(ui_->resource_usage_combo_box_);
+    resource_usage_combo_box_model_->SetupResourceComboBox(ui_->resource_usage_combo_box_, true);
     connect(resource_usage_combo_box_model_, &rmv::ResourceUsageComboBoxModel::FilterChanged, this, &ResourceListPane::ResourceChanged);
 
-    rmv::widget_util::InitGraphicsView(ui_->carousel_view_, ScalingManager::Get().Scaled(kCarouselItemHeight));
+    rmv::widget_util::InitGraphicsView(ui_->carousel_view_, kCarouselItemHeight);
 
     RMVCarouselConfig config = {};
     config.height            = ui_->carousel_view_->height();
@@ -76,23 +75,14 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     connect(model_->GetResourceProxyModel(), &rmv::ResourceProxyModel::layoutChanged, this, &ResourceListPane::ScrollToSelectedResource);
 
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ResourceSelected, this, &ResourceListPane::SelectResource);
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ResourceListPane::OnScaleFactorChanged);
 }
 
 ResourceListPane::~ResourceListPane()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ResourceListPane::OnScaleFactorChanged);
-
     delete carousel_;
     delete resource_usage_combo_box_model_;
     delete preferred_heap_combo_box_model_;
     delete model_;
-}
-
-void ResourceListPane::OnScaleFactorChanged()
-{
-    // Carousel.
-    ui_->carousel_view_->setFixedHeight(ScalingManager::Get().Scaled(kCarouselItemHeight));
 }
 
 void ResourceListPane::showEvent(QShowEvent* event)

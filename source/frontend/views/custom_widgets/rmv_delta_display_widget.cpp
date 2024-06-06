@@ -10,8 +10,6 @@
 #include <QPainter>
 #include <QWidget>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "util/rmv_util.h"
 #include "util/string_util.h"
 
@@ -26,7 +24,7 @@ RMVDeltaDisplayWidget::~RMVDeltaDisplayWidget()
 
 QRectF RMVDeltaDisplayWidget::boundingRect() const
 {
-    return QRectF(0, 0, ScalingManager::Get().Scaled(config_.width), ScalingManager::Get().Scaled(config_.height));
+    return QRectF(0, 0, config_.width, config_.height);
 }
 
 void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* widget)
@@ -40,14 +38,14 @@ void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsI
 
     painter->setPen(Qt::NoPen);
 
-    int x_pos = ScalingManager::Get().Scaled(5);
+    int x_pos = 5;
 
     if (config_.graphic == true)
     {
         if (config_.type == kDeltaValueTypeString)
         {
             painter->setBrush(config_.custom_color);
-            painter->drawEllipse(QRect(0, 0, ScalingManager::Get().Scaled(20), ScalingManager::Get().Scaled(20)));
+            painter->drawEllipse(QRect(0, 0, 20, 20));
         }
         else
         {
@@ -56,8 +54,8 @@ void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsI
                 painter->setBrush(rmv_util::GetDeltaChangeColor(kDeltaChangeIncrease));
 
                 QPolygonF polygon;
-                polygon << QPoint(0, ScalingManager::Get().Scaled(20)) << QPoint(ScalingManager::Get().Scaled(10), 0)
-                        << QPoint(ScalingManager::Get().Scaled(20), ScalingManager::Get().Scaled(20));
+                polygon << QPoint(0, 20) << QPoint(10, 0)
+                        << QPoint(20, 20);
                 painter->drawPolygon(polygon);
             }
             else if (config_.value_num < 0)
@@ -65,18 +63,18 @@ void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsI
                 painter->setBrush(rmv_util::GetDeltaChangeColor(kDeltaChangeDecrease));
 
                 QPolygonF polygon;
-                polygon << QPoint(0, 0) << QPoint(ScalingManager::Get().Scaled(10), ScalingManager::Get().Scaled(20))
-                        << QPoint(ScalingManager::Get().Scaled(20), 0);
+                polygon << QPoint(0, 0) << QPoint(10, 20)
+                        << QPoint(20, 0);
                 painter->drawPolygon(polygon);
             }
             else
             {
                 painter->setBrush(rmv_util::GetDeltaChangeColor(kDeltaChangeNone));
-                painter->drawEllipse(QRect(0, 0, ScalingManager::Get().Scaled(20), ScalingManager::Get().Scaled(20)));
+                painter->drawEllipse(QRect(0, 0, 20, 20));
             }
         }
 
-        x_pos += ScalingManager::Get().Scaled(config_.height);
+        x_pos += config_.height;
     }
 
     QString text = "N/A";
@@ -95,7 +93,7 @@ void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsI
     }
 
     painter->setPen(Qt::black);
-    painter->drawText(x_pos, ScalingManager::Get().Scaled(15), text);
+    painter->drawText(x_pos, 15, text);
 }
 
 void RMVDeltaDisplayWidget::UpdateDimensions(int width, int height)

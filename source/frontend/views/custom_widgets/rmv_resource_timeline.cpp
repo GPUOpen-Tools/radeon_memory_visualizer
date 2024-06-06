@@ -13,7 +13,6 @@
 #include <QMouseEvent>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "views/delegates/rmv_resource_event_delegate.h"
 
@@ -25,12 +24,10 @@ RMVResourceTimeline::RMVResourceTimeline(QWidget* parent)
     : QWidget(parent)
     , model_(nullptr)
 {
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QWidget::updateGeometry);
 }
 
 RMVResourceTimeline::~RMVResourceTimeline()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QWidget::updateGeometry);
 }
 
 void RMVResourceTimeline::Initialize(rmv::ResourceDetailsModel* model)
@@ -40,7 +37,7 @@ void RMVResourceTimeline::Initialize(rmv::ResourceDetailsModel* model)
 
 QSize RMVResourceTimeline::sizeHint() const
 {
-    return ScalingManager::Get().Scaled(QSize(kDefaultTimelineWidthHint, kDefaultTimelineHeightHint));
+    return QSize(kDefaultTimelineWidthHint, kDefaultTimelineHeightHint);
 }
 
 void RMVResourceTimeline::paintEvent(QPaintEvent* event)

@@ -11,8 +11,6 @@
 #include <QHeaderView>
 #include <QScrollBar>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "util/constants.h"
 #include "util/widget_util.h"
 
@@ -20,8 +18,8 @@ namespace rmv
 {
     void widget_util::InitRangeSlider(RmvRangeSlider* slider_widget)
     {
-        slider_widget->setFixedWidth(ScalingManager::Get().Scaled(rmv::kDoubleSliderWidth));
-        slider_widget->setFixedHeight(ScalingManager::Get().Scaled(rmv::kDoubleSliderHeight));
+        slider_widget->setFixedWidth(rmv::kDoubleSliderWidth);
+        slider_widget->setFixedHeight(rmv::kDoubleSliderHeight);
         slider_widget->setCursor(Qt::PointingHandCursor);
         slider_widget->setMinimum(0);
         slider_widget->setMaximum(kSizeSliderRange - 1);
@@ -84,8 +82,8 @@ namespace rmv
     {
         text_search_widget->setFixedWidth(rmv::kSearchBoxWidth);
 
-        double_slider_widget->setFixedWidth(ScalingManager::Get().Scaled(rmv::kDoubleSliderWidth));
-        double_slider_widget->setFixedHeight(ScalingManager::Get().Scaled(rmv::kDoubleSliderHeight));
+        double_slider_widget->setFixedWidth(rmv::kDoubleSliderWidth);
+        double_slider_widget->setFixedHeight(rmv::kDoubleSliderHeight);
         double_slider_widget->setCursor(Qt::PointingHandCursor);
         double_slider_widget->setMinimum(0);
         double_slider_widget->setMaximum(kSizeSliderRange);

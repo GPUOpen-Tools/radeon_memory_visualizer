@@ -11,8 +11,6 @@
 #include <QScrollBar>
 #include <QListWidget>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "managers/message_manager.h"
 #include "managers/pane_manager.h"
 #include "managers/snapshot_manager.h"

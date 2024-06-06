@@ -45,13 +45,13 @@ namespace rmv
             ColorMode color_mode;
         };
 
-        static std::vector<TimelineInfo> type_info = {{QString("Process"), kColorModeCount},
-                                                      {QString("Page size"), kColorModeCount},
-                                                      {QString("Committed"), kColorModePreferredHeap},
-                                                      {QString("Resource usage count"), kColorModeResourceUsageType},
-                                                      {QString("Resource usage size"), kColorModeResourceUsageType},
-                                                      {QString("Paging"), kColorModeCount},
-                                                      {QString("Virtual memory heap"), kColorModePreferredHeap}};
+        static std::vector<TimelineInfo> type_info = {{QString("Process view"), kColorModeCount},
+                                                      {QString("Page size view"), kColorModeCount},
+                                                      {QString("Committed view"), kColorModePreferredHeap},
+                                                      {QString("Resource usage count view"), kColorModeResourceUsageType},
+                                                      {QString("Resource usage size view"), kColorModeResourceUsageType},
+                                                      {QString("Paging view"), kColorModeCount},
+                                                      {QString("Virtual memory heap view"), kColorModePreferredHeap}};
 
         // Set up the combo box. Get the title string from the first entry in mode_list.
         QString combo_title_string = type_info[0].text;

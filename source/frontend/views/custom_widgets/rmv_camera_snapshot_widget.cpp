@@ -10,7 +10,6 @@
 #include <QPainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
 #include "managers/trace_manager.h"
@@ -49,10 +48,10 @@ void RMVCameraSnapshotWidget::paint(QPainter* painter, const QStyleOptionGraphic
 
     painter->setRenderHint(QPainter::Antialiasing);
 
-    const int camera_width  = ScalingManager::Get().Scaled(120);
-    const int camera_height = ScalingManager::Get().Scaled(80);
+    const int camera_width  = 120;
+    const int camera_height = 80;
 
-    const int circle_diameter = ScalingManager::Get().Scaled(kCircleDiameter) - ScaledMargin() * 2;
+    const int circle_diameter = kCircleDiameter - ScaledMargin() * 2;
 
     painter->drawEllipse(ScaledMargin(), ScaledMargin(), ScaledWidth(), ScaledHeight());
     painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
@@ -60,36 +59,36 @@ void RMVCameraSnapshotWidget::paint(QPainter* painter, const QStyleOptionGraphic
     painter->setBrush(Qt::white);
     painter->drawRoundedRect(
         QRect(ScaledMargin() + circle_diameter / 2 - camera_width / 2, ScaledMargin() + circle_diameter / 2 - camera_height / 2, camera_width, camera_height),
-        ScalingManager::Get().Scaled(10),
-        ScalingManager::Get().Scaled(10));
+        10,
+        10);
 
     painter->setBrush(Qt::white);
     painter->drawRect(ScaledMargin() + circle_diameter / 2 - camera_width / 2 + 15,
-                      ScaledMargin() + circle_diameter / 2 - camera_height / 2 - ScalingManager::Get().Scaled(5),
-                      ScalingManager::Get().Scaled(20),
-                      ScalingManager::Get().Scaled(20));
+                      ScaledMargin() + circle_diameter / 2 - camera_height / 2 - 5,
+                      20,
+                      20);
 
     painter->setBrush(render_color_);
     painter->drawRect(ScaledMargin() + circle_diameter / 2 + 30,
-                      ScaledMargin() + circle_diameter / 2 - ScalingManager::Get().Scaled(30),
-                      ScalingManager::Get().Scaled(20),
-                      ScalingManager::Get().Scaled(10));
+                      ScaledMargin() + circle_diameter / 2 - 30,
+                      20,
+                      10);
 
-    const int lens_diameter_0 = ScalingManager::Get().Scaled(50);
+    const int lens_diameter_0 = 50;
     painter->setBrush(render_color_);
     painter->drawEllipse(ScaledMargin() + circle_diameter / 2 - lens_diameter_0 / 2,
                          ScaledMargin() + circle_diameter / 2 - lens_diameter_0 / 2 + 3,
                          lens_diameter_0,
                          lens_diameter_0);
 
-    const int lens_diameter_1 = ScalingManager::Get().Scaled(40);
+    const int lens_diameter_1 = 40;
     painter->setBrush(Qt::white);
     painter->drawEllipse(ScaledMargin() + circle_diameter / 2 - lens_diameter_1 / 2,
                          ScaledMargin() + circle_diameter / 2 - lens_diameter_1 / 2 + 3,
                          lens_diameter_1,
                          lens_diameter_1);
 
-    const int lens_diameter_2 = ScalingManager::Get().Scaled(30);
+    const int lens_diameter_2 = 30;
     painter->setBrush(render_color_);
     painter->drawEllipse(ScaledMargin() + circle_diameter / 2 - lens_diameter_2 / 2,
                          ScaledMargin() + circle_diameter / 2 - lens_diameter_2 / 2 + 3,
@@ -165,15 +164,15 @@ void RMVCameraSnapshotWidget::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
 int32_t RMVCameraSnapshotWidget::ScaledHeight() const
 {
-    return ScalingManager::Get().Scaled(config_.height);
+    return config_.height;
 }
 
 int32_t RMVCameraSnapshotWidget::ScaledWidth() const
 {
-    return ScalingManager::Get().Scaled(config_.width);
+    return config_.width;
 }
 
 int32_t RMVCameraSnapshotWidget::ScaledMargin() const
 {
-    return ScalingManager::Get().Scaled(config_.margin);
+    return config_.margin;
 }

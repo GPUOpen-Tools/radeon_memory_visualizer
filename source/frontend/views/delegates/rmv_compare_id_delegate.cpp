@@ -14,8 +14,6 @@
 #include <QColor>
 #include <QPen>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "models/resource_item_model.h"
 #include "util/rmv_util.h"
 
@@ -51,8 +49,8 @@ QSize RMVCompareIdDelegate::sizeHint(const QStyleOptionViewItem& option, const Q
 
 QSize RMVCompareIdDelegate::DefaultSizeHint() const
 {
-    const int scaled_width_hint  = ScalingManager::Get().Scaled(kWidthHint);
-    const int scaled_height_hint = ScalingManager::Get().Scaled(kHeightHint);
+    const int scaled_width_hint  = kWidthHint;
+    const int scaled_height_hint = kHeightHint;
 
     return QSize(scaled_width_hint, scaled_height_hint);
 }

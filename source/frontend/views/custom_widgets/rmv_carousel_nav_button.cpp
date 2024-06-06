@@ -10,8 +10,6 @@
 #include <QCursor>
 #include <QPainter>
 
-#include "qt_common/utils/scaling_manager.h"
-
 static const QColor kDefaultColor = QColor(210, 210, 210);
 static const QColor kHoveredColor = QColor(180, 180, 180);
 static const QColor kPressedColor = QColor(150, 150, 150);
@@ -57,7 +55,7 @@ QPainterPath RMVCarouselNavButton::shape() const
 {
     QPainterPath path;
 
-    path.addPolygon(GetTriangle(width_, height_, left_direction_, ScalingManager::Get().Scaled(1.0)));
+    path.addPolygon(GetTriangle(width_, height_, left_direction_, 1.0));
 
     return path;
 }
@@ -80,7 +78,7 @@ void RMVCarouselNavButton::paint(QPainter* painter, const QStyleOptionGraphicsIt
     painter->setPen(Qt::NoPen);
     painter->setBrush(arrow_color);
     painter->setRenderHint(QPainter::Antialiasing);
-    painter->drawPolygon(GetTriangle(width_, height_, left_direction_, ScalingManager::Get().Scaled(1.0)));
+    painter->drawPolygon(GetTriangle(width_, height_, left_direction_, 1.0));
 }
 
 void RMVCarouselNavButton::UpdateDimensions(int width, int height)
@@ -131,10 +129,10 @@ void RMVCarouselNavButton::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 
 int32_t RMVCarouselNavButton::ScaledHeight() const
 {
-    return ScalingManager::Get().Scaled(height_);
+    return height_;
 }
 
 int32_t RMVCarouselNavButton::ScaledWidth() const
 {
-    return ScalingManager::Get().Scaled(width_);
+    return width_;
 }

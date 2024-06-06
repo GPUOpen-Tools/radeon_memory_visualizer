@@ -7,8 +7,6 @@
 
 #include "views/custom_widgets/rmv_carousel.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "views/custom_widgets/rmv_carousel_memory_footprint.h"
 #include "views/custom_widgets/rmv_carousel_allocation_sizes.h"
 #include "views/custom_widgets/rmv_carousel_memory_types.h"
@@ -118,7 +116,7 @@ void RMVCarousel::Update()
     scene_->setSceneRect(scene_rect);
 
     int nav_button_height = config_.height / 2;
-    int nav_button_width  = ScalingManager::Get().Scaled(kNavButtonWidth);
+    int nav_button_width  = kNavButtonWidth;
 
     left_nav_button_->UpdateDimensions(nav_button_width, nav_button_height);
     right_nav_button_->UpdateDimensions(nav_button_width, nav_button_height);
@@ -141,7 +139,7 @@ void RMVCarousel::Update()
     {
         potential_pixels += carousel_items_[i]->boundingRect().width();
 
-        if (potential_pixels < available_pixels - (ScalingManager::Get().Scaled(5)))
+        if (potential_pixels < available_pixels - 5)
         {
             widget_fit_count++;
             consumed_pixels += carousel_items_[i]->boundingRect().width();

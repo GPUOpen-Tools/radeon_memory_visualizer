@@ -13,8 +13,6 @@
 #include <QStyle>
 #include <vector>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "rmt_assert.h"
 #include "rmt_data_snapshot.h"
 
@@ -156,7 +154,6 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
     connect(ui_->sort_direction_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &AllocationOverviewPane::ApplySort);
     connect(ui_->color_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &AllocationOverviewPane::ColorModeChanged);
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ResourceSelected, this, &AllocationOverviewPane::SelectResource);
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &AllocationOverviewPane::OnScaleFactorChanged);
 
     connect(ui_->allocation_height_slider_, &QSlider::valueChanged, this, [=]() { AllocationHeightChanged(); });
     connect(ui_->allocation_list_view_->verticalScrollBar(), &QScrollBar::valueChanged, this, [=]() { ResizeItems(); });
@@ -168,8 +165,6 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
 
 AllocationOverviewPane::~AllocationOverviewPane()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &AllocationOverviewPane::OnScaleFactorChanged);
-
     int32_t current_size = static_cast<int32_t>(allocation_graphic_objects_.size());
     for (int32_t i = 0; i < current_size; i++)
     {
@@ -307,7 +302,7 @@ void AllocationOverviewPane::ResizeItems()
 {
     int allocation_offset = 0;
 
-    const qreal       scaled_allocation_height = ScalingManager::Get().Scaled(allocation_height_);
+    const qreal       scaled_allocation_height = allocation_height_;
     const QScrollBar* scroll_bar               = ui_->allocation_list_view_->verticalScrollBar();
     if (scroll_bar != nullptr)
     {
@@ -418,7 +413,7 @@ void AllocationOverviewPane::SelectResource(RmtResourceIdentifier resource_ident
     QScrollBar* scroll_bar = ui_->allocation_list_view_->verticalScrollBar();
     if (scroll_bar != nullptr && allocation_offset != UINT64_MAX)
     {
-        const qreal   scaled_allocation_height = ScalingManager::Get().Scaled(allocation_height_);
+        const qreal   scaled_allocation_height = allocation_height_;
         const int32_t view_height              = ui_->allocation_list_view_->height();
         const int32_t scroll_bar_offset        = scroll_bar->value();
         const int32_t top_allocation_index     = scroll_bar_offset / scaled_allocation_height;
@@ -446,11 +441,6 @@ void AllocationOverviewPane::HeapChanged(bool checked)
 {
     RMT_UNUSED(checked);
     ApplyFilters();
-}
-
-void AllocationOverviewPane::OnScaleFactorChanged()
-{
-    ResizeItems();
 }
 
 void AllocationOverviewPane::ToggleNormalizeAllocations()

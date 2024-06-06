@@ -48,10 +48,6 @@ public:
     /// @brief Set the text for the pane describing an empty snapshot.
     void SetEmptyTitleText();
 
-private slots:
-    /// @brief Callback for when the DPI Scale changes.
-    void OnScaleFactorChanged();
-
 private:
     /// @brief Resizes the GraphicsView to fit the scene.
     void ResizeGraphicsView();

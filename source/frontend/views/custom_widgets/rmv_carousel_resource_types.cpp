@@ -10,7 +10,6 @@
 #include <QPainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_print.h"
 
@@ -42,21 +41,21 @@ void RMVCarouselResourceTypes::DrawCarouselMemoryUsageLegend(QPainter*      pain
                                                              int32_t        usage_amount)
 {
     static const int kFontPixelSize = 12;
-    static const int kTextOffset    = ScalingManager::Get().Scaled((kIconWidth + kFontPixelSize) / 2);
+    static const int kTextOffset    = (kIconWidth + kFontPixelSize) / 2;
 
-    y_offset               = ScalingManager::Get().Scaled((int)y_offset);
-    uint32_t margin_length = ScalingManager::Get().Scaled(kEdgeMargin);
+    y_offset               = (int)y_offset;
+    uint32_t margin_length = kEdgeMargin;
 
     QFont font = painter->font();
     font.setBold(false);
-    font.setPixelSize(ScalingManager::Get().Scaled(kFontPixelSize));
+    font.setPixelSize(kFontPixelSize);
 
     painter->setFont(font);
     painter->setPen(Qt::NoPen);
     painter->setBrush(resource_color);
-    painter->drawRect(margin_length, y_offset, ScalingManager::Get().Scaled(kIconWidth), ScalingManager::Get().Scaled(kIconWidth));
+    painter->drawRect(margin_length, y_offset, kIconWidth, kIconWidth);
 
-    const int text_pos_x        = (2 * margin_length) + ScalingManager::Get().Scaled(kIconWidth);
+    const int text_pos_x        = (2 * margin_length) + kIconWidth;
     QString   usage_description = resource_name;
     if (usage_description.at(usage_description.size() - 1) != 's')
     {
@@ -89,7 +88,7 @@ void RMVCarouselResourceTypes::DrawCarouselMemoryUsageLegend(QPainter*      pain
 
     const int description_length = QtCommon::QtUtils::GetPainterTextWidth(painter, usage_description);
 
-    painter->drawText(text_pos_x + description_length + ScalingManager::Get().Scaled(kTextGap), y_offset + kTextOffset, amount);
+    painter->drawText(text_pos_x + description_length + kTextGap, y_offset + kTextOffset, amount);
 }
 
 void RMVCarouselResourceTypes::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)

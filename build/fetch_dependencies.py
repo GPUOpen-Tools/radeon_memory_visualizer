@@ -6,6 +6,11 @@
 ## \brief Script to fetch all external git and/or downloadable dependencies
 ##        needed to build the project.
 ##
+##   fetch_dependencies.py (--internal)
+##
+## If --internal is specified, then any additional dependencies required for internal builds will also
+## be checked out.
+##
 ## Each git repo will be updated to the commit specified in the "gitMapping" table.
 ##=============================================================================
 

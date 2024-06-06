@@ -77,8 +77,8 @@ namespace rmv
         static const QString kOpenTraceErrorText  = "The trace file, %1, failed to load.";
 
         // Delete recent file pop up dialog.
-        static const QString kDeleteRecentTraceTitle        = "Error";
-        static const QString kDeleteRecentTraceText         = "\n\nDo you want to remove it from the recent files list?";
+        static const QString kDeleteRecentTraceTitle = "Error";
+        static const QString kDeleteRecentTraceText  = "\n\nDo you want to remove it from the recent files list?";
 
         static const QString kRecentTraceAlreadyOpenedTitle = "Warning";
         static const QString kRecentTraceAlreadyOpenedText =
@@ -109,9 +109,9 @@ namespace rmv
         static const QString kSortDescending = "Descending";
 
         // Other text strings.
-        static const QString kPreferredHeap = "Preferred heap";
+        static const QString kPreferredHeap = "Preferred heap filter";
         static const QString kActualHeap    = "Actual heap";
-        static const QString kResourceUsage = "Resource usage";
+        static const QString kResourceUsage = "Resource usage filter";
 
         // Time units.
         static const QString kSettingsUnitsClocks       = "Clocks";

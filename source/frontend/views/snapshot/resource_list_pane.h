@@ -78,9 +78,6 @@ private slots:
     /// @param [in] changed_item_index The index of the checkbox in the combo box that was changed.
     void ResourceChanged(bool checked, int changed_item_index);
 
-    /// @brief Resize child UI widgets when the DPI scale factor changes.
-    void OnScaleFactorChanged();
-
     /// @brief Handle what happens when an item in the resource table is clicked on.
     ///
     /// @param [in] index the model index of the item clicked on.

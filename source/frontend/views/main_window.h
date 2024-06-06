@@ -131,9 +131,6 @@ private slots:
     /// the UI file and not created dynamically.
     void BroadcastChangeColoring();
 
-    /// @brief Resize UI elements when the DPI scale factor changes.
-    void OnScaleFactorChanged();
-
     /// @brief Handle what happens when an item in the start tab list is clicked on.
     ///
     /// @param [in] row The row in the list selected.

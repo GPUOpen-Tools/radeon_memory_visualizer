@@ -11,7 +11,6 @@
 #include <QThread>
 
 #include "qt_common/utils/common_definitions.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
 #include "managers/snapshot_manager.h"
@@ -92,9 +91,9 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
     ui_->resource_timeline_->Initialize(model_);
 
     // Set up the residency donut widget.
-    ui_->residency_donut_->setFixedWidth(ScalingManager::Get().Scaled(kDonutDimension));
-    ui_->residency_donut_->setFixedHeight(ScalingManager::Get().Scaled(kDonutDimension));
-    ui_->residency_donut_->SetArcWidth(ScalingManager::Get().Scaled(kDonutThickness));
+    ui_->residency_donut_->setFixedWidth(kDonutDimension);
+    ui_->residency_donut_->setFixedHeight(kDonutDimension);
+    ui_->residency_donut_->SetArcWidth(kDonutThickness);
     ui_->residency_donut_->SetNumSegments(kRmtHeapTypeSystem + 2);
 
     ui_->resource_timeline_table_view_->setFrameStyle(QFrame::StyledPanel);
@@ -132,24 +131,13 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
 
     // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetTimelineProxyModel(), &rmv::ResourceDetailsProxyModel::layoutChanged, this, &ResourceDetailsPane::ScrollToSelectedEvent);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ResourceDetailsPane::OnScaleFactorChanged);
 }
 
 ResourceDetailsPane::~ResourceDetailsPane()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ResourceDetailsPane::OnScaleFactorChanged);
-
     delete legend_delegate_;
     delete model_;
     delete ui_;
-}
-
-void ResourceDetailsPane::OnScaleFactorChanged()
-{
-    // Resize the donut.
-    ui_->residency_donut_->setFixedSize(ScalingManager::Get().Scaled(kDonutDimension), ScalingManager::Get().Scaled(kDonutDimension));
-    ui_->residency_donut_->SetArcWidth(ScalingManager::Get().Scaled(kDonutThickness));
 }
 
 void ResourceDetailsPane::LoadResourceTimeline()
@@ -264,7 +252,7 @@ void ResourceDetailsPane::Refresh()
         }
         else
         {
-            ui_->content_base_address_->setStyleSheet("QPushButton { color : lightGray; border: none; text-align: left}");
+            ui_->content_base_address_->setStyleSheet("QPushButton { color : red; border: none; text-align: left}");
         }
 
         // Show the warning message if the memory isn't all in the preferred heap.

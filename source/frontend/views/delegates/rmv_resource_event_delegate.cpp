@@ -9,8 +9,6 @@
 
 #include <QPainter>
 
-#include "qt_common/utils/scaling_manager.h"
-
 const static QColor kTableSelectionColor(0, 120, 215);
 
 // Default width and height of the icon sizeHint.
@@ -39,7 +37,7 @@ QSize RMVResourceEventDelegate::sizeHint(const QStyleOptionViewItem& option, con
 
     if (index.column() == rmv::kResourceHistoryColumnLegend)
     {
-        int scaled_dimension = ScalingManager::Get().Scaled(kIconDefaultSizeHint);
+        int scaled_dimension = kIconDefaultSizeHint;
         size_hint.setWidth(scaled_dimension);
         size_hint.setHeight(scaled_dimension);
     }

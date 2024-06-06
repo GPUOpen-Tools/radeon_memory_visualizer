@@ -8,7 +8,6 @@
 #include "views/custom_widgets/rmv_carousel_item.h"
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "util/rmv_util.h"
 #include "util/string_util.h"
@@ -28,7 +27,7 @@ RMVCarouselItem::~RMVCarouselItem()
 
 QRectF RMVCarouselItem::boundingRect() const
 {
-    return QRectF(0, 0, ScalingManager::Get().Scaled(config_.width), ScalingManager::Get().Scaled(config_.height));
+    return QRectF(0, 0, config_.width, config_.height);
 }
 
 void RMVCarouselItem::UpdateDimensions(int width, int height)
@@ -42,20 +41,20 @@ void RMVCarouselItem::DrawCarouselBaseComponents(QPainter* painter, const QStrin
     int widget_width  = config_.width;
     int widget_height = config_.height;
 
-    widget_width  = ScalingManager::Get().Scaled(widget_width);
-    widget_height = ScalingManager::Get().Scaled(widget_height);
+    widget_width  = widget_width;
+    widget_height = widget_height;
 
     painter->setPen(Qt::NoPen);
     painter->setBrush(kCarouselBaseColor);
     painter->drawRect(0, 0, widget_width, widget_height);
 
     QFont font;
-    font.setPixelSize(ScalingManager::Get().Scaled(15));
+    font.setPixelSize(15);
     font.setBold(true);
     painter->setFont(font);
     painter->setPen(Qt::black);
     painter->drawText(
-        ScalingManager::Get().Scaled(10), ScalingManager::Get().Scaled(20), title + ((config_.data_type == kCarouselDataTypeDelta) ? " delta" : ""));
+        10, 20, title + ((config_.data_type == kCarouselDataTypeDelta) ? " delta" : ""));
 }
 
 void RMVCarouselItem::DrawHorizontalBarComponent(QPainter*      painter,
@@ -109,19 +108,19 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
         value     = abs(value);
         max       = abs(max);
         bar_scale = 0.5;
-        origin    = ScalingManager::Get().Scaled(int(bar_length / 2));
+        origin    = int(bar_length / 2);
     }
 
     QFont font = painter->font();
 
-    x_pos      = ScalingManager::Get().Scaled((int)x_pos);
-    y_pos      = ScalingManager::Get().Scaled((int)y_pos);
-    bar_length = ScalingManager::Get().Scaled((int)bar_length);
-    bar_width  = ScalingManager::Get().Scaled((int)bar_width);
+    x_pos      = (int)x_pos;
+    y_pos      = (int)y_pos;
+    bar_length = (int)bar_length;
+    bar_width  = (int)bar_width;
 
     if (bar_title.isEmpty() == false)
     {
-        int title_font_size = ScalingManager::Get().Scaled(12);
+        int title_font_size = 12;
         font.setBold(false);
         font.setPixelSize(title_font_size);
         painter->setPen(Qt::black);
@@ -169,7 +168,7 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
         if (show_summary)
         {
             font.setBold(true);
-            font.setPixelSize(ScalingManager::Get().Scaled(10));
+            font.setPixelSize(10);
             painter->setFont(font);
             painter->setPen(text_color);
 
@@ -178,7 +177,7 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
             int allocated_length = QtCommon::QtUtils::GetTextWidth(font, allocated_description);
 
             painter->drawText(
-                x_pos + bar_length - allocated_length, y_pos + bar_width + ScalingManager::Get().Scaled(kSummaryTextOffset), allocated_description);
+                x_pos + bar_length - allocated_length, y_pos + bar_width + kSummaryTextOffset, allocated_description);
         }
     }
 }

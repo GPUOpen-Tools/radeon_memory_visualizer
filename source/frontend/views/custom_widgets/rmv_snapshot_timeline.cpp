@@ -15,7 +15,6 @@
 
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "util/time_util.h"
 
@@ -82,7 +81,7 @@ RMVSnapshotMarker* RMVSnapshotTimeline::AddSnapshot(RmtSnapshotPoint* snapshot_p
     content_object.item  = marker;
     content_object.clock = snapshot_point->timestamp;
 
-    content_object.item->setY(ScalingManager::Get().Scaled(kDefaultRulerHeight));
+    content_object.item->setY(kDefaultRulerHeight);
     content_.push_back(content_object);
 
     scene_->addItem(content_object.item);
@@ -104,7 +103,7 @@ RMVTimelineGraph* RMVSnapshotTimeline::AddTimelineGraph(rmv::TimelineModel* time
     TimelineItem content_object = {};
     content_object.item         = new RMVTimelineGraph(config);
 
-    content_object.item->setY(ScalingManager::Get().Scaled(kDefaultRulerHeight));
+    content_object.item->setY(kDefaultRulerHeight);
     content_object.item->setX(100);
 
     content_.push_back(content_object);
@@ -245,17 +244,17 @@ void RMVSnapshotTimeline::UpdateSnapshotMarkers()
 
         if (marker != nullptr)
         {
-            marker->UpdateDimensions(ScalingManager::Get().Scaled(kDefaultMarkerWidth), height());
+            marker->UpdateDimensions(kDefaultMarkerWidth, height());
             marker->setX(ClockToSceneCoordinate(content_[i].clock));
-            marker->setY(ScalingManager::Get().Scaled(kDefaultRulerHeight));
+            marker->setY(kDefaultRulerHeight);
         }
 
         RMVTimelineGraph* allocation = dynamic_cast<RMVTimelineGraph*>(content_[i].item);
         if (allocation != nullptr)
         {
             allocation->setX(ClockToSceneCoordinate(ViewableStartClk()));
-            allocation->setY(ScalingManager::Get().Scaled(kDefaultRulerHeight));
-            allocation->UpdateDimensions(width(), BasePosY() - ScalingManager::Get().Scaled(kDefaultRulerHeight));
+            allocation->setY(kDefaultRulerHeight);
+            allocation->UpdateDimensions(width(), BasePosY() - kDefaultRulerHeight);
         }
     }
 }

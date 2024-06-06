@@ -48,10 +48,6 @@ public:
     /// @brief Set the text for the pane describing an empty comparison.
     void SetEmptyTitleText();
 
-private slots:
-    /// @brief Callback for when the DPI Scale changes.
-    void OnScaleFactorChanged();
-
 private:
     /// @brief Repositions the right circle and resizes the GraphicsView to fit the whole scene.
     void UpdateCirclePositions();

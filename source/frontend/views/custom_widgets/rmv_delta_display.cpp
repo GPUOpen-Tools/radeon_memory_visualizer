@@ -11,7 +11,6 @@
 #include <QScrollBar>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 static const qreal kDeltaDisplayWidth  = 200.0;
 static const qreal kDeltaDisplayHeight = 20.0;
@@ -68,7 +67,7 @@ void RMVDeltaDisplay::Init(const QString& title, const QVector<DeltaItem>& items
 
     deltas_.clear();
 
-    const double scale_factor  = ScalingManager::Get().Scaled(1.0);
+    const double scale_factor  = 1.0;
     const double y_base_pos    = title.isEmpty() == true ? 12.0 : 25.0;
     const double display_width = kDeltaDisplayWidth * width_scaler;
 
@@ -129,7 +128,7 @@ void RMVDeltaDisplay::UpdateDimensions()
 
 QFont RMVDeltaDisplay::GetFont() const
 {
-    const double scaling_factor = ScalingManager::Get().Scaled(1.0);
+    const double scaling_factor = 1.0;
 
     QFont font;
     font.setPixelSize(11 * scaling_factor);

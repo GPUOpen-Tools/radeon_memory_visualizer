@@ -16,7 +16,6 @@ import importlib.util
 import argparse
 import shutil
 import subprocess
-import distutils.spawn
 import platform
 import time
 
@@ -63,9 +62,10 @@ elif sys.platform == "darwin":
 else:
     parser.add_argument("--qt-root", default="~/Qt", help="specify the root directory for locating QT on this system (default: ~/Qt) ")
     parser.add_argument("--qt-system", action="store_true", help="use the system-installed version of QT")
-parser.add_argument("--qt", default="5.15.2", help="specify the version of QT to be used with the script (default: 5.15.2)" )
+parser.add_argument("--qt", default="6.7.0", help="specify the version of QT to be used with the script (default: 6.7.0)" )
 parser.add_argument("--clean", action="store_true", help="delete any directories created by this script")
 parser.add_argument("--no-qt", action="store_true", help="build a headless version (not applicable for all products)")
+parser.add_argument("--build-number", default="0", help="specify the build number, primarily to be used by build machines to produce versioned builds")
 parser.add_argument("--update", action="store_true", help="Force fetch_dependencies script to update all dependencies")
 parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of PreBuild.py script)")
 parser.add_argument("--build", action="store_true", help="build all supported configurations on completion of prebuild step")
@@ -114,10 +114,10 @@ def mkdir_print(dir):
 # Look for Qt path in specified Qt root directory
 # Example:
 # --qt-root=C:\\Qt
-# --qt=5.15.2
-# Look first for C:\\Qt\\Qt5.15.2\\5.15.2
+# --qt=6.7.0
+# Look first for C:\\Qt\\Qt6.7.0\\6.7.0
 #  (if not found..)
-# Look next for C:\\Qt\\5.15.2
+# Look next for C:\\Qt\\6.7.0
 #
 # If neither of those can be found AND we are using the default
 # qt-root dir (i.e. the user did not specify --qt-root), then also
@@ -262,6 +262,8 @@ def generate_config(config):
         if args.qt_system:
             cmake_args.extend(["-DQT_SYSTEM:BOOL=TRUE"])
 
+    cmake_args.extend(["-DRMV_BUILD_NUMBER=" + str(args.build_number)])
+
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=" + debug_output_dir])
@@ -324,7 +326,7 @@ def generate_config(config):
             with open(vscode_json_file, 'w') as f:
                 json.dump(json_data, f, indent=4)
 
-    if not distutils.spawn.find_executable(cmake_args[0]):
+    if not shutil.which(cmake_args[0]):
         log_error_and_exit("cmake not found")
 
     p = subprocess.Popen(cmake_args, cwd=cmake_dir, stderr=subprocess.STDOUT)

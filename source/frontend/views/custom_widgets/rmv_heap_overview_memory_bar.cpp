@@ -11,7 +11,6 @@
 #include <QStylePainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "util/constants.h"
 #include "util/string_util.h"
@@ -47,7 +46,7 @@ QSize RMVHeapOverviewMemoryBar::sizeHint() const
 
 QSize RMVHeapOverviewMemoryBar::minimumSizeHint() const
 {
-    QSize minimum_size = ScalingManager::Get().ScaledFontMetrics(font()).size(0, rmv::string_util::LocalizedValueMemory(size_, false, false));
+    QSize minimum_size = QFontMetrics(font()).size(0, rmv::string_util::LocalizedValueMemory(size_, false, false));
 
     return minimum_size;
 }

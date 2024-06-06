@@ -14,7 +14,6 @@
 
 #include "qt_common/custom_widgets/double_slider_widget.h"
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
 #include "managers/pane_manager.h"
@@ -42,6 +41,9 @@ const static QString kTimestampPadding        = "   ";  // Extra padding to comp
 // The timeline type to revert to if calculating the resource usage size timeline type is cancelled.
 static int saved_timeline_type_index_ = 0;
 
+// Set of resources that should be unchecked by default in the resource usage filter combo box.
+static const std::set<int> kDefaultUncheckedResourcesFilter = {kRmtResourceUsageTypeHeap};
+
 TimelinePane::TimelinePane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::TimelinePane)
@@ -61,6 +63,12 @@ TimelinePane::TimelinePane(QWidget* parent)
     rmv::widget_util::InitGraphicsView(ui_->snapshot_legends_view_, rmv::kColoredLegendsHeight);
     rmv::widget_util::InitColorLegend(snapshot_legends_, ui_->snapshot_legends_view_);
     AddSnapshotLegends();
+
+    // Initialize the timeline series filter combo box.
+    rmv::widget_util::InitMultiSelectComboBox(this, ui_->timeline_series_filter_combo_box_, rmv::text::kResourceUsage);
+    resource_usage_model_ = new rmv::ResourceUsageComboBoxModel(&kDefaultUncheckedResourcesFilter);
+    resource_usage_model_->SetupResourceComboBox(ui_->timeline_series_filter_combo_box_, false);
+    ui_->timeline_series_filter_combo_box_->hide();
 
     model_ = new rmv::TimelineModel();
 
@@ -164,6 +172,7 @@ TimelinePane::TimelinePane(QWidget* parent)
     connect(ui_->timeline_view_->horizontalScrollBar(), &QScrollBar::valueChanged, this, &TimelinePane::ScrollBarChanged);
     connect(ui_->compare_button_, &QPushButton::pressed, this, &TimelinePane::CompareSnapshots);
     connect(&rmv::SnapshotManager::Get(), &rmv::SnapshotManager::SnapshotMarkerSelected, this, &TimelinePane::UpdateSnapshotTable);
+    connect(resource_usage_model_, &rmv::ResourceUsageComboBoxModel::FilterChanged, this, &TimelinePane::ResourceComboFiltersChanged);
 
     // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetProxyModel(), &rmv::SnapshotTimelineProxyModel::layoutChanged, this, &TimelinePane::ScrollToSelectedSnapshot);
@@ -174,6 +183,7 @@ TimelinePane::~TimelinePane()
     delete zoom_icon_manager_;
     delete colorizer_;
     delete model_;
+    delete resource_usage_model_;
 }
 
 void TimelinePane::showEvent(QShowEvent* event)
@@ -238,6 +248,7 @@ void TimelinePane::OnTraceLoad()
 
     ui_->timeline_wrapper_->show();
     ui_->snapshot_table_view_->showColumn(rmv::kSnapshotTimelineColumnTime);
+    ui_->timeline_series_filter_combo_box_->hide();
 
     model_->UpdateMemoryGraph(ui_->timeline_view_->ViewableStartClk(), ui_->timeline_view_->ViewableEndClk());
     colorizer_->UpdateLegends();
@@ -314,7 +325,7 @@ void TimelinePane::Reset()
     model_->ResetModelValues();
     rmv::SnapshotManager::Get().SetSelectedSnapshotPoint(nullptr);
     rmv::SnapshotManager::Get().SetSelectedCompareSnapshotPoints(nullptr, nullptr);
-
+    resource_usage_model_->ResetResourceComboBox(ui_->timeline_series_filter_combo_box_);
     ZoomReset();
 
     ui_->size_slider_->SetLowerValue(0);
@@ -377,8 +388,11 @@ void TimelinePane::ZoomOut()
 
 void TimelinePane::ZoomInCustom(int zoom_rate, bool use_mouse_pos)
 {
-    const bool zoom = ui_->timeline_view_->ZoomIn(zoom_rate, use_mouse_pos);
-    UpdateZoomButtonsForZoomIn(zoom);
+    if (ui_->zoom_in_button_->isEnabled())
+    {
+        const bool zoom = ui_->timeline_view_->ZoomIn(zoom_rate, use_mouse_pos);
+        UpdateZoomButtonsForZoomIn(zoom);
+    }
 }
 
 void TimelinePane::ZoomOutCustom(int zoom_rate, bool use_mouse_pos)
@@ -690,9 +704,27 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
     }
 }
 
+void TimelinePane::ResourceComboFiltersChanged(bool checked, int changed_item_index)
+{
+    RMT_UNUSED(checked);
+
+    uint32_t           filter_mask   = UINT32_MAX;
+    rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
+    const int          index         = ui_->timeline_type_combo_box_->CurrentRow();
+    if (index >= 0)
+    {
+        resource_usage_model_->UpdateCheckboxes(changed_item_index, ui_->timeline_series_filter_combo_box_);
+        filter_mask = resource_usage_model_->GetFilterMask(ui_->timeline_series_filter_combo_box_);
+    }
+    RmtDataTimeline* timeline = trace_manager.GetTimeline();
+    model_->SetTimelineSeriesFilter(filter_mask, timeline);
+    model_->UpdateMemoryGraph(ui_->timeline_view_->ViewableStartClk(), ui_->timeline_view_->ViewableEndClk());
+    ui_->timeline_view_->viewport()->update();
+}
+
 void TimelinePane::TimelineTypeChanged()
 {
-    const rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
+    rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
     if (trace_manager.DataSetValid())
     {
         const int index = ui_->timeline_type_combo_box_->CurrentRow();
@@ -701,9 +733,21 @@ void TimelinePane::TimelineTypeChanged()
             RmtDataTimelineType new_timeline_type = colorizer_->ApplyColorMode(index);
             model_->SetTimelineType(new_timeline_type);
 
+            uint32_t filter_mask = UINT32_MAX;
+            if ((new_timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageVirtualSize) ||
+                (new_timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageCount))
+            {
+                ui_->timeline_series_filter_combo_box_->show();
+                filter_mask = resource_usage_model_->GetFilterMask(ui_->timeline_series_filter_combo_box_);
+            }
+            else
+            {
+                ui_->timeline_series_filter_combo_box_->hide();
+            }
+
             // Start the processing thread and pass in the worker object. The thread controller will take ownership
             // of the worker and delete it once it's complete.
-            thread_controller_ = new rmv::ThreadController(ui_->timeline_view_, model_->CreateWorkerThread(new_timeline_type));
+            thread_controller_ = new rmv::ThreadController(ui_->timeline_view_, model_->CreateWorkerThread(new_timeline_type, filter_mask));
 
             // When the worker thread has finished, a signal will be emitted. Wait for the signal here and update
             // the UI with the newly acquired data from the worker thread.

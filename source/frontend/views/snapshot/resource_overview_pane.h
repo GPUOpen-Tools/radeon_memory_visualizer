@@ -54,9 +54,6 @@ public:
     virtual void OpenSnapshot(RmtDataSnapshot* snapshot) Q_DECL_OVERRIDE;
 
 private slots:
-    /// @brief Update parts of the UI when the scale factor changes.
-    void OnScaleFactorChanged();
-
     /// @brief Select a resource on this pane.
     ///
     /// This is usually called when selecting a resource on a different pane to make sure the

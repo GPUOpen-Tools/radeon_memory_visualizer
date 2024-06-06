@@ -7,8 +7,6 @@
 
 #include "views/settings/settings_pane.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "managers/message_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"

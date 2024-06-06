@@ -75,9 +75,6 @@ private slots:
     /// @brief Switch snapshots.
     void SwitchSnapshots();
 
-    /// @brief Resize widgets as needed according to the DPI Scale.
-    void OnScaleFactorChanged();
-
 private:
     /// @brief Update the UI.
     void UpdateUI();

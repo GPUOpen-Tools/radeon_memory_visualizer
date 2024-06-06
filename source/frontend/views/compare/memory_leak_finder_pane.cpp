@@ -10,7 +10,6 @@
 #include <QScrollBar>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
 #include "managers/trace_manager.h"
@@ -53,7 +52,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     connect(preferred_heap_combo_box_model_, &rmv::HeapComboBoxModel::FilterChanged, this, &MemoryLeakFinderPane::HeapChanged);
 
     resource_usage_combo_box_model_ = new rmv::ResourceUsageComboBoxModel();
-    resource_usage_combo_box_model_->SetupResourceComboBox(ui_->resource_usage_combo_box_);
+    resource_usage_combo_box_model_->SetupResourceComboBox(ui_->resource_usage_combo_box_, true);
     connect(resource_usage_combo_box_model_, &rmv::ResourceUsageComboBoxModel::FilterChanged, this, &MemoryLeakFinderPane::ResourceChanged);
 
     compare_id_delegate_ = new RMVCompareIdDelegate();
@@ -84,14 +83,10 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     connect(model_->GetResourceProxyModel(), &rmv::MemoryLeakFinderProxyModel::layoutChanged, this, &MemoryLeakFinderPane::ScrollToSelectedResource);
 
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::SwapSnapshotsRequested, this, &MemoryLeakFinderPane::SwitchSnapshots);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MemoryLeakFinderPane::OnScaleFactorChanged);
 }
 
 MemoryLeakFinderPane::~MemoryLeakFinderPane()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MemoryLeakFinderPane::OnScaleFactorChanged);
-
     delete compare_id_delegate_;
     delete resource_usage_combo_box_model_;
     delete preferred_heap_combo_box_model_;
@@ -105,19 +100,6 @@ void MemoryLeakFinderPane::showEvent(QShowEvent* event)
     Update(false);
 
     QWidget::showEvent(event);
-}
-
-void MemoryLeakFinderPane::OnScaleFactorChanged()
-{
-    // Get the height of the delegate to update the checkmark geometry and table row height.
-    const int checkmark_icon_height = compare_id_delegate_->DefaultSizeHint().height();
-
-    // Update checkmark geometry in the CompareIdDelegate.
-    compare_id_delegate_->CalculateCheckmarkGeometry(checkmark_icon_height);
-
-    // Update the table row height according to the compare ID column delegate (which is dependent on DPI scale).
-    // This item is the tallest object in the table, so this height is a good one to use.
-    ui_->resource_table_view_->verticalHeader()->setDefaultSectionSize(checkmark_icon_height);
 }
 
 void MemoryLeakFinderPane::SwitchSnapshots()

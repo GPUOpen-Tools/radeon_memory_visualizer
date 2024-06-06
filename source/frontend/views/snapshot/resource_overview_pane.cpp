@@ -10,7 +10,6 @@
 #include <QCheckBox>
 
 #include "qt_common/custom_widgets/colored_legend_scene.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_data_snapshot.h"
 
@@ -68,7 +67,7 @@ ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
     tree_map_models_.actual_heap_model->SetupHeapComboBox(ui_->actual_heap_combo_box_);
     connect(tree_map_models_.actual_heap_model, &rmv::HeapComboBoxModel::FilterChanged, this, &ResourceOverviewPane::ComboFiltersChanged);
 
-    tree_map_models_.resource_usage_model->SetupResourceComboBox(ui_->resource_usage_combo_box_);
+    tree_map_models_.resource_usage_model->SetupResourceComboBox(ui_->resource_usage_combo_box_, true);
     connect(tree_map_models_.resource_usage_model, &rmv::ResourceUsageComboBoxModel::FilterChanged, this, &ResourceOverviewPane::ResourceComboFiltersChanged);
 
     // Set up a list of required coloring modes, in order.
@@ -129,7 +128,7 @@ ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
     ui_->resource_details_view_->setFrameStyle(QFrame::NoFrame);
     ui_->resource_details_view_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui_->resource_details_view_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui_->resource_details_view_->setFixedHeight(ScalingManager::Get().Scaled(kResourceDetailsHeight));
+    ui_->resource_details_view_->setFixedHeight(kResourceDetailsHeight);
 
     allocation_details_scene_ = new QGraphicsScene();
     ui_->resource_details_view_->setScene(allocation_details_scene_);
@@ -158,13 +157,10 @@ ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
     connect(ui_->tree_map_view_->BlocksWidget(), &RMVTreeMapBlocks::UnboundResourceSelected, this, &ResourceOverviewPane::SelectedUnboundResource);
     connect(ui_->color_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &ResourceOverviewPane::ColorModeChanged);
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ResourceSelected, this, &ResourceOverviewPane::SelectResource);
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ResourceOverviewPane::OnScaleFactorChanged);
 }
 
 ResourceOverviewPane::~ResourceOverviewPane()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ResourceOverviewPane::OnScaleFactorChanged);
-
     delete tree_map_models_.preferred_heap_model;
     delete tree_map_models_.actual_heap_model;
     delete tree_map_models_.resource_usage_model;
@@ -455,9 +451,4 @@ void ResourceOverviewPane::ResizeItems()
 
         resource_details_->UpdateDimensions(ui_->resource_details_view_->width(), ui_->resource_details_view_->height());
     }
-}
-
-void ResourceOverviewPane::OnScaleFactorChanged()
-{
-    ui_->resource_details_view_->setFixedHeight(ScalingManager::Get().Scaled(kResourceDetailsHeight));
 }

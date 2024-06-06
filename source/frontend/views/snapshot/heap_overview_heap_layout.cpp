@@ -7,8 +7,6 @@
 
 #include "views/snapshot/heap_overview_heap_layout.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "rmt_print.h"
 
 #include "managers/message_manager.h"

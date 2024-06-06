@@ -12,6 +12,8 @@
 
 #include "rmt_format.h"
 
+#include <set>
+
 namespace rmv
 {
     /// @brief Model encapsulating everything needed for a resource combo box.
@@ -23,13 +25,19 @@ namespace rmv
         /// @brief Constructor.
         ResourceUsageComboBoxModel();
 
+        /// @brief Constructor.
+        ///
+        /// @param [in] default_unchecked_resources The list of resource usage types that are unchecked by default.
+        ResourceUsageComboBoxModel(const std::set<int>* default_unchecked_resources);
+
         /// @brief Destructor.
         virtual ~ResourceUsageComboBoxModel();
 
         /// @brief Set up the resource combo box taking into account any resources that are to be ignored.
         ///
-        /// @param [in] combo_box Pointer to the combo box to set up.
-        void SetupResourceComboBox(ArrowIconComboBox* combo_box);
+        /// @param [in] combo_box             Pointer to the combo box to set up.
+        /// @param [in] include_heap_checkbox A flag to indicate if the heap checkbox should be included.
+        void SetupResourceComboBox(ArrowIconComboBox* combo_box, const bool include_heap_checkbox);
 
         /// @brief Reset the resource combo box to its default values. Some values may be disabled by default.
         ///
@@ -79,6 +87,7 @@ namespace rmv
         int                            heap_checkbox_item_index_;      ///< The combo box item index for the "Heap" checkbox.
         int                            all_checkbox_item_index_;       ///< The combo box item index for the "All" checkbox.
         std::set<RmtResourceUsageType> checked_resource_usage_types_;  ///< The list of checked resource usage types.
+        const std::set<int>*           default_unchecked_resources_;   ///< The list of resource usage types that are unchecked by default.
     };
 }  // namespace rmv
 

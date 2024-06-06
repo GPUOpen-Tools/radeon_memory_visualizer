@@ -9,8 +9,6 @@
 
 #include <QPainter>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "util/rmv_util.h"
 
 static const int kBarTopOffset = 45;
@@ -41,7 +39,7 @@ void RMVCarouselAllocationSizes::paint(QPainter* painter, const QStyleOptionGrap
 
     for (int index = 0; index < rmv::kNumAllocationSizeBuckets; index++)
     {
-        int x_pos = ScalingManager::Get().Scaled((index * (gap + bar_width)) + x_offset);
+        int x_pos = (index * (gap + bar_width)) + x_offset;
         DrawAllocationBar(painter, bar_width, x_pos, data_.buckets[index], size_strings[index]);
     }
 }
@@ -74,15 +72,15 @@ void RMVCarouselAllocationSizes::DrawAllocationBar(QPainter* painter, int bar_wi
 
         value     = abs(value);
         bar_scale = 0.5;
-        origin    = ScalingManager::Get().Scaled(kBarHeight / 2);
+        origin    = kBarHeight / 2;
     }
 
-    // Calculate the positioning of the bars given a spacing between the bars and the width of each bar.
-    int bar_top    = ScalingManager::Get().Scaled(kBarTopOffset);
-    int bar_bottom = ScalingManager::Get().Scaled(kBarTopOffset + kBarHeight);
-    int bar_height = ScalingManager::Get().Scaled(kBarHeight);
-    int font_size  = ScalingManager::Get().Scaled(9);
-    int bar_length = ScalingManager::Get().Scaled(bar_width);
+    // Calculate the positioning of the bars given a spacing between the bars and the width of each ba.
+    int bar_top    = kBarTopOffset;
+    int bar_bottom = kBarTopOffset + kBarHeight;
+    int bar_height = kBarHeight;
+    int font_size  = 9;
+    int bar_length = bar_width;
 
     // Draw the bar.
     painter->setPen(Qt::NoPen);
@@ -109,7 +107,7 @@ void RMVCarouselAllocationSizes::DrawAllocationBar(QPainter* painter, int bar_wi
     font.setPixelSize(font_size);
     painter->setPen(Qt::black);
     painter->setFont(font);
-    QFontMetricsF scaled_font_metrics = ScalingManager::Get().ScaledFontMetrics(font);
+    QFontMetricsF scaled_font_metrics = QFontMetrics(font);
 
     // Draw the text label under the bar.
     qreal text_width    = scaled_font_metrics.horizontalAdvance(label_string);

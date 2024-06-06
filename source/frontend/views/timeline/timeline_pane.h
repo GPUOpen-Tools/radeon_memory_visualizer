@@ -14,6 +14,7 @@
 #include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/zoom_icon_group_manager.h"
 
+#include "models/resource_usage_combo_box_model.h"
 #include "models/timeline/timeline_colorizer.h"
 #include "models/timeline/timeline_model.h"
 #include "views/base_pane.h"
@@ -126,6 +127,12 @@ private slots:
     /// @param [in] max_value Maximum value of slider span.
     void FilterBySizeSliderChanged(int min_value, int max_value);
 
+    /// @brief Handle what happens when a checkbox in the resource usage type filter dropdown is checked or unchecked.
+    ///
+    /// @param [in] checked            Whether the checkbox is checked or unchecked.
+    /// @param [in] changed_item_index The index of the check box in the combo box that changed.
+    void ResourceComboFiltersChanged(bool checked, int changed_item_index);
+
     /// @brief Handle what happens when user changes the search filter.
     void SearchBoxChanged();
 
@@ -237,6 +244,7 @@ private:
 
     Ui::TimelinePane*                   ui_;                            ///< Pointer to the Qt UI design.
     ZoomIconGroupManager*               zoom_icon_manager_;             ///< The object responsible for the zoom icon status.
+    rmv::ResourceUsageComboBoxModel*    resource_usage_model_;          ///< The resource usage model.
     rmv::TimelineModel*                 model_;                         ///< Container class for the widget models.
     ColoredLegendScene*                 snapshot_legends_;              ///< Snapshot legends above the timeline.
     rmv::KeyboardZoomShortcutsTimeline* keyboard_zoom_shortcuts_;       ///< Keyboard shortcut handler.

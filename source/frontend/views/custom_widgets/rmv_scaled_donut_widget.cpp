@@ -15,7 +15,6 @@
 #include <QQueue>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_assert.h"
 
@@ -56,8 +55,6 @@ void RMVScaledDonutWidget::AdjustSize()
 
     // Scale font sizes in multiples of 2, incase the odd font size doesn't exist.
     // Note: Font point size is adjusted based on the width of widget and the base font point size (before DPI scaling is applied).
-    // The size of the widget should be increased based on the DPI scaling.
-    //qreal dpiScale   = ScalingManager::Get().GetScaleFactor();
 }
 
 void RMVScaledDonutWidget::paintEvent(QPaintEvent* event)

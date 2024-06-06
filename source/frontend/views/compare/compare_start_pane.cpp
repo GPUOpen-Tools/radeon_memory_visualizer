@@ -7,8 +7,6 @@
 
 #include "views/compare/compare_start_pane.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "rmt_data_snapshot.h"
 
 #include "managers/message_manager.h"
@@ -27,8 +25,8 @@ CompareStartPane::CompareStartPane(QWidget* parent)
 
     rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
 
-    rmv::widget_util::InitGraphicsView(ui_->graphics_view_, ScalingManager::Get().Scaled(kCircleDiameter));
-    ui_->graphics_view_->setFixedWidth(ScalingManager::Get().Scaled(kCircleDiameter * 2 - kCircleDiameter / kCircleSeparationFactor));
+    rmv::widget_util::InitGraphicsView(ui_->graphics_view_, kCircleDiameter);
+    ui_->graphics_view_->setFixedWidth(kCircleDiameter * 2 - kCircleDiameter / kCircleSeparationFactor);
 
     scene_ = new QGraphicsScene();
     ui_->graphics_view_->setScene(scene_);
@@ -56,13 +54,10 @@ CompareStartPane::CompareStartPane(QWidget* parent)
     connect(snapshot_widget_right_, &RMVCameraSnapshotWidget::Navigate, [=]() {
         emit rmv::MessageManager::Get().PaneSwitchRequested(rmv::kPaneIdTimelineGenerateSnapshot);
     });
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &CompareStartPane::OnScaleFactorChanged);
 }
 
 CompareStartPane::~CompareStartPane()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &CompareStartPane::OnScaleFactorChanged);
 }
 
 void CompareStartPane::resizeEvent(QResizeEvent* event)
@@ -71,18 +66,13 @@ void CompareStartPane::resizeEvent(QResizeEvent* event)
     QWidget::resizeEvent(event);
 }
 
-void CompareStartPane::OnScaleFactorChanged()
-{
-    UpdateCirclePositions();
-}
-
 void CompareStartPane::UpdateCirclePositions()
 {
     const qreal circle_diameter = kCircleDiameter - kSceneMargin * 2;
 
     snapshot_widget_left_->UpdateDimensions(circle_diameter, circle_diameter);
     snapshot_widget_right_->UpdateDimensions(circle_diameter, circle_diameter);
-    qreal overlap_start = kSceneMargin + ScalingManager::Get().Scaled(circle_diameter);
+    qreal overlap_start = kSceneMargin + circle_diameter;
     snapshot_widget_right_->setPos(overlap_start - (overlap_start / kCircleSeparationFactor), 0);
 
     QRectF scene_rect = scene_->itemsBoundingRect();

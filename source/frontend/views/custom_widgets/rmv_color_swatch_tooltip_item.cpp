@@ -48,8 +48,19 @@ void RMVColorSwatchTooltipItem::paint(QPainter* painter, const QStyleOptionGraph
         for (auto index = 0; index < line_list.size(); index++)
         {
             QString color = data(index).toString();
-            painter->fillRect(0, offset + 1, icon_size_, icon_size_, QColor(color));
-            painter->drawText(icon_size_ + 1, icon_size_ + offset, line_list[index]);
+
+            // If the tooltip item contains a color string, drawn the swatch followed by the text.
+            // Otherwise, just draw the text (split the difference of the swatch rectangle width to center the text).
+            if (color.length() > 0)
+            {
+                painter->fillRect(0, offset + 1, icon_size_, icon_size_, QColor(color));
+                painter->drawText(icon_size_ + 1, icon_size_ + offset, line_list[index]);
+            }
+            else
+            {
+                painter->drawText((icon_size_ / 2) + 1, icon_size_ + offset, line_list[index]);
+            }
+
             offset += text_height;
         }
     }

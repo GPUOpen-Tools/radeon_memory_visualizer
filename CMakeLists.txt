@@ -7,13 +7,12 @@ cmake_minimum_required(VERSION 3.11)
 
 set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
 
-
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 9)
+set(RMV_MINOR_VERSION 10)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -59,7 +58,6 @@ ELSE(WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug)
 ENDIF(WIN32)
-
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
@@ -168,18 +166,6 @@ if(SPHINX_EXECUTABLE)
         COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
         COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rmv/. -t ${SPHINX_OPTION}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rmv/.doctrees
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/allocation_explorer.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/allocation_overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/capture.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/carousel.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/heap_overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/memory_leak_finder.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/resource_details.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/resource_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/resource_overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/settings.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/snapshot_delta.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rmv/timeline.html
     )
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
@@ -194,5 +180,3 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sample_trace.rmv  ${DOCS_OUTPUT_DIR}/samples/.
 )
-
-
