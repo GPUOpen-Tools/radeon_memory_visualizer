@@ -8,7 +8,7 @@ The first thing you will need to do is generate a memory trace. Currently,
 this is done via the Radeon Developer Panel. Read the documentation provided
 with this distribution for information on how to create a memory trace. This
 can be obtained from within the Radeon Developer Panel or from the link on the
-Radeon Memory Visualizer “Welcome” view. The documentation is also available
+Radeon Memory Visualizer "Welcome" view. The documentation is also available
 online at:
 http://radeon-developer-panel.readthedocs.io/en/latest/
 
@@ -114,3 +114,26 @@ number of sub-windows..
 
    b. **Memory leak finder** - Shows allocations from each snapshot and how
       those allocations intersect to help locate memory leaks
+	  
+Driver experiments
+------------------
+
+Driver experiments are configured when capturing a memory trace and allow the
+behavior of certain driver operations to be adjusted.  Please see the Radeon
+Developer Panel documentation for more details on configuring Driver experiments.
+Modified Driver experiments included in a memory trace file will be listed on
+the System information pane under the section labeled **Driver experiments**. 
+
+.. image:: media/system_info_1.png
+
+When a memory trace that includes Driver experiments is loaded, a notification
+banner is displayed below the main drop down menu. 
+
+.. image:: media/driver_experiments_1.png
+
+The notification banner includes a "see details" shortcut link that navigates
+to the System information pane. The banner can be dismissed by clicking the "X"
+button. Clicking the "Do not show again" link prevents the banner from being
+shown for subsequently loaded trace files. The notification banner can be
+re-enabled from the Settings pane.
+

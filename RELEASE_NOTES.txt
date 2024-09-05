@@ -1,11 +1,12 @@
-Radeon™ Memory Visualizer V1.10 07/01/2024
+Radeon™ Memory Visualizer V1.11 10/01/2024
 ------------------------------------------
 
-V1.10 Changes
+V1.11 Changes
 ------------------------------------
-1) Updated to use Qt 6.7.0.
-2) Show/hide usage types on the Resource usage size and Resource usage count timeline views.
-3) Bug/stability fixes.
+1) Dark mode user interface support, allowing the user to choose between a light and dark theme (or have RMV follow the OS theme setting).
+2) UI support for driver experiments.
+3) The "Device configuration" pane has been renamed to "System information."
+4) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -24,6 +25,12 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.10 Changes
+------------------------------------
+1) Updated to use Qt 6.7.0.
+2) Show/hide usage types on the Resource usage size and Resource usage count timeline views.
+3) Bug/stability fixes.
 
 V1.9 Changes
 ------------------------------------

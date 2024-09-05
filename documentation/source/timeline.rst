@@ -186,10 +186,14 @@ on the timeline corresponding to a resource type of 'internal', as seen below.
 
 .. image:: media/rgp_interop.png
 
-Device configuration
---------------------
+System information
+------------------
 This pane will show some of the parameters of the video hardware on which the
 memory trace was taken, showing such things as the name of the video card and
-the memory bandwidth.
+the memory bandwidth. In addition, if any Driver experiments are included when
+the trace was captured, they will be displayed here under the section labeled
+**Driver experiments**. Hovering over a driver experiment name or value with
+the mouse pointer displays a tooltip describing that item.
 
-.. image:: media/device_config_1.png
+.. image:: media/system_info_1.png
+
