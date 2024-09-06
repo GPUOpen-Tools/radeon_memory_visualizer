@@ -1262,7 +1262,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
                     if (!allocation_resource_map.empty())
                     {
                         const auto allocation_resource_entry = allocation_resource_map.find(current_token.resource_destroy_token.resource_identifier);
-                        if (allocation_resource_entry == allocation_resource_map.end())
+                        if (allocation_resource_entry != allocation_resource_map.end())
                         {
                             uint64_t allocation_identifier = allocation_resource_entry->second;
                             auto     bound_resource_entry  = bound_resources.find(allocation_identifier);

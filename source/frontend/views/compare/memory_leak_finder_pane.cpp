@@ -26,7 +26,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     model_ = new rmv::MemoryLeakFinderModel();
 

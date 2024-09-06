@@ -36,7 +36,7 @@ ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
     ui_->setupUi(this);
     ui_->empty_page_->SetEmptyTitleText();
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     model_ = new rmv::ResourceOverviewModel();
 
@@ -143,13 +143,15 @@ ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
     resource_details_ = new RMVResourceDetails(config);
     allocation_details_scene_->addItem(resource_details_);
 
-    ui_->resource_details_checkbox_->Initialize(true, rmv::kCheckboxEnableColor, Qt::black);
+    ui_->resource_details_checkbox_->setChecked(true);
+    ui_->resource_details_checkbox_->SetOnText(rmv::text::kResourceDetails);
+    ui_->resource_details_checkbox_->SetOffText(rmv::text::kResourceDetails);
 
     rmv::widget_util::InitRangeSlider(ui_->size_slider_);
 
     connect(ui_->size_slider_, &DoubleSliderWidget::SpanChanged, this, &ResourceOverviewPane::FilterBySizeSliderChanged);
 
-    connect(ui_->resource_details_checkbox_, &RMVColoredCheckbox::Clicked, this, &ResourceOverviewPane::ToggleResourceDetails);
+    connect(ui_->resource_details_checkbox_, &CheckBoxWidget::clicked, this, &ResourceOverviewPane::ToggleResourceDetails);
     connect(ui_->slicing_button_one_, &ArrowIconComboBox::SelectionChanged, this, &ResourceOverviewPane::SlicingLevelChanged);
     connect(ui_->slicing_button_two_, &ArrowIconComboBox::SelectionChanged, this, &ResourceOverviewPane::SlicingLevelChanged);
     connect(ui_->slicing_button_three_, &ArrowIconComboBox::SelectionChanged, this, &ResourceOverviewPane::SlicingLevelChanged);

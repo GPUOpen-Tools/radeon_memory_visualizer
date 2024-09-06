@@ -413,7 +413,7 @@ static RmtResourceIdNode* InsertNode(RmtResourceList* resource_list, RmtResource
     }
     else
     {
-        RMT_ASSERT_FAIL("WTF");
+        RMT_ASSERT_FAIL("RmtResourceIdNode InsertNode failed");
     }
 
     return node;

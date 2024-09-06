@@ -58,6 +58,9 @@ protected:
     /// @param [in] event the resize event object.
     virtual void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
+    /// @brief Update the widget based on the color theme.
+    void OnColorThemeUpdated();
+
 private:
     Ui::HeapOverviewHeapLayout* ui_;  ///< Pointer to the Qt UI design.
 

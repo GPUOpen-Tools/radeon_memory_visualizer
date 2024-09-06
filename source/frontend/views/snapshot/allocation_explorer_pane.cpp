@@ -41,7 +41,7 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     ui_->splitter_->setStretchFactor(1, 1);
     ui_->splitter_->setStretchFactor(2, 3);
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     model_ = new rmv::VirtualAllocationExplorerModel(kNumAllocationModels);
 
@@ -59,7 +59,9 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     rmv::widget_util::InitCommonFilteringComponents(ui_->allocation_search_box_, ui_->allocation_size_slider_);
     rmv::widget_util::InitRangeSlider(ui_->resource_size_slider_);
     rmv::widget_util::InitRangeSlider(ui_->allocation_size_slider_);
-    ui_->aliased_resource_checkbox_->Initialize(false, rmv::kCheckboxEnableColor, Qt::black);
+    ui_->aliased_resource_checkbox_->setChecked(false);
+    ui_->aliased_resource_checkbox_->SetOnText(rmv::text::kShowAliasing);
+    ui_->aliased_resource_checkbox_->SetOffText(rmv::text::kShowAliasing);
 
     colorizer_ = new rmv::Colorizer();
 
@@ -93,7 +95,7 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     connect(ui_->allocation_search_box_, &QLineEdit::textChanged, this, &AllocationExplorerPane::AllocationSearchBoxChanged);
     connect(ui_->color_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &AllocationExplorerPane::ColorModeChanged);
     connect(ui_->resource_table_view_, &QTableView::doubleClicked, this, &AllocationExplorerPane::ResourceTableDoubleClicked);
-    connect(ui_->aliased_resource_checkbox_, &RMVColoredCheckbox::Clicked, this, &AllocationExplorerPane::AliasedResourceClicked);
+    connect(ui_->aliased_resource_checkbox_, &CheckBoxWidget::clicked, this, &AllocationExplorerPane::AliasedResourceClicked);
 
     connect(ui_->allocation_table_view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &AllocationExplorerPane::AllocationTableChanged);
     connect(ui_->resource_table_view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &AllocationExplorerPane::ResourceTableSelectionChanged);

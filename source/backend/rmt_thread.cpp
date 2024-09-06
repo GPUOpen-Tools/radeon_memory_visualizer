@@ -7,6 +7,7 @@
 
 #ifndef _WIN32
 #include <thread>
+#include <new>
 #endif  // #ifndef _WIN32
 
 #include <stdint.h>

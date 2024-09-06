@@ -65,17 +65,21 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
     ui_->setupUi(this);
     ui_->empty_page_->SetEmptyTitleText();
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     model_ = new rmv::AllocationOverviewModel(kNumAllocationModels);
 
     ui_->search_box_->setFixedWidth(rmv::kSearchBoxWidth);
-    ui_->normalize_allocations_checkbox_->Initialize(false, rmv::kCheckboxEnableColor, Qt::black);
+    ui_->normalize_allocations_checkbox_->setChecked(false);
+    ui_->normalize_allocations_checkbox_->SetOnText(rmv::text::kNormalizeAllocations);
+    ui_->normalize_allocations_checkbox_->SetOffText(rmv::text::kNormalizeAllocations);
     ToggleNormalizeAllocations();
-    connect(ui_->normalize_allocations_checkbox_, &RMVColoredCheckbox::Clicked, this, &AllocationOverviewPane::ToggleNormalizeAllocations);
+    connect(ui_->normalize_allocations_checkbox_, &CheckBoxWidget::clicked, this, &AllocationOverviewPane::ToggleNormalizeAllocations);
 
-    ui_->aliased_resource_checkbox_->Initialize(false, rmv::kCheckboxEnableColor, Qt::black);
-    connect(ui_->aliased_resource_checkbox_, &RMVColoredCheckbox::Clicked, this, &AllocationOverviewPane::ToggleAliasedResources);
+    ui_->aliased_resource_checkbox_->setChecked(false);
+    ui_->aliased_resource_checkbox_->SetOnText(rmv::text::kShowAliasing);
+    ui_->aliased_resource_checkbox_->SetOffText(rmv::text::kShowAliasing);
+    connect(ui_->aliased_resource_checkbox_, &CheckBoxWidget::clicked, this, &AllocationOverviewPane::ToggleAliasedResources);
 
     rmv::widget_util::InitMultiSelectComboBox(this, ui_->preferred_heap_combo_box_, rmv::text::kPreferredHeap);
     rmv::widget_util::InitSingleSelectComboBox(this, ui_->sort_combo_box_, rmv::text::kSortByAllocationId, false);

@@ -7,6 +7,8 @@
 
 #include "views/delegates/rmv_resource_event_delegate.h"
 
+#include "qt_common/utils/qt_util.h"
+
 #include <QPainter>
 
 const static QColor kTableSelectionColor(0, 120, 215);
@@ -60,7 +62,7 @@ void RMVResourceEventDelegate::paint(QPainter* painter, const QStyleOptionViewIt
         if (option.state & QStyle::State_Selected)
         {
             // Draw selection highlight.
-            painter->fillRect(option.rect, QBrush(kTableSelectionColor));
+            painter->fillRect(option.rect, QBrush(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().row_selected_color));
             color = Qt::white;
         }
 

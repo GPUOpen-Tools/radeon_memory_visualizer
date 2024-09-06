@@ -18,7 +18,7 @@ HeapOverviewPane::HeapOverviewPane(QWidget* parent)
     ui_->setupUi(this);
     ui_->empty_page_->SetEmptyTitleText();
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     ui_->local_heap_view_->Initialize(kRmtHeapTypeLocal);
     ui_->invisible_heap_view_->Initialize(kRmtHeapTypeInvisible);

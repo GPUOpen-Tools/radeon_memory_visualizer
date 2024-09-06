@@ -53,7 +53,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
 
         if (config_.allocation_thumbnail == true)
         {
-            painter->setPen(Qt::black);
+            painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
 
             // It's possible for a resource to not have a parent allocation, so handle it.
             if (allocation != nullptr)
@@ -95,7 +95,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
             x_pos += 550;
         }
 
-        painter->setPen(Qt::black);
+        painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
         painter->drawText(x_pos, header_height, "Actual size");
         painter->drawText(x_pos, value_height, rmv::string_util::LocalizedValueMemory(size_in_bytes, false, false));
 

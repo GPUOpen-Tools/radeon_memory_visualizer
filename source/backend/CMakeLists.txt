@@ -10,6 +10,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../backend ../parser ../../external/rdf/rdf/inc ../third_party)
 
 add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
+add_definitions(-DDRIVER_OVERRIDES_ENABLE_RDF)
 add_definitions(-DRDF_CXX_BINDINGS)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
@@ -81,7 +82,6 @@ set( SOURCES
 set( LINUX_SOURCES
     "rmt_include_pevents.cpp"
 )
-
 
 # specify output library name
 IF(WIN32)

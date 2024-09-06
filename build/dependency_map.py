@@ -21,9 +21,9 @@ github_root  = "https://github.com/"
 # Define a set of dependencies that exist as separate git projects.
 # each git dependency has a desired directory where it will be cloned - along with a commit to checkout
 git_mapping = {
-    github_tools + "qt_common"                 : ["../external/qt_common",         "v4.0.0",                                   True],
-    github_tools + "update_check_api"          : ["../external/update_check_api",  "v2.1.1",                                   True],
-    github_tools + "system_info_utils"         : ["../external/system_info_utils", "88a338a01949f8d8bad60a30b78b65300fd13a9f", False],
-    github_root  + "GPUOpen-Drivers/libamdrdf" : ["../external/rdf",               "v1.1.2",                                   True],
+    github_tools + "qt_common"                 : ["../external/qt_common",         "v4.1.0", True],
+    github_tools + "update_check_api"          : ["../external/update_check_api",  "v2.1.1", True],
+    github_tools + "system_info_utils"         : ["../external/system_info_utils", "v2.0",   True],
+    github_root  + "GPUOpen-Drivers/libamdrdf" : ["../external/rdf",               "v1.4.0", True],
 }
 

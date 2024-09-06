@@ -62,7 +62,7 @@ void RMVCarouselResourceTypes::DrawCarouselMemoryUsageLegend(QPainter*      pain
         usage_description += 's';
     }
 
-    painter->setPen(Qt::black);
+    painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
     painter->drawText(text_pos_x, y_offset + kTextOffset, usage_description);
 
     QString amount = "(";

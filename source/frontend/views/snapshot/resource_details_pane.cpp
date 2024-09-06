@@ -11,6 +11,7 @@
 #include <QThread>
 
 #include "qt_common/utils/common_definitions.h"
+#include "qt_common/utils/qt_util.h"
 
 #include "managers/message_manager.h"
 #include "managers/snapshot_manager.h"
@@ -39,7 +40,7 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
     ui_->setupUi(this);
     ui_->snapshot_empty_->SetEmptyTitleText();
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     model_ = new rmv::ResourceDetailsModel();
 
@@ -112,6 +113,13 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
     // Add a delegate to the resource timeline table to allow custom painting.
     legend_delegate_ = new RMVResourceEventDelegate(nullptr, model_);
     ui_->resource_timeline_table_view_->setItemDelegateForColumn(rmv::kResourceHistoryColumnLegend, legend_delegate_);
+
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->warning_icon_->setPixmap(QPixmap(QString::fromUtf8(":/Resources/assets/third_party/ionicons/warning_white.svg")));
+    }
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &ResourceDetailsPane::OnColorThemeUpdated);
 
     // Intercept the ResourceSelected signal so the chosen resource can be set up. This signal is sent
     // before the pane navigation.
@@ -213,7 +221,6 @@ void ResourceDetailsPane::Refresh()
 
         ui_->resource_timeline_table_view_->setSortingEnabled(true);
         ui_->resource_timeline_table_view_->sortByColumn(rmv::kResourceHistoryColumnTime, Qt::AscendingOrder);
-        rmv::widget_util::SetWidgetBackgroundColor(ui_->residency_donut_, Qt::white);
 
         float   value;
         QString name;
@@ -248,7 +255,7 @@ void ResourceDetailsPane::Refresh()
         ui_->content_base_address_->setEnabled(baseAddressValid);
         if (baseAddressValid == true)
         {
-            ui_->content_base_address_->setStyleSheet(kLinkButtonStylesheet);
+            ui_->content_base_address_->SetLinkStyleSheet();
         }
         else
         {
@@ -323,5 +330,17 @@ void ResourceDetailsPane::ScrollToSelectedEvent()
             QModelIndex model_index = item_list[0];
             ui_->resource_timeline_table_view_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
         }
+    }
+}
+
+void ResourceDetailsPane::OnColorThemeUpdated()
+{
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->warning_icon_->setPixmap(QPixmap(QString::fromUtf8(":/Resources/assets/third_party/ionicons/warning_white.svg")));
+    }
+    else
+    {
+        ui_->warning_icon_->setPixmap(QPixmap(QString::fromUtf8(":/Resources/assets/third_party/ionicons/warning.svg")));
     }
 }

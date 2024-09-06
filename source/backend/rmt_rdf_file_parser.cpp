@@ -20,7 +20,9 @@
 #include "rmt_rdf_snapshot_info.h"
 #include "rmt_rdf_snapshot_writer.h"
 #include "rmt_types.h"
+
 #include "system_info_utils/source/system_info_reader.h"
+#include "system_info_utils/source/driver_overrides_reader.h"
 #ifndef _WIN32
 #include "linux/safe_crt.h"
 #endif
@@ -101,6 +103,23 @@ static RmtErrorCode LoadSnapshotChunks(rdfChunkFile* chunk_file, RmtDataSet* dat
     return result;
 }
 
+// Load the Driver Overrides chunk.
+static RmtErrorCode LoadDriverOverridesChunk(rdfChunkFile* chunk_file, RmtDataSet* data_set)
+{
+    RMT_RETURN_ON_ERROR(chunk_file != nullptr, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(data_set != nullptr, kRmtErrorInvalidPointer);
+    RmtErrorCode result = kRmtErrorMalformedData;
+
+    // Attempt to load Driver Overrides chunk.
+    std::string json_text;
+    if (driver_overrides_utils::DriverOverridesReader::Parse(chunk_file, json_text))
+    {
+        result = RmtDataSetCopyDriverOverridesString(data_set, json_text.c_str(), json_text.size());
+    }
+
+    return result;
+}
+
 // Load the GPU Memory Segment chunk.
 static RmtErrorCode LoadSegmentChunk(rdfChunkFile* chunk_file, RmtDataSet* data_set)
 {
@@ -132,7 +151,7 @@ static RmtErrorCode LoadSegmentChunk(rdfChunkFile* chunk_file, RmtDataSet* data_
                     data_set->segment_info[count].heap_type    = static_cast<RmtHeapType>(data.type);
 
                     data_set->segment_info[count].index = 0;
-                    data_set->segment_info[count].size = data.size;
+                    data_set->segment_info[count].size  = data.size;
                     count++;
                 }
                 else
@@ -417,10 +436,8 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
                   system_info.driver.software_version.c_str(),
                   kRmtMaxDriverSoftwareVersionNameLength - 1);
 
-        strncpy_s(data_set->system_info.system_memory_type_name,
-                  kRmtMaxMemoryTypeNameLength,
-                  system_info.os.memory.type.c_str(),
-                  kRmtMaxMemoryTypeNameLength - 1);
+        strncpy_s(
+            data_set->system_info.system_memory_type_name, kRmtMaxMemoryTypeNameLength, system_info.os.memory.type.c_str(), kRmtMaxMemoryTypeNameLength - 1);
 
         result = kRmtOk;
     }
@@ -445,7 +462,14 @@ RmtErrorCode RmtRdfFileParserLoadRdf(const char* path, RmtDataSet* data_set)
             error_code = LoadSystemInfoChunk(chunk_file, data_set);
             RMT_ASSERT(error_code == kRmtOk);
 
-            error_code = LoadSegmentChunk(chunk_file, data_set);
+            // Load the Driver Overrides chunk if it is present.
+            error_code = LoadDriverOverridesChunk(chunk_file, data_set);
+            RMT_ASSERT(error_code == kRmtOk);
+
+            if (error_code == kRmtOk)
+            {
+                error_code = LoadSegmentChunk(chunk_file, data_set);
+            }
 
             if (error_code == kRmtOk)
             {
@@ -513,7 +537,7 @@ RmtErrorCode RmtRdfStreamOpen(const char* path, const bool read_only)
     {
         access_mode = rdfStreamAccess::rdfStreamAccessReadWrite;
     }
-    rdfStreamFromFileCreateInfo stream_create_info{path, access_mode, rdfFileMode::rdfFileModeOpen};
+    rdfStreamFromFileCreateInfo stream_create_info{path, access_mode, rdfFileMode::rdfFileModeOpen, read_only};
 
     rdfResult rdf_result = rdfResult::rdfResultOk;
     rdf_result           = static_cast<rdfResult>(rdfStreamFromFile(&stream_create_info, &global_data_stream));

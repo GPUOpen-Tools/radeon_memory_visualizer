@@ -23,7 +23,7 @@ CompareStartPane::CompareStartPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     rmv::widget_util::InitGraphicsView(ui_->graphics_view_, kCircleDiameter);
     ui_->graphics_view_->setFixedWidth(kCircleDiameter * 2 - kCircleDiameter / kCircleSeparationFactor);

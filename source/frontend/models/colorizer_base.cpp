@@ -13,6 +13,8 @@
 
 #include <QString>
 
+#include "qt_common/utils/qt_util.h"
+
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 
@@ -144,7 +146,7 @@ namespace rmv
             break;
 
         default:
-            out = Qt::black;
+            out = QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color;
             break;
         }
 

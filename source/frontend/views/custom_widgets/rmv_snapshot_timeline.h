@@ -151,6 +151,9 @@ private:
     /// @param [in] mouse_pos The mouse position in the parent view.
     void UpdateToolTip(const QPointF& mouse_pos);
 
+    /// @brief Update the widget based on the color theme.
+    void OnColorThemeUpdated();
+
     RMVTimelineGraph*   timeline_graph_;    ///< The timeline graph.
     RMVTooltip          timeline_tooltip_;  ///< The tooltip on the timeline.
     rmv::TimelineModel* timeline_model_;    ///< Pointer to the timeline model.

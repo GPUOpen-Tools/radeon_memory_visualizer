@@ -39,6 +39,8 @@ RMVDeltaDisplay::RMVDeltaDisplay(QWidget* parent)
     UpdateDimensions();
 
     setScene(&scene_);
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &RMVDeltaDisplay::OnColorThemeUpdated);
 }
 
 RMVDeltaDisplay::~RMVDeltaDisplay()
@@ -134,4 +136,18 @@ QFont RMVDeltaDisplay::GetFont() const
     font.setPixelSize(11 * scaling_factor);
 
     return font;
+}
+
+void RMVDeltaDisplay::OnColorThemeUpdated()
+{
+    title_.setDefaultTextColor(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
+
+    for (int32_t i = 0; i < deltas_.size(); i++)
+    {
+        deltas_[i].description->setDefaultTextColor(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
+        deltas_[i].description->update();
+        deltas_[i].widget->update();
+    }
+
+    scene_.update();
 }

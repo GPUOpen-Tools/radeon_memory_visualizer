@@ -137,7 +137,7 @@ static RmtVirtualAllocationInterval* InsertNode(RmtVirtualAllocationList*     vi
     }
     else
     {
-        RMT_ASSERT_FAIL("WTF");
+        RMT_ASSERT_FAIL("RmtVirtualAllocationInterval InsertNode failed");
     }
 
     return node;

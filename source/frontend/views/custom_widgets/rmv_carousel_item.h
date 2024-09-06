@@ -15,7 +15,6 @@
 
 static const int    kCarouselItemHeight      = 275;
 static const int    kCarouselItemWidth       = 450;
-static const QColor kCarouselBaseColor       = QColor(240, 240, 240);
 static const QColor kDefaultCarouselBarColor = QColor(127, 127, 127);
 
 /// @brief Enum for the carousel type.

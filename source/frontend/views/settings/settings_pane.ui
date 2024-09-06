@@ -80,7 +80,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="RMVColoredCheckbox" name="check_for_updates_on_startup_checkbox_">
+           <widget class="CheckBoxWidget" name="check_for_updates_on_startup_checkbox_">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -88,7 +88,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Check for updates on startup.</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -123,6 +123,16 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="DriverOverridesNotificationConfigWidget" name="driver_overrides_notification_config_widget_" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="ScaledLabel" name="unit_label_">
@@ -228,22 +238,6 @@
         </layout>
        </item>
        <item>
-        <spacer name="vertical_spacer_2_">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>30</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
         <spacer name="vertical_spacer_3_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -295,7 +289,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="RMVColoredCheckbox" name="heap_uniqueness_checkbox_">
+           <widget class="CheckBoxWidget" name="heap_uniqueness_checkbox_">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -339,7 +333,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="RMVColoredCheckbox" name="allocation_uniqueness_checkbox_">
+           <widget class="CheckBoxWidget" name="allocation_uniqueness_checkbox_">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -383,7 +377,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="RMVColoredCheckbox" name="offset_uniqueness_checkbox_">
+           <widget class="CheckBoxWidget" name="offset_uniqueness_checkbox_">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -430,9 +424,15 @@
    <header>qt_common/custom_widgets/scaled_label.h</header>
   </customwidget>
   <customwidget>
-   <class>RMVColoredCheckbox</class>
+   <class>CheckBoxWidget</class>
    <extends>QCheckBox</extends>
-   <header>views/custom_widgets/rmv_colored_checkbox.h</header>
+   <header>qt_common/custom_widgets/check_box_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DriverOverridesNotificationConfigWidget</class>
+   <extends>QWidget</extends>
+   <header>qt_common/custom_widgets/driver_overrides_notification_config_widget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

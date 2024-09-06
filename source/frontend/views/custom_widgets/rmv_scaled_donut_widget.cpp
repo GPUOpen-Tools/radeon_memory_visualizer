@@ -140,7 +140,7 @@ void RMVScaledDonutWidget::paintEvent(QPaintEvent* event)
 
     font.setPixelSize(kDonutValuePixelFontSize);
     painter.setFont(font);
-    painter.setPen(Qt::black);
+    painter.setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
 
     int text_width = QtCommon::QtUtils::GetPainterTextWidth(&painter, text_line_one_);
 

@@ -10,6 +10,8 @@
 #include <QPainter>
 #include <QWidget>
 
+#include "qt_common/utils/qt_util.h"
+
 #include "util/rmv_util.h"
 #include "util/string_util.h"
 
@@ -92,7 +94,7 @@ void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsI
         text = rmv::string_util::LocalizedValueMemory(config_.value_num, false, false);
     }
 
-    painter->setPen(Qt::black);
+    painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
     painter->drawText(x_pos, 15, text);
 }
 

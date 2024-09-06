@@ -96,6 +96,11 @@ namespace rmv
         /// @return The timeline.
         RmtDataTimeline* GetTimeline();
 
+        /// @brief Get the default executable name (OS-aware).
+        ///
+        /// @return The default name string.
+        QString GetDefaultExeName() const;
+
     public slots:
         /// @brief Load a trace.
         ///
@@ -135,11 +140,6 @@ namespace rmv
         ///
         /// @return true if both traces are the same.
         bool SameTrace(const QFileInfo& new_trace) const;
-
-        /// @brief Get the default executable name (OS-aware).
-        ///
-        /// @return The default name string.
-        QString GetDefaultExeName() const;
 
         QWidget* parent_;             ///< Pointer to the parent pane.
         QString  active_trace_path_;  ///< The path to currently opened file.

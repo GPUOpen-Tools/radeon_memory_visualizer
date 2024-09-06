@@ -104,6 +104,9 @@ public:
     void UpdateItem(const DeltaItem& item);
 
 private:
+    /// @brief Update the widget based on the color theme.
+    void OnColorThemeUpdated();
+
     /// @brief Update view dimensions.
     void UpdateDimensions();
 

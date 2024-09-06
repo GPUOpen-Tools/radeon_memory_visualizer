@@ -12,20 +12,31 @@
 #include "util/widget_util.h"
 #include "views/custom_widgets/rmv_colored_checkbox.h"
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
+
+using namespace driver_overrides;
+
 SettingsPane::SettingsPane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::SettingsPane)
 {
     ui_->setupUi(this);
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    // Set up the Driver Overrides notification configuration widget.
+    ui_->driver_overrides_notification_config_widget_->Init(rmv::RMVSettings::Get().GetDriverOverridesAllowNotifications(), false);
 
-    ui_->check_for_updates_on_startup_checkbox_->Initialize(rmv::RMVSettings::Get().GetCheckForUpdatesOnStartup(), rmv::kCheckboxEnableColor, Qt::black);
-    ui_->heap_uniqueness_checkbox_->Initialize(rmv::RMVSettings::Get().GetAllocUniqunessHeap(), rmv::kCheckboxEnableColor, Qt::black);
-    ui_->allocation_uniqueness_checkbox_->Initialize(rmv::RMVSettings::Get().GetAllocUniqunessAllocation(), rmv::kCheckboxEnableColor, Qt::black);
-    ui_->offset_uniqueness_checkbox_->Initialize(rmv::RMVSettings::Get().GetAllocUniqunessOffset(), rmv::kCheckboxEnableColor, Qt::black);
+    connect(ui_->driver_overrides_notification_config_widget_,
+            &DriverOverridesNotificationConfigWidget::StateChanged,
+            this,
+            &SettingsPane::DriverOverridesAllowNotificationsChanged);
+    
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
-    // For now, hide the memory leak settings (they may be used in a future release).
+    // Set up checkboxes.
+    ui_->check_for_updates_on_startup_checkbox_->SetOnText(rmv::text::kCheckForUpdates);
+    ui_->check_for_updates_on_startup_checkbox_->SetOffText(rmv::text::kCheckForUpdates);
+    ui_->check_for_updates_on_startup_checkbox_->setChecked(rmv::RMVSettings::Get().GetCheckForUpdatesOnStartup());
+
     ui_->memory_leak_title_->hide();
     ui_->heap_uniqueness_checkbox_->hide();
     ui_->allocation_uniqueness_checkbox_->hide();
@@ -42,10 +53,8 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->units_combo_push_button_->SetSelectedRow(0);
     connect(ui_->units_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::TimeUnitsChanged);
 
-    connect(ui_->check_for_updates_on_startup_checkbox_, &RMVColoredCheckbox::Clicked, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
-    connect(ui_->heap_uniqueness_checkbox_, &RMVColoredCheckbox::Clicked, this, &SettingsPane::HeapUniquenessSelectionStateChanged);
-    connect(ui_->allocation_uniqueness_checkbox_, &RMVColoredCheckbox::Clicked, this, &SettingsPane::AllocationUniquenessSelectionStateChanged);
-    connect(ui_->offset_uniqueness_checkbox_, &RMVColoredCheckbox::Clicked, this, &SettingsPane::OffsetUniquenessSelectionStateChanged);
+    connect(ui_->check_for_updates_on_startup_checkbox_, &CheckBoxWidget::stateChanged, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
+
 }
 
 SettingsPane::~SettingsPane()
@@ -98,26 +107,9 @@ void SettingsPane::CheckForUpdatesOnStartupStateChanged()
     rmv::RMVSettings::Get().SaveSettings();
 }
 
-void SettingsPane::HeapUniquenessSelectionStateChanged()
+void SettingsPane::DriverOverridesAllowNotificationsChanged(bool checked)
 {
-    rmv::RMVSettings::Get().SetAllocUniqunessHeap(ui_->heap_uniqueness_checkbox_->isChecked());
+    rmv::RMVSettings::Get().SetDriverOverridesAllowNotifications(checked);
     rmv::RMVSettings::Get().SaveSettings();
-
-    emit rmv::MessageManager::Get().HashesChanged();
 }
 
-void SettingsPane::AllocationUniquenessSelectionStateChanged()
-{
-    rmv::RMVSettings::Get().SetAllocUniqunessAllocation(ui_->allocation_uniqueness_checkbox_->isChecked());
-    rmv::RMVSettings::Get().SaveSettings();
-
-    emit rmv::MessageManager::Get().HashesChanged();
-}
-
-void SettingsPane::OffsetUniquenessSelectionStateChanged()
-{
-    rmv::RMVSettings::Get().SetAllocUniqunessOffset(ui_->offset_uniqueness_checkbox_->isChecked());
-    rmv::RMVSettings::Get().SaveSettings();
-
-    emit rmv::MessageManager::Get().HashesChanged();
-}

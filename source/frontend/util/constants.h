@@ -15,7 +15,8 @@
 
 namespace rmv
 {
-    static const QString kRmvExecutableBaseFilename = "RadeonMemoryVisualizer";
+    static const QString kRmvExecutableBaseFilename    = "RadeonMemoryVisualizer";
+    static const QString kRmvApplicationFileTypeString = "trace";
 
 #ifdef _DEBUG
     static const QString kRmvExecutableDebugIdentifier = "-d";
@@ -113,6 +114,15 @@ namespace rmv
         static const QString kActualHeap    = "Actual heap";
         static const QString kResourceUsage = "Resource usage filter";
 
+        static const QString kCheckForUpdates      = "Check for updates on startup.";
+        static const QString kHeapUniqueness       = "When calculating resource uniqueness, include Heap ID.";
+        static const QString kAllocationUniqueness = "When calculating resource uniqueness, include Allocation ID.";
+        static const QString kOffsetUniqueness     = "When calculating resource uniqueness, include Allocation Offset.";
+
+        static const QString kResourceDetails      = "Resource details";
+        static const QString kNormalizeAllocations = "Normalize allocations";
+        static const QString kShowAliasing         = "Show aliasing";
+
         // Time units.
         static const QString kSettingsUnitsClocks       = "Clocks";
         static const QString kSettingsUnitsMilliseconds = "Milliseconds";
@@ -146,7 +156,9 @@ namespace rmv
     namespace resource
     {
         // Stylesheet resource.
-        static const QString kStylesheet = ":/Resources/stylesheet.qss";
+        static const QString kDarkStylesheet  = ":/Resources/dark_mode_stylesheet.qss";
+        static const QString kLightStylesheet = ":/Resources/light_mode_stylesheet.qss";
+        static const QString kStylesheet      = ":/Resources/stylesheet.qss";
 
         // Zoom in/out svg resources.
         static const QString kZoomInEnabled   = ":/Resources/assets/zoom_in.svg";

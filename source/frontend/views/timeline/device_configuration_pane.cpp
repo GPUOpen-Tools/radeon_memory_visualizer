@@ -18,14 +18,19 @@ DeviceConfigurationPane::DeviceConfigurationPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    // Set white background for this pane.
-    rmv::widget_util::SetWidgetBackgroundColor(this, Qt::white);
-
     // Set mouse cursor to pointing hand cursor for various widgets.
     ui_->button_copy_to_clipboard_->setCursor(Qt::PointingHandCursor);
 
     // Hide the copy to clipboard button until it's implemented.
     ui_->button_copy_to_clipboard_->hide();
+    ui_->horizontal_spacer_->changeSize(0, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->label_amd_logo_->setStyleSheet("image: url(:/Resources/assets/amd_logo_white.svg)");
+    }
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &DeviceConfigurationPane::OnColorThemeUpdated);
 
     model_ = new rmv::DeviceConfigurationModel();
 
@@ -81,6 +86,18 @@ void DeviceConfigurationPane::showEvent(QShowEvent* event)
     ui_->label_driver_software_version_->setVisible(false);
     ui_->content_driver_software_version_->setVisible(false);
 #endif
+}
+
+void DeviceConfigurationPane::OnColorThemeUpdated()
+{
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->label_amd_logo_->setStyleSheet("QLabel#label_amd_logo_ { image: url(:/Resources/assets/amd_logo_white.svg); }");
+    }
+    else
+    {
+        ui_->label_amd_logo_->setStyleSheet("QLabel#label_amd_logo_ { image: url(:/Resources/assets/amd_logo.svg); }");
+    }
 }
 
 void DeviceConfigurationPane::Refresh()

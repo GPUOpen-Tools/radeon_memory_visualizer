@@ -42,8 +42,10 @@
 #include <unistd.h>
 #else
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <corecrt_io.h>
+#include <fcntl.h>
+#include <fstream>
+#include <windows.h>
 #endif  // #ifdef _LINUX
 
 // Determine if a file is read only.
@@ -59,28 +61,75 @@ static bool IsFileReadOnly(const char* file_path)
 #endif
 }
 
-/// @brief Opens a file with the option of preventing other processes from inheriting the handle.
+/// @brief Customizable file open function.
 ///
-// @param [out] file_descriptor                 A pointer to the file descriptor to be opened.
-// @param [in]  file_name                       A pointer to the file name to be opened.
-// @param [in]  mode                            The mode to open the file in.
-// @param [in]  prevent_inheritance             A flag that, if true, prevents inheritance of the file handle.
+/// Provides the options of preventing other processes from inheriting the handle and
+/// specifying whether the file should be opened in a shareable mode or exclusive mode.
+///
+/// @param [out] file_descriptor                 A pointer to the file descriptor to be opened.
+/// @param [in]  file_name                       A pointer to the file name to be opened.
+/// @param [in]  mode                            The mode to open the file in.
+/// @param [in]  prevent_inheritance             A flag that, if true, prevents inheritance of the file handle.
+/// @param [in]  is_shareable                    A flag that, if true, allows the file to be shared with other processes.
 ///
 /// @return An error code indicating the result of the operation (0 indicates success).
 ///
-static errno_t OpenFile(FILE** file_descriptor, char const* file_name, char const* mode, bool prevent_inheritance)
+static errno_t OpenFile(FILE** file_descriptor, char const* file_name, char const* mode, const bool prevent_inheritance, const bool is_shareable)
 {
-    errno_t error_no = fopen_s(file_descriptor, file_name, mode);
 #ifdef WIN32
-    if ((error_no == 0) && (prevent_inheritance))
+    const DWORD share_mode           = is_shareable ? (FILE_SHARE_READ | FILE_SHARE_WRITE) : 0;
+    const DWORD flags_and_attributes = FILE_ATTRIBUTE_NORMAL;
+    DWORD       desired_access       = 0;
+    DWORD       creation_disposition = 0;
+
+    if (strrchr(mode, 'r') != nullptr)
+    {
+        desired_access |= GENERIC_READ;
+        creation_disposition = OPEN_EXISTING;
+    }
+
+    if (strrchr(mode, 'w') != nullptr)
+    {
+        desired_access |= GENERIC_WRITE;
+        creation_disposition = CREATE_ALWAYS;
+    }
+
+    if ((strrchr(mode, 'a') != nullptr) || (strrchr(mode, '+') != nullptr))
+    {
+        desired_access |= GENERIC_WRITE;
+        creation_disposition = OPEN_ALWAYS;
+    }
+
+    HANDLE object_handle = CreateFile(file_name, desired_access, share_mode, nullptr, creation_disposition, flags_and_attributes, nullptr);
+
+    if (object_handle == INVALID_HANDLE_VALUE)
+    {
+        return GetLastError();
+    }
+
+    if (prevent_inheritance)
     {
         // Disable inheritance of the file handle.
-        SetHandleInformation((HANDLE)_get_osfhandle(_fileno(*file_descriptor)), HANDLE_FLAG_INHERIT, 0);
+        SetHandleInformation(object_handle, HANDLE_FLAG_INHERIT, 0);
     }
+
+    // Convert the file handle to a file descriptor.
+    const int file_handle = _open_osfhandle((intptr_t)object_handle, _O_BINARY);
+    *file_descriptor      = _fdopen(file_handle, mode);
+    if (*file_descriptor == nullptr)
+    {
+        CloseHandle(object_handle);
+        return GetLastError();
+    }
+
+    return 0;
 #else
     RMT_UNUSED(prevent_inheritance);
-#endif
+    RMT_UNUSED(is_shareable);
+
+    errno_t error_no = fopen_s(file_descriptor, file_name, mode);
     return error_no;
+#endif
 }
 
 /// @brief Determine if the trace file is an RGD crash dump.
@@ -137,7 +186,44 @@ static bool CopyTraceFile(const char* existing_file_path, const char* new_file_p
 static bool MoveTraceFile(const char* existing_file_path, const char* new_file_path)
 {
 #ifdef _WIN32
-    return MoveFileEx(existing_file_path, new_file_path, MOVEFILE_REPLACE_EXISTING);
+    // The Windows MoveFileEx() API function is not used here because it requires
+    // the destination file to be opened in exclusive mode.  Otherwise, MoveFileEx() will fail
+    // with a sharing violation error.  Instead, the destination file is manually opened and
+    // the source file is copied to it.
+
+    // Open the source file for reading.
+    std::ifstream source_file(existing_file_path, std::ios::binary);
+    if (!source_file)
+    {
+        return false;  // Failed to open the source file.
+    }
+
+    // Open the shared destination file for writing with shared read/write access.
+    std::ofstream destination_file(new_file_path, std::ios::binary);
+    if (!destination_file)
+    {
+        return false;  // Failed to open the destination file.
+    }
+
+    // Copy the contents of the source file to the destination file.
+    destination_file << source_file.rdbuf();
+
+    if (!destination_file.good())
+    {
+        return false;  // Failed to copy the file contents.
+    }
+
+    // Close the file handles.
+    source_file.close();
+    destination_file.close();
+
+    // Delete the source file.
+    if (std::remove(existing_file_path) != 0)
+    {
+        return false;  // Failed to delete the source file.
+    }
+
+    return true;  // File moved successfully.
 #else
     bool result = false;
     if (rename(existing_file_path, new_file_path) == 0)
@@ -738,6 +824,8 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     RMT_UNUSED(data_set);
 
+    const bool enable_aliased_resource_usage_sizes = out_snapshot->resource_list.enable_aliased_resource_usage_sizes;
+
     switch (current_token->type)
     {
     case kRmtTokenTypeVirtualFree:
@@ -746,7 +834,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         RmtErrorCode                result             = RmtVirtualAllocationListGetAllocationForAddress(
             &(out_snapshot->virtual_allocation_list), current_token->virtual_free_token.virtual_address, &virtual_allocation);
         // Remove the virtual allocation if it is being tracked and a virtual allocation could be found.
-        if ((result == kRmtOk) && (out_snapshot->resource_list.enable_aliased_resource_usage_sizes))
+        if ((result == kRmtOk) && (enable_aliased_resource_usage_sizes))
         {
             // Update memory sizes grouped by resource usage types taking into account overlapped aliased resources.
             RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
@@ -881,7 +969,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                                                                    RmtOwnerType::kRmtOwnerTypeClientDriver,
                                                                    allocation_identifier);
 
-                if (out_snapshot->resource_list.enable_aliased_resource_usage_sizes)
+                if (enable_aliased_resource_usage_sizes)
                 {
                     RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
                     RMT_ASSERT(memory_aliasing_calculator != nullptr);
@@ -1001,7 +1089,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
-        if (out_snapshot->resource_list.enable_aliased_resource_usage_sizes)
+        if (enable_aliased_resource_usage_sizes)
         {
             // Track virtual allocation for aliased resource size calculation.
             RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
@@ -1026,7 +1114,38 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 RMT_ASSERT(error_code == kRmtOk);
                 if (resource != nullptr)
                 {
-                    resource->buffer.usage_flags = static_cast<uint32_t>(current_token->resource_update_token.after);
+                    const RmtResourceUsageType old_usage_type = RmtResourceGetUsageType(resource);
+                    resource->buffer.usage_flags              = static_cast<uint32_t>(current_token->resource_update_token.after);
+                    const RmtResourceUsageType new_usage_type = RmtResourceGetUsageType(resource);
+
+                    // Decrease the resource usage count for the old usage type.
+                    out_snapshot->resource_list.resource_usage_count[old_usage_type]--;
+
+                    // Increase the resource usage count for the new usage type.
+                    out_snapshot->resource_list.resource_usage_count[new_usage_type]++;
+
+                    if (resource->bound_allocation != nullptr)
+                    {
+                        // Update the aliased resource usage sizes.
+                        if ((enable_aliased_resource_usage_sizes) && (old_usage_type != RmtResourceUsageType::kRmtResourceUsageTypeHeap))
+                        {
+                            RmtMemoryAliasingCalculator* memory_aliasing_calculator = RmtMemoryAliasingCalculatorInstance();
+                            RMT_ASSERT(memory_aliasing_calculator);
+                            Allocation* aliased_resource_allocation =
+                                memory_aliasing_calculator->FindAllocation(resource->bound_allocation->allocation_identifier);
+
+                            if (aliased_resource_allocation != nullptr)
+                            {
+                                aliased_resource_allocation->DestroyResource(
+                                    resource->address - resource->bound_allocation->base_address, resource->size_in_bytes, old_usage_type);
+                                UpdateTotalResourceUsageAliasedSize(&(out_snapshot->resource_list), memory_aliasing_calculator);
+
+                                aliased_resource_allocation->CreateResource(
+                                    resource->address - resource->bound_allocation->base_address, resource->size_in_bytes, new_usage_type);
+                                UpdateTotalResourceUsageAliasedSize(&(out_snapshot->resource_list), memory_aliasing_calculator);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1111,8 +1230,10 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
     {
         bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
         RMT_ASSERT(success);
-        // Note: MoveTraceFile() may fail if there is a second instance of RMV with same trace
-        // file opened.  The second instance will open exclusively in read only mode.
+        if (success)
+        {
+            result = kRmtOk;
+        }
     }
     else
     {
@@ -1142,8 +1263,9 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
         }
         else
         {
-            data_set->file_handle = NULL;
-            errno_t error_no      = OpenFile((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+", true);
+            data_set->file_handle        = NULL;
+            const bool    shareable_file = data_set->flags.read_only;
+            const errno_t error_no       = OpenFile((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+", true, shareable_file);
 
             RMT_ASSERT(data_set->file_handle);
             RMT_ASSERT(error_no == 0);
@@ -1166,6 +1288,9 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     RMT_RETURN_ON_ERROR(path, kRmtErrorInvalidPointer);
     RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
     RmtErrorCode error_code = kRmtOk;
+
+    // Initialize the Driver Overrides string.
+    data_set->driver_overrides_json_text = nullptr;
 
     // copy the path
     const size_t path_length = strlen(path);
@@ -1206,17 +1331,31 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     const char* file_access_mode = "rb+";
     const char* trace_file       = data_set->temporary_file_path;
 
+    bool shareable_file = false;
+    // The shareable_file flag is used to indicate whether the trace should be opened in exclusive mode
+    // or shared mode.  The first instance of RMV opening a trace file will make a backup copy (.bak extension)
+    // and open in exclusive mode.  Snapshot modifications are committed to the original .rmv file.  Subsequent
+    // instances of RMV opening the same trace file will first try to open the .bak file with write access, but
+    // will fail since the file is opened in exclusive mode by the first instance.  The fallback is to open the
+    // original .rmv file in shared mode with the read only flag set (i.e., snapshot modifications are not saved).
+    // Since the .rmv file for subsequent instances of RMV are opened in shared mode, the first instance is still
+    // able to commit snapshot modifications.
+
     // If the trace file is a standard RMV trace and it doesn't have the read-only attribute set, do an additional check here
     // to see if another instance of RMV already has the file open (this would be the .bak file).
     if (!data_set->flags.read_only)
     {
         // Determine if the back up file or original file should be opened. If the backup file can't be opened with write privileges
-        // (because another RMV instance already has opened it), set the read only flag and attempt to open the original file in read only mode.
-        error_no = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true);
+        // (because another RMV instance already has opened it in exclusive access mode), set the read only flag and attempt to open
+        // the original file in shared, read only mode.
+        error_no = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true, shareable_file);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
             // Set the read only flag so that opening the original file will be attempted.
             data_set->flags.read_only = true;
+
+            // Set the shareable file flag so that the first instance will still be able to update snapshot changes.
+            shareable_file = true;
         }
     }
 
@@ -1225,7 +1364,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         // File is read-only.  Attempt to just read the original rmv trace file.
         file_access_mode = "rb";
         trace_file       = data_set->file_path;
-        error_no         = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true);
+        error_no         = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true, shareable_file);
         if ((data_set->file_handle == nullptr) || error_no != 0)
         {
             error_code = kRmtErrorFileNotOpen;
@@ -1252,7 +1391,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         if (error_code != kRmtOk)
         {
             // Loading as an RDF file failed, attempt to open the trace file using the legacy format.
-            error_no = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true);
+            error_no = OpenFile((FILE**)&data_set->file_handle, trace_file, file_access_mode, true, shareable_file);
             if ((data_set->file_handle != nullptr) && (error_no == 0))
             {
                 error_code = kRmtOk;
@@ -1266,9 +1405,16 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
             {
                 // Get the size of the file.
                 const size_t current_stream_offset = ftell((FILE*)data_set->file_handle);
-                fseek((FILE*)data_set->file_handle, 0L, SEEK_END);
+                if (fseek((FILE*)data_set->file_handle, 0L, SEEK_END) != 0)
+                {
+                    RMT_ASSERT(errno == 0);
+                }
                 data_set->file_size_in_bytes = ftell((FILE*)data_set->file_handle);
-                fseek((FILE*)data_set->file_handle, (int32_t)current_stream_offset, SEEK_SET);
+
+                if (fseek((FILE*)data_set->file_handle, (int32_t)current_stream_offset, SEEK_SET))
+                {
+                    RMT_ASSERT(errno == 0);
+                }
 
                 // Check that the file is large enough to at least contain the RMT file header.
                 if (data_set->file_size_in_bytes < sizeof(RmtFileHeader))
@@ -1364,6 +1510,10 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
         data_set->virtual_allocation_list.allocation_details[i].unbound_memory_region_count = 0;
     }
     data_set->virtual_allocation_list.allocation_count = 0;
+
+    // Delete the Driver Overrides data if it exists.
+    delete data_set->driver_overrides_json_text;
+    data_set->driver_overrides_json_text = nullptr;
 
     RmtResourceUserDataCleanup();
     return kRmtOk;
@@ -2449,4 +2599,39 @@ bool RmtDataSetIsBackgroundTaskCancelled(const RmtDataSet* data_set)
     }
 
     return result;
+}
+
+RmtErrorCode RmtDataSetCopyDriverOverridesString(RmtDataSet* data_set, const char* driver_overrides_string, size_t length)
+{
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(driver_overrides_string, kRmtErrorInvalidPointer);
+    RmtErrorCode result = kRmtOk;
+
+    delete data_set->driver_overrides_json_text;
+
+    if ((driver_overrides_string == nullptr) || (length == 0))
+    {
+        data_set->driver_overrides_json_text = nullptr;
+    }
+    else
+    {
+        data_set->driver_overrides_json_text = new (std::nothrow) char[length + 1];
+        if (data_set->driver_overrides_json_text != nullptr)
+        {
+            memcpy(data_set->driver_overrides_json_text, driver_overrides_string, length);
+            data_set->driver_overrides_json_text[length] = '\0';
+        }
+        else
+        {
+            result = kRmtErrorOutOfMemory;
+        }
+    }
+
+    return result;
+}
+
+char* RmtDataSetGetDriverOverridesString(const RmtDataSet* data_set)
+{
+    RMT_RETURN_ON_ERROR(data_set, nullptr);
+    return data_set->driver_overrides_json_text;
 }

@@ -45,7 +45,6 @@ ENDIF(UNIX)
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
 
-
 set( SOURCES
     "main.cpp"
     "managers/load_animation_manager.cpp"
@@ -290,6 +289,8 @@ set( SOURCES
     "views/timeline/timeline_pane.cpp"
     "views/timeline/timeline_pane.ui"
     "resources.qrc"
+    "dark_mode_stylesheet.qss"
+    "light_mode_stylesheet.qss"
     "stylesheet.qss"
     ${UPDATECHECKAPI_SRC}
     ${UPDATECHECKAPI_INC}
@@ -303,7 +304,6 @@ set( WINDOWS_SOURCES
     "windows/rmv.rc"
     "windows/rmv_icon.ico"
 )
-
 
 # Filter out the UI files and get the list of generated files
 set(UI_FILES ${SOURCES})
@@ -396,7 +396,6 @@ IF(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
-
 
     # Add the Debug-Only custom commands.
     # This functionality requires CMake 3.8 or higher.

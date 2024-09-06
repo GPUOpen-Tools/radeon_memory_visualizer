@@ -7,6 +7,8 @@
 
 #include "views/snapshot/heap_overview_heap_layout.h"
 
+#include "qt_common/utils/qt_util.h"
+
 #include "rmt_print.h"
 
 #include "managers/message_manager.h"
@@ -27,10 +29,6 @@ HeapOverviewHeapLayout::HeapOverviewHeapLayout(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    QPalette donut_palette = ui_->resource_donut_->palette();
-    donut_palette.setColor(QPalette::ColorRole::Window, Qt::white);
-    ui_->resource_donut_->setPalette(donut_palette);
-
     // Set up the resource legends.
     resource_legends_views_[0] = ui_->legends_resource_1_;
     resource_legends_views_[1] = ui_->legends_resource_2_;
@@ -38,6 +36,13 @@ HeapOverviewHeapLayout::HeapOverviewHeapLayout(QWidget* parent)
     resource_legends_views_[3] = ui_->legends_resource_4_;
     resource_legends_views_[4] = ui_->legends_resource_5_;
     resource_legends_views_[5] = ui_->legends_resource_6_;
+
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->warning_icon_->setPixmap(QPixmap(QString::fromUtf8(":/Resources/assets/third_party/ionicons/warning_white.svg")));
+    }
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &HeapOverviewHeapLayout::OnColorThemeUpdated);
 
     for (int i = 0; i < kNumResourceLegends; i++)
     {
@@ -209,4 +214,16 @@ void HeapOverviewHeapLayout::Update()
     ui_->bar_total_size_->update();
 
     ui_->donut_widget_->update();
+}
+
+void HeapOverviewHeapLayout::OnColorThemeUpdated()
+{
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->warning_icon_->setPixmap(QPixmap(QString::fromUtf8(":/Resources/assets/third_party/ionicons/warning_white.svg")));
+    }
+    else
+    {
+        ui_->warning_icon_->setPixmap(QPixmap(QString::fromUtf8(":/Resources/assets/third_party/ionicons/warning.svg")));
+    }
 }

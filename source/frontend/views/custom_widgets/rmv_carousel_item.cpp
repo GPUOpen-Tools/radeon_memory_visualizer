@@ -45,14 +45,15 @@ void RMVCarouselItem::DrawCarouselBaseComponents(QPainter* painter, const QStrin
     widget_height = widget_height;
 
     painter->setPen(Qt::NoPen);
-    painter->setBrush(kCarouselBaseColor);
+
+    painter->setBrush(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().ruler_background_color);
     painter->drawRect(0, 0, widget_width, widget_height);
 
     QFont font;
     font.setPixelSize(15);
     font.setBold(true);
     painter->setFont(font);
-    painter->setPen(Qt::black);
+    painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
     painter->drawText(
         10, 20, title + ((config_.data_type == kCarouselDataTypeDelta) ? " delta" : ""));
 }
@@ -82,7 +83,7 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
                                                         bool           show_summary) const
 {
     QColor fill_color = bar_color;
-    QColor text_color = Qt::black;
+    QColor text_color = QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color;
 
     int   origin    = 0;
     float bar_scale = 1.0;
@@ -123,7 +124,7 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
         int title_font_size = 12;
         font.setBold(false);
         font.setPixelSize(title_font_size);
-        painter->setPen(Qt::black);
+        painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
         painter->setFont(font);
         painter->drawText(x_pos, y_pos - title_font_size, bar_title);
     }
@@ -156,7 +157,7 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
 
     // Paint the bar background in white.
     painter->setPen(Qt::NoPen);
-    painter->setBrush(Qt::white);
+    painter->setBrush(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().window_background_color);
     painter->drawRect(x_pos, y_pos, bar_length, bar_width);
 
     // Paint the bar.

@@ -40,23 +40,13 @@ public slots:
     /// Update and save the settings.
     void CheckForUpdatesOnStartupStateChanged();
 
+    /// @brief Slot to handle what happens when the Driver Overrides notification check box changes.
+    ///
+    /// @param checked The new state of the check box.
+    void DriverOverridesAllowNotificationsChanged(bool checked);
+
     /// @brief Slot to handle what happens when the time units combo box has changed.
     void TimeUnitsChanged();
-
-    /// @brief Slot to handle what happens when the heap alloc uniqueness box changes.
-    ///
-    /// Update and save the settings.
-    void HeapUniquenessSelectionStateChanged();
-
-    /// @brief Slot to handle what happens when the block alloc uniqueness box changes.
-    ///
-    /// Update and save the settings.
-    void AllocationUniquenessSelectionStateChanged();
-
-    /// @brief Slot to handle what happens when the offset alloc uniqueness box changes.
-    ///
-    /// Update and save the settings.
-    void OffsetUniquenessSelectionStateChanged();
 
 private:
     /// @brief Update the time unit combo box.

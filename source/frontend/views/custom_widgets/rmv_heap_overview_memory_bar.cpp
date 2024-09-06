@@ -103,7 +103,6 @@ void RMVHeapOverviewMemoryBar::paintEvent(QPaintEvent* event)
         // If bar is < 50% of the max, display the text string after the bar. Otherwise display it over the bar.
         if (((size_ * 100) / max_size_) < 50)
         {
-            painter.setPen(Qt::black);
             int   offset = width + 3;
             QRect text_rect(offset, 0, w - offset, h);
             painter.drawText(text_rect, Qt::AlignLeft | Qt::AlignVCenter, rmv::string_util::LocalizedValueMemory(size_, false, false));

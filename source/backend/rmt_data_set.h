@@ -108,7 +108,8 @@ typedef struct RmtDataSet
     uint32_t                active_gpu;              ///< The active GPU used by the application process that was captured.
     RmtSnapshotWriterHandle snapshot_writer_handle;  ///< The object responsible for writing snapshots to the trace file.
 
-    struct RmtDataSetFlags flags;  ///< The dataset flags, described above.
+    struct RmtDataSetFlags flags;                       ///< The dataset flags, described above.
+    char*                  driver_overrides_json_text;  ///< The Driver Overrides JSON text.
 
 } RmtDataSet;
 
@@ -286,6 +287,25 @@ bool RmtDataSetIsBackgroundTaskCancelled(const RmtDataSet* data_set);
 ///
 void RmtDataSetCancelBackgroundTask(RmtDataSet* data_set);
 
+/// @brief Allocate memory and copy the Driver Overrides JSON string to the data set.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  driver_overrides_string                    The JSON text to copy.
+/// @param [in]  length                                     The length of the JSON text to copy.
+///
+/// @returns
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> or <c><i>driver_overrides_string</i></c> being <c><i>NULL</i></c>.
+/// kRmtErrorOutOfMemory                        The operation failed due to lack of free memory.
+RmtErrorCode RmtDataSetCopyDriverOverridesString(RmtDataSet* data_set, const char* driver_overrides_string, size_t length);
+
+/// @brief  Get the Driver Overrides JSON string from the data set.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+///
+/// @returns                                    The Driver Overrides JSON text or <c><i>NULL</i></c> if the <c><i>data_set</i></c> is <c><i>NULL</i></c>.
+char* RmtDataSetGetDriverOverridesString(const RmtDataSet* data_set);
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus

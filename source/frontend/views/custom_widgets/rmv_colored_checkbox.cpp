@@ -59,14 +59,14 @@ void RMVColoredCheckbox::paintEvent(QPaintEvent* event)
     const qreal half_height   = switch_height / 2;
     const qreal switch_radius = half_height;
 
-    const qreal space_y_coord = switch_height * 0.1;
-    const qreal space_x_coord = switch_height * 0.1;
-    const qreal space_height  = switch_height * 0.8;
-    const qreal space_width   = switch_width * 0.9;
+    const qreal space_y_coord = switch_height * 0.05;
+    const qreal space_x_coord = switch_height * 0.05;
+    const qreal space_height  = switch_height * 0.9;
+    const qreal space_width   = switch_width * 0.95;
     const qreal space_radius  = space_height / 2;
 
-    const qreal button_diameter    = switch_height * 0.6;
-    const qreal button_y_coord     = switch_height * 0.2;
+    const qreal button_diameter    = switch_height * 0.7;
+    const qreal button_y_coord     = switch_height * 0.15;
     const qreal button_x_coord_off = switch_height * 0.2;
     const qreal button_x_coord_on  = switch_width * 0.6;
 
@@ -116,24 +116,22 @@ void RMVColoredCheckbox::paintEvent(QPaintEvent* event)
         }
         else
         {
-            // Stencil the area to be painted.
-            painter.setBrush(Qt::black);
-            painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
-
-            painter.setCompositionMode(QPainter::CompositionMode_Plus);
+            const qreal width = switch_width - switch_height;
 
             // Paint top half of switch.
             painter.setBrush(primary_color_);
-            painter.drawRect(0, 0, switch_width, half_height);
+            painter.drawPie(0, 0, switch_height, switch_height, 90 * 16, 90 * 16);
+            painter.drawRect(half_height - 1, 0, width + 2, half_height);
+            painter.drawPie(width, 0, switch_height, switch_height, 0 * 16, 90 * 16);
 
             // Paint bottom half of switch.
             painter.setBrush(secondary_color_);
-            painter.drawRect(0, half_height, switch_width, ceil(half_height));
+            painter.drawPie(0, 0, switch_height, switch_height, 180 * 16, 90 * 16);
+            painter.drawRect(half_height - 1, half_height, width + 2, half_height);
+            painter.drawPie(width, 0, switch_height, switch_height, 270 * 16, 90 * 16);
         }
 
         // Draw white button in the middle.
-        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-
         painter.setBrush(Qt::white);
         const QRectF button_rect = QRectF(button_x_coord_on, button_y_coord, button_diameter, button_diameter);
         painter.drawEllipse(button_rect);
@@ -142,7 +140,7 @@ void RMVColoredCheckbox::paintEvent(QPaintEvent* event)
     qreal text_height = font_metrics.capHeight();
     qreal text_base   = half_height + (text_height / 2.0);
 
-    painter.setPen(Qt::black);
+    painter.setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
     painter.drawText(switch_width + scaled_padding, text_base, this->text());
 }
 

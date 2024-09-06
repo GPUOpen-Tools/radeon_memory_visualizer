@@ -9,6 +9,8 @@
 
 #include <QPainter>
 
+#include "qt_common/utils/qt_util.h"
+
 #include "util/rmv_util.h"
 
 static const int kBarTopOffset = 45;
@@ -46,7 +48,7 @@ void RMVCarouselAllocationSizes::paint(QPainter* painter, const QStyleOptionGrap
 
 void RMVCarouselAllocationSizes::DrawAllocationBar(QPainter* painter, int bar_width, int x_pos, int32_t value, const QString& label_string)
 {
-    QColor text_color = Qt::black;
+    QColor text_color = QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color;
     QColor fill_color = kDefaultCarouselBarColor;
 
     int   origin    = 0;
@@ -84,7 +86,7 @@ void RMVCarouselAllocationSizes::DrawAllocationBar(QPainter* painter, int bar_wi
 
     // Draw the bar.
     painter->setPen(Qt::NoPen);
-    painter->setBrush(Qt::white);
+    painter->setBrush(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().window_background_color);
     painter->drawRect(x_pos, bar_top, bar_length, bar_height);
 
     // Draw the data in the bar if data is valid.
@@ -105,7 +107,7 @@ void RMVCarouselAllocationSizes::DrawAllocationBar(QPainter* painter, int bar_wi
     QFont font = painter->font();
     font.setBold(false);
     font.setPixelSize(font_size);
-    painter->setPen(Qt::black);
+    painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
     painter->setFont(font);
     QFontMetricsF scaled_font_metrics = QFontMetrics(font);
 

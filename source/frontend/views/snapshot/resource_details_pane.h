@@ -82,6 +82,9 @@ private slots:
     /// Make sure the selected item (if there is one) is visible.
     void ScrollToSelectedEvent();
 
+    /// @brief Update the pane based on the color theme.
+    void OnColorThemeUpdated();
+
 private:
     /// @brief Helper function to set the maximum height of the timeline table so it only contains rows with valid data.
     inline void SetMaximumTimelineTableHeight()

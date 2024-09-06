@@ -7,6 +7,13 @@
 
 #include "views/settings/themes_and_colors_pane.h"
 
+#include <QDir>
+#include <QProcess>
+#include <QStyleHints>
+
+#include "qt_common/utils/qt_util.h"
+
+#include "managers/trace_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/rmv_util.h"
 #include "util/widget_util.h"
@@ -22,7 +29,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     // Set up buttons using RMVSettingID's as buttongroup id's.
     button_group_.addButton(ui_->button_snapshots_viewed_, kSettingThemesAndColorsSnapshotViewed);
@@ -73,6 +80,13 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     button_group_.addButton(ui_->button_commit_type_placed_, kSettingThemesAndColorsCommitTypePlaced);
     button_group_.addButton(ui_->button_commit_type_virtual_, kSettingThemesAndColorsCommitTypeVirtual);
 
+    ui_->color_theme_combo_box_->InitSingleSelect(this, kLightThemeOption, false, "Color Theme: ");
+    ui_->color_theme_combo_box_->AddItem(kLightThemeOption, kColorThemeTypeLight);
+    ui_->color_theme_combo_box_->AddItem(kDarkThemeOption, kColorThemeTypeDark);
+    ui_->color_theme_combo_box_->AddItem(kDetectOsOption, kColorThemeTypeCount);
+
+    ui_->color_theme_combo_box_->SetSelectedRow(rmv::RMVSettings::Get().GetColorTheme());
+
     // Slot/signal connection for various widgets.
     connect(ui_->color_widget_, &RMVColorPickerWidget::ColorSelected, this, &ThemesAndColorsPane::PickerColorSelected);
     connect(&button_group_, &QButtonGroup::idClicked, this, &ThemesAndColorsPane::ItemButtonClicked);
@@ -87,6 +101,11 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     connect(ui_->slider_color_red_, SIGNAL(valueChanged(int)), ui_->spin_box_color_red_, SLOT(setValue(int)));
     connect(ui_->slider_color_green_, SIGNAL(valueChanged(int)), ui_->spin_box_color_green_, SLOT(setValue(int)));
     connect(ui_->slider_color_blue_, SIGNAL(valueChanged(int)), ui_->spin_box_color_blue_, SLOT(setValue(int)));
+
+    connect(ui_->color_theme_combo_box_, &ArrowIconComboBox::SelectedItem, this, &ThemesAndColorsPane::ColorThemeOptionSelected);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, &ThemesAndColorsPane::OsColorSchemeChanged);
+#endif
 
     // Set up color picker.
     ui_->color_widget_->SetRowAndColumnCount(kPickerRows, kPickerColumns);
@@ -147,6 +166,193 @@ void ThemesAndColorsPane::ItemButtonClicked(int button_id)
     Q_UNUSED(button_id)
 
     Refresh();
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+void ThemesAndColorsPane::OsColorSchemeChanged(Qt::ColorScheme color_scheme)
+{
+    if (rmv::RMVSettings::Get().GetColorTheme() != kColorThemeTypeCount)
+    {
+        return;
+    }
+
+    if (color_scheme == Qt::ColorScheme::Unknown)
+    {
+        return;
+    }
+
+    ColorThemeType color_mode = kColorThemeTypeLight;
+    if (color_scheme == Qt::ColorScheme::Light)
+    {
+        color_mode = kColorThemeTypeLight;
+    }
+    else if (color_scheme == Qt::ColorScheme::Dark)
+    {
+        color_mode = kColorThemeTypeDark;
+    }
+
+    if (color_mode == QtCommon::QtUtils::ColorTheme::Get().GetColorTheme())
+    {
+        return;
+    }
+
+    QtCommon::QtUtils::ColorTheme::Get().SetColorTheme(color_mode);
+
+    qApp->setPalette(QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette());
+
+    // Load application stylesheet.
+    QFile style_sheet(rmv::resource::kStylesheet);
+    if (style_sheet.open(QFile::ReadOnly))
+    {
+        QString app_stylesheet = style_sheet.readAll();
+
+        if (color_mode == kColorThemeTypeDark)
+        {
+            QFile dark_style_sheet(rmv::resource::kDarkStylesheet);
+            if (dark_style_sheet.open(QFile::ReadOnly))
+            {
+                app_stylesheet.append(dark_style_sheet.readAll());
+            }
+        }
+        else
+        {
+            QFile light_style_sheet(rmv::resource::kLightStylesheet);
+            if (light_style_sheet.open(QFile::ReadOnly))
+            {
+                app_stylesheet.append(light_style_sheet.readAll());
+            }
+        }
+
+        qApp->setStyleSheet(app_stylesheet);
+    }
+
+    rmv::RMVSettings::Get().SaveSettings();
+
+    emit QtCommon::QtUtils::ColorTheme::Get().ColorThemeUpdated();
+}
+#endif
+
+void ThemesAndColorsPane::ColorThemeOptionSelected(QListWidgetItem* color_theme_option)
+{
+    ColorThemeType selected_color_mode = static_cast<ColorThemeType>(color_theme_option->data(Qt::UserRole).toInt());
+
+    // If the setting was not changed, return early.
+    if (selected_color_mode == rmv::RMVSettings::Get().GetColorTheme())
+    {
+        return;
+    }
+
+    ColorThemeType color_mode = selected_color_mode;
+
+    if (selected_color_mode == kColorThemeTypeCount)
+    {
+        color_mode = QtCommon::QtUtils::DetectOsSetting();
+    }
+
+    // If the setting was changed, but won't result in a color theme change, apply the setting then return.
+    if (color_mode == QtCommon::QtUtils::ColorTheme::Get().GetColorTheme())
+    {
+        rmv::RMVSettings::Get().SetColorTheme(selected_color_mode);
+        return;
+    }
+
+    QString color_theme_changed_title = "Color Theme Changed. Restart Application?";
+    QString color_theme_changed_text =
+        "Not all UI elements will update to reflect the change in color theme until the application has restarted. Restart Application?";
+
+    int ret = QtCommon::QtUtils::ShowMessageBox(
+        this, QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Question, color_theme_changed_title, color_theme_changed_text);
+
+    if (ret == QMessageBox::Cancel)
+    {
+        for (int i = 0; i <= kColorThemeTypeCount; i++)
+        {
+            if (i == rmv::RMVSettings::Get().GetColorTheme())
+            {
+                ui_->color_theme_combo_box_->SetSelectedRow(i);
+            }
+        }
+    }
+    else
+    {
+        rmv::RMVSettings::Get().SetColorTheme(selected_color_mode);
+
+        QtCommon::QtUtils::ColorTheme::Get().SetColorTheme(color_mode);
+
+        if (ret == QMessageBox::Yes)
+        {
+            QString path        = rmv::TraceManager::Get().GetTracePath();
+            QString native_path = QDir::toNativeSeparators(path);
+
+            // Fire up a new instance if desired trace is different than current.
+            // Attempt to open a new instance of RRA using the selected trace file as an argument.
+            const QString executable_name = qApp->applicationDirPath() + rmv::TraceManager::Get().GetDefaultExeName();
+
+            // If the executable does not exist, put up a message box.
+            QFileInfo file(executable_name);
+            if (file.exists())
+            {
+                // Close any trace currently opened to save any edits.
+                emit rmv::TraceManager::Get().TraceClosed();
+
+                QProcess* process = new QProcess(this);
+                if (process != nullptr)
+                {
+                    QStringList args;
+                    args << path;
+
+                    bool process_result = process->startDetached(executable_name, args);
+
+                    if (!process_result)
+                    {
+                        // The selected trace file is missing on the disk so display a message box stating so.
+                        const QString text = rmv::text::kOpenRecentTraceStart + file.fileName() + rmv::text::kOpenRecentTraceEnd;
+                        QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
+                    }
+                }
+            }
+            else
+            {
+                // If the executable does not exist, put up a message box.
+                const QString text = executable_name + " does not exist";
+                QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rmv::text::kOpenRecentTraceTitle, text);
+            }
+
+            qApp->quit();
+        }
+        else if (ret == QMessageBox::No)
+        {
+            qApp->setPalette(QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette());
+
+            // Load application stylesheet.
+            QFile style_sheet(rmv::resource::kStylesheet);
+            if (style_sheet.open(QFile::ReadOnly))
+            {
+                QString app_stylesheet = style_sheet.readAll();
+
+                if (color_mode == kColorThemeTypeDark)
+                {
+                    QFile dark_style_sheet(rmv::resource::kDarkStylesheet);
+                    if (dark_style_sheet.open(QFile::ReadOnly))
+                    {
+                        app_stylesheet.append(dark_style_sheet.readAll());
+                    }
+                }
+                else
+                {
+                    QFile light_style_sheet(rmv::resource::kLightStylesheet);
+                    if (light_style_sheet.open(QFile::ReadOnly))
+                    {
+                        app_stylesheet.append(light_style_sheet.readAll());
+                    }
+                }
+
+                qApp->setStyleSheet(app_stylesheet);
+            }
+
+            emit QtCommon::QtUtils::ColorTheme::Get().ColorThemeUpdated();
+        }
+    }
 }
 
 void ThemesAndColorsPane::DefaultSettingsButtonClicked()

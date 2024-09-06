@@ -12,7 +12,7 @@ project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 10)
+set(RMV_MINOR_VERSION 11)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()

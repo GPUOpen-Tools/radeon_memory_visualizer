@@ -53,7 +53,7 @@ TimelinePane::TimelinePane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    rmv::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     // Fix up the ratios of the 2 splitter regions.
     ui_->splitter_->setStretchFactor(0, 5);

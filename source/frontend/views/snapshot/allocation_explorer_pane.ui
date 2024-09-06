@@ -214,7 +214,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="RMVColoredCheckbox" name="aliased_resource_checkbox_">
+                   <widget class="CheckBoxWidget" name="aliased_resource_checkbox_">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                       <horstretch>0</horstretch>
@@ -530,9 +530,9 @@
    <header>qt_common/custom_widgets/text_search_widget.h</header>
   </customwidget>
   <customwidget>
-   <class>RMVColoredCheckbox</class>
+   <class>CheckBoxWidget</class>
    <extends>QCheckBox</extends>
-   <header>views/custom_widgets/rmv_colored_checkbox.h</header>
+   <header>qt_common/custom_widgets/check_box_widget.h</header>
   </customwidget>
   <customwidget>
    <class>SnapshotStartPane</class>

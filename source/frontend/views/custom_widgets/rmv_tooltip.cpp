@@ -14,10 +14,9 @@
 
 #include "views/custom_widgets/rmv_tooltip.h"
 
-#include "views/custom_widgets/rmv_color_swatch_tooltip_item.h"
+#include "qt_common/utils/qt_util.h"
 
-// Slightly transparent white background color for the custom tooltip.
-static const QColor kTooltipBackgroundColor = QColor(255, 255, 255, 230);
+#include "views/custom_widgets/rmv_color_swatch_tooltip_item.h"
 
 // The width of the border around the text in the tooltip.
 static const double kTooltipBorderWidth = 3.0;
@@ -54,7 +53,8 @@ void RMVTooltip::HideToolTip()
 void RMVTooltip::CreateToolTip(QGraphicsScene* scene, bool color_swatch)
 {
     // Note: The scene takes ownership of these objects so no need to delete.
-    tooltip_background_ = scene->addRect(QRect(), QPen(), kTooltipBackgroundColor);
+    tooltip_background_ = scene->addRect(
+        QRect(), QPen(), QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().quick_link_button_background_color);
     if (color_swatch)
     {
         tooltip_contents_ = new RMVColorSwatchTooltipItem();
@@ -68,6 +68,11 @@ void RMVTooltip::CreateToolTip(QGraphicsScene* scene, bool color_swatch)
     // Make sure the tooltip is on top of everything else in the scene.
     tooltip_background_->setZValue(1.0);
     tooltip_contents_->setZValue(1.0);
+
+    QBrush tooltip_brush      = tooltip_contents_->brush();
+    QColor tooltip_text_color = QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color;
+    tooltip_brush.setColor(tooltip_text_color);
+    tooltip_contents_->setBrush(tooltip_brush);
 
     // Don't scale the tooltip's border.
     auto pen = tooltip_background_->pen();
@@ -108,6 +113,14 @@ void RMVTooltip::UpdateToolTip(const QPointF& mouse_pos, const QPointF& scene_po
     Q_ASSERT(tooltip_background_);
     Q_ASSERT(view_width > 0);
     Q_ASSERT(view_height > 0);
+
+    QBrush tooltip_background_brush = tooltip_contents_->brush();
+    tooltip_background_brush.setColor(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().quick_link_button_background_color);
+    tooltip_background_->setBrush(tooltip_background_brush);
+
+    QBrush tooltip_brush = tooltip_contents_->brush();
+    tooltip_brush.setColor(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
+    tooltip_contents_->setBrush(tooltip_brush);
 
     tooltip_background_->show();
     tooltip_contents_->show();

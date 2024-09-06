@@ -12,6 +12,7 @@
 #include <QMimeData>
 #include <QScreen>
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
 
@@ -41,9 +42,12 @@
 #include "views/timeline/device_configuration_pane.h"
 #include "settings/rmv_settings.h"
 #include "settings/rmv_geometry_settings.h"
+#include "util/constants.h"
 #include "util/time_util.h"
 #include "util/version.h"
 #include "util/widget_util.h"
+
+using namespace driver_overrides;
 
 // Indices for the COMPARE stacked widget. These need to match the widget order
 // in the .ui file.
@@ -72,14 +76,61 @@ MainWindow::MainWindow(QWidget* parent)
 {
     const bool loaded_settings = rmv::RMVSettings::Get().LoadSettings();
 
+     ColorThemeType color_mode = static_cast<ColorThemeType>(rmv::RMVSettings::Get().GetColorTheme());
+
+    if (color_mode == kColorThemeTypeCount)
+    {
+        color_mode = QtCommon::QtUtils::DetectOsSetting();
+    }
+
+    QtCommon::QtUtils::ColorTheme::Get().SetColorTheme(static_cast<ColorThemeType>(color_mode));
+
+    qApp->setPalette(QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette());
+
+    // Load application stylesheet.
+    QFile style_sheet(rmv::resource::kStylesheet);
+
+    if (style_sheet.open(QFile::ReadOnly))
+    {
+        QString app_stylesheet = style_sheet.readAll();
+
+        if (color_mode == kColorThemeTypeDark)
+        {
+            QFile dark_style_sheet(rmv::resource::kDarkStylesheet);
+            if (dark_style_sheet.open(QFile::ReadOnly))
+            {
+                app_stylesheet.append(dark_style_sheet.readAll());
+            }
+        }
+        else
+        {
+            QFile light_style_sheet(rmv::resource::kLightStylesheet);
+            if (light_style_sheet.open(QFile::ReadOnly))
+            {
+                app_stylesheet.append(light_style_sheet.readAll());
+            }
+        }
+
+        qApp->setStyleSheet(app_stylesheet);
+    }
+
     ui_->setupUi(this);
+
+    // Initialize the Driver Overrides model.
+    DriverOverridesModel::GetInstance()->SetApplicationDetails(rmv::kRmvApplicationFileTypeString);
+
+    // Set up the links for the Driver Overrides notification banner.
+    connect(
+        ui_->driver_overrides_notification_banner_, &DriverOverridesNotificationBanner::ShowDetailsClicked, this, &MainWindow::OpenDriverOverridesDetailsLink);
+
+    connect(ui_->driver_overrides_notification_banner_,
+            &DriverOverridesNotificationBanner::DontShowAgainRequested,
+            this,
+            &MainWindow::DontShowDriverOverridesNotification);
 
     setWindowTitle(GetTitleBarString());
     setWindowIcon(QIcon(":/Resources/assets/rmv_icon_32x32.png"));
     setAcceptDrops(true);
-
-    // Set white background for this pane.
-    rmv::widget_util::SetWidgetBackgroundColor(this, Qt::white);
 
     // Setup window sizes and settings.
     SetupWindowRects(loaded_settings);
@@ -196,9 +247,6 @@ void MainWindow::ResizeNavigationLists()
 
 void MainWindow::SetupTabBar()
 {
-    // Set grey background for main tab bar background.
-    rmv::widget_util::SetWidgetBackgroundColor(ui_->main_tab_widget_, QColor(51, 51, 51));
-
     // Set the mouse cursor to pointing hand cursor for all of the tabs.
     QList<QTabBar*> tab_bar = ui_->main_tab_widget_->findChildren<QTabBar*>();
     foreach (QTabBar* item, tab_bar)
@@ -431,6 +479,27 @@ void MainWindow::OpenTrace()
     SetupRecentTracesMenu();
 
     UpdateTitlebar();
+
+    rmv::TraceManager& trace_manager = rmv::TraceManager::Get();
+    if (trace_manager.DataSetValid())
+    {
+        const RmtDataSet* data_set = trace_manager.GetDataSet();
+        if (data_set->driver_overrides_json_text != nullptr)
+        {
+            DriverOverridesModel::GetInstance()->ImportFromJsonText(RmtDataSetGetDriverOverridesString(data_set));
+        }
+        else
+        {
+            // Remove any old settings from the Driver Overrides model.
+            DriverOverridesModel::GetInstance()->Reset();
+        }
+    }
+}
+
+void MainWindow::OpenDriverOverridesDetailsLink()
+{
+    // Open the driver experiments details link.
+    ViewPane(rmv::kPaneIdTimelineDeviceConfiguration);
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
@@ -494,6 +563,9 @@ void MainWindow::ResetUI()
 
     UpdateTitlebar();
     pane_manager_.Reset();
+
+    // Remove any old settings from the Driver Overrides model.
+    DriverOverridesModel::GetInstance()->Reset();
 }
 
 void MainWindow::OpenHelp()
@@ -893,4 +965,9 @@ void MainWindow::BroadcastChangeColoring()
     ui_->snapshot_page_1_->ChangeColoring();
     ui_->compare_snapshots_not_loaded_->ChangeColoring();
     ui_->compare_snapshots_empty_->ChangeColoring();
+}
+
+void MainWindow::DontShowDriverOverridesNotification()
+{
+    rmv::RMVSettings::Get().SetDriverOverridesAllowNotifications(false);
 }

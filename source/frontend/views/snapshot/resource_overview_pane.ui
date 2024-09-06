@@ -527,7 +527,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="RMVColoredCheckbox" name="resource_details_checkbox_">
+               <widget class="CheckBoxWidget" name="resource_details_checkbox_">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -579,9 +579,9 @@
    <header>views/custom_widgets/rmv_tree_map_view.h</header>
   </customwidget>
   <customwidget>
-   <class>RMVColoredCheckbox</class>
+   <class>CheckBoxWidget</class>
    <extends>QCheckBox</extends>
-   <header>views/custom_widgets/rmv_colored_checkbox.h</header>
+   <header>qt_common/custom_widgets/check_box_widget.h</header>
   </customwidget>
   <customwidget>
    <class>SnapshotStartPane</class>

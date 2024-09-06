@@ -24,6 +24,8 @@ RMVSnapshotTimeline::RMVSnapshotTimeline(QWidget* parent)
     : TimelineView(parent)
     , timeline_graph_(nullptr)
 {
+    setBackgroundBrush(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_background_color);
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &RMVSnapshotTimeline::OnColorThemeUpdated);
 }
 
 RMVSnapshotTimeline::~RMVSnapshotTimeline()
@@ -293,4 +295,10 @@ void RMVSnapshotTimeline::UpdateToolTip(const QPointF& mouse_pos)
             timeline_tooltip_.HideToolTip();
         }
     }
+}
+
+void RMVSnapshotTimeline::OnColorThemeUpdated()
+{
+    setBackgroundBrush(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_background_color);
+    UpdateScene();
 }

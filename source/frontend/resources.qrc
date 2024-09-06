@@ -1,12 +1,21 @@
 <RCC>
     <qresource prefix="/Resources">
         <file>../assets/amd_logo.svg</file>
+        <file>../assets/amd_logo_white.svg</file>
+        <file>../assets/arrow_gray_left.svg</file>
+        <file>../assets/arrow_gray_right.svg</file>
         <file>../assets/browse_back_normal.svg</file>
         <file>../assets/browse_back_pressed.svg</file>
         <file>../assets/browse_back_disabled.svg</file>
         <file>../assets/browse_fwd_normal.svg</file>
         <file>../assets/browse_fwd_pressed.svg</file>
         <file>../assets/browse_fwd_disabled.svg</file>
+        <file>../assets/checkbox_on_gray.svg</file>
+        <file>../assets/checkbox_off_gray.svg</file>
+        <file>../assets/checkbox_on.svg</file>
+        <file>../assets/checkbox_off.svg</file>
+        <file>../assets/PullDownOff_Gray.svg</file>
+        <file>../assets/PullDownOn_Gray.svg</file>
         <file>../assets/rmv_icon_32x32.png</file>
         <file>../assets/rmv_icon_48x48.png</file>
         <file>../assets/stop_128x128.png</file>
@@ -20,6 +29,9 @@
         <file>../assets/zoom_reset_disabled.svg</file>
         <file>../assets/third_party/ionicons/search_icon.png</file>
         <file>../assets/third_party/ionicons/warning.svg</file>
+        <file>../assets/third_party/ionicons/warning_white.svg</file>
+        <file>dark_mode_stylesheet.qss</file>
+        <file>light_mode_stylesheet.qss</file>
         <file>stylesheet.qss</file>
     </qresource>
 </RCC>

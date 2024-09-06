@@ -197,14 +197,15 @@ namespace rmv
     {
         override_units_ = false;
 
-        default_settings_[kSettingMainWindowGeometryData]          = {"WindowGeometryData", ""};
-        default_settings_[kSettingMainWindowWidth]                 = {"WindowWidth", "0"};
-        default_settings_[kSettingMainWindowHeight]                = {"WindowHeight", "0"};
-        default_settings_[kSettingMainWindowXpos]                  = {"WindowXPos", "100"};
-        default_settings_[kSettingMainWindowYpos]                  = {"WindowYPos", "100"};
-        default_settings_[kSettingLastFileOpenLocation]            = {"LastFileOpenLocation", ""};
-        default_settings_[kSettingGeneralCheckForUpdatesOnStartup] = {"CheckForUpdatesOnStartup", "False"};
-        default_settings_[kSettingGeneralTimeUnits]                = {"TimeUnits", rmv::text::kSettingsUnitsSeconds};
+        default_settings_[kSettingMainWindowGeometryData]                   = {"WindowGeometryData", ""};
+        default_settings_[kSettingMainWindowWidth]                          = {"WindowWidth", "0"};
+        default_settings_[kSettingMainWindowHeight]                         = {"WindowHeight", "0"};
+        default_settings_[kSettingMainWindowXpos]                           = {"WindowXPos", "100"};
+        default_settings_[kSettingMainWindowYpos]                           = {"WindowYPos", "100"};
+        default_settings_[kSettingLastFileOpenLocation]                     = {"LastFileOpenLocation", ""};
+        default_settings_[kSettingGeneralCheckForUpdatesOnStartup]          = {"CheckForUpdatesOnStartup", "False"};
+        default_settings_[kSettingGeneralTimeUnits]                         = {"TimeUnits", rmv::text::kSettingsUnitsSeconds};
+        default_settings_[kSettingGeneralDriverOverridesAllowNotifications] = {"DriverOverridesAllowNotifications", "True"};
 
         default_settings_[kSettingThemesAndColorsPalette] = {"ColorPalette",
                                                              "#FFFFBA02,#FFFF8B00,#FFF76210,#FFE17F35,#FFDA3B01,#FFEF6950,#FFD03438,#FFFF4343,"
@@ -233,6 +234,8 @@ namespace rmv
         default_settings_[kSettingThemesAndColorsResourceGpuEvent]         = {"ResourceGPUEventColor", "19"};
         default_settings_[kSettingThemesAndColorsResourceFreeSpace]        = {"ResourceFreeSpaceColor", "24"};
         default_settings_[kSettingThemesAndColorsResourceInternal]         = {"ResourceInternalColor", "31"};
+
+        default_settings_[kSettingThemesAndColorsColorThemeMode] = {"ColorThemeMode", "2"};
 
         default_settings_[kSettingThemesAndColorsDeltaIncrease] = {"DeltaIncreaseColor", "31"};
         default_settings_[kSettingThemesAndColorsDeltaDecrease] = {"DeltaDecreaseColor", "9"};
@@ -442,21 +445,9 @@ namespace rmv
         SaveSettings();
     }
 
-    void RMVSettings::SetAllocUniqunessHeap(const bool value)
+    void RMVSettings::SetDriverOverridesAllowNotifications(const bool value)
     {
-        SetBoolValue(kSettingGeneralAllocUniquenessHeap, value);
-        SaveSettings();
-    }
-
-    void RMVSettings::SetAllocUniqunessAllocation(const bool value)
-    {
-        SetBoolValue(kSettingGeneralAllocUniquenessAllocation, value);
-        SaveSettings();
-    }
-
-    void RMVSettings::SetAllocUniqunessOffset(const bool value)
-    {
-        SetBoolValue(kSettingGeneralAllocUniquenessOffset, value);
+        SetBoolValue(kSettingGeneralDriverOverridesAllowNotifications, value);
         SaveSettings();
     }
 
@@ -476,19 +467,20 @@ namespace rmv
         return GetBoolValue(kSettingGeneralCheckForUpdatesOnStartup);
     }
 
-    bool RMVSettings::GetAllocUniqunessHeap()
+    bool RMVSettings::GetDriverOverridesAllowNotifications()
     {
-        return GetBoolValue(kSettingGeneralAllocUniquenessHeap);
+        return GetBoolValue(kSettingGeneralDriverOverridesAllowNotifications);
     }
 
-    bool RMVSettings::GetAllocUniqunessAllocation()
+    int RMVSettings::GetColorTheme()
     {
-        return GetBoolValue(kSettingGeneralAllocUniquenessAllocation);
+        return GetIntValue(kSettingThemesAndColorsColorThemeMode);
     }
 
-    bool RMVSettings::GetAllocUniqunessOffset()
+    void RMVSettings::SetColorTheme(int value)
     {
-        return GetBoolValue(kSettingGeneralAllocUniquenessOffset);
+        SetIntValue(kSettingThemesAndColorsColorThemeMode, value);
+        SaveSettings();
     }
 
     const ColorPalette& RMVSettings::GetColorPalette() const
@@ -567,7 +559,7 @@ namespace rmv
         SetToDefaultValue(kSettingThemesAndColorsCommitTypeCommitted);
         SetToDefaultValue(kSettingThemesAndColorsCommitTypePlaced);
         SetToDefaultValue(kSettingThemesAndColorsCommitTypeVirtual);
-
+        SetToDefaultValue(kSettingGeneralDriverOverridesAllowNotifications);
         SaveSettings();
     }
 

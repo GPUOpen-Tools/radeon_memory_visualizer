@@ -69,6 +69,12 @@ public:
     void EnableActions(const bool enable);
 
 public slots:
+    /// @brief Open the System information pane.
+    void OpenDriverOverridesDetailsLink();
+
+    /// @brief Save the setting that prevents Driver Override notifications.
+    void DontShowDriverOverridesNotification();
+
     /// @brief Called when trace file finished loading.
     void OpenTrace();
 

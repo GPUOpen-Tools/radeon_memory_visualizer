@@ -33,9 +33,6 @@ WelcomePane::WelcomePane(QWidget* parent)
     constexpr int id = qRegisterMetaType<RmtErrorCode>();
     Q_UNUSED(id);
 
-    // Set white background for this pane.
-    rmv::widget_util::SetWidgetBackgroundColor(this, Qt::white);
-
     SetupFileList();
 
     // Set up the buttons.
@@ -176,7 +173,7 @@ void WelcomePane::InitButton(ScaledPushButton* button)
 {
     // Init the button
     button->setCursor(Qt::PointingHandCursor);
-    button->setStyleSheet(kLinkButtonStylesheet);
+    button->SetLinkStyleSheet();
 }
 
 void WelcomePane::OpenHtmlFile(const QString& html_file)

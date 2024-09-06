@@ -14,7 +14,10 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="main_content_">
-   <layout class="QHBoxLayout" name="horizontal_layout_5_">
+   <layout class="QVBoxLayout" name="vertical_layout_5_">
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -27,6 +30,9 @@
     <property name="bottomMargin">
      <number>0</number>
     </property>
+    <item>
+     <widget class="DriverOverridesNotificationBanner" name="driver_overrides_notification_banner_" native="true"/>
+    </item>
     <item>
      <widget class="TabWidget" name="main_tab_widget_">
       <property name="currentIndex">
@@ -125,7 +131,7 @@
           </item>
           <item>
            <property name="text">
-            <string>Device configuration</string>
+            <string>System information</string>
            </property>
           </item>
          </widget>
@@ -160,9 +166,9 @@
           <property name="currentIndex">
            <number>1</number>
           </property>
-           <widget class="SnapshotStartPane" name="snapshot_page_1_"/>
-           <widget class="QWidget" name="snapshot_page_2_">
-            <layout class="QHBoxLayout" name="horizontal_layout_1_">
+          <widget class="SnapshotStartPane" name="snapshot_page_1_"/>
+          <widget class="QWidget" name="snapshot_page_2_">
+           <layout class="QHBoxLayout" name="horizontal_layout_1_">
             <property name="spacing">
              <number>0</number>
             </property>
@@ -270,7 +276,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string></string>
+                 <string/>
                 </property>
                 <property name="indent">
                  <number>5</number>
@@ -315,7 +321,7 @@
           </property>
           <widget class="CompareStartPane" name="compare_snapshots_not_loaded_"/>
           <widget class="CompareStartPane" name="compare_snapshots_empty_"/>
-          <widget class="QWidget" name="compare_snapshots_ok_">             
+          <widget class="QWidget" name="compare_snapshots_ok_">
            <layout class="QHBoxLayout" name="horizontal_layout_4_" stretch="1,5">
             <property name="spacing">
              <number>0</number>
@@ -426,7 +432,7 @@
      <x>0</x>
      <y>0</y>
      <width>894</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -475,6 +481,12 @@
    <class>CompareStartPane</class>
    <extends>QWidget</extends>
    <header>views/compare/compare_start_pane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DriverOverridesNotificationBanner</class>
+   <extends>QWidget</extends>
+   <header>qt_common/custom_widgets/driver_overrides_notification_banner.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

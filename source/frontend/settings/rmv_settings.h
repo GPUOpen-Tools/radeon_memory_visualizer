@@ -40,6 +40,7 @@ enum RMVSettingID
     kSettingGeneralAllocUniquenessHeap,
     kSettingGeneralAllocUniquenessAllocation,
     kSettingGeneralAllocUniquenessOffset,
+    kSettingGeneralDriverOverridesAllowNotifications,
 
     kSettingThemesAndColorsPalette,
 
@@ -64,6 +65,8 @@ enum RMVSettingID
     kSettingThemesAndColorsResourceGpuEvent,
     kSettingThemesAndColorsResourceFreeSpace,
     kSettingThemesAndColorsResourceInternal,
+
+    kSettingThemesAndColorsColorThemeMode,
 
     kSettingThemesAndColorsDeltaIncrease,
     kSettingThemesAndColorsDeltaDecrease,
@@ -244,6 +247,11 @@ namespace rmv
         /// @param [in] value The new value of kSettingGeneralCheckForUpdatesOnStartup.
         void SetCheckForUpdatesOnStartup(const bool value);
 
+        /// @brief Set the value of kSettingDriverOverridesAllowNotifications in the settings.
+        ///
+        /// @param [in] value The new value of kSettingDriverOverridesAllowNotifications.
+        void SetDriverOverridesAllowNotifications(const bool value);
+
         /// @brief Allows units to be displayed as clock cycles for traces with invalid clock frequencies.
         ///
         /// @param [in] enable When set to true, units are displayed as clock cycles regardless
@@ -256,40 +264,25 @@ namespace rmv
         /// @param [in] units The new value of the timing units.
         void SetUnits(const TimeUnitType units);
 
-        /// @brief Set the value of kSettingGeneralAllocUniquenessHeap in the settings.
-        ///
-        /// @param [in] value The new value of kSettingGeneralAllocUniquenessHeap.
-        void SetAllocUniqunessHeap(const bool value);
-
-        /// @brief Set the value of kSettingGeneralAllocUniquenessAllocation in the settings.
-        ///
-        /// @param [in] value The new value of kSettingGeneralAllocUniquenessAllocation.
-        void SetAllocUniqunessAllocation(const bool value);
-
-        /// @brief Set the value of kSettingGeneralAllocUniquenessOffset in the settings.
-        ///
-        /// @param [in] value The new value of kSettingGeneralAllocUniquenessOffset.
-        void SetAllocUniqunessOffset(const bool value);
-
         /// @brief Get the value of kSettingGeneralCheckForUpdatesOnStartup in the settings.
         ///
         /// @return The value of kSettingGeneralCheckForUpdatesOnStartup.
         bool GetCheckForUpdatesOnStartup();
 
-        /// @brief Get the value of kSettingGeneralAllocUniquenessHeap in the settings.
+        /// @brief Get the value of kSetOverridesAllowNotifications in the settings.
         ///
-        /// @return The value of kSettingGeneralAllocUniquenessHeap.
-        bool GetAllocUniqunessHeap();
+        /// @return The value of kSettingDriverOverridesAllowNotifications.
+        bool GetDriverOverridesAllowNotifications();
 
-        /// @brief Get the value of kSettingGeneralAllocUniquenessAllocation in the settings.
+        /// @brief Gets the current color theme mode.
         ///
-        /// @return The value of kSettingGeneralAllocUniquenessAllocation.
-        bool GetAllocUniqunessAllocation();
+        /// @return the value of the current color theme.
+        int GetColorTheme();
 
-        /// @brief Get the value of kSettingGeneralAllocUniquenessOffset in the settings.
+        /// @brief Sets the color theme mode.
         ///
-        /// @return The value of kSettingGeneralAllocUniquenessOffset.
-        bool GetAllocUniqunessOffset();
+        /// @param [in] the value of the color theme.
+        void SetColorTheme(int value);
 
         /// @brief Get the color palette from the settings.
         ///

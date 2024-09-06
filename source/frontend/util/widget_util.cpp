@@ -59,23 +59,9 @@ namespace rmv
         }
     }
 
-    void widget_util::SetWidgetBackgroundColor(QWidget* widget, const QColor& color)
+    void widget_util::ApplyStandardPaneStyle(QScrollArea* scroll_area)
     {
-        if (widget != nullptr)
-        {
-            QPalette palette(widget->palette());
-            palette.setColor(QPalette::Window, color);
-            widget->setPalette(palette);
-            widget->setAutoFillBackground(true);
-        }
-    }
-
-    void widget_util::ApplyStandardPaneStyle(QWidget* root, QWidget* main_content, QScrollArea* scroll_area)
-    {
-        SetWidgetBackgroundColor(root, Qt::white);
-        SetWidgetBackgroundColor(main_content, Qt::white);
         scroll_area->setFrameStyle(QFrame::NoFrame);
-        SetWidgetBackgroundColor(scroll_area, Qt::white);
     }
 
     void widget_util::InitCommonFilteringComponents(TextSearchWidget* text_search_widget, DoubleSliderWidget* double_slider_widget)
