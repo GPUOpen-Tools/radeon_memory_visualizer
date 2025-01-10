@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Device configuration model.
@@ -58,6 +58,14 @@ namespace rmv
         ///
         /// @return true if extended information is available, false if not.
         bool ExtendedInfoAvailable();
+
+        /// @brief Does the UI need to show the driver software version.
+        ///
+        /// This will be true if the loaded trace comes from a Windows
+        /// machine.
+        ///
+        /// @return true if the driver software version is to be shown.
+        bool IsDriverSoftwareVersionNeeded();
     };
 
 }  // namespace rmv

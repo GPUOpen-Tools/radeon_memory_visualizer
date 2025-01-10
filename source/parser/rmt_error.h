@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Error codes.
@@ -42,6 +42,13 @@ static const RmtErrorCode kRmtErrorFileAlreadyOpened        = 0x80000013;  /// T
 static const RmtErrorCode kRmtErrorFileAccessFailed         = 0x80000014;  /// The operation failed because a file couldn't be accessed.
 static const RmtErrorCode kRmtErrorPageTableSizeExceeded    = 0x80000015;  /// The operation failed because the page table size was exceeded.
 static const RmtErrorCode kRmtErrorTraceFileNotSupported    = 0x80000016;  /// The operation failed because a trace file is unsupported.
+
+typedef enum RmtErrorResponseCode
+{
+    RmtErrorResponseCodeNone,    ///< No response.
+    RmtErrorResponseCodeIgnore,  ///< Ignore the error.
+    RmtErrorResponseCodeRetry,   ///< Retry the operation.
+} RmtErrorResponseCode;
 
 /// Helper macro to return error code y from a function when a specific condition, x, is not met.
 #define RMT_RETURN_ON_ERROR(x, y) \

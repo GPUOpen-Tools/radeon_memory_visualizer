@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the carousel model.
@@ -242,7 +242,11 @@ namespace rmv
     bool CarouselModel::GetCarouselData(RMVCarouselData& out_carousel_data) const
     {
         RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-        return GetCarouselData(open_snapshot, out_carousel_data);
+        if (open_snapshot != nullptr)
+        {
+            return GetCarouselData(open_snapshot, out_carousel_data);
+        }
+        return false;
     }
 
     int CarouselModel::GetAllocationBucketIndex(uint64_t allocation_size) const

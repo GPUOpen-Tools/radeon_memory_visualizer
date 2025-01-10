@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a tree map block collection.
@@ -42,7 +42,7 @@ struct CutData
     bool                        is_null;        ///< Good or bad.
 };
 
-typedef QMap<const RmtResource*, QRectF> AllocGeometryMap;
+typedef QHash<const RmtResource*, QRectF> AllocGeometryMap;
 
 /// @brief Describes a cluster, which is a square with potentially other child clusters.
 struct ResourceCluster
@@ -53,11 +53,11 @@ struct ResourceCluster
     {
     }
 
-    AllocGeometryMap                alloc_geometry_map;  ///< Association of allocation pointers to their rendered geometry.
-    QVector<const RmtResource*>     sorted_resources;    ///< Array of all child allocations, sorted by size.
-    QMap<uint32_t, ResourceCluster> sub_clusters;        ///< Collection of children clusters.
-    uint64_t                        amount;              ///< Total size of this cluster.
-    QRectF                          geometry;            ///< Encompassing geometry.
+    AllocGeometryMap                 alloc_geometry_map;  ///< Association of allocation pointers to their rendered geometry.
+    QVector<const RmtResource*>      sorted_resources;    ///< Array of all child allocations, sorted by size.
+    QHash<uint32_t, ResourceCluster> sub_clusters;        ///< Collection of children clusters.
+    uint64_t                         amount;              ///< Total size of this cluster.
+    QRectF                           geometry;            ///< Encompassing geometry.
 };
 
 /// @brief Various models used to filter the tree map.
@@ -452,15 +452,15 @@ private:
                                const RmtResource*     resource,
                                bool&                  resource_added) const;
 
-    RMVTreeMapBlocksConfig          config_;                        ///< Description of this widget.
-    RmtResourceIdentifier           hovered_resource_identifier_;   ///< Id of the allocation hovered over.
-    RmtResourceIdentifier           selected_resource_identifier_;  ///< Id of the selected allocation.
-    const RmtResource*              hovered_resource_;              ///< The hovered resource (incase the resource is unbound).
-    const RmtResource*              selected_resource_;             ///< The selected resource (incase the resource is unbound).
-    QMap<uint32_t, ResourceCluster> clusters_;                      ///< The master data structure that holds all recursive block layouts.
-    QVector<SliceType>              slice_types_;                   ///< Holds UI slicing selections.
-    const rmv::Colorizer*           colorizer_;                     ///< The colorizer for deciding how to color the blocks.
-    QVector<RmtResource*>           unbound_resources_;             ///< A list of unbound resources.
+    RMVTreeMapBlocksConfig           config_;                        ///< Description of this widget.
+    RmtResourceIdentifier            hovered_resource_identifier_;   ///< Id of the allocation hovered over.
+    RmtResourceIdentifier            selected_resource_identifier_;  ///< Id of the selected allocation.
+    const RmtResource*               hovered_resource_;              ///< The hovered resource (incase the resource is unbound).
+    const RmtResource*               selected_resource_;             ///< The selected resource (incase the resource is unbound).
+    QHash<uint32_t, ResourceCluster> clusters_;                      ///< The master data structure that holds all recursive block layouts.
+    QVector<SliceType>               slice_types_;                   ///< Holds UI slicing selections.
+    const rmv::Colorizer*            colorizer_;                     ///< The colorizer for deciding how to color the blocks.
+    QVector<RmtResource*>            unbound_resources_;             ///< A list of unbound resources.
 };
 
 #endif  // RMV_VIEWS_CUSTOM_WIDGETS_RMV_TREE_MAP_BLOCKS_H_

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource List pane.
@@ -280,4 +280,3 @@ void ResourceListPane::SelectResourceInTable()
         }
     }
 }
-

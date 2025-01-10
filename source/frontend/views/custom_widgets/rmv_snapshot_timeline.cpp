@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2017-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the snapshot timeline visualization.
@@ -146,6 +146,7 @@ void RMVSnapshotTimeline::Clear()
     for (int i = 0; i < content_.size(); i++)
     {
         scene_->removeItem(content_[i].item);
+        delete content_[i].item;
     }
 
     content_.clear();

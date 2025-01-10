@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the virtual allocation list functions.
@@ -9,20 +9,23 @@
 
 #include "rmt_address_helper.h"
 #include "rmt_data_snapshot.h"
+
 #include "rmt_page_table.h"
 #include "rmt_resource_list.h"
 #include "rmt_resource_userdata.h"
+#include "rmt_tree.h"
 
 #include <rmt_assert.h>
 
-#include <map>
+#include <algorithm>
 #include <math.h>
-#include <set>
 #include <string.h>  // memcpy
-#include <unordered_map>
-#include <unordered_set>
+#include <vector>
 
-// The ResourcePriorityComparator handles ordering resources in a std::set based on aliased resource priority.
+typedef rmt_tree::IntervalTree<uint64_t, RmtResource*> AliasedResourceIntervalTreeType;
+typedef rmt_tree::Interval<uint64_t, RmtResource*>     AliasedResourceIntervalType;
+
+// The ResourcePriorityComparator handles ordering resources based on aliased resource priority.
 // A comparison is first made on the resource usage type enum value (highest to lowest).  If the two resources
 // being compared have the same usage type, the resources are compared by size (smallest size is highest priority).
 // If the size is also the same, then resource IDs are compared (largest value is highest priority).
@@ -49,7 +52,7 @@ struct ResourcePriorityComparator
             }
             else
             {
-                // Compare by resource identifier (last resort, other attributes are the same).
+                // Compare by resource identifier (last resort, since the other attributes are the same).
                 result = lhs->identifier > rhs->identifier;
             }
         }
@@ -57,12 +60,6 @@ struct ResourcePriorityComparator
         return result;
     }
 };
-
-typedef std::set<const RmtResource*, ResourcePriorityComparator> PrioritizedResourceSetType;  // Set of resource objects sorted by priority.
-
-typedef std::map<uint64_t, PrioritizedResourceSetType> ResourceMemoryRegionsMap;  // Map resource object sets split into segments using bind offset as a key.
-static std::unordered_map<uint64_t, ResourceMemoryRegionsMap>
-    aliased_resource_memory_regions_for_allocations_;  // Map of all allocations, allocation id is used as the key.
 
 // Helper function to improve tree balance by hashing the handles.
 static RmtGpuAddress HashGpuAddress(RmtGpuAddress address)
@@ -118,13 +115,20 @@ static RmtVirtualAllocationInterval* InsertNode(RmtVirtualAllocationList*     vi
     {
         // create a new node
         RmtVirtualAllocationInterval* new_node = (RmtVirtualAllocationInterval*)RmtPoolAllocate(&virtual_allocation_list->allocation_interval_pool);
-        new_node->base_address                 = gpu_address;
-        new_node->size_in_4kb_pages            = size_in_pages;
-        new_node->dead                         = 0;
-        new_node->allocation                   = allocation;
-        new_node->left                         = NULL;
-        new_node->right                        = NULL;
-        return new_node;
+        if (new_node != nullptr)
+        {
+            new_node->base_address      = gpu_address;
+            new_node->size_in_4kb_pages = size_in_pages;
+            new_node->dead              = 0;
+            new_node->allocation        = allocation;
+            new_node->left              = NULL;
+            new_node->right             = NULL;
+            return new_node;
+        }
+        else
+        {
+            RMT_ASSERT_FAIL("RmtVirtualAllocationInterval InsertNode alloc failed");
+        }
     }
 
     if (gpu_address < node->base_address)
@@ -385,7 +389,7 @@ float RmtVirtualAllocationGetFragmentationQuotient(const RmtVirtualAllocation* v
         }
 
         // advance the last address to the next byte in the allocation.
-        last_address = current_resource->bind_time + current_resource->size_in_bytes;
+        last_address = current_resource->address + current_resource->size_in_bytes;
     }
 
     return (float)gaps_in_virtual_memory;
@@ -434,8 +438,6 @@ RmtErrorCode RmtVirtualAllocationListInitialize(RmtVirtualAllocationList* virtua
     virtual_allocation_list->root = NULL;
 
     memset(virtual_allocation_list->allocations_per_preferred_heap, 0, sizeof(virtual_allocation_list->allocations_per_preferred_heap));
-
-    aliased_resource_memory_regions_for_allocations_.clear();
     return kRmtOk;
 }
 
@@ -823,149 +825,170 @@ RmtErrorCode RmtVirtualAllocationGetBackingStorageHistogram(const RmtDataSnapsho
     return kRmtOk;
 }
 
-static RmtErrorCode TrackResourceAdd(const RmtResource* resource, std::map<uint64_t, PrioritizedResourceSetType>& out_resource_memory_segments)
-{
-    RMT_ASSERT(resource != nullptr);
-
-    // Skip this resource if it isn't bound to an allocation.
-    if (resource->bound_allocation == nullptr)
-    {
-        return kRmtErrorNoResourceFound;
-    }
-
-    // Skip this resource if it is implicit.
-    if (RmtResourceUserDataIsResourceImplicit(resource->identifier) == true)
-
-    {
-        return kRmtErrorNoResourceFound;
-    }
-
-    uint64_t allocation_size_in_bytes = RmtGetAllocationSizeInBytes(resource->bound_allocation->size_in_4kb_page, kRmtPageSize4Kb);
-
-    if (allocation_size_in_bytes < resource->size_in_bytes)
-    {
-        return kRmtErrorInvalidSize;
-    }
-
-    // Add a segment at the resource's starting offset (if one doesn't already exist) and add the resource to the segment's set of resources.
-    const uint64_t start_offset = resource->address - resource->bound_allocation->base_address;
-    out_resource_memory_segments[start_offset].insert(resource);
-
-    // Add a segment with an empty list of resources (if one doesn't already exist).  This marks the end of the resource's memory block.
-    const uint64_t end_offset = start_offset + resource->size_in_bytes;
-    out_resource_memory_segments[end_offset];
-
-    // Second pass: For each segment except the first one, copy resources to the next segment's resource set if the resource's ending offset is greater than the segment's offset key.
-    for (std::map<uint64_t, PrioritizedResourceSetType>::iterator current_segment_iterator = out_resource_memory_segments.begin();
-         current_segment_iterator != out_resource_memory_segments.end();
-         current_segment_iterator++)
-    {
-        // Get the next segment.  If there are no more segments then exit the loop.
-        auto next_segment_iterator = std::next(current_segment_iterator);
-        if (next_segment_iterator == out_resource_memory_segments.end())
-        {
-            break;
-        }
-
-        // Copy resources from previous segment to next segment if the resource's ending range extends into this segment.
-        for (const auto& resource_from_segment : current_segment_iterator->second)
-        {
-            if (resource_from_segment->bound_allocation != nullptr)
-            {
-                const uint64_t resource_start_range = resource_from_segment->address - resource_from_segment->bound_allocation->base_address;
-                const uint64_t resource_end_range   = resource_start_range + resource_from_segment->size_in_bytes;
-                if (resource_end_range > next_segment_iterator->first)
-                {
-                    // The resource range extends into this segment.  Add it to the next segment's list of resources.
-                    next_segment_iterator->second.insert(resource_from_segment);
-                }
-            }
-        }
-    }
-
-    return kRmtOk;
-}
-
-static RmtErrorCode AliasedResourceTrackerAddResource(const RmtResource* resource)
-{
-    const RmtVirtualAllocation* allocation = resource->bound_allocation;
-    if (allocation == nullptr)
-    {
-        return kRmtErrorNoAllocationFound;
-    }
-
-    return TrackResourceAdd(resource, aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier]);
-}
-
-// The resource_memory_segments map is used to split the memory allocation into segments at the start and end offsets of each bound resource.
-// Each segment contains a set of resources sorted by the alias priority.  The size of each segment is applied to the size of the top resource
-// in each segment's set.  These sizes are totaled up for each resource to obtain the resource's size after aliasing.
-
-static RmtErrorCode RmtVirtualAllocationUpdateAliasedResourceSizes(const RmtVirtualAllocation* allocation,
-                                                                   const RmtResourceList*      resource_list,
-                                                                   uint64_t                    resource_usage_mask)
+/// @Brief Update the resource's size after aliasing (adjusted_size_in_bytes).
+///
+/// Builds an interval tree to keep track of resource segments with the highest priority when compared against other resources in a virtual allocation.
+/// The interval tree is used to calculate the adjusted size of resources taking into account overlaps.
+///
+/// Resources are first sorted by priority and then inserted into the interval tree.  Any portion of a resource that overlaps with an interval already
+/// in the tree is excluded (since it has a lower priority than the already existing intervals).  As intervals are inserted, the resource's adjusted size
+/// is increased by the size of the interval being inserted.
+///
+/// Interval ranges include the start offset and exclude the end offset.
+///
+/// @param [in] allocation                             A pointer to a <c><i>RmtVirtualAllocation</i></c> structure.
+/// @param [in] resource_list                          A pointer to a <c><i>RmtResourceList</i></c> structure.
+/// @param [in] resource_usage_mask                    A bit mask of all usage types that should be included when calculating alias size.
+/// @param [in] sorted_resources                       A vector used to store resources sorted by priority.  The caller can reserve the expected max size.
+/// @param [in] interval_overlaps                      A vector used to store intervals that overlap with the new resource.  The caller can reserve the expected max size.
+///
+/// @retval
+/// kRmtOk                                  The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                 The operation failed because <c><i>virtual_allocation_list</i></c> or <c><i>resource_list</i></c> was <c><i>NULL</i></c>.
+static RmtErrorCode AdjustAliasedResourceSizesForAllocation(const RmtVirtualAllocation*               allocation,
+                                                            const RmtResourceList*                    resource_list,
+                                                            uint64_t                                  resource_usage_mask,
+                                                            std::vector<RmtResource*>&                sorted_resources,
+                                                            std::vector<AliasedResourceIntervalType>& interval_overlaps)
 {
     RMT_RETURN_ON_ERROR(allocation != nullptr, kRmtErrorInvalidPointer);
     RMT_RETURN_ON_ERROR(resource_list != nullptr, kRmtErrorInvalidPointer);
 
-    // First pass: Split resource memory into segments for each of the resources starting offset.
-    // Add the resource to the segment's list.  Also create an empty segment for the resource's memory block ending offset.
+    // Add resources to a list to be sorted.  Filter the resources not included by the usage mask.  Initialize the resource's adjusted size after aliasing to zero.
+    sorted_resources.clear();
     for (int i = 0; i < allocation->resource_count; i++)
     {
-        const RmtResource* resource = allocation->resources[i];
+        RmtResource* resource = allocation->resources[i];
         RMT_ASSERT(resource != nullptr);
 
+        // Special case handling for heaps.  Heaps aren't adjusted for aliased resources.
+        if (resource->resource_type == RmtResourceType::kRmtResourceTypeHeap)
+        {
+            resource->adjusted_size_in_bytes = resource->size_in_bytes;
+            continue;
+        }
+
         // Reset the alias size.
-        RmtResourceUpdateAliasSize(resource->identifier, resource_list, 0);
+        resource->adjusted_size_in_bytes = 0;
+        resource->is_aliased             = false;
 
         // Skip this resource if it is disabled by the usage filter.
-        RmtResourceUsageType usage_type = RmtResourceGetUsageType(resource);
+        const RmtResourceUsageType usage_type = RmtResourceGetUsageType(resource);
         if (!(RmtResourceGetUsageTypeMask(usage_type) & resource_usage_mask))
         {
             continue;
         }
 
-        AliasedResourceTrackerAddResource(resource);
+        sorted_resources.push_back(resource);
     }
 
-    // Total up the segmented sizes of each resource.
-    std::unordered_map<const RmtResource*, uint64_t>         resource_alias_sizes;
-    std::map<uint64_t, PrioritizedResourceSetType>::iterator segment_iterator =
-        aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier].begin();
+    // Sort the resources by priority.  This guarantees that resources with the highest priority are processed first.
+    // It also guarantees that once intervals are added to the interval tree there will be no overlaps (intervals are trimmed when inserted).
+    std::sort(sorted_resources.begin(), sorted_resources.end(), ResourcePriorityComparator());
 
-    for (; segment_iterator != aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier].end(); segment_iterator++)
+    AliasedResourceIntervalTreeType interval_tree;
+    bool                            interval_inserted = false;  // The processing of overlapped resources can be skip if this flag is false.
+
+    // Process each resource and add intervals to the interval tree for the parts that don't overlap.
+    for (auto& new_resource : sorted_resources)
     {
-        if (segment_iterator->second.empty())
+        const uint64_t new_resource_start = new_resource->address - allocation->base_address;
+
+        const uint64_t new_resource_end            = (new_resource_start + new_resource->size_in_bytes);
+        uint64_t       new_interval_start          = new_resource_start;
+        uint64_t       new_interval_end            = new_resource_end;
+        uint64_t       new_resource_remaining_size = new_resource->size_in_bytes;
+
+        // Skip this block if there are no intervals in the tree yet.  In this case, a new interval can be added for the entire resource (i.e. no overlaps).
+        if (interval_inserted)
         {
-            // Skipping since there are no resources in this segment.
-            continue;
+            // Get a list of existing intervals in the interval tree that overlap with the new resource.
+            interval_overlaps.clear();
+
+            // Create an interval to search for overlaps.  Make the interval exclusive (i.e. exclude the start and end values).
+            // The interval tree's FindOverlappingIntervals() method expects the interval parameter specified to be an inclusive
+            // interval, meaning the start and end points are included when detecting overlaps.  The start and end values should
+            // not be considered so that resources aren't incorrectly marked as being aliased.
+            const AliasedResourceIntervalType search_interval = {new_resource_start + 1LL, new_resource_end - 1LL, nullptr};
+            interval_tree.FindOverlappingIntervals(search_interval, interval_overlaps);
+
+            // Sort the overlapping intervals by range start value.
+            std::sort(interval_overlaps.begin(), interval_overlaps.end(), [](const AliasedResourceIntervalType& lhs, const AliasedResourceIntervalType& rhs) {
+                return lhs.start < rhs.start;
+            });
+
+            for (const auto& overlap_interval : interval_overlaps)
+            {
+                // This new resource overlaps with a resource in the interval tree.  Mark both as aliased.
+                overlap_interval.index->is_aliased     = true;
+                new_resource->is_aliased               = true;
+                const uint64_t existing_interval_start = overlap_interval.start;
+                const uint64_t existing_interval_end   = overlap_interval.end;
+
+                if (existing_interval_start <= new_resource_start && existing_interval_end > new_resource_end)
+                {
+                    // The existing interval completely overlaps with all of the new resource.
+                    new_resource_remaining_size = 0;
+                    break;
+                }
+
+                if (existing_interval_start <= new_interval_start)
+                {
+                    // Trim the start of the new interval.  Add one so that the new start interval points to the offset immediately following
+                    // the end of the previous existing interval.
+                    const uint64_t trim_amount = (std::min(new_interval_end, existing_interval_end) - new_interval_start) + 1;
+                    new_interval_start += trim_amount;
+                    new_resource_remaining_size -= trim_amount;
+                    RMT_ASSERT(static_cast<int64_t>(new_resource_remaining_size) >= 0);
+                }
+                else
+                {
+                    // Trim the end of the new interval.
+                    if (new_interval_end > existing_interval_end)
+                    {
+                        new_interval_end = existing_interval_end;
+                    }
+
+                    // Calculate the amount to trim from the new interval end.  Add one so that the the new interval end offset is also trimmed.
+                    const uint64_t trim_amount = (new_interval_end - existing_interval_start) + 1;
+                    new_interval_end -= trim_amount;
+                    new_resource_remaining_size -= trim_amount;
+                    RMT_ASSERT(static_cast<int64_t>(new_resource_remaining_size) >= 0);
+
+                    // Add an interval for the section of the resource that doesn't overlap with the existing interval.
+                    const AliasedResourceIntervalType new_interval = {new_interval_start, new_interval_end, new_resource};
+                    RMT_ASSERT(new_interval.end > new_interval.start);
+                    interval_tree.Insert(new_interval);
+
+                    // Increase the adjusted size of the resource.  Add one to include end offset to get the full size of the interval.
+                    const uint64_t interval_size = (new_interval_end - new_interval_start + 1);
+                    new_resource->adjusted_size_in_bytes += interval_size;
+
+                    new_resource_remaining_size -= interval_size;
+                    RMT_ASSERT(static_cast<int64_t>(new_resource_remaining_size) >= 0);
+
+                    // Prepare for the next interval.  Add one to the new start interval so that it points to the offset immediately following the previous existing interval.
+                    new_interval_start = existing_interval_end + 1;
+                    new_interval_end   = new_resource_end;
+                }
+            }
         }
 
-        // Get the top resource from this segment's resource set.
-        const RmtResource* top_resource = segment_iterator->second.begin().operator*();
-        RMT_ASSERT(top_resource != nullptr);
-
-        // Get the offset of the next segment so that the size of the current segment can be determined.
-        auto next_segment_iterator = std::next(segment_iterator);
-        if (next_segment_iterator == aliased_resource_memory_regions_for_allocations_[allocation->allocation_identifier].end())
+        // Add an interval for the remaining section of the resource that doesn't overlap with any other existing intervals.
+        if (new_resource_remaining_size > 0)
         {
-            // End of segments reached.
-            break;
+            // Calculate the end offset and subtract one so that the end point is excluded for the new interval.
+            new_interval_end                               = (new_interval_start + new_resource_remaining_size) - 1;
+            const AliasedResourceIntervalType new_interval = {new_interval_start, new_interval_end, new_resource};
+            interval_tree.Insert(new_interval);
+
+            // Set the flag that indicates subsequent resources that are processed need to be checked for overlaps in the interval tree.
+            interval_inserted = true;
+
+            // Increase the adjusted size of the resource.
+            new_resource->adjusted_size_in_bytes += new_resource_remaining_size;
         }
-
-        // Calculate the segment size.
-        const uint64_t next_segment_offset = next_segment_iterator->first;
-        const uint64_t segment_offset      = segment_iterator->first;
-        const uint64_t segment_size        = next_segment_offset - segment_offset;
-
-        // Add the segment's size to the resource's total alias size.
-        resource_alias_sizes[top_resource] += segment_size;
-    }
-
-    // Copy the size after aliasing to the resource objects.
-    for (auto alias_resource : resource_alias_sizes)
-    {
-        RmtResourceUpdateAliasSize(alias_resource.first->identifier, resource_list, alias_resource.second);
     }
 
     return kRmtOk;
@@ -979,9 +1002,39 @@ RmtErrorCode RmtVirtualAllocationListUpdateAliasedResourceSizes(const RmtVirtual
     RMT_RETURN_ON_ERROR(resource_list != nullptr, kRmtErrorInvalidPointer);
 
     RmtErrorCode result = kRmtOk;
+
+    // Find the maximum number of resources in any of the virtual allocations.
+    int max_resource = 0;
+    for (int index = 0; index < allocation_list->allocation_count; index++)
+    {
+        // Update the maximum number of resources found.
+        if (allocation_list[index].allocation_details != nullptr)
+        {
+            max_resource = RMT_MAXIMUM(max_resource, allocation_list[index].allocation_details->resource_count);
+        }
+    }
+
+    if (max_resource == 0)
+    {
+        // There are no resources bound to any of the virtual allocation so just exit.
+        return kRmtOk;
+    }
+
+    // Temporary list of resource pointers that get sorted by start address.
+    std::vector<RmtResource*> sorted_resources;
+
+    // Temporary list of resource intervals that overlap with a resource.
+    std::vector<AliasedResourceIntervalType> interval_overlaps;
+
+    // Reserve space up front for the temporary lists.
+    sorted_resources.reserve(max_resource);
+    interval_overlaps.reserve(max_resource - 1);
+
+    // Iterate over each of the virtual allocations and calculate resource sizes taking into account aliasing.
     for (int32_t index = 0; index < allocation_list->allocation_count; index++)
     {
-        result = RmtVirtualAllocationUpdateAliasedResourceSizes(&allocation_list->allocation_details[index], resource_list, resource_usage_mask);
+        result = AdjustAliasedResourceSizesForAllocation(
+            &allocation_list->allocation_details[index], resource_list, resource_usage_mask, sorted_resources, interval_overlaps);
         if (result != kRmtOk)
         {
             break;

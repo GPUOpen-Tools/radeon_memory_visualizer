@@ -19,7 +19,7 @@ As a preliminary step, make sure that you have the following installed on your s
 * CMake 3.11 or above.
 * Python 3.7 or above.
 * Qt® 6 or above (6.7.0 is the default and recommended).
-* Visual Studio® 2015 or above (2019 is the default).
+* Visual Studio® 2019 or above (2022 is the default).
 
 Qt should be installed to the default location (C:\Qt\Qt6.xx.x).
 Be sure to select msvc2017/msvc2019 64-bit during Qt installation, depending on the compiler you decide to use.
@@ -49,13 +49,14 @@ If Qt is installed from a Qt installer, it should be installed to ~/Qt/Qt6.7.0 (
 Required dependencies can be installed as follows:
 ```bash
 sudo apt-get update
-sudo apt-get install build-essential python3 chrpath
-sudo apt-get install python3-pip
-pip install sphinx_rtd_theme
 sudo snap install cmake --classic
 sudo apt-get install git
 sudo apt-get install git-lfs
+sudo apt-get install build-essential python3
+sudo apt-get install chrpath patchelf
+sudo apt-get install python3-pip
 sudo apt-get install python3-sphinx
+sudo apt-get install python3-sphinx-rtd-theme
 sudo apt-get install libxcb-xinerama0
 sudo apt-get install mesa-common-dev libglu1-mesa-dev
 ```

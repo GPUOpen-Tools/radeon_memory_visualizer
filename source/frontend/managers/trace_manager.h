@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the Trace Manager.
@@ -69,7 +69,7 @@ namespace rmv
         /// @param [in] trace_file_name The name of the trace file.
         ///
         /// @return An error code returned from the loading thread.
-        TraceLoadReturnCode TraceLoad(const char* trace_file_name);
+        TraceLoadReturnCode TraceLoad(const QString& trace_file_name);
 
         /// @brief Clear a trace from memory.
         ///

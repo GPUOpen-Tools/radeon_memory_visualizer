@@ -33,6 +33,11 @@ all memory is visible to the CPU.
 
 .. image:: media/snapshot/heap_overview_2.png
 
+Additionally, AMD GPUs based on the RDNA 4 architecture are able to perform
+a kind of dynamic smart access memory, making it appear as though all of the GPU
+memory is visible to the CPU. In this case, the UI will be shown as if SAM
+were enabled (since both methods produce the same result).
+
 On the left is the amount of memory used for each heap type as a series
 of bar graphs:
 
@@ -201,8 +206,12 @@ color the resources and allocations by various parameters, for example, resource
 usage, and the preferred heap type.
 
 The allocations can be sorted using the sort combo box at the top. Sorting is
-currently based on allocation size, allocation Id, allocation age or resource
-count (the number of resources in the allocation). Another combo box to the
+currently based on allocation size, allocation Id, allocation age, resource
+count (the number of resources in the allocation) or fragmentation score. The
+fragmentation score is simply a measure of how fragmented the allocation is. The
+more gaps there are between resources, the higher this value will be.
+
+Another combo box to the
 left allows the sort to be in ascending or descending order.
 
 Normally, allocations are sized relative to the largest allocations. Sometimes

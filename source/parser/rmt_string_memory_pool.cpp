@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for a dynamic memory pool
@@ -55,7 +55,7 @@ RmtErrorCode RmtStringMemoryPool::FreeAll()
     memory_pool_buffer_        = nullptr;
     for (auto memory_block : memory_pool_blocks_)
     {
-        delete[](memory_block);
+        delete[] (memory_block);
     }
     memory_pool_blocks_.clear();
 

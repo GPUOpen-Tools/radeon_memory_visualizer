@@ -75,11 +75,43 @@
         </widget>
        </item>
        <item>
-        <widget class="ScaledLabel" name="sam_status_label_">
+        <spacer name="title_spacer_1_">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>15</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="heap_status_label_">
          <property name="text">
           <string>TextLabel</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <spacer name="title_spacer_2_">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>

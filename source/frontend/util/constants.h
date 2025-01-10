@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -86,12 +86,18 @@ namespace rmv
             "Opening the trace file as read-only (snapshot edits will not be saved). The RMV file is either read only or has been opened in another instance "
             "of RMV";
 
-        // Specific error messages (appended to generic error message).
+        // Confirm Snapshot deletes query.
+        static const QString kConfirmSnapshotDeletesTitle = "Delete snapshot(s)";
+        static const QString kConfirmSnapshotDeletesText  = "Are you sure you want to delete %1?";
+
         static const QString kOpenTraceOutOfVirtualGPUMemory =
             "\n\nThe trace file contains allocations requesting more than 64GB of GPU memory. Please reduce the video memory consumption.";
 
         static const QString kOpenTraceFileNotSupported =
             "\n\nThe trace file is no longer supported. Please load it using an older version of the Radeon Memory Visualizer.";
+
+        static const QString kCommitEditsFailedTitle = "Error";
+        static const QString kCommitEditsFailedText  = "Failed to commit edits to the trace file %1.";
 
         // Open recent trace missing pop up dialog.
         static const QString kOpenRecentTraceTitle = "Trace not opened";

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Memory Leak Finder model.
@@ -284,8 +284,12 @@ namespace rmv
         }
 
         // Set up the single snapshot point for loading (if necessary).
-        RmtSnapshotPoint* snapshot_point = snapshot->snapshot_point;
-        SnapshotManager::Get().SetSelectedSnapshotPoint(snapshot_point);
-        return snapshot_point;
+        if (snapshot != nullptr)
+        {
+            RmtSnapshotPoint* snapshot_point = snapshot->snapshot_point;
+            SnapshotManager::Get().SetSelectedSnapshotPoint(snapshot_point);
+            return snapshot_point;
+        }
+        return nullptr;
     }
 }  // namespace rmv

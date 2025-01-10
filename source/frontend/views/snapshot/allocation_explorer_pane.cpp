@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Allocation Explorer pane.
@@ -115,6 +115,8 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     connect(allocation_item_, &RMVAllocationBar::ResourceSelected, this, &AllocationExplorerPane::SelectedResource);
 
     ui_->resource_table_valid_switch_->setCurrentIndex(0);
+
+    ui_->splitter_->setChildrenCollapsible(false);
 }
 
 AllocationExplorerPane::~AllocationExplorerPane()

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions of the RMT format.
@@ -151,6 +151,9 @@ typedef enum RmtResourceUsageType
     kRmtResourceUsageTypeCount,
     kRmtResourceUsageTypeAll = kRmtResourceUsageTypeCount  ///< A value used to indicates all usage types are selected.
 } RmtResourceUsageType;
+
+// Bit mask with all resource usage types enabled.
+static const uint64_t kRmtResourceUsageTypeBitMaskAll = (((1LLU << kRmtResourceUsageTypeCount) - 1LL) & ~(1LLU << kRmtResourceUsageTypeUnknown));
 
 /// An enumeration of process events.
 typedef enum RmtProcessEventType
@@ -797,12 +800,12 @@ typedef struct RmtResourceDescriptionCommandAllocator
     uint64_t
         cmd_data_size;  ///< The size, in bytes, of the base memory allocations the command allocator will make for executable command data. Expressed as 4Kb chunks.
     uint64_t
-                cmd_data_suballoc_size;  ///< The size, in bytes, of the chunks the command allocator will give to command buffers for executable command data. Expressed as 4Kb chunks.
+        cmd_data_suballoc_size;  ///< The size, in bytes, of the chunks the command allocator will give to command buffers for executable command data. Expressed as 4Kb chunks.
     RmtHeapType embed_data_heap;  ///< The preferred allocation heap for embedded command data.
     uint64_t
         embed_data_size;  ///< The size, in bytes, of the base memory allocations the command allocator will make for embedded command data. Expressed as 4Kb chunks.
     uint64_t
-                embed_data_suballoc_size;  ///< The size, in bytes, of the chunks the command allocator will give to command buffers for embedded command data. Expressed as 4Kb chunks.
+        embed_data_suballoc_size;  ///< The size, in bytes, of the chunks the command allocator will give to command buffers for embedded command data. Expressed as 4Kb chunks.
     RmtHeapType gpu_scratch_heap;  ///< The preferred allocation heap for GPU scratch memory.
     uint64_t
         gpu_scratch_size;  ///< The size, in bytes, of the base memory allocations the command allocator will make for GPU scratch memory. Expressed as 4Kb chunks.

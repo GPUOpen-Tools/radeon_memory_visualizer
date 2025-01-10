@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the LogFileWriter.
@@ -25,9 +25,6 @@
 
 namespace rmv
 {
-    // LogFileWriter instance.
-    LogFileWriter* LogFileWriter::instance_ = nullptr;
-
     LogFileWriter::LogFileWriter()
 #ifdef _DEBUG
         : log_level_(kDebug)
@@ -43,12 +40,8 @@ namespace rmv
 
     LogFileWriter& LogFileWriter::Get()
     {
-        if (instance_ == nullptr)
-        {
-            instance_ = new LogFileWriter();
-        }
-
-        return *instance_;
+        static LogFileWriter instance;
+        return instance;
     }
 
     void LogFileWriter::WriteLogMessage(const char* log_message)

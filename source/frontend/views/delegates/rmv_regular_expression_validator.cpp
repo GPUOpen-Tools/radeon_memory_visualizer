@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the regular expression validator with tooltip support.
@@ -9,11 +9,6 @@
 
 #include <QValidator>
 #include <QToolTip>
-
-RMVRegularExpressionValidator::RMVRegularExpressionValidator(QObject* parent)
-    : QRegularExpressionValidator(parent)
-{
-}
 
 RMVRegularExpressionValidator::RMVRegularExpressionValidator(const QRegularExpression& regular_expression, QObject* parent)
     : QRegularExpressionValidator(regular_expression, parent)

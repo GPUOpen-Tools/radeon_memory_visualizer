@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the carousel item widget base class.
@@ -54,8 +54,7 @@ void RMVCarouselItem::DrawCarouselBaseComponents(QPainter* painter, const QStrin
     font.setBold(true);
     painter->setFont(font);
     painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
-    painter->drawText(
-        10, 20, title + ((config_.data_type == kCarouselDataTypeDelta) ? " delta" : ""));
+    painter->drawText(10, 20, title + ((config_.data_type == kCarouselDataTypeDelta) ? " delta" : ""));
 }
 
 void RMVCarouselItem::DrawHorizontalBarComponent(QPainter*      painter,
@@ -177,8 +176,7 @@ void RMVCarouselItem::DrawColoredHorizontalBarComponent(QPainter*      painter,
                 rmv::string_util::LocalizedValueMemory(value, false, false) + " out of " + rmv::string_util::LocalizedValueMemory(max, false, false);
             int allocated_length = QtCommon::QtUtils::GetTextWidth(font, allocated_description);
 
-            painter->drawText(
-                x_pos + bar_length - allocated_length, y_pos + bar_width + kSummaryTextOffset, allocated_description);
+            painter->drawText(x_pos + bar_length - allocated_length, y_pos + bar_width + kSummaryTextOffset, allocated_description);
         }
     }
 }

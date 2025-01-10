@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a custom tooltip comprising of a multiline text
@@ -42,7 +42,7 @@ public:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) Q_DECL_OVERRIDE;
 
 private:
-    int icon_size_;    ///< The icon size.
+    int icon_size_;  ///< The icon size.
 };
 
 #endif  // RMV_VIEWS_CUSTOM_WIDGETS_RMV_COLOR_SWATCH_TOOLTIP_ITEM_H_

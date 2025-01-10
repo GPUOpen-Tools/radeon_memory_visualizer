@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a number of widget utilities.
@@ -76,10 +76,11 @@ namespace rmv
         double_slider_widget->Init();
     }
 
-    void widget_util::InitColorLegend(ColoredLegendScene*& legend_widget, QGraphicsView* view)
+    ColoredLegendScene* widget_util::InitColorLegend(QGraphicsView* view)
     {
-        legend_widget = new ColoredLegendScene();
+        ColoredLegendScene* legend_widget = new ColoredLegendScene();
         view->setScene(legend_widget);
+        return legend_widget;
     }
 
     void widget_util::UpdateTablePalette(QTableView* view)

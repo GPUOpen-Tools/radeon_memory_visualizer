@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the colorizer base class.
@@ -43,6 +43,7 @@ namespace rmv
 
     ColorizerBase::~ColorizerBase()
     {
+        delete legends_scene_;
     }
 
     void ColorizerBase::Initialize(ArrowIconComboBox* combo_box, QGraphicsView* legends_view)
@@ -52,8 +53,8 @@ namespace rmv
         // Make sure the legends view is fixed-size.
         rmv::widget_util::InitGraphicsView(legends_view, rmv::kColoredLegendsHeight);
 
-        rmv::widget_util::InitColorLegend(legends_scene_, legends_view);
-        legends_view_ = legends_view;
+        legends_scene_ = rmv::widget_util::InitColorLegend(legends_view);
+        legends_view_  = legends_view;
         UpdateLegends();
     }
 
@@ -187,9 +188,12 @@ namespace rmv
         {
             if (rmv::TraceManager::Get().DataSetValid())
             {
-                const RmtDataSnapshot* snapshot  = rmv::SnapshotManager::Get().GetOpenSnapshot();
-                RmtHeapType            heap_type = RmtResourceGetActualHeap(snapshot, resource);
-                return GetHeapColor(heap_type);
+                const RmtDataSnapshot* snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
+                if (snapshot != nullptr)
+                {
+                    RmtHeapType heap_type = RmtResourceGetActualHeap(snapshot, resource);
+                    return GetHeapColor(heap_type);
+                }
             }
             break;
         }
@@ -266,40 +270,44 @@ namespace rmv
         case kColorModeNotAllPreferred:
         {
             const RmtDataSnapshot* open_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
+            if (open_snapshot != nullptr)
+            {
+                uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
+                RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
 
-            uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
-            RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+                if (!resource || !resource->bound_allocation || resource->resource_type == kRmtResourceTypeCount)
+                    return rmv::RMVSettings::Get().GetColorResourceFreeSpace();
 
-            if (!resource || !resource->bound_allocation || resource->resource_type == kRmtResourceTypeCount)
-                return rmv::RMVSettings::Get().GetColorResourceFreeSpace();
-
-            // Check that the preferred heap contains all the bytes.
-            const RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
-            if (memory_segment_histogram[preferred_heap] != resource->size_in_bytes && preferred_heap != kRmtHeapTypeNone)
-                return rmv::RMVSettings::Get().GetColorNotInPreferredHeap();
-            else
-                return rmv::RMVSettings::Get().GetColorInPreferredHeap();
+                // Check that the preferred heap contains all the bytes.
+                const RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
+                if (memory_segment_histogram[preferred_heap] != resource->size_in_bytes && preferred_heap != kRmtHeapTypeNone)
+                    return rmv::RMVSettings::Get().GetColorNotInPreferredHeap();
+                else
+                    return rmv::RMVSettings::Get().GetColorInPreferredHeap();
+            }
         }
         break;
 
         case kColorModeAliasing:
         {
             const RmtDataSnapshot* open_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
-
-            uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
-            RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
-
-            if (!resource || !resource->bound_allocation || resource->resource_type == kRmtResourceTypeCount)
-                return rmv::RMVSettings::Get().GetColorResourceFreeSpace();
-
-            // Check if the resource is aliased.
-            if (RmtResourceGetAliasCount(resource) > 0)
+            if (open_snapshot != nullptr)
             {
-                return rmv::RMVSettings::Get().GetColorAliased();
-            }
-            else
-            {
-                return rmv::RMVSettings::Get().GetColorNotAliased();
+                uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
+                RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+
+                if (!resource || !resource->bound_allocation || resource->resource_type == kRmtResourceTypeCount)
+                    return rmv::RMVSettings::Get().GetColorResourceFreeSpace();
+
+                // Check if the resource is aliased.
+                if (RmtResourceGetAliasCount(resource) > 0)
+                {
+                    return rmv::RMVSettings::Get().GetColorAliased();
+                }
+                else
+                {
+                    return rmv::RMVSettings::Get().GetColorNotAliased();
+                }
             }
         }
         break;

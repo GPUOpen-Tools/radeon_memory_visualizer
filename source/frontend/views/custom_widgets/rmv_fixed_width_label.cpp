@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief Implementation for the fixed width label widget.
@@ -24,7 +24,7 @@ void RmvFixedWidthLabel::SetWidestTextString(const QString& string)
 
 QSize RmvFixedWidthLabel::sizeHint() const
 {
-    QSize size = ScaledLabel::sizeHint();
+    QSize              size = ScaledLabel::sizeHint();
     const QFontMetrics fm(font());
     const int          width = fm.horizontalAdvance(widest_text_string_);
     size.setWidth(width);

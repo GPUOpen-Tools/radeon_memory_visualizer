@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions for the aliasing memory aliasing algorithm.
@@ -48,11 +48,22 @@ namespace RmtMemoryAliasingTimelineAlgorithm
             return static_cast<uint8_t>(pos);
         }
 
-#else
+#elif defined __GNUC__ || defined __clang__
         if (mask)
         {
             return 31 - static_cast<uint8_t>(__builtin_clz(mask));
         }
+#else
+        uint8_t  pos = 31;
+        uint32_t bit = 1UL << 31;
+        do
+        {
+            if (mask & bit)
+            {
+                return pos;
+            }
+            bit >>= 1;
+        } while (pos-- > 0);
 #endif
         return UINT8_MAX;
     }

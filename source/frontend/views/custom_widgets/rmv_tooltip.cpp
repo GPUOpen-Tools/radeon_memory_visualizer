@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the custom tooltips.
@@ -53,8 +53,7 @@ void RMVTooltip::HideToolTip()
 void RMVTooltip::CreateToolTip(QGraphicsScene* scene, bool color_swatch)
 {
     // Note: The scene takes ownership of these objects so no need to delete.
-    tooltip_background_ = scene->addRect(
-        QRect(), QPen(), QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().quick_link_button_background_color);
+    tooltip_background_ = scene->addRect(QRect(), QPen(), QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().quick_link_button_background_color);
     if (color_swatch)
     {
         tooltip_contents_ = new RMVColorSwatchTooltipItem();

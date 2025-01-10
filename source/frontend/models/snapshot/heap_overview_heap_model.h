@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a model for a heap layout for the Heap Overview pane.
@@ -21,7 +21,7 @@ namespace rmv
         // global widgets
         kHeapOverviewTitle,
         kHeapOverviewDescription,
-        kHeapOverviewSamStatus,
+        kHeapOverviewHeapStatus,
 
         // bar graph widgets (first column)
         kHeapOverviewWarningText,
@@ -94,7 +94,12 @@ namespace rmv
         /// @brief Determines SAM (Smart Memory Access) was enabled when the memory trace was taken.
         ///
         /// @return If SAM is enabled, returns true, otherwise returns false.
-        static bool IsSAMSupported();
+        bool IsSAMSupported();
+
+        /// @brief Determines if CPU host aperture was enabled when the memory trace was taken.
+        ///
+        /// @return true if enabled, false otherwise.
+        bool IsCPUHostApertureSupported();
 
         /// @brief Retrieves the heap type for this model.
         ///

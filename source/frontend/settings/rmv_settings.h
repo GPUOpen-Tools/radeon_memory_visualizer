@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Define the settings and information about recently opened traces.
@@ -153,7 +153,7 @@ namespace rmv
         /// @param [in] trace_file_name  The trace file name to add/remove.
         /// @param [in] data_set         The data set.
         /// @param [in] remove_from_list If true, remove the trace file from the list.
-        void TraceLoaded(const char* trace_file_name, const RmtDataSet* data_set, bool remove_from_list);
+        void TraceLoaded(const QString& trace_file_name, const RmtDataSet* data_set, bool remove_from_list);
 
         /// @brief Remove a file from the recent files list.
         ///

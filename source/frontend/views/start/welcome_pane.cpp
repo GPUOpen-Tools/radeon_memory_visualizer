@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the welcome pane.
@@ -159,13 +159,24 @@ void WelcomePane::SetupFileList()
         ui_->recent_traces_wrapper_->layout()->addWidget(trace_widget);
     }
 
-    if (files.size() > kMaxRecentFilesToShow)
+    const size_t recent_file_count = files.size();
+
+    if (recent_file_count > kMaxRecentFilesToShow)
     {
         ui_->see_more_recent_files_button_->show();
     }
     else
     {
         ui_->see_more_recent_files_button_->hide();
+    }
+
+    if (recent_file_count == 0)
+    {
+        ui_->empty_recent_files_label_->show();
+    }
+    else
+    {
+        ui_->empty_recent_files_label_->hide();
     }
 }
 
@@ -257,8 +268,7 @@ void WelcomePane::NotifyOfNewVersion(UpdateCheck::ThreadController* thread, cons
         // This dialog will get deleted when the WelcomePane is deleted.
         UpdateCheckResultsDialog* results_dialog = new UpdateCheckResultsDialog(this);
         results_dialog->setWindowFlags((results_dialog->windowFlags() & ~Qt::WindowContextHelpButtonHint) | Qt::MSWindowsFixedSizeDialogHint);
-        results_dialog->setFixedSize(rmv::kUpdatesResultsDialogWidth,
-                                     rmv::kUpdatesResultsDialogHeight);
+        results_dialog->setFixedSize(rmv::kUpdatesResultsDialogWidth, rmv::kUpdatesResultsDialogHeight);
         results_dialog->SetShowTags(false);
         results_dialog->SetResults(update_check_results);
 

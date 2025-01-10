@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the class that handles writing snapshot data to RDF trace files.
@@ -97,7 +97,7 @@ RmtErrorCode RmtRdfSnapshotWriter::Add(const char* name, const uint64_t timestam
             std::vector<int16_t> indices;
             std::string          chunk_indices_string;
             indices.reserve(data_set_->snapshot_count);
-            for (int16_t snapshot_index = 0; snapshot_index < data_set_->snapshot_count; snapshot_index++)
+            for (int32_t snapshot_index = 0; snapshot_index < data_set_->snapshot_count; snapshot_index++)
             {
                 // Skip snapshots with an empty name.
                 if (data_set_->snapshots[snapshot_index].name[0] != '\0')
@@ -164,7 +164,7 @@ RmtErrorCode RmtRdfSnapshotWriter::Remove(const uint16_t removed_snapshot_index)
         if (data_set_->snapshot_count > 1)
         {
             indices.reserve(data_set_->snapshot_count);
-            for (int16_t snapshot_index = 0; snapshot_index < data_set_->snapshot_count; snapshot_index++)
+            for (int32_t snapshot_index = 0; snapshot_index < data_set_->snapshot_count; snapshot_index++)
             {
                 // Skip snapshots with an empty name.
                 if (data_set_->snapshots[snapshot_index].name[0] != '\0')

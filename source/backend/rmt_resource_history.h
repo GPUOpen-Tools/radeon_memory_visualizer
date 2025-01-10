@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a resource history.
@@ -36,6 +36,7 @@ typedef enum RmtResourceHistoryEventType
     kRmtResourceHistoryEventPhysicalMapToLocal        = 10,  ///< Some or all of the physical memory backing this resource was mapped.
     kRmtResourceHistoryEventPhysicalUnmap             = 11,  ///< Some or all of the physical memory backing this resource was unmapped.
     kRmtResourceHistoryEventPhysicalMapToHost         = 12,  ///< Some or all of the physical memory backing this resource was paged to local.
+    kRmtResourceHistoryEventResourceNamed             = 13   ///< A resource was named.
 
 } RmtResourceHistoryEventType;
 

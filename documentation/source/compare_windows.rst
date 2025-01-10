@@ -76,3 +76,4 @@ Viewing resource names
 The resource names will show up in the RMV UI in the resource list pane, for example:
 
 .. image:: media/vk_resource_naming_1.png
+

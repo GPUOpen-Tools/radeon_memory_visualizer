@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model corresponding to a resource combo box.
@@ -173,7 +173,8 @@ namespace rmv
 
         if ((all_checkbox_item_index_ != kInvalidIndex) && (combo_box->IsChecked(all_checkbox_item_index_)))
         {
-            filter_mask = UINT64_MAX;
+            // Set bit mask for all usage types to true.
+            filter_mask = kRmtResourceUsageTypeBitMaskAll;
         }
         else
         {

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a tree map block collection.
@@ -91,7 +91,7 @@ void RMVTreeMapBlocks::PaintClusterParents(QPainter* painter, const ResourceClus
     // Go to next parent.
     if (cluster.sub_clusters.size() != 0)
     {
-        QMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
+        QHashIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
         while (next_it.hasNext())
         {
             next_it.next();
@@ -111,7 +111,7 @@ void RMVTreeMapBlocks::PaintClusterChildren(QPainter*              painter,
     // This paints blocks inside each cluster.
     if (cluster.sub_clusters.size() == 0)
     {
-        QMapIterator<const RmtResource*, QRectF> render_it(cluster.alloc_geometry_map);
+        QHashIterator<const RmtResource*, QRectF> render_it(cluster.alloc_geometry_map);
         while (render_it.hasNext())
         {
             render_it.next();
@@ -159,7 +159,7 @@ void RMVTreeMapBlocks::PaintClusterChildren(QPainter*              painter,
     // Move onto next set of subslices.
     else
     {
-        QMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
+        QHashIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
         while (next_it.hasNext())
         {
             next_it.next();
@@ -236,7 +236,7 @@ bool RMVTreeMapBlocks::FindBlockData(ResourceCluster&       cluster,
     bool result = false;
 
     // Move onto next levels.
-    QMutableMapIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
+    QMutableHashIterator<uint32_t, ResourceCluster> next_it(cluster.sub_clusters);
     while (next_it.hasNext())
     {
         next_it.next();
@@ -254,7 +254,7 @@ bool RMVTreeMapBlocks::FindBlockData(ResourceCluster&       cluster,
     // Only perform search at bottom-most level.
     if (cluster.sub_clusters.size() == 0)
     {
-        QMutableMapIterator<const RmtResource*, QRectF> search_it(cluster.alloc_geometry_map);
+        QMutableHashIterator<const RmtResource*, QRectF> search_it(cluster.alloc_geometry_map);
         while (search_it.hasNext())
         {
             search_it.next();
@@ -794,9 +794,9 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster,
     QMap<uint32_t, const RmtResource*> sliceIdToAlloc;  // probably can just be an array of vectors.
 
     // Create some temporary allocations so we can later compute geometry for parent bounds.
-    uint64_t                                temp_parent_allocs_size = 0;
-    QVector<const RmtResource*>             temp_resources;
-    QMapIterator<uint32_t, ResourceCluster> it_1(parent_cluster.sub_clusters);
+    uint64_t                                 temp_parent_allocs_size = 0;
+    QVector<const RmtResource*>              temp_resources;
+    QHashIterator<uint32_t, ResourceCluster> it_1(parent_cluster.sub_clusters);
     while (it_1.hasNext())
     {
         it_1.next();
@@ -804,7 +804,7 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster,
         uint32_t        sliceType  = it_1.key();
         ResourceCluster subCluster = it_1.value();
 
-        RmtResource* temp_resource   = new RmtResource();
+        RmtResource* temp_resource            = new RmtResource();
         temp_resource->adjusted_size_in_bytes = subCluster.amount;
         temp_resources.push_back(temp_resource);
         temp_parent_allocs_size += subCluster.amount;
@@ -826,7 +826,7 @@ void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster,
     }
 
     // Figure out geometry for sub-clusters, but bound by parent bounds.
-    QMutableMapIterator<uint32_t, ResourceCluster> it_2(parent_cluster.sub_clusters);
+    QMutableHashIterator<uint32_t, ResourceCluster> it_2(parent_cluster.sub_clusters);
     while (it_2.hasNext())
     {
         it_2.next();
@@ -1083,7 +1083,7 @@ void RMVTreeMapBlocks::FillClusterResources(ResourceCluster& parent_cluster, QVe
     else
     {
         typedef void (RMVTreeMapBlocks::*FilterFunction)(
-            ResourceCluster & parent_cluster, int32_t slice_index, const RmtDataSnapshot* snapshot, const RmtResource* resource, bool& found_allocs) const;
+            ResourceCluster& parent_cluster, int32_t slice_index, const RmtDataSnapshot* snapshot, const RmtResource* resource, bool& found_allocs) const;
 
         FilterFunction fn = nullptr;
 

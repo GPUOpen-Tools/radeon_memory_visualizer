@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -15,6 +15,8 @@
 #include "qt_common/custom_widgets/driver_overrides_model.h"
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
+
+#include "rmt_assert.h"
 
 #include "managers/load_animation_manager.h"
 #include "managers/message_manager.h"
@@ -76,7 +78,7 @@ MainWindow::MainWindow(QWidget* parent)
 {
     const bool loaded_settings = rmv::RMVSettings::Get().LoadSettings();
 
-     ColorThemeType color_mode = static_cast<ColorThemeType>(rmv::RMVSettings::Get().GetColorTheme());
+    ColorThemeType color_mode = static_cast<ColorThemeType>(rmv::RMVSettings::Get().GetColorTheme());
 
     if (color_mode == kColorThemeTypeCount)
     {
@@ -341,6 +343,9 @@ void MainWindow::CreateActions()
     SetupHotkeyNavAction(rmv::kGotoThemesAndColorsPane, rmv::kPaneIdSettingsThemesAndColors);
     SetupHotkeyNavAction(rmv::kGotoKeyboardShortcutsPane, rmv::kPaneIdSettingsKeyboardShortcuts);
 
+    // NOTE: Actions here pass in the parent widget when constructed. It is the responsibility of the parent widget
+    // to make sure they are deleted.
+
     // Set up forward/backward navigation.
     QAction* shortcut = new QAction(this);
     shortcut->setShortcut(QKeySequence(Qt::ALT | rmv::kKeyNavForwardArrow));
@@ -429,13 +434,21 @@ void MainWindow::SetupRecentTracesMenu()
 
     const int num_items = (files.size() > kMaxSubmenuSnapshots) ? kMaxSubmenuSnapshots : files.size();
 
-    for (int i = 0; i < num_items; i++)
+    if (num_items == 0)
     {
-        recent_trace_actions_[i]->setText(files[i].path);
+        recent_traces_menu_->setEnabled(false);
+    }
+    else
+    {
+        recent_traces_menu_->setEnabled(true);
+        for (int i = 0; i < num_items; i++)
+        {
+            recent_trace_actions_[i]->setText(files[i].path);
 
-        recent_traces_menu_->addAction(recent_trace_actions_[i]);
+            recent_traces_menu_->addAction(recent_trace_actions_[i]);
 
-        recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
+            recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
+        }
     }
 
     emit rmv::MessageManager::Get().RecentFileListChanged();
@@ -860,15 +873,18 @@ void MainWindow::ShowSnapshotPane()
     }
 
     RmtDataSnapshot* snapshot = snapshot_manager.GetOpenSnapshot();
+    RMT_ASSERT(snapshot != nullptr);
+    if (snapshot != nullptr)
+    {
+        pane_manager_.OpenSnapshot(snapshot);
+        ui_->snapshot_start_stack_->setCurrentIndex(rmv::kSnapshotIndexPopulatedPane);
 
-    pane_manager_.OpenSnapshot(snapshot);
-    ui_->snapshot_start_stack_->setCurrentIndex(rmv::kSnapshotIndexPopulatedPane);
+        UpdateTitlebar();
+        UpdateSnapshotCombobox(snapshot->snapshot_point);
+        ResizeNavigationLists();
 
-    UpdateTitlebar();
-    UpdateSnapshotCombobox(snapshot->snapshot_point);
-    ResizeNavigationLists();
-
-    qApp->restoreOverrideCursor();
+        qApp->restoreOverrideCursor();
+    }
 }
 
 void MainWindow::OpenCompareSnapshots()

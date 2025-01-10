@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of a number of widget utilities.
@@ -72,9 +72,10 @@ namespace rmv
 
         /// @brief Method to initialize color legends.
         ///
-        /// @param [in] legend_widget The scene for this legend.
         /// @param [in] view          The graphics view for this legend.
-        void InitColorLegend(ColoredLegendScene*& legend_widget, QGraphicsView* view);
+        ///
+        /// @return A new scene for this legend.
+        ColoredLegendScene* InitColorLegend(QGraphicsView* view);
 
         /// @brief Set a custom palette for tables.
         ///

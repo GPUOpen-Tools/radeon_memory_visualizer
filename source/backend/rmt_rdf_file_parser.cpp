@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with the RDF file format.
@@ -438,6 +438,8 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
 
         strncpy_s(
             data_set->system_info.system_memory_type_name, kRmtMaxMemoryTypeNameLength, system_info.os.memory.type.c_str(), kRmtMaxMemoryTypeNameLength - 1);
+
+        strncpy_s(data_set->system_info.os_name, kRmtMaxOsNameLength, system_info.os.name.c_str(), kRmtMaxOsNameLength - 1);
 
         result = kRmtOk;
     }

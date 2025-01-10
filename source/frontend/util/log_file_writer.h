@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the log file writer.
@@ -54,9 +54,8 @@ namespace rmv
         /// @param [in] log_message The message to write to the log file.
         void WriteLogMessage(const char* log_message);
 
-        QMutex                mutex_;      ///< The mutex to write the log.
-        static LogFileWriter* instance_;   ///< LogFileWriter instance pointer.
-        LogLevel              log_level_;  ///< The current log level.
+        QMutex   mutex_;      ///< The mutex to write the log.
+        LogLevel log_level_;  ///< The current log level.
     };
 }  // namespace rmv
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model for a heap layout for the Heap Overview
@@ -19,9 +19,13 @@
 
 namespace rmv
 {
-    static const QString kSamStatusText   = " (Smart Access Memory is ";
-    static const QString kSamEnabledText  = "enabled)";
-    static const QString kSamDisabledText = "disabled)";
+    static const QString kSamStatusText   = "(Smart Access Memory is %1).";
+    static const QString kSamEnabledText  = "enabled";
+    static const QString kSamDisabledText = "disabled";
+
+    static const QString kCpuHostApertureStatusText = "(CPU Host Aperture is enabled).";
+    static const QString kCpuHostApertureStatusTooltip =
+        "AMD GPUs based on the RDNA 4 architecture are able to perform dynamic Smart Access Memory, so all video memory will appear in the local heap";
 
     static const QString kHeapDescriptions[kRmtHeapTypeCount] = {
         QString("This heap is in local (video) memory. It is mappable by the CPU, but does not use the CPU cache."),
@@ -93,12 +97,19 @@ namespace rmv
         // Update global data.
         if (heap_ == kRmtHeapTypeLocal)
         {
-            QString sam_status_string = kSamStatusText + (IsSAMSupported() ? kSamEnabledText : kSamDisabledText);
-            SetModelData(kHeapOverviewSamStatus, sam_status_string);
+            // If CPU host aperture is enabled, show it, else show the SAM status.
+            if (IsCPUHostApertureSupported())
+            {
+                SetModelData(kHeapOverviewHeapStatus, kCpuHostApertureStatusText, kCpuHostApertureStatusTooltip);
+            }
+            else
+            {
+                SetModelData(kHeapOverviewHeapStatus, kSamStatusText.arg((IsSAMSupported() ? kSamEnabledText : kSamDisabledText)));
+            }
         }
         else
         {
-            SetModelData(kHeapOverviewSamStatus, "");
+            SetModelData(kHeapOverviewHeapStatus, "");
         }
 
         SetModelData(kHeapOverviewTitle, RmtGetHeapTypeNameFromHeapType(heap_));
@@ -201,6 +212,11 @@ namespace rmv
     bool HeapOverviewHeapModel::IsSAMSupported()
     {
         return TraceManager::Get().GetDataSet()->flags.sam_enabled;
+    }
+
+    bool HeapOverviewHeapModel::IsCPUHostApertureSupported()
+    {
+        return TraceManager::Get().GetDataSet()->flags.cpu_host_aperture_enabled;
     }
 
     RmtHeapType HeapOverviewHeapModel::GetHeapType() const

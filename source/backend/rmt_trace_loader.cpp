@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Trace loader structures and functions.
@@ -44,7 +44,7 @@ bool RmtTraceLoaderDataSetValid()
     return false;
 }
 
-RmtErrorCode RmtTraceLoaderTraceLoad(const char* trace_file_name)
+RmtErrorCode RmtTraceLoaderTraceLoad(const char* trace_file_name, RmtDataSetErrorReportFunc reporter_function)
 {
     // Loading regular binary data.
     RmtErrorCode error_code = RmtDataSetInitialize(trace_file_name, &data_set_);
@@ -54,6 +54,9 @@ RmtErrorCode RmtTraceLoaderTraceLoad(const char* trace_file_name)
         RmtTokenClearPayloadCaches();
         return error_code;
     }
+
+    // Set the error reporter callback function.
+    RmtDataSetSetErrorReporter(&data_set_, reporter_function);
 
     // Create the default timeline for the data set.
     error_code = RmtDataSetGenerateTimeline(&data_set_, kRmtDataTimelineTypeVirtualMemory, &timeline_);

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Function implementation for any resource userdata.
@@ -64,6 +64,7 @@ struct TokenData
     RmtResourceIdentifier   correlation_id;
     char*                   resource_name;
     RmtImplicitResourceType implicit_resource_type;
+    RmtTimestamp            timestamp;
 };
 
 // An ID used for tracking resource names.
@@ -80,11 +81,14 @@ static std::unordered_map<RmtResourceNameHash, RmtCorrelationIdentifier> resourc
 static std::unordered_map<RmtResourceNameHash, RmtResourceIdentifier> resource_hash_to_internal_resource_id;
 static std::unordered_map<RmtResourceIdentifier, RmtResourceNameHash> internal_resource_id_to_resource_hash_id;
 
-// Given a correlation ID, find the resource name.
-static std::unordered_map<RmtCorrelationIdentifier, char*> correlation_id_to_resource_name;
+// Definition for the ID to multi-name lookup map.  Each resource can have multiple names over the course of its lifetime.
+using IdToNameCollectionLookupType = std::unordered_map<RmtCorrelationIdentifier, std::map<RmtTimestamp, const char*>>;
 
-// This is the one that sticks around. Map of resource id to string.  This is used to patch everything up in after processing completes.
-static std::unordered_map<RmtResourceIdentifier, char*> internal_resource_id_to_resource_name;
+// Given a correlation ID and timestamp, find the resource name.
+static IdToNameCollectionLookupType correlation_id_to_resource_names;
+
+// This is the one that sticks around. Map of resource id to a map of strings with a timestamp for the key.  This is used to patch everything up in after processing completes.
+static IdToNameCollectionLookupType internal_resource_id_to_resource_names;
 
 // Lookup map of implicit resources using an internal resource identifier as the key.
 static std::unordered_map<RmtResourceIdentifier, RmtImplicitResourceType> resource_identifier_implicit;
@@ -241,9 +245,16 @@ static void ProcessResourceCorrelationToken(const TokenData& token_data)
     resource_hash_to_internal_resource_id[hash]                   = resource_identifier;
 }
 
+static bool StoreNameForResource(const RmtResourceIdentifier identifier, RmtTimestamp timestamp, const char* name, IdToNameCollectionLookupType& out_lookup_map)
+{
+    out_lookup_map[identifier].insert(std::make_pair(timestamp, name));
+
+    return true;
+}
+
 static void ProcessResourceNameToken(const TokenData& token_data, bool any_correlations)
 {
-    correlation_id_to_resource_name[token_data.correlation_id] = token_data.resource_name;
+    StoreNameForResource(token_data.correlation_id, token_data.timestamp, token_data.resource_name, correlation_id_to_resource_names);
 
     if (any_correlations)
     {
@@ -259,7 +270,10 @@ static void ProcessResourceNameToken(const TokenData& token_data, bool any_corre
             if (internal_resource_ids_needing_correlation.find(internal_resource_identifier) == internal_resource_ids_needing_correlation.end())
             {
                 // Update the internal resource ID to resource name lookup map.
-                internal_resource_id_to_resource_name[internal_resource_identifier] = correlation_id_to_resource_name[token_data.correlation_id];
+                StoreNameForResource(internal_resource_identifier,
+                                     token_data.timestamp,
+                                     correlation_id_to_resource_names[token_data.correlation_id].find(token_data.timestamp)->second,
+                                     internal_resource_id_to_resource_names);
                 return;
             }
         }
@@ -274,8 +288,8 @@ static void ProcessResourceNameToken(const TokenData& token_data, bool any_corre
             if (internal_resource_id_iterator2 != resource_hash_to_internal_resource_id.end())
             {
                 // The internal resource ID was found.  Map the resource name to the internal resource ID.
-                const RmtResourceIdentifier internal_resource_identifier            = (*internal_resource_id_iterator2).second;
-                internal_resource_id_to_resource_name[internal_resource_identifier] = correlation_id_to_resource_name[token_data.correlation_id];
+                const RmtResourceIdentifier internal_resource_identifier             = (*internal_resource_id_iterator2).second;
+                internal_resource_id_to_resource_names[internal_resource_identifier] = correlation_id_to_resource_names[token_data.correlation_id];
             }
         }
     }
@@ -290,8 +304,8 @@ static void ProcessResourceNameToken(const TokenData& token_data, bool any_corre
         if (it != resource_hash_to_internal_resource_id.end())
         {
             // The internal resource ID was found.  Map the resource name to the internal resource ID.
-            const RmtResourceIdentifier internal_resource_identifier            = (*it).second;
-            internal_resource_id_to_resource_name[internal_resource_identifier] = correlation_id_to_resource_name[token_data.correlation_id];
+            const RmtResourceIdentifier internal_resource_identifier             = (*it).second;
+            internal_resource_id_to_resource_names[internal_resource_identifier] = correlation_id_to_resource_names[token_data.correlation_id];
         }
     }
 }
@@ -350,7 +364,7 @@ static void ProcessImplicitResourceToken(const TokenData& token_data, bool any_c
 
 RmtErrorCode RmtResourceUserdataProcessEvents(const bool any_correlations)
 {
-    internal_resource_id_to_resource_name.clear();
+    internal_resource_id_to_resource_names.clear();
     resource_identifier_implicit.clear();
 
     // Process events.
@@ -383,7 +397,7 @@ RmtErrorCode RmtResourceUserdataProcessEvents(const bool any_correlations)
     resource_hash_to_correlation_id.clear();
     resource_hash_to_internal_resource_id.clear();
     internal_resource_id_to_resource_hash_id.clear();
-    correlation_id_to_resource_name.clear();
+    correlation_id_to_resource_names.clear();
     internal_resource_ids_needing_correlation.clear();
     paired_resources_and_heaps.clear();
     tokens.clear();
@@ -407,6 +421,7 @@ RmtErrorCode RmtResourceUserdataTrackResourceCreateToken(const RmtResourceIdenti
         token_data.resource_type        = resource_type;
         token_data.driver_resource_id   = driver_resource_id;
         token_data.internal_resource_id = internal_resource_id;
+        token_data.timestamp            = timestamp;
         tokens.insert(std::make_pair(timestamp, token_data));
     }
 
@@ -418,6 +433,7 @@ RmtErrorCode RmtResourceUserdataTrackResourceDestroyToken(const RmtResourceIdent
     TokenData token_data            = {};
     token_data.token_type           = kResourceDestroy;
     token_data.internal_resource_id = internal_resource_id;
+    token_data.timestamp            = timestamp;
     tokens.insert(std::make_pair(timestamp, token_data));
 
     return kRmtOk;
@@ -434,6 +450,7 @@ RmtErrorCode RmtResourceUserdataTrackResourceCorrelationToken(const RmtResourceI
     token_data.token_type         = kResourceCorrelation;
     token_data.driver_resource_id = driver_resource_id;
     token_data.correlation_id     = correlation_id;
+    token_data.timestamp          = timestamp;
     tokens.insert(std::make_pair(timestamp, token_data));
 
     return kRmtOk;
@@ -467,6 +484,7 @@ RmtErrorCode RmtResourceUserdataTrackResourceNameToken(const RmtCorrelationIdent
         TokenData token_data      = {};
         token_data.token_type     = kResourceName;
         token_data.correlation_id = resource_name_id;
+        token_data.timestamp      = timestamp - delay_time;
         size_t name_length        = strlen(resource_name) + 1;
         result                    = resource_name_string_pool.Allocate(name_length, &token_data.resource_name);
         RMT_ASSERT(result == kRmtOk);
@@ -492,6 +510,7 @@ RmtErrorCode RmtResourceUserdataTrackImplicitResourceToken(const RmtResourceIden
         token_data.token_type             = kResourceImplicit;
         token_data.correlation_id         = correlation_id;
         token_data.implicit_resource_type = implicit_resource_type;
+        token_data.timestamp              = timestamp;
 
         tokens.insert(std::make_pair(timestamp - delay_time, token_data));
         return kRmtOk;
@@ -544,40 +563,110 @@ RmtErrorCode RmtResourceUserDataTrackBoundResource(const RmtResource* resource, 
     return kRmtOk;
 }
 
-RmtErrorCode RmtResourceUserdataGetResourceName(const RmtResourceIdentifier resource_id, const char** out_resource_name)
+RmtErrorCode RmtResourceUserdataGetResourceNameAtTimestamp(const RmtResourceIdentifier resource_id,
+                                                           const RmtTimestamp          creation_time,
+                                                           const RmtTimestamp          timestamp,
+                                                           const char**                out_resource_name)
 {
+    RMT_ASSERT(out_resource_name != nullptr);
     RMT_RETURN_ON_ERROR(out_resource_name != nullptr, kRmtErrorInvalidPointer);
 
     RmtErrorCode result = kRmtOk;
 
-    const auto& resource_name_iterator = internal_resource_id_to_resource_name.find(resource_id);
-    if (resource_name_iterator != internal_resource_id_to_resource_name.end())
+    const auto resource_name_iterator = internal_resource_id_to_resource_names.find(resource_id);
+    if (resource_name_iterator != internal_resource_id_to_resource_names.end())
     {
-        *out_resource_name = (*resource_name_iterator).second;
+        auto&        name_list           = (*resource_name_iterator).second;
+        const char*  last_name_found     = nullptr;
+        RmtTimestamp last_name_timestamp = 0;
+
+        // Search through the list of names in reverse order to find the name at the timestamp specified.
+        for (auto it = name_list.rbegin(); it != name_list.rend(); ++it)
+        {
+            if (it->first < creation_time)
+            {
+                break;
+            }
+
+            last_name_found     = it->second;
+            last_name_timestamp = it->first;
+            if (it->first <= timestamp)
+            {
+                *out_resource_name = last_name_found;
+                break;
+            }
+        }
+
+        if (*out_resource_name == nullptr)
+        {
+            if (last_name_timestamp >= creation_time)
+            {
+                // If no name is found at the timestamp specified, use the last name associated with the resource, but only if it is after the resource' creation time.
+                *out_resource_name = last_name_found;
+            }
+        }
     }
-    else
+
+    if (*out_resource_name == nullptr)
     {
-        *out_resource_name = nullptr;
-        result             = kRmtErrorNoResourceFound;
+        result = kRmtErrorNoResourceFound;
     }
 
     return result;
 }
 
-RmtErrorCode RmtResourceUserdataUpdateResourceName(const RmtResourceList* resource_list, const RmtResourceIdentifier internal_resource_id)
+RmtErrorCode RmtResourceUserdataGetResourceName(const RmtResourceIdentifier resource_id, const char** out_resource_name)
+{
+    return RmtResourceUserdataGetResourceNameAtTimestamp(resource_id, 0, UINT64_MAX, out_resource_name);
+}
+
+RmtErrorCode RmtResourceUserdataUpdateResourceName(const RmtResourceList*      resource_list,
+                                                   const RmtResourceIdentifier internal_resource_id,
+                                                   RmtTimestamp                timestamp)
 {
     RmtResource* found_resource = NULL;
     RmtErrorCode result         = RmtResourceListGetResourceByResourceId(resource_list, internal_resource_id, (const RmtResource**)&found_resource);
     if (result == kRmtOk)
     {
         const char* resource_name = nullptr;
-        if (RmtResourceUserdataGetResourceName(internal_resource_id, &resource_name) == kRmtOk)
+        if (RmtResourceUserdataGetResourceNameAtTimestamp(internal_resource_id, found_resource->create_time, timestamp, &resource_name) == kRmtOk)
         {
             found_resource->name = resource_name;
         }
     }
 
     return result;
+}
+
+RmtErrorCode RmtResourceUserdataUpdateNamedResourceHistoryEvents(RmtResourceHistory* out_resource_history_list)
+{
+    RMT_ASSERT(out_resource_history_list);
+    RMT_RETURN_ON_ERROR(out_resource_history_list, kRmtErrorInvalidPointer);
+    RMT_ASSERT(out_resource_history_list->resource);
+    RMT_RETURN_ON_ERROR(out_resource_history_list->resource, kRmtErrorInvalidPointer);
+
+    const RmtResourceIdentifier internal_resource_id = out_resource_history_list->resource->identifier;
+
+    const auto resource_name_iterator = internal_resource_id_to_resource_names.find(internal_resource_id);
+    if (resource_name_iterator != internal_resource_id_to_resource_names.end())
+    {
+        auto& name_list = (*resource_name_iterator).second;
+        for (auto it = name_list.begin(); it != name_list.end(); ++it)
+        {
+            const uint64_t timestamp = it->first;
+            if (timestamp >= out_resource_history_list->resource->create_time)
+            {
+                const uint64_t destroy_time = out_resource_history_list->resource->destroy_time;
+                if ((destroy_time > 0) && (timestamp < destroy_time))
+                {
+                    RmtResourceHistoryAddEvent(
+                        out_resource_history_list, RmtResourceHistoryEventType::kRmtResourceHistoryEventResourceNamed, 0, timestamp, 0, 0, 0, 0, false);
+                }
+            }
+        }
+    }
+
+    return kRmtOk;
 }
 
 bool RmtResourceUserDataIsResourceImplicit(const RmtResourceIdentifier resource_id)
@@ -623,14 +712,14 @@ void RmtResourceUserDataCleanup()
     resource_hash_to_correlation_id.clear();
     resource_hash_to_internal_resource_id.clear();
     internal_resource_id_to_resource_hash_id.clear();
-    correlation_id_to_resource_name.clear();
+    correlation_id_to_resource_names.clear();
     internal_resource_ids_needing_correlation.clear();
     paired_resources_and_heaps.clear();
     tokens.clear();
 
     // Clear lookup maps used after the trace file has been processed.
     resource_identifier_implicit.clear();
-    internal_resource_id_to_resource_name.clear();
+    internal_resource_id_to_resource_names.clear();
     paired_heap_to_resource_map.clear();
     paired_resource_to_heap_map.clear();
 }

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -38,6 +38,9 @@ typedef void* (*RmtDataSetAllocationFunc)(size_t size_in_bytes, size_t alignment
 /// Callback function prototype for freeing memory.
 typedef void (*RmtDataSetFreeFunc)(void* buffer);
 
+/// Callback function prototype for reporting errors.
+typedef void (*RmtDataSetErrorReportFunc)(RmtDataSet* data_set, const RmtErrorCode error_code, RmtErrorResponseCode* out_error_response_code);
+
 /// A structure encapsulating a single snapshot point.
 typedef struct RmtSnapshotPoint
 {
@@ -64,6 +67,7 @@ struct RmtDataSetFlags
     bool contains_correlation_tokens : 1;  ///< Whether the dataset contains any correlation tokens.
     bool cancel_background_task_flag : 1;  ///< If true, indicates a background task has been cancelled.
     bool implicit_heap_detection : 1;      ///< If true, indicates the trace includes data that can be used to determine if a heap is implicit.
+    bool cpu_host_aperture_enabled : 1;    ///< Whether the dataset is CPU host aperture enabled (RDNA 4 on by default).
 };
 
 /// A structure encapsulating a single RMT dataset.
@@ -108,9 +112,9 @@ typedef struct RmtDataSet
     uint32_t                active_gpu;              ///< The active GPU used by the application process that was captured.
     RmtSnapshotWriterHandle snapshot_writer_handle;  ///< The object responsible for writing snapshots to the trace file.
 
-    struct RmtDataSetFlags flags;                       ///< The dataset flags, described above.
-    char*                  driver_overrides_json_text;  ///< The Driver Overrides JSON text.
-
+    struct RmtDataSetFlags    flags;                       ///< The dataset flags, described above.
+    char*                     driver_overrides_json_text;  ///< The Driver Overrides JSON text.
+    RmtDataSetErrorReportFunc error_report_func;  ///< The error reporting function.  Allows errors to be report and specify what response should be taken.
 } RmtDataSet;
 
 /// Initialize the RMT data set from a file path.
@@ -146,6 +150,17 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set);
 /// @retval
 /// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set);
+
+/// Function to set the error reporter handler.
+///
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure.
+/// @param [in]  reporter_function                          The error reporter function.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+RmtErrorCode RmtDataSetSetErrorReporter(RmtDataSet* data_set, const RmtDataSetErrorReportFunc reporter_function);
 
 /// Generate a timeline from the data set.
 ///

@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -12,7 +12,7 @@ project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 11)
+set(RMV_MINOR_VERSION 12)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -37,7 +37,7 @@ option(RDF_STATIC              "Build RDF as a static library" ON)
 ## For RMV we only care about the Debug and Release configuration types
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
-## Determine build suffixes based on configuration and bitness
+## Determine build suffixes based on configuration and bitness status
 ## These values will be inherited by all child projects
 set(ADT_PLATFORM_POSTFIX "-x86")
 IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -47,17 +47,6 @@ ENDIF()
 # As default for RMV, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX)
-
-# Add cmake utilities
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-IF(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../debug)
-ELSE(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug)
-ENDIF(WIN32)
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
@@ -130,11 +119,7 @@ ENDIF(WIN32)
 ## Copy Documentation and Samples to output directory. Note - this target is intentionally not included in
 ## the default project build. It needs to be explicitly built as a separate project
 
-# Determine where the build process will be placing the binary files
-# This is evaluated at project build time - not at CMake generation time
-set(BUILD_ROOT $<$<CONFIG:debug>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}>$<$<CONFIG:release>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}>)
-
-set(DOCS_OUTPUT_DIR ${BUILD_ROOT})
+set(DOCS_OUTPUT_DIR ${CMAKE_BINARY_DIR})
 
 # group sphinx source files into a sphinx folder
 file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_SOURCE_DIR}/documentation/source/*.rst)
@@ -152,6 +137,8 @@ set (RELEASE_DOCS_IN_ROOT
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
 
+install(FILES ${RELEASE_DOCS_IN_ROOT} DESTINATION . COMPONENT apps)
+
 find_program(SPHINX_EXECUTABLE sphinx-build)
 if(SPHINX_EXECUTABLE)
     # Define the option to pass to the sphinx documentation job
@@ -167,6 +154,7 @@ if(SPHINX_EXECUTABLE)
         COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rmv/. -t ${SPHINX_OPTION}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rmv/.doctrees
     )
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/help DESTINATION . COMPONENT apps)
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
     # If the sphinx binary isn't found, then just create the Documentation project with only the release docs in it.
@@ -178,5 +166,39 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sample_trace.rmv  ${DOCS_OUTPUT_DIR}/samples/.
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sample_trace.rmv  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rmv
 )
+
+install(FILES
+       ${DOCS_OUTPUT_DIR}/samples/sample_trace.rmv
+        DESTINATION
+        samples
+        COMPONENT apps
+)
+
+if (WIN32)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+    include(InstallRequiredSystemLibraries)
+
+    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . COMPONENT apps)
+endif (WIN32)
+
+# CPack packaging
+
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_COMPONENTS_GROUPING IGNORE)
+
+set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonMemoryVisualizer_${RMV_MAJOR_VERSION}.${RMV_MINOR_VERSION}.${RMV_BUGFIX_NUMBER}.${RMV_BUILD_NUMBER}")
+set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonMemoryVisualizer-PDB_${RMV_MAJOR_VERSION}.${RMV_MINOR_VERSION}.${RMV_BUGFIX_NUMBER}.${RMV_BUILD_NUMBER}")
+
+include(CPack)
+
+cpack_add_component(apps
+        DISPLAY_NAME "Applications"
+        DESCRIPTION "RMV application")
+cpack_add_component(debug
+        DISPLAY_NAME "Debug Symbols"
+        DESCRIPTION "Debug Symbols")
+
+

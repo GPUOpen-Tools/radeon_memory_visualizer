@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource details model.
@@ -188,13 +188,16 @@ namespace rmv
             if (TraceManager::Get().DataSetValid())
             {
                 const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-                SetModelData(kResourceDetailsFullyMapped, QString(RmtResourceIsCompletelyInPreferredHeap(open_snapshot, resource) ? "Yes" : "No"));
+                if (open_snapshot != nullptr)
+                {
+                    SetModelData(kResourceDetailsFullyMapped, QString(RmtResourceIsCompletelyInPreferredHeap(open_snapshot, resource) ? "Yes" : "No"));
 
-                // Calculate histogram.
-                uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
-                RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
-                double unmapped_percentage = ((double)memory_segment_histogram[kRmtResourceBackingStorageUnmapped] / (double)resource->size_in_bytes) * 100;
-                SetModelData(kResourceDetailsUnmappedPercentage, QString::number(unmapped_percentage) + "%");
+                    // Calculate histogram.
+                    uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
+                    RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+                    double unmapped_percentage = ((double)memory_segment_histogram[kRmtResourceBackingStorageUnmapped] / (double)resource->size_in_bytes) * 100;
+                    SetModelData(kResourceDetailsUnmappedPercentage, QString::number(unmapped_percentage) + "%");
+                }
             }
 
             SetModelData(kResourceDetailsCreateTime, rmv::time_util::ClockToTimeUnit(resource->create_time));
@@ -260,6 +263,7 @@ namespace rmv
         case kRmtResourceHistoryEventResourceCreated:
         case kRmtResourceHistoryEventResourceDestroyed:
         case kRmtResourceHistoryEventResourceBound:
+        case kRmtResourceHistoryEventResourceNamed:
             return RMVSettings::Get().GetColorResourceHistoryResourceEvent();
 
         case kRmtResourceHistoryEventVirtualMemoryMapped:
@@ -306,6 +310,7 @@ namespace rmv
 
         case kRmtResourceHistoryEventResourceBound:
         case kRmtResourceHistoryEventVirtualMemoryAllocated:
+        case kRmtResourceHistoryEventResourceNamed:
             return kIconShapeTriangle;
 
         case kRmtResourceHistoryEventVirtualMemoryFree:
@@ -328,11 +333,14 @@ namespace rmv
         if (TraceManager::Get().DataSetValid())
         {
             RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-            resource_history_.event_count  = -1;
-            const RmtResource* resource    = nullptr;
-            GetResourceFromResourceId(resource_identifier, &resource);
+            if (open_snapshot != nullptr)
+            {
+                resource_history_.event_count = -1;
+                const RmtResource* resource   = nullptr;
+                GetResourceFromResourceId(resource_identifier, &resource);
 
-            RmtDataSnapshotGenerateResourceHistory(open_snapshot, resource, &resource_history_);
+                RmtDataSnapshotGenerateResourceHistory(open_snapshot, resource, &resource_history_);
+            }
         }
     }
 
@@ -461,7 +469,10 @@ namespace rmv
         uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
 
         const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-        RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+        if (open_snapshot != nullptr)
+        {
+            RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+        }
 
         value = 0.0f;
         if (resource->size_in_bytes > 0)
@@ -508,7 +519,10 @@ namespace rmv
         uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
 
         const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-        RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+        if (open_snapshot != nullptr)
+        {
+            RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+        }
 
         value = 0;
         if (resource->size_in_bytes > 0)
@@ -531,20 +545,23 @@ namespace rmv
             if (TraceManager::Get().DataSetValid())
             {
                 const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-                if (resource->bound_allocation != nullptr)
+                if (open_snapshot != nullptr)
                 {
-                    // If preferred heap is unspecified, then don't care if the memory is mapped or not.
-                    RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
-                    if (preferred_heap == kRmtHeapTypeNone)
+                    if (resource->bound_allocation != nullptr)
                     {
-                        return true;
+                        // If preferred heap is unspecified, then don't care if the memory is mapped or not.
+                        RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
+                        if (preferred_heap == kRmtHeapTypeNone)
+                        {
+                            return true;
+                        }
                     }
-                }
-                bool all_mapped = RmtPageTableIsEntireResourcePhysicallyMapped(&open_snapshot->page_table, resource);
-                if (all_mapped)
-                {
-                    // If it's all physically mapped, make sure it's all in the preferred heap.
-                    return RmtResourceIsCompletelyInPreferredHeap(open_snapshot, resource);
+                    bool all_mapped = RmtPageTableIsEntireResourcePhysicallyMapped(&open_snapshot->page_table, resource);
+                    if (all_mapped)
+                    {
+                        // If it's all physically mapped, make sure it's all in the preferred heap.
+                        return RmtResourceIsCompletelyInPreferredHeap(open_snapshot, resource);
+                    }
                 }
             }
         }

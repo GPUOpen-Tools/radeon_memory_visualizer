@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Timeline model.
@@ -242,6 +242,9 @@ namespace rmv
             const RmtSnapshotPoint* current_snapshot_point = RmtTraceLoaderGetSnapshotPoint(current_snapshot_point_index);
             if (current_snapshot_point == snapshot_point)
             {
+                // Get a pointer to the opened snapshot (if one is opened or null if no snapshot is opened).
+                // If the currently opened snapshot is the one being deleted, the lower level snapshot remove function will
+                // reset it.
                 RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
                 RmtDataSetRemoveSnapshot(data_set, current_snapshot_point_index, open_snapshot);
             }
@@ -249,6 +252,23 @@ namespace rmv
 
         // Update the model as we've done edits.
         Update();
+    }
+
+    RmtSnapshotPoint* TimelineModel::FindSnapshotByName(const QString& name) const
+    {
+        // Locate a snapshot in the model with a matching name.
+        for (int32_t current_snapshot_point_index = 0; current_snapshot_point_index < RmtTraceLoaderGetSnapshotCount(); ++current_snapshot_point_index)
+        {
+            RmtSnapshotPoint* current_snapshot_point = RmtTraceLoaderGetSnapshotPoint(current_snapshot_point_index);
+            if (current_snapshot_point != nullptr)
+            {
+                if (name == current_snapshot_point->name)
+                {
+                    return current_snapshot_point;
+                }
+            }
+        }
+        return nullptr;
     }
 
     int TimelineModel::RowCount()

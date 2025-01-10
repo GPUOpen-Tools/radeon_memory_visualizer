@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the settings.
@@ -45,7 +45,7 @@ namespace rmv
         recent_files_.push_back(recent_file);
     }
 
-    void RMVSettings::TraceLoaded(const char* trace_file_name, const RmtDataSet* data_set, bool remove_from_list)
+    void RMVSettings::TraceLoaded(const QString& trace_file_name, const RmtDataSet* data_set, bool remove_from_list)
     {
         RecentFileData trace_file;
 

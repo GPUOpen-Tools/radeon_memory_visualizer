@@ -39,7 +39,6 @@
        <property name="font">
         <font>
          <pointsize>12</pointsize>
-         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -56,10 +55,10 @@
        <item>
         <spacer name="vertical_spacer_4_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -80,7 +79,6 @@
          <property name="font">
           <font>
            <pointsize>12</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -92,10 +90,10 @@
        <item>
         <spacer name="vertical_spacer_8_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -105,7 +103,7 @@
          </property>
         </spacer>
        </item>
-       <item alignment="Qt::AlignLeft">
+       <item alignment="Qt::AlignmentFlag::AlignLeft">
         <widget class="ScaledPushButton" name="open_rmv_trace_button_">
          <property name="font">
           <font>
@@ -120,10 +118,10 @@
        <item>
         <spacer name="vertical_spacer_3_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -144,7 +142,6 @@
          <property name="font">
           <font>
            <pointsize>12</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -156,10 +153,10 @@
        <item>
         <spacer name="vertical_spacer_9_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -169,7 +166,14 @@
          </property>
         </spacer>
        </item>
-       <item alignment="Qt::AlignLeft">
+       <item>
+        <widget class="ScaledLabel" name="empty_recent_files_label_">
+         <property name="text">
+          <string>There are no recently opened memory traces</string>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignmentFlag::AlignLeft">
         <widget class="QWidget" name="recent_traces_wrapper_" native="true">
          <property name="minimumSize">
           <size>
@@ -182,7 +186,7 @@
            <number>3</number>
           </property>
           <property name="sizeConstraint">
-           <enum>QLayout::SetFixedSize</enum>
+           <enum>QLayout::SizeConstraint::SetFixedSize</enum>
           </property>
           <property name="leftMargin">
            <number>0</number>
@@ -202,10 +206,10 @@
        <item>
         <spacer name="vertical_spacer_11_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -215,7 +219,7 @@
          </property>
         </spacer>
        </item>
-       <item alignment="Qt::AlignLeft">
+       <item alignment="Qt::AlignmentFlag::AlignLeft">
         <widget class="ScaledPushButton" name="see_more_recent_files_button_">
          <property name="font">
           <font>
@@ -230,10 +234,10 @@
        <item>
         <spacer name="vertical_spacer_2_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -259,7 +263,6 @@
            <property name="font">
             <font>
              <pointsize>12</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -273,10 +276,10 @@
        <item>
         <spacer name="vertical_spacer_10_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -291,7 +294,7 @@
          <property name="spacing">
           <number>3</number>
          </property>
-         <item alignment="Qt::AlignLeft">
+         <item alignment="Qt::AlignmentFlag::AlignLeft">
           <widget class="ScaledPushButton" name="open_getting_started_button_">
            <property name="font">
             <font>
@@ -303,7 +306,7 @@
            </property>
           </widget>
          </item>
-         <item alignment="Qt::AlignLeft">
+         <item alignment="Qt::AlignmentFlag::AlignLeft">
           <widget class="ScaledPushButton" name="open_rmv_help_button_">
            <property name="font">
             <font>
@@ -320,7 +323,7 @@
        <item>
         <spacer name="vertical_spacer_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -340,10 +343,10 @@
        <item>
         <spacer name="vertical_spacer_6_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -364,7 +367,6 @@
          <property name="font">
           <font>
            <pointsize>12</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -376,10 +378,10 @@
        <item>
         <spacer name="vertical_spacer_12_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -399,10 +401,10 @@
        <item>
         <spacer name="vertical_spacer_5_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -422,10 +424,10 @@
        <item>
         <spacer name="vertical_spacer_17">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -445,10 +447,10 @@
        <item>
         <spacer name="vertical_spacer_7_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -468,10 +470,10 @@
        <item>
         <spacer name="vertical_spacer_14_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -491,10 +493,10 @@
        <item>
         <spacer name="vertical_spacer_19_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -514,10 +516,10 @@
        <item>
         <spacer name="vertical_spacer_18_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -537,10 +539,10 @@
        <item>
         <spacer name="vertical_spacer_16_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -560,10 +562,10 @@
        <item>
         <spacer name="vertical_spacer_13_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -584,7 +586,6 @@
          <property name="font">
           <font>
            <pointsize>12</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -596,10 +597,10 @@
        <item>
         <spacer name="vertical_spacer_15_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
+          <enum>QSizePolicy::Policy::Fixed</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -619,7 +620,7 @@
        <item>
         <spacer name="vertical_spacer_1_">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -636,7 +637,7 @@
    <item>
     <spacer name="horizontal_spacer_">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>

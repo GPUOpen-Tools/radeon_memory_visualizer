@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Memory Event History API.
@@ -619,9 +619,15 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
     RMT_ASSERT(data_set != nullptr);
     RMT_RETURN_ON_ERROR(data_set != nullptr, kRmtErrorInvalidPointer);
 
+    // The bound_resources lookup map is used to locate a list of resource identifiers bound to a virtual allocation.
+    // A virtual allocation unique identifier is used as the key.
     std::unordered_map<uint64_t, std::vector<RmtResourceIdentifier>> bound_resources;
-    std::unordered_map<RmtResourceIdentifier, uint64_t>              allocation_resource_map;
-    std::unordered_set<RmtResourceIdentifier>                        heap_resource_identifiers;
+
+    // The allocation_resource_map is used to find a virtual allocation's unique identifier bound to a resource with the resource identifier as the key.
+    std::unordered_map<RmtResourceIdentifier, uint64_t> allocation_resource_map;
+
+    // The heap_resource_identifiers set is a list of resource identifiers which are heap resources.
+    std::unordered_set<RmtResourceIdentifier> heap_resource_identifiers;
 
     // Instantiate a new event history object.  The user is responsible for deleting this with the RmtMemoryEventHistoryFreeHistory() API function.
     EventHistoryImpl* history                       = new EventHistoryImpl();
@@ -1164,8 +1170,12 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
     RMT_ASSERT(data_set != nullptr);
     RMT_RETURN_ON_ERROR(data_set != nullptr, kRmtErrorInvalidPointer);
 
+    // The bound_resources lookup map is used to locate a list of resource identifiers bound to a virtual allocation.
+    // A virtual allocation unique identifier is used as the key.
     std::unordered_map<uint64_t, std::vector<RmtResourceIdentifier>> bound_resources;
-    std::unordered_map<RmtResourceIdentifier, uint64_t>              allocation_resource_map;
+
+    // The allocation_resource_map is used to find a virtual allocation's unique identifier bound to a resource with the resource identifier as the key.
+    std::unordered_map<RmtResourceIdentifier, uint64_t> allocation_resource_map;
 
     EventHistoryImpl* history                       = new EventHistoryImpl();
     *out_history_handle                             = reinterpret_cast<RmtMemoryEventHistoryHandle*>(history);
@@ -1246,6 +1256,9 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
                         if (virtual_allocation_bind_list != bound_resources.end())
                         {
                             virtual_allocation_bind_list->second.push_back(current_token.resource_bind_token.resource_identifier);
+
+                            // Use the resource identifier as a key to map the bound resource to a virtual allocation's unique identifier.
+                            allocation_resource_map[current_token.resource_bind_token.resource_identifier] = virtual_allocation->allocation_identifier;
                         }
                     }
                 }

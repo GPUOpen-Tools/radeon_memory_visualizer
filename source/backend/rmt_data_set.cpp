@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -564,6 +564,23 @@ static RmtErrorCode ParseChunks(RmtDataSet* data_set)
     return kRmtOk;
 }
 
+// Check for CPU host aperture support.
+//
+// Supported by default on RDNA 4 hardware.
+static void CheckForCpuHostApertureSupport(RmtDataSet* data_set)
+{
+    if (data_set->system_info.pcie_family_id == kFamilyNavi4)
+    {
+        data_set->segment_info[kRmtHeapTypeLocal].size += data_set->segment_info[kRmtHeapTypeInvisible].size;
+        data_set->segment_info[kRmtHeapTypeInvisible].size = 0;
+        data_set->flags.cpu_host_aperture_enabled          = true;
+    }
+    else
+    {
+        data_set->flags.cpu_host_aperture_enabled = false;
+    }
+}
+
 // Check for SAM (Smart access memory) support.
 //
 // Without SAM support, the local memory size is 256MB. If SAM is enabled, the local memory
@@ -850,7 +867,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypePageTableUpdate:
     {
-
         if (!current_token->page_table_update_token.is_unmapping)
         {
             const uint64_t size_in_bytes =
@@ -948,7 +964,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     {
         if (!RmtResourceUserDataIsResourceImplicit(current_token->resource_bind_token.resource_identifier))
         {
-
             error_code = RmtResourceListAddResourceBind(&out_snapshot->resource_list, &current_token->resource_bind_token, !data_set->flags.userdata_processed);
 
             if (error_code == kRmtErrorSharedAllocationNotFound)
@@ -993,7 +1008,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                     resource_create_token.resource_identifier = matching_resource->identifier;
                     resource_create_token.owner_type          = matching_resource->owner_type;
                     resource_create_token.commit_type         = matching_resource->commit_type;
-                    resource_create_token.resource_type = matching_resource->resource_type;
+                    resource_create_token.resource_type       = matching_resource->resource_type;
                     memcpy(&resource_create_token.common, &current_token->common, sizeof(RmtTokenCommon));
 
                     switch (matching_resource->resource_type)
@@ -1055,7 +1070,6 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
     case kRmtTokenTypeCpuMap:
     {
-
         if (current_token->cpu_map_token.is_unmap)
         {
             error_code = RmtVirtualAllocationListAddCpuUnmap(
@@ -1160,14 +1174,15 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 
             if (!data_set->flags.userdata_processed)
             {
-                RmtResourceUserdataTrackResourceCreateToken(current_token->resource_create_token.original_resource_identifier,
-                                                            current_token->resource_create_token.resource_identifier,
-                                                            current_token->resource_create_token.resource_type,
-                                                            current_token->common.timestamp);
+                error_code = RmtResourceUserdataTrackResourceCreateToken(current_token->resource_create_token.original_resource_identifier,
+                                                                         current_token->resource_create_token.resource_identifier,
+                                                                         current_token->resource_create_token.resource_type,
+                                                                         current_token->common.timestamp);
             }
             else
             {
-                RmtResourceUserdataUpdateResourceName(&out_snapshot->resource_list, current_token->resource_create_token.resource_identifier);
+                error_code = RmtResourceUserdataUpdateResourceName(
+                    &out_snapshot->resource_list, current_token->resource_create_token.resource_identifier, out_snapshot->timestamp);
             }
 
             RMT_ASSERT(error_code == kRmtOk);
@@ -1207,6 +1222,9 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
 // helper function that mirrors the .bak file to the original.
 static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_temporary)
 {
+    // The retry flag is set by the error reporter callback in response to a failed operation.
+    bool retry = false;
+
     RMT_ASSERT(data_set);
     if (data_set->flags.read_only)
     {
@@ -1228,51 +1246,100 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
 
     if (remove_temporary)
     {
-        bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
-        RMT_ASSERT(success);
-        if (success)
+        do
         {
-            result = kRmtOk;
-        }
+            const bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
+
+            if (success)
+            {
+                result = kRmtOk;
+                retry  = false;
+                break;
+            }
+            else
+            {
+                // If an error reporter callback exists, the response will indicate whether the failed operation should be tried again.
+                if (data_set->error_report_func != nullptr)
+                {
+                    RmtErrorResponseCode response_code = RmtErrorResponseCode::RmtErrorResponseCodeNone;
+                    data_set->error_report_func(data_set, kRmtErrorFileAccessFailed, &response_code);
+                    retry = (response_code == RmtErrorResponseCode::RmtErrorResponseCodeRetry) ? true : false;
+                }
+            }
+        } while (retry);
     }
     else
     {
-        // for a mirror without remove, we need to recopy the temp
-        bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
-        RMT_ASSERT(success);
+        do
+        {
+            // For a mirror without remove, we need to recopy the temp
+            bool success = MoveTraceFile(data_set->temporary_file_path, data_set->file_path);
 
-        if (success == false)
-        {
-            // Failed to move backup trace file to original trace file.
-            // The backup file is left for the user in case they want to recover any saved snapshots.
-            data_set->flags.read_only = true;
-        }
-        else
-        {
-            success = CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
-            RMT_ASSERT(success);
             if (success == false)
             {
-                data_set->flags.read_only = true;
+                // Failed to move backup trace file to original trace file.
+                // The backup file is left for the user in case they want to recover any saved snapshots.
+
+                // If an error reporter callback exists, the response will indicate whether the failed operation should be tried again.
+                if (data_set->error_report_func != nullptr)
+                {
+                    RmtErrorResponseCode response_code = RmtErrorResponseCode::RmtErrorResponseCodeNone;
+                    data_set->error_report_func(data_set, kRmtErrorFileAccessFailed, &response_code);
+                    retry = response_code == RmtErrorResponseCode::RmtErrorResponseCodeRetry ? true : false;
+                    if (response_code == RmtErrorResponseCode::RmtErrorResponseCodeIgnore)
+                    {
+                        data_set->flags.read_only = true;
+                    }
+                }
             }
-        }
-
-        if (data_set->flags.is_rdf_trace)
-        {
-            result = RmtRdfStreamOpen(data_set->temporary_file_path, data_set->flags.read_only);
-        }
-        else
-        {
-            data_set->file_handle        = NULL;
-            const bool    shareable_file = data_set->flags.read_only;
-            const errno_t error_no       = OpenFile((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+", true, shareable_file);
-
-            RMT_ASSERT(data_set->file_handle);
-            RMT_ASSERT(error_no == 0);
-
-            if (error_no == 0)
+            else
             {
-                result = kRmtOk;
+                retry = false;
+                do
+                {
+                    success = CopyTraceFile(data_set->file_path, data_set->temporary_file_path);
+                    RMT_ASSERT(success);
+                    if (success == false)
+                    {
+                        // If an error reporter callback exists, the response will indicate whether the failed operation should be tried again.
+                        if (data_set->error_report_func != nullptr)
+                        {
+                            RmtErrorResponseCode response_code = RmtErrorResponseCode::RmtErrorResponseCodeNone;
+                            data_set->error_report_func(data_set, kRmtErrorFileAccessFailed, &response_code);
+                            retry = response_code == RmtErrorResponseCode::RmtErrorResponseCodeRetry ? true : false;
+                            if (response_code == RmtErrorResponseCode::RmtErrorResponseCodeIgnore)
+                            {
+                                data_set->flags.read_only = true;
+                            }
+                        }
+                    }
+                } while (retry);
+            }
+        } while (retry);
+
+        // The temporary file is removed when the trace is closed.
+        // Only re-open the trace file if it is still in use (i.e., the remove_temporary flag is false).
+        if (remove_temporary == false)
+        {
+            if (data_set->flags.is_rdf_trace)
+            {
+                // Re-open an RDF trace file.
+                result = RmtRdfStreamOpen(data_set->temporary_file_path, data_set->flags.read_only);
+            }
+            else
+            {
+                // Re-open a legacy trace file.
+                data_set->file_handle        = NULL;
+                const bool    shareable_file = data_set->flags.read_only;
+                const errno_t error_no       = OpenFile((FILE**)&data_set->file_handle, data_set->temporary_file_path, "rb+", true, shareable_file);
+
+                RMT_ASSERT(data_set->file_handle);
+                RMT_ASSERT(error_no == 0);
+
+                if (error_no == 0)
+                {
+                    result = kRmtOk;
+                }
             }
         }
     }
@@ -1302,6 +1369,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     data_set->flags.is_rdf_trace            = false;
     data_set->flags.implicit_heap_detection = false;
     data_set->active_gpu                    = 0;
+    data_set->error_report_func             = nullptr;
 
     errno_t error_no;
     bool    file_transfer_result = false;
@@ -1436,13 +1504,14 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         }
 
         // Vega and older GPUs are no longer supported.
-        if (error_code == kRmtOk && data_set->system_info.pcie_family_id < kGfx10AsicFamily)
+        if (error_code == kRmtOk && data_set->system_info.pcie_family_id < kFamilyNavi)
         {
             error_code = kRmtErrorTraceFileNotSupported;
         }
 
         if (error_code == kRmtOk)
         {
+            CheckForCpuHostApertureSupport(data_set);
             CheckForSAMSupport(data_set);
 
             // Construct the data profile for subsequent data parsing.
@@ -1475,6 +1544,16 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
     }
 
     return error_code;
+}
+
+RmtErrorCode RmtDataSetSetErrorReporter(RmtDataSet* data_set, const RmtDataSetErrorReportFunc reporter_function)
+{
+    RMT_ASSERT(data_set != nullptr);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+
+    data_set->error_report_func = reporter_function;
+
+    return kRmtOk;
 }
 
 // destroy the data set.
@@ -1514,6 +1593,8 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
     // Delete the Driver Overrides data if it exists.
     delete data_set->driver_overrides_json_text;
     data_set->driver_overrides_json_text = nullptr;
+
+    free(data_set->resource_id_map_allocator);
 
     RmtResourceUserDataCleanup();
     return kRmtOk;
@@ -1692,10 +1773,10 @@ static RmtErrorCode TimelineGeneratorAllocateMemory(RmtDataSet* data_set, RmtDat
     out_timeline->series_count = GetSeriesCountFromTimelineType(data_set, timeline_type);
     RMT_ASSERT(out_timeline->series_count < RMT_MAXIMUM_TIMELINE_DATA_SERIES);
 
-    const int32_t values_per_top_level_series = RmtDataSetGetSeriesIndexForTimestamp(data_set, data_set->maximum_timestamp) + 1;
-    const uint64_t buffer_size               = values_per_top_level_series * sizeof(uint64_t);
-    const size_t   series_memory_buffer_size = buffer_size * out_timeline->series_count;
-    out_timeline->series_memory_buffer       = (int32_t*)PerformAllocation(data_set, series_memory_buffer_size, sizeof(uint64_t));
+    const int32_t  values_per_top_level_series = RmtDataSetGetSeriesIndexForTimestamp(data_set, data_set->maximum_timestamp) + 1;
+    const uint64_t buffer_size                 = values_per_top_level_series * sizeof(uint64_t);
+    const size_t   series_memory_buffer_size   = buffer_size * out_timeline->series_count;
+    out_timeline->series_memory_buffer         = (int32_t*)PerformAllocation(data_set, series_memory_buffer_size, sizeof(uint64_t));
     RMT_ASSERT(out_timeline->series_memory_buffer);
     RMT_RETURN_ON_ERROR(out_timeline->series_memory_buffer, kRmtErrorOutOfMemory);
 
@@ -1733,7 +1814,11 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     RmtErrorCode error_code =
         AllocateMemoryForSnapshot(data_set, temp_snapshot, timeline_type == RmtDataTimelineType::kRmtDataTimelineTypeResourceUsageVirtualSize);
     RMT_ASSERT(error_code == kRmtOk);
-    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+    if (error_code != kRmtOk)
+    {
+        PerformFree(data_set, temp_snapshot);
+        return error_code;
+    }
 
     temp_snapshot->maximum_physical_memory_in_bytes = RmtDataSetGetTotalVideoMemoryInBytes(data_set);
 
@@ -1779,12 +1864,20 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
         RmtToken current_token = {};
         error_code             = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
-        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+        if (error_code != kRmtOk)
+        {
+            PerformFree(data_set, temp_snapshot);
+            return error_code;
+        }
 
         // Update the temporary snapshot with the RMT token.
         error_code = ProcessTokenForSnapshot(data_set, &current_token, temp_snapshot);
         RMT_ASSERT(error_code == kRmtOk);
-        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+        if (error_code != kRmtOk)
+        {
+            PerformFree(data_set, temp_snapshot);
+            return error_code;
+        }
 
         // set the timestamp for the current snapshot
         temp_snapshot->timestamp = current_token.common.timestamp;
@@ -2129,7 +2222,7 @@ static RmtErrorCode SnapshotGeneratorAddUnboundResources(RmtDataSnapshot* snapsh
 // Calculate the size after aliasing for each resource.
 static RmtErrorCode SnapshotGeneratorCalculateAliasedResourceSizes(RmtDataSnapshot* snapshot)
 {
-    uint64_t resource_usage_mask = (1ULL << (kRmtResourceUsageTypeCount - 1)) - 1;
+    uint64_t resource_usage_mask = kRmtResourceUsageTypeBitMaskAll;
     return RmtVirtualAllocationListUpdateAliasedResourceSizes(&(snapshot->virtual_allocation_list), &snapshot->resource_list, resource_usage_mask);
 }
 
@@ -2285,18 +2378,20 @@ static RmtErrorCode SnapshotGeneratorUpdateNamedHeaps(RmtDataSnapshot* out_snaps
             const RmtResource* resource = allocation.resources[resource_index];
             if (resource->resource_type == RmtResourceType::kRmtResourceTypeHeap)
             {
-                first_heap_resource = resource;
-                RmtResourceUserdataGetResourceName(first_heap_resource->identifier, &first_heap_resource_name);
-                if (first_non_heap_resource != nullptr)
+                first_heap_resource               = resource;
+                RmtErrorCode resource_name_result = RmtResourceUserdataGetResourceNameAtTimestamp(
+                    first_heap_resource->identifier, resource->create_time, out_snapshot->timestamp, &first_heap_resource_name);
+                if ((resource_name_result == kRmtOk) && (first_non_heap_resource != nullptr))
                 {
                     break;
                 }
             }
             else
             {
-                first_non_heap_resource = resource;
-                RmtResourceUserdataGetResourceName(first_non_heap_resource->identifier, &first_non_heap_resource_name);
-                if (first_heap_resource != nullptr)
+                first_non_heap_resource           = resource;
+                RmtErrorCode resource_name_result = RmtResourceUserdataGetResourceNameAtTimestamp(
+                    first_non_heap_resource->identifier, first_non_heap_resource->create_time, out_snapshot->timestamp, &first_non_heap_resource_name);
+                if ((resource_name_result == kRmtOk) && (first_heap_resource != nullptr))
                 {
                     break;
                 }

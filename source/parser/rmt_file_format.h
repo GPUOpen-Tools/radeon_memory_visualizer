@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of structures and functions for the RMT file format.
@@ -117,7 +117,7 @@ typedef struct RmtFileChunkSystemInfo
     char     processor_brand[48];  ///< For x86 CPUs this is based off the 48 byte null-terminated ASCII processor brand using CPU instruction.
     uint64_t padding;              ///< Padding after 48 byte string.
     uint64_t
-             timestamp_frequency;  ///< The frequency of the timestamp clock (in Hz). For windows this is the same as reported by the <c><i>QueryPerformanceFrequency</i></c> API.
+        timestamp_frequency;  ///< The frequency of the timestamp clock (in Hz). For windows this is the same as reported by the <c><i>QueryPerformanceFrequency</i></c> API.
     uint32_t clock_speed;       ///< The maximum clock frequency of the CPU (in MHz).
     int32_t  logic_cores;       ///< The number of logical cores.
     int32_t  physical_cores;    ///< The number of physical cores.

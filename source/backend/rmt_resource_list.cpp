@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the resource list functions.
@@ -393,14 +393,21 @@ static RmtResourceIdNode* InsertNode(RmtResourceList* resource_list, RmtResource
     {
         // create a new node
         RmtResourceIdNode* new_node = (RmtResourceIdNode*)RmtPoolAllocate(&resource_list->resource_id_node_pool);
-        new_node->identifier        = resource_identifier;
-        new_node->resource          = resource;
-        new_node->left              = NULL;
-        new_node->right             = NULL;
+        if (new_node != nullptr)
+        {
+            new_node->identifier = resource_identifier;
+            new_node->resource   = resource;
+            new_node->left       = NULL;
+            new_node->right      = NULL;
 
-        // store pointer to the node ID so we can update it on delete.
-        resource->id_node = new_node;
-        return new_node;
+            // store pointer to the node ID so we can update it on delete.
+            resource->id_node = new_node;
+            return new_node;
+        }
+        else
+        {
+            RMT_ASSERT_FAIL("RmtResourceIdNode InsertNode alloc failed");
+        }
     }
 
     if (resource_identifier < node->identifier)
@@ -633,6 +640,9 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
             }
         }
 
+        // The current resource is being replaced with a new resource.
+        // Set the current resource destroy time.
+        resource->destroy_time = resource_create->common.timestamp;
         DestroyResource(resource_list, resource);
     }
 
@@ -641,10 +651,11 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
     RMT_RETURN_ON_ERROR((resource_list->resource_count + 1) <= resource_list->maximum_concurrent_resources, kRmtErrorOutOfMemory);
 
     // fill out the stuff we know.
-    RmtResource* new_resource = &resource_list->resources[resource_list->resource_count++];
+    RmtResource* new_resource   = &resource_list->resources[resource_list->resource_count++];
     new_resource->name          = nullptr;
     new_resource->identifier    = resource_create->resource_identifier;
     new_resource->create_time   = resource_create->common.timestamp;
+    new_resource->destroy_time  = UINT64_MAX;  // The resource destroy time is set to the max value until a ResourceDestroy token is processed.
     new_resource->flags         = 0;
     new_resource->commit_type   = resource_create->commit_type;
     new_resource->resource_type = resource_create->resource_type;
@@ -721,10 +732,12 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
     }
 
     // clear this ready for patch during bind.
-    new_resource->bind_time        = 0;
-    new_resource->address          = 0;
-    new_resource->size_in_bytes    = 0;
-    new_resource->bound_allocation = NULL;
+    new_resource->bind_time              = 0;
+    new_resource->address                = 0;
+    new_resource->size_in_bytes          = 0;
+    new_resource->bound_allocation       = NULL;
+    new_resource->adjusted_size_in_bytes = 0;
+    new_resource->is_aliased             = false;
 
     // insert node into the acceleration structure.
     AddResourceToTree(resource_list, hashed_identifier, new_resource);
@@ -891,6 +904,11 @@ RmtErrorCode RmtResourceListAddResourceDestroy(RmtResourceList* resource_list, c
 
     // call destroy on it.
     const RmtErrorCode error_code = DestroyResource(resource_list, resource);
+    if (error_code == kRmtOk)
+    {
+        resource->destroy_time = resource_destroy->common.timestamp;
+    }
+
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     return kRmtOk;
@@ -916,58 +934,15 @@ RmtErrorCode RmtResourceListGetResourceByResourceId(const RmtResourceList* resou
 bool RmtResourceIsAliased(const RmtResource* resource)
 {
     RMT_RETURN_ON_ERROR(resource != nullptr, false);
-    RMT_RETURN_ON_ERROR(resource->bound_allocation != nullptr, false);
-    RMT_RETURN_ON_ERROR(resource->resource_type != kRmtResourceTypeHeap, false);
-
-    const RmtVirtualAllocation* virtual_allocation     = resource->bound_allocation;
-    const RmtGpuAddress         resource_start_address = resource->address;
-    const RmtGpuAddress         resource_end_address   = resource->address + resource->size_in_bytes;
-    bool                        is_aliased             = false;
-
-    for (int32_t current_resource_index = 0; current_resource_index < virtual_allocation->resource_count; ++current_resource_index)
-    {
-        const RmtResource* current_resource = virtual_allocation->resources[current_resource_index];
-
-        if (current_resource == resource)
-        {
-            continue;
-        }
-
-        // Special handle for heaps.
-        if (current_resource->resource_type == kRmtResourceTypeHeap)
-        {
-            continue;
-        }
-
-        // Get the start and end address.
-        const RmtGpuAddress current_resource_start = current_resource->address;
-        const RmtGpuAddress current_resource_end   = current_resource->address + current_resource->size_in_bytes;
-        if (resource_start_address >= current_resource_end)
-        {
-            continue;
-        }
-
-        if (resource_end_address <= current_resource_start)
-        {
-            continue;
-        }
-
-        is_aliased = true;
-        break;
-    }
-
-    return is_aliased;
+    return resource->is_aliased;
 }
 
 uint64_t RmtResourceGetUsageTypeMask(RmtResourceUsageType usage_type)
 {
-    RMT_ASSERT((usage_type >= 0) && (usage_type < 64));
+    RMT_ASSERT(usage_type >= 0);
+    static_assert(sizeof(uint64_t) * 8 >= kRmtResourceUsageTypeCount);  // Ensure that the usage type fits in a 64-bit mask.
 
-    uint64_t result = 0;
-    if (usage_type != kRmtResourceUsageTypeUnknown)
-    {
-        result = 1ULL << (usage_type - 1);
-    }
+    uint64_t result = (1ULL << usage_type);
 
     return result;
 }

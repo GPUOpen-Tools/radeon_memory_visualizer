@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Functions working on a snapshot.
@@ -25,7 +25,7 @@
 static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const RmtResource* resource, RmtResourceHistory* out_resource_history)
 {
     // Reset the RMT stream parsers ready to load the data.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    RmtErrorCode result = RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
 
     while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
@@ -286,7 +286,13 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
         }
     }
 
-    return kRmtOk;
+    if (result == kRmtOk)
+    {
+        // Name UserData tokens have correlation IDs or 32 bit driver resource IDs so they can't be filtered by the internal resource ID the way other tokens are.
+        // Instead, The ResourceUserData module is levereged to populate the resource history with the ResourceNamed events.
+        result = RmtResourceUserdataUpdateNamedResourceHistoryEvents(out_resource_history);
+    }
+    return result;
 }
 
 // Helper functo call the correct free function.
@@ -497,8 +503,8 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
     }
 
     // fill out the structure fields.
-    out_segment_status->total_virtual_memory_requested   = total_virtual_memory_requested;
-    out_segment_status->total_physical_mapped_by_process = total_physical_mapped_by_process;
+    out_segment_status->total_virtual_memory_requested           = total_virtual_memory_requested;
+    out_segment_status->total_physical_mapped_by_process         = total_physical_mapped_by_process;
     out_segment_status->total_physical_mapped_by_other_processes = 0;
     out_segment_status->max_allocation_size                      = max_virtual_allocation_size;
     out_segment_status->min_allocation_size                      = min_virtual_allocation_size;

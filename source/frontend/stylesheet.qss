@@ -83,6 +83,11 @@ ScaledLabel, ScaledPushButton, QLabel
     font-size: 9.75pt;
 }
 
+ScaledLabel#empty_recent_files_label_
+{
+    font-size: 10pt;
+}
+
 ColoredLegendGraphicsView
 {
     font-size: 8pt;

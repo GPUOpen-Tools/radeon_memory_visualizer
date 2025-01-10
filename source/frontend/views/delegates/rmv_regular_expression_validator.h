@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the regular expression validator with tooltip support.
@@ -16,11 +16,6 @@ class RMVRegularExpressionValidator : public QRegularExpressionValidator
     Q_OBJECT
 
 public:
-    /// @brief Constructor.
-    ///
-    /// @param [in] parent The validator's parent.
-    explicit RMVRegularExpressionValidator(QObject* parent = nullptr);
-
     /// @brief Constructor.
     ///
     /// @param [in] regular_expression The regular expression string.

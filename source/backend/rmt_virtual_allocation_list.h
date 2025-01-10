@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for managing a virtual allocation list.
@@ -354,7 +354,7 @@ uint64_t RmtVirtualAllocationListGetBoundTotalSizeInBytes(const RmtDataSnapshot*
 /// The size (in bytes) of the memory in a <c><i>virtual_allocation_list</i></c> that is not bound to resources.
 uint64_t RmtVirtualAllocationListGetUnboundTotalSizeInBytes(const RmtDataSnapshot* snapshot, const RmtVirtualAllocationList* virtual_allocation_list);
 
-/// Update the alias size of each resource bound to an allocation.
+/// For each virtual allocation, update the size after aliasing for each bound resource.
 ///
 /// @param [in] allocation_list                        A pointer to a <c><i>RmtVirtualAllocationList</i></c> structure.
 /// @param [in] resource_list                          A pointer to a <c><i>RmtResourceList</i></c> structure.

@@ -30,6 +30,8 @@ Supported graphics APIs, RDNA hardware, and operating systems
 
 \ **Supported RDNA hardware**
 
+-  AMD Radeon RX 9000 series
+
 -  AMD Radeon RX 7000 series
 
 -  AMD Radeon RX 6000 series
@@ -74,5 +76,5 @@ Microsoft is a registered trademark of Microsoft Corporation in the US and other
 Windows is a registered trademark of Microsoft Corporation in the US and other jurisdictions.
 
 
-© 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+© 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the RFD Snapshot Info chunk. Loads the chunk data into a buffer.

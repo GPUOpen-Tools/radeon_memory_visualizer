@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2017-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the timeline keyboard shortcuts class.
@@ -75,6 +75,8 @@ namespace rmv
         // Setup actions for various keyboard shortcuts.
         for (auto const& item : navigation_control_)
         {
+            // NOTE: Actions here pass in the parent widget when constructed. It is the responsibility of the parent widget
+            // to make sure they are deleted.
             QAction* action = new QAction(parent_pane_);
             action->setShortcut(item.first);
 

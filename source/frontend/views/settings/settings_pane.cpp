@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Settings pane.
@@ -29,7 +29,7 @@ SettingsPane::SettingsPane(QWidget* parent)
             &DriverOverridesNotificationConfigWidget::StateChanged,
             this,
             &SettingsPane::DriverOverridesAllowNotificationsChanged);
-    
+
     rmv::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     // Set up checkboxes.
@@ -54,7 +54,6 @@ SettingsPane::SettingsPane(QWidget* parent)
     connect(ui_->units_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::TimeUnitsChanged);
 
     connect(ui_->check_for_updates_on_startup_checkbox_, &CheckBoxWidget::stateChanged, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
-
 }
 
 SettingsPane::~SettingsPane()
@@ -112,4 +111,3 @@ void SettingsPane::DriverOverridesAllowNotificationsChanged(bool checked)
     rmv::RMVSettings::Get().SetDriverOverridesAllowNotifications(checked);
     rmv::RMVSettings::Get().SaveSettings();
 }
-

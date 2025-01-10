@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the resource details widget.
@@ -61,9 +61,7 @@ void RMVResourceDetails::paint(QPainter* painter, const QStyleOptionGraphicsItem
                 if (identifier != 0)
                 {
                     painter->drawText(
-                        0,
-                        header_height,
-                        "Resource ID " + QString::number(identifier) + " in allocation " + rmv_util::GetVirtualAllocationName(allocation));
+                        0, header_height, "Resource ID " + QString::number(identifier) + " in allocation " + rmv_util::GetVirtualAllocationName(allocation));
                 }
                 else
                 {

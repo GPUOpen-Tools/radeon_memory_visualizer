@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a resource list.
@@ -47,6 +47,7 @@ typedef struct RmtResource
     RmtResourceIdentifier identifier;     ///< A GUID for the this resource.
     uint64_t              create_time;    ///< The time the resource was created.
     uint64_t              bind_time;      ///< The time the resource was last bound to a virtual address range.
+    uint64_t              destroy_time;   ///< The time the resource was destroyed.
     uint64_t              address;        ///< The virtual address of the resource.
     uint64_t              size_in_bytes;  ///< The total size of the resource.
     const RmtVirtualAllocation*
@@ -79,6 +80,7 @@ typedef struct RmtResource
     RmtResourceIdNode* id_node;  ///< A pointer to the <c><i>RmtResourceIdNode</i></c> structure in the tree, used to quickly locate this resource by ID.
 
     uint64_t adjusted_size_in_bytes;  ///< Adjusted size of the resource taking into account filtering and aliasing.
+    bool     is_aliased;              ///< A flag that, if true, indicates the resource overlaps in memory space with another resource.
 } RmtResource;
 
 /// Get the resource usage type from the resource.
@@ -222,7 +224,7 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
 /// @param [in] resource_list                       A pointer to a <c><i>RmtResourceList</i></c> structure.
 /// @param [in] resource_bind                       A pointer to a <c><i>RmtTokenResourceBind</i></c> structure.
 /// @param [in] track_user_data                     A flag that indicates, if true, that the bind needs to be tracked for user data processing.
-/// 
+///
 /// @retval
 /// kRmtOk                              The operation completed successfully.
 /// @retval

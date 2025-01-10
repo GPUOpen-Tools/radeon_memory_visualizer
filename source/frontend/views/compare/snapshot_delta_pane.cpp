@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Snapshot delta pane.
@@ -59,7 +59,7 @@ SnapshotDeltaPane::SnapshotDeltaPane(QWidget* parent)
     ui_->legends_view_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui_->legends_view_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    rmv::widget_util::InitColorLegend(legends_, ui_->legends_view_);
+    legends_ = rmv::widget_util::InitColorLegend(ui_->legends_view_);
     AddMemoryDeltaLegends();
 
     QRectF legend_rect = legends_->itemsBoundingRect();
@@ -74,6 +74,7 @@ SnapshotDeltaPane::~SnapshotDeltaPane()
 {
     delete carousel_;
     delete model_;
+    delete legends_;
 }
 
 void SnapshotDeltaPane::showEvent(QShowEvent* event)

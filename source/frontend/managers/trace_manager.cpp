@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Trace Manager.
@@ -39,20 +39,19 @@ namespace rmv
         ///
         /// @param [in] path The full path of the data set to load.
         explicit LoadingThread(const QString& path)
-            : path_data(path.toLatin1())
+            : trace_path_(path)
         {
         }
 
         /// @brief Execute the loading thread.
         void run() Q_DECL_OVERRIDE
         {
-            const char*               trace_path = path_data.data();
-            const TraceLoadReturnCode error_code = TraceManager::Get().TraceLoad(trace_path);
+            const TraceLoadReturnCode error_code = TraceManager::Get().TraceLoad(trace_path_);
             emit                      TraceManager::Get().TraceLoadThreadFinished(error_code);
         }
 
     private:
-        QByteArray path_data;  ///< The path to the trace being loaded
+        QString trace_path_;  ///< The path to the trace being loaded
     };
 
     /// @brief Pointer to the loading thread object.
@@ -76,6 +75,42 @@ namespace rmv
         ClearTrace();
     }
 
+    static void ErrorReporter(RmtDataSet* data_set, const RmtErrorCode error_code, RmtErrorResponseCode* out_error_response)
+    {
+        RMT_ASSERT(out_error_response != nullptr);
+
+        if ((data_set == nullptr) || (out_error_response == nullptr))
+        {
+            return;
+        }
+
+        switch (error_code)
+        {
+        case kRmtErrorFileAccessFailed:
+        {
+            const int user_response = QtCommon::QtUtils::ShowMessageBox(nullptr,
+                                                                        QMessageBox::Retry | QMessageBox::Ignore,
+                                                                        QMessageBox::Warning,
+                                                                        rmv::text::kCommitEditsFailedTitle,
+                                                                        rmv::text::kCommitEditsFailedText.arg(data_set->file_path));
+
+            if (user_response == QMessageBox::Retry)
+            {
+                *out_error_response = RmtErrorResponseCode::RmtErrorResponseCodeRetry;
+            }
+            else if (user_response == QMessageBox::Ignore)
+            {
+                *out_error_response = RmtErrorResponseCode::RmtErrorResponseCodeIgnore;
+            }
+            break;
+        }
+
+        default:
+            *out_error_response = RmtErrorResponseCode::RmtErrorResponseCodeNone;
+            break;
+        }
+    }
+
     TraceManager::~TraceManager()
     {
     }
@@ -85,7 +120,7 @@ namespace rmv
         parent_ = parent;
     }
 
-    TraceLoadReturnCode TraceManager::TraceLoad(const char* trace_file_name)
+    TraceLoadReturnCode TraceManager::TraceLoad(const QString& trace_file_name)
     {
         // Load a snapshot for viewing.
         active_trace_path_ = QDir::toNativeSeparators(trace_file_name);
@@ -93,7 +128,7 @@ namespace rmv
         rmv::SnapshotManager::Get().ClearOpenSnapshot();
         rmv::SnapshotManager::Get().ClearCompareSnapshots();
 
-        const RmtErrorCode return_code = RmtTraceLoaderTraceLoad(trace_file_name);
+        const RmtErrorCode return_code = RmtTraceLoaderTraceLoad(trace_file_name.toLatin1(), ErrorReporter);
         if (return_code != kRmtOk)
         {
             if (return_code == kRmtErrorPageTableSizeExceeded)
@@ -240,7 +275,7 @@ namespace rmv
                 if (ret == QMessageBox::Yes)
                 {
                     // Remove the file from the recent file list.
-                    RMVSettings::Get().TraceLoaded(active_trace_path_.toLatin1().data(), nullptr, true);
+                    RMVSettings::Get().TraceLoaded(active_trace_path_, nullptr, true);
                     RMVSettings::Get().SaveSettings();
 
                     // Notify the view to refresh the list.
@@ -262,7 +297,7 @@ namespace rmv
                 read_only = true;
             }
 
-            RMVSettings::Get().TraceLoaded(active_trace_path_.toLatin1().data(), data_set, remove_from_list);
+            RMVSettings::Get().TraceLoaded(active_trace_path_, data_set, remove_from_list);
             RMVSettings::Get().SaveSettings();
 
             if (error_code == kTraceLoadReturnSuccess)

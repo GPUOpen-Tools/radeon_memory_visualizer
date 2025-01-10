@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the allocation multi bar model class.
@@ -61,7 +61,6 @@ namespace rmv
                 const QString value_a = rmv_util::GetVirtualAllocationName(virtual_allocation_a);
                 const QString value_b = rmv_util::GetVirtualAllocationName(virtual_allocation_b);
 
-                
                 // Decide on whether ascending or descending sort is required and return the appropriate result.
                 if (ascending_)
                 {
@@ -199,48 +198,51 @@ namespace rmv
     {
         if (TraceManager::Get().DataSetValid())
         {
-            const RmtDataSnapshot*          open_snapshot    = SnapshotManager::Get().GetOpenSnapshot();
-            const RmtVirtualAllocationList* allocation_list  = &open_snapshot->virtual_allocation_list;
-            int32_t                         allocation_count = allocation_list->allocation_count;
-
-            if (allocation_count > 0)
+            const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
+            if (open_snapshot != nullptr)
             {
-                for (int32_t i = 0; i < allocation_count; i++)
+                const RmtVirtualAllocationList* allocation_list  = &open_snapshot->virtual_allocation_list;
+                int32_t                         allocation_count = allocation_list->allocation_count;
+
+                if (allocation_count > 0)
                 {
-                    const RmtVirtualAllocation* virtual_allocation = &allocation_list->allocation_details[i];
-                    int                         heap_index         = virtual_allocation->heap_preferences[0];
-                    bool                        allow              = false;
-
-                    if (heap_array_flags[heap_index])
+                    for (int32_t i = 0; i < allocation_count; i++)
                     {
-                        QString description = GetTitleText(virtual_allocation) + GetDescriptionText(virtual_allocation);
+                        const RmtVirtualAllocation* virtual_allocation = &allocation_list->allocation_details[i];
+                        int                         heap_index         = virtual_allocation->heap_preferences[0];
+                        bool                        allow              = false;
 
-                        if (filter_text.isEmpty() == false)
+                        if (heap_array_flags[heap_index])
                         {
-                            if (description.contains(filter_text, Qt::CaseInsensitive))
+                            QString description = GetTitleText(virtual_allocation) + GetDescriptionText(virtual_allocation);
+
+                            if (filter_text.isEmpty() == false)
+                            {
+                                if (description.contains(filter_text, Qt::CaseInsensitive))
+                                {
+                                    allow = true;
+                                }
+                            }
+                            else
                             {
                                 allow = true;
                             }
                         }
-                        else
+
+                        if (allow)
                         {
-                            allow = true;
+                            shown_allocation_list_.push_back(virtual_allocation);
+                        }
+
+                        uint64_t allocation_size = RmtVirtualAllocationGetSizeInBytes(virtual_allocation);
+                        if (allocation_size > largest_allocation_size_)
+                        {
+                            largest_allocation_size_ = allocation_size;
                         }
                     }
-
-                    if (allow)
-                    {
-                        shown_allocation_list_.push_back(virtual_allocation);
-                    }
-
-                    uint64_t allocation_size = RmtVirtualAllocationGetSizeInBytes(virtual_allocation);
-                    if (allocation_size > largest_allocation_size_)
-                    {
-                        largest_allocation_size_ = allocation_size;
-                    }
                 }
+                Sort(sort_mode, ascending);
             }
-            Sort(sort_mode, ascending);
         }
     }
 

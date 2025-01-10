@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the allocation overview pane.
@@ -174,9 +174,11 @@ AllocationOverviewPane::~AllocationOverviewPane()
     {
         RMVAllocationBar* allocation_item = allocation_graphic_objects_[i];
         allocation_list_scene_->removeItem(allocation_item);
+        delete allocation_item;
         disconnect(allocation_item, &RMVAllocationBar::ResourceSelected, this, &AllocationOverviewPane::SelectedResource);
     }
 
+    delete allocation_list_scene_;
     delete model_;
     delete preferred_heap_combo_box_model_;
     delete colorizer_;

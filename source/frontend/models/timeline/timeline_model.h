@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Timeline model.
@@ -74,6 +74,13 @@ namespace rmv
         ///
         /// @param [in] snapshot_point The snapshot to remove.
         void RemoveSnapshot(RmtSnapshotPoint* snapshot_point);
+
+        /// @brief Find a snapshot in the model that matches the specified name.
+        ///
+        /// @param [in] name The name of the snapshot to locate.
+        ///
+        /// @return An RmtSnapshotPoint structure or nullptr if a matching snapshot name isn't found.
+        RmtSnapshotPoint* FindSnapshotByName(const QString& name) const;
 
         /// @brief Get number of rows in the snapshot table.
         ///

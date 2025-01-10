@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Device configuration model.
@@ -113,4 +113,20 @@ namespace rmv
         }
         return false;
     }
+
+    bool DeviceConfigurationModel::IsDriverSoftwareVersionNeeded()
+    {
+        TraceManager& trace_manager = TraceManager::Get();
+        if (trace_manager.DataSetValid())
+        {
+            const RmtDataSet*       data_set    = trace_manager.GetDataSet();
+            const RmtRdfSystemInfo& system_info = data_set->system_info;
+            if (std::strstr(system_info.os_name, "Windows") != nullptr)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }  // namespace rmv

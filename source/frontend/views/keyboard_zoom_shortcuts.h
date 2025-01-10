@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the keyboard zoom shortcuts.
@@ -94,7 +94,7 @@ namespace rmv
         virtual void OnResetView(bool checked) = 0;
 
     protected:
-        typedef void (KeyboardZoomShortcuts::*ShortcutSlot)(bool flag);
+        typedef void                        (KeyboardZoomShortcuts::*ShortcutSlot)(bool flag);
         typedef std::map<int, ShortcutSlot> NavigationControl;
 
         NavigationControl navigation_control_;  ///< The navigation control information for each key.

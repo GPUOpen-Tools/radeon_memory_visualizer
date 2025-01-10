@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Allocation explorer model.
@@ -71,30 +71,32 @@ namespace rmv
         }
 
         const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-
-        allocation_table_model_->removeRows(0, allocation_table_model_->rowCount());
-
-        minimum_allocation_size_ = UINT64_MAX;
-        maximum_allocation_size_ = 0;
-
-        // Update allocation table and min/max allocation sizes.
-        int32_t allocation_count = open_snapshot->virtual_allocation_list.allocation_count;
-        allocation_table_model_->SetRowCount(allocation_count);
-        for (int32_t allocation_index = 0; allocation_index < allocation_count; allocation_index++)
+        if (open_snapshot != nullptr)
         {
-            const RmtVirtualAllocation* virtual_allocation = &open_snapshot->virtual_allocation_list.allocation_details[allocation_index];
-            allocation_table_model_->AddAllocation(open_snapshot, virtual_allocation);
-            uint64_t allocation_size = RmtVirtualAllocationGetSizeInBytes(virtual_allocation);
-            if (allocation_size < minimum_allocation_size_)
+            allocation_table_model_->removeRows(0, allocation_table_model_->rowCount());
+
+            minimum_allocation_size_ = UINT64_MAX;
+            maximum_allocation_size_ = 0;
+
+            // Update allocation table and min/max allocation sizes.
+            int32_t allocation_count = open_snapshot->virtual_allocation_list.allocation_count;
+            allocation_table_model_->SetRowCount(allocation_count);
+            for (int32_t allocation_index = 0; allocation_index < allocation_count; allocation_index++)
             {
-                minimum_allocation_size_ = allocation_size;
+                const RmtVirtualAllocation* virtual_allocation = &open_snapshot->virtual_allocation_list.allocation_details[allocation_index];
+                allocation_table_model_->AddAllocation(open_snapshot, virtual_allocation);
+                uint64_t allocation_size = RmtVirtualAllocationGetSizeInBytes(virtual_allocation);
+                if (allocation_size < minimum_allocation_size_)
+                {
+                    minimum_allocation_size_ = allocation_size;
+                }
+                if (allocation_size > maximum_allocation_size_)
+                {
+                    maximum_allocation_size_ = allocation_size;
+                }
             }
-            if (allocation_size > maximum_allocation_size_)
-            {
-                maximum_allocation_size_ = allocation_size;
-            }
+            allocation_proxy_model_->invalidate();
         }
-        allocation_proxy_model_->invalidate();
     }
 
     int32_t VirtualAllocationExplorerModel::UpdateResourceTable()
@@ -112,17 +114,20 @@ namespace rmv
             return resource_count;
         }
 
-        resource_table_model_->removeRows(0, resource_table_model_->rowCount());
-
         // Update resource table.
         const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
-        resource_count                       = selected_allocation->resource_count;
-        resource_table_model_->SetRowCount(resource_count);
-        for (int32_t i = 0; i < resource_count; i++)
+        if (open_snapshot != nullptr)
         {
-            resource_table_model_->AddResource(open_snapshot, selected_allocation->resources[i], kSnapshotCompareIdUndefined);
+            resource_table_model_->removeRows(0, resource_table_model_->rowCount());
+
+            resource_count = selected_allocation->resource_count;
+            resource_table_model_->SetRowCount(resource_count);
+            for (int32_t i = 0; i < resource_count; i++)
+            {
+                resource_table_model_->AddResource(open_snapshot, selected_allocation->resources[i], kSnapshotCompareIdUndefined);
+            }
+            resource_proxy_model_->invalidate();
         }
-        resource_proxy_model_->invalidate();
         return resource_count;
     }
 

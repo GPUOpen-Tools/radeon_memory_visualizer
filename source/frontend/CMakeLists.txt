@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -315,20 +315,20 @@ set(SOURCES ${SOURCES} ${GENERATED_UI})
 
 # Specify output executable name. For windows, indicate this is a Windows application
 # and not a console application
-IF(WIN32)
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${WINDOWS_SOURCES})
-ELSEIF(APPLE)
-    IF(NO_APP_BUNDLE)
-        add_executable(${PROJECT_NAME} ${SOURCES})
-    ELSE()
+IF (WIN32)
+    qt_add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${WINDOWS_SOURCES})
+ELSEIF (APPLE)
+    IF (NO_APP_BUNDLE)
+        qt_add_executable(${PROJECT_NAME} ${SOURCES})
+    ELSE ()
         set(MACOSX_BUNDLE_ICON_FILE rmv.icns)
-        set(MACOSX_ICON MacOSX/rmv.icns)
+        set(MACOSX_ICON mac_osx/rmv.icns)
         set_source_files_properties(${MACOSX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-        add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${MACOSX_ICON} ${SOURCES})
-        set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_RPATH TRUE MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSX/MacOSXBundleInfo.plist.in)
-    ENDIF()
-ELSEIF(UNIX)
-    add_executable(${PROJECT_NAME} ${SOURCES})
+        qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${MACOSX_ICON} ${SOURCES})
+        set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_RPATH TRUE MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/mac_osx/MacOSXBundleInfo.plist.in)
+    ENDIF ()
+ELSEIF (UNIX)
+    qt_add_executable(${PROJECT_NAME} ${SOURCES})
     # Setting RPATH here results in local build directory also being appended to RPATH
     # RPATH set instead by calling chrpath command line command for cleaner solution.
     # Correct cmake solution will likely require use of a separate make install
@@ -337,100 +337,108 @@ ELSEIF(UNIX)
     #    set_target_properties(${PROJECT_NAME} PROPERTIES
     #      BUILD_WITH_INSTALL_RPATH TRUE
     #      INSTALL_RPATH_USE_LINK_PATH TRUE
-    #      INSTALL_RPATH "\$ORIGIN/lib"
+    #      INSTALL_RPATH "\$ORIGIN/qt/lib"
     #)
-ENDIF(WIN32)
+ENDIF (WIN32)
 
+# Apply common developer tools target options and definitions
+devtools_target_options(${PROJECT_NAME})
 
 IF (WIN32 OR APPLE)
-SOURCE_GROUP_BY_FOLDER(${PROJECT_NAME})
-ENDIF()
+    SOURCE_GROUP_BY_FOLDER(${PROJECT_NAME})
+ENDIF ()
 
 # CMAKE_<CONFIG>_POSTFIX isn't applied automatically to executable targets so apply manually
-IF(CMAKE_DEBUG_POSTFIX)
+IF (CMAKE_DEBUG_POSTFIX)
     set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-ENDIF(CMAKE_DEBUG_POSTFIX)
-IF(CMAKE_RELEASE_POSTFIX)
+ENDIF (CMAKE_DEBUG_POSTFIX)
+IF (CMAKE_RELEASE_POSTFIX)
     set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX ${CMAKE_RELEASE_POSTFIX})
-ENDIF(CMAKE_RELEASE_POSTFIX)
+ENDIF (CMAKE_RELEASE_POSTFIX)
 
 # executable file library dependency list
-IF(WIN32)
-    target_link_libraries(${PROJECT_NAME} RmvBackend RmvParser system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
-ELSEIF(UNIX)
-    target_link_libraries(${PROJECT_NAME} RmvBackend RmvParser system_info rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads ${UPDATECHECKAPI_LIBS})
-ENDIF()
+IF (WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE RmvBackend RmvParser system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
+ELSEIF (UNIX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE RmvBackend RmvParser system_info rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads ${UPDATECHECKAPI_LIBS})
+ENDIF ()
+
+if (LINUX)
+    # Ensure that wayland plugin integration is enabled for deployment to work
+    # TODO(mguerret): This could eventually be removed if Qt improves their deployment script logic
+    qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QWaylandIntegrationPlugin)
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt::WaylandClient)
+endif ()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "copying rtda to output directory"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RTDA_PATH} $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E echo "copying rtda to output directory"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RTDA_PATH} $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-IF(APPLE)
-    IF (NOT NO_APP_BUNDLE)
-        # Run macdeployqt if it can be found
-        find_program(MACDEPLOYQT_EXECUTABLE NAMES macdeployqt)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            # macdeployqt expects to be passed the "${PROJECT_NAME}.app" directory rather than the final target
-            COMMAND ${MACDEPLOYQT_EXECUTABLE} $<TARGET_FILE_DIR:${PROJECT_NAME}>/../../
-        )
-    ENDIF()
-ENDIF(APPLE)
+# Set the RPATH properly on Linux
+if (LINUX)
+    set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "$ORIGIN/lib")
+endif ()
 
-IF(WIN32)
+# Install commands for CPack
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION . COMPONENT apps
+        BUNDLE DESTINATION . COMPONENT apps
+        ARCHIVE DESTINATION lib/ COMPONENT apps
+        LIBRARY DESTINATION lib/ COMPONENT apps)
+
+if (LINUX)
+    install(FILES ${RTDA_PATH} PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE DESTINATION . COMPONENT apps)
+else()
+    install(FILES ${RTDA_PATH} DESTINATION . COMPONENT apps)
+endif()
+
+if (WIN32)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION . OPTIONAL COMPONENT debug)
+endif()
+
+IF (WIN32)
     # Copy the VisualStudio redist files
     # the list of all redist files is contained in the variable CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS. We only want to copy
     # a subset of these so we extract the directory from the first entry and then manually copy the files we want
-    foreach(VSLIB ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+    foreach (VSLIB ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
         get_filename_component(VSREDISTDIR ${VSLIB} DIRECTORY)
         message("Visual Studio redistributable files directory = ${VSREDISTDIR}")
         break()
-    endforeach()
+    endforeach ()
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E echo "copying Visual Studio redist files from ${VSREDISTDIR} to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_2.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/concrt140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E echo "copying Visual Studio redist files from ${VSREDISTDIR} to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_2.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/concrt140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_atomic_wait.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_codecvt_ids.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
+    IF (EXISTS ${VSREDISTDIR}/vcruntime140_1.dll)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        )
+    ENDIF ()
 
-    # Add the Debug-Only custom commands.
-    # This functionality requires CMake 3.8 or higher.
-    add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND "${_cmd_copy_updates_to_vs_wd}"
-        COMMAND "${_cmd_copy_updates_to_output_dir}"
-        COMMAND_EXPAND_LISTS
-    )
-
-ENDIF(WIN32)
+ENDIF (WIN32)
 
 # Copy QT components into appropriate location in build destination
-if (WIN32)
-    DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
-elseif (UNIX AND NOT APPLE)
-    DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
-elseif (APPLE)
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-        DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE})
-    endif()
-endif()
+# if (WIN32)
+#     DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
+# elseif (UNIX AND NOT APPLE)
+#     DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
+# elseif (APPLE)
+#     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#         DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
+#     elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+#         DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE})
+#     endif()
+# endif()
 
-IF(UNIX AND NOT APPLE)
-    IF(NOT QT_SYSTEM)
-        # Call chrpath on system to override executable file RPATH.
-        find_program(CHRPATH_EXECUTABLE NAMES chrpath)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E echo "trying chrpath"
-            COMMAND ${CHRPATH_EXECUTABLE} -r "\\$$ORIGIN/lib" $<TARGET_FILE:${PROJECT_NAME}>
-        )
-    ENDIF(NOT QT_SYSTEM)
-
-ENDIF(UNIX AND NOT APPLE)
-
-devtools_target_options(${PROJECT_NAME})
+# Deploy Qt binaries for build and install
+deploy_qt(${PROJECT_NAME} apps)
 

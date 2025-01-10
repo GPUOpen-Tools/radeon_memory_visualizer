@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of platform-specific thread events.
@@ -61,7 +61,7 @@ RmtErrorCode RmtThreadEventSignal(RmtThreadEvent* thread_event)
     // signal the event
     BOOL result = SetEvent(thread_event_internal->handle);
 #else
-    int     result                = neosmart::SetEvent(thread_event_internal->handle);
+    int result = neosmart::SetEvent(thread_event_internal->handle);
 #endif  // #ifdef _WIN32
 
     RMT_RETURN_ON_ERROR(result, kRmtErrorPlatformFunctionFailed);
@@ -81,7 +81,7 @@ RmtErrorCode RmtThreadEventWait(RmtThreadEvent* thread_event)
     const uint32_t result = WaitForSingleObject(thread_event_internal->handle, INFINITE);
     RMT_RETURN_ON_ERROR(result == WAIT_OBJECT_0, kRmtErrorPlatformFunctionFailed);
 #else
-    int32_t result                = neosmart::WaitForEvent(thread_event_internal->handle);
+    int32_t result = neosmart::WaitForEvent(thread_event_internal->handle);
     RMT_RETURN_ON_ERROR(result == 0, kRmtErrorPlatformFunctionFailed);
 #endif  // #ifdef _WIN32
 

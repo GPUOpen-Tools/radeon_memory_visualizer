@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a resource timeline item model.
@@ -90,7 +90,26 @@ namespace rmv
             case kResourceHistoryColumnLegend:
                 return event_type;
             case kResourceHistoryColumnEvent:
-                return GetTextFromEventType(event_type);
+            {
+                // If the event type is 'ResourceNamed' then append the resource name string to the event name.
+                const char*  resource_name        = nullptr;
+                RmtErrorCode resource_name_result = kRmtOk;
+                if (event_type == kRmtResourceHistoryEventResourceNamed)
+                {
+                    resource_name_result = RmtResourceUserdataGetResourceNameAtTimestamp(
+                        resource_history_->resource->identifier, resource_history_->resource->create_time, timestamp, &resource_name);
+                }
+
+                if ((resource_name_result == kRmtOk) && (resource_name != nullptr))
+                {
+                    const QString resource_named_event_string = GetTextFromEventType(event_type) + " '" + resource_name + "'";
+                    return resource_named_event_string;
+                }
+                else
+                {
+                    return GetTextFromEventType(event_type);
+                }
+            }
             case kResourceHistoryColumnTime:
                 return rmv::time_util::ClockToTimeUnit(timestamp);
             case kResourceHistoryColumnVirtualAddress:
@@ -232,7 +251,7 @@ namespace rmv
             case kResourceHistoryColumnPhysicalAddress:
             case kResourceHistoryColumnSize:
             case kResourceHistoryColumnPageSize:
-                if (row > snapshot_table_index_)
+                if (timestamp > snapshot_timestamp_)
                 {
                     return QColor(Qt::lightGray);
                 }
@@ -352,6 +371,9 @@ namespace rmv
 
         case kRmtResourceHistoryEventSnapshotTaken:
             return "Snapshot taken";
+
+        case kRmtResourceHistoryEventResourceNamed:
+            return "Resource named";
 
         default:
             return "-";

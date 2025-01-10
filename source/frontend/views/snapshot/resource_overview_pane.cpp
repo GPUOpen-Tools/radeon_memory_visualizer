@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource Overview pane.
@@ -168,6 +168,7 @@ ResourceOverviewPane::~ResourceOverviewPane()
     delete tree_map_models_.resource_usage_model;
     delete colorizer_;
     delete model_;
+    delete allocation_details_scene_;
 }
 
 void ResourceOverviewPane::Refresh()
@@ -282,7 +283,10 @@ void ResourceOverviewPane::ComboFiltersChanged(bool checked)
     UpdateComboFilters();
     const uint64_t         usage_mask    = tree_map_models_.resource_usage_model->GetFilterMask(ui_->resource_usage_combo_box_);
     const RmtDataSnapshot* open_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
-    RmtVirtualAllocationListUpdateAliasedResourceSizes(&(open_snapshot->virtual_allocation_list), &(open_snapshot->resource_list), usage_mask);
+    if (open_snapshot != nullptr)
+    {
+        RmtVirtualAllocationListUpdateAliasedResourceSizes(&(open_snapshot->virtual_allocation_list), &(open_snapshot->resource_list), usage_mask);
+    }
 
     Refresh();
 

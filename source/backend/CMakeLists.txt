@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -73,9 +73,9 @@ set( SOURCES
     "rmt_thread_event.h"
     "rmt_trace_loader.cpp"
     "rmt_trace_loader.h"
+    "rmt_tree.h"
     "rmt_virtual_allocation_list.cpp"
     "rmt_virtual_allocation_list.h"
-    "rmt_warnings.cpp"
     "rmt_warnings.h"
 )
 

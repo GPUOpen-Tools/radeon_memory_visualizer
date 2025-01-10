@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Timeline pane.
@@ -29,9 +29,17 @@
 #include <linux/safe_crt.h>
 #endif
 
-const static QString kRenameAction  = "Rename snapshot";
-const static QString kDeleteAction  = "Delete snapshot";
-const static QString kCompareAction = "Compare snapshots";
+// Constants for snapshot table context menu.
+const static QString kRenameAction         = "Rename snapshot";
+const static QString kDeleteAction         = "Delete snapshot";
+const static QString kDeleteAllAction      = "Delete all snapshots";
+const static QString kDeleteMultipleAction = "Delete snapshots";
+const static QString kCompareAction        = "Compare snapshots";
+
+// Constants for snapshot deletion prompts.
+const static QString kDeleteSingleSnapshotPrompt    = "this snapshot";
+const static QString kDeleteSelectedSnapshotsPrompt = "the selected snapshots";
+const static QString kDeleteAllSnapshotsPrompt      = "all snapshots";
 
 // Constants for building the selection duration and timeline hover position string.
 const static QString kSelectionString         = "Selection: ";
@@ -61,7 +69,7 @@ TimelinePane::TimelinePane(QWidget* parent)
 
     // Initialize the snapshot legends.
     rmv::widget_util::InitGraphicsView(ui_->snapshot_legends_view_, rmv::kColoredLegendsHeight);
-    rmv::widget_util::InitColorLegend(snapshot_legends_, ui_->snapshot_legends_view_);
+    snapshot_legends_ = rmv::widget_util::InitColorLegend(ui_->snapshot_legends_view_);
     AddSnapshotLegends();
 
     // Initialize the timeline series filter combo box.
@@ -151,6 +159,8 @@ TimelinePane::TimelinePane(QWidget* parent)
     // Disable the compare button.
     ui_->compare_button_->setEnabled(false);
 
+    // NOTE: The parent pane (this) is being passed into the constructor of KeyboardZoomShortcutsTimeline(), so it takes ownership and is
+    // responsible for deletion.
     keyboard_zoom_shortcuts_ = new rmv::KeyboardZoomShortcutsTimeline(this, ui_->timeline_view_->horizontalScrollBar(), ui_->timeline_view_);
 
     connect(keyboard_zoom_shortcuts_, &rmv::KeyboardZoomShortcutsTimeline::ZoomInSelectionSignal, this, &TimelinePane::ZoomInSelection);
@@ -184,6 +194,7 @@ TimelinePane::~TimelinePane()
     delete colorizer_;
     delete model_;
     delete resource_usage_model_;
+    delete snapshot_legends_;
 }
 
 void TimelinePane::showEvent(QShowEvent* event)
@@ -656,9 +667,11 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
         QMenu   menu;
         QAction rename_action(kRenameAction);
         QAction delete_action(kDeleteAction);
+        QAction delete_all_action(kDeleteAllAction);
 
         menu.addAction(&rename_action);
         menu.addAction(&delete_action);
+        menu.addAction(&delete_all_action);
 
         QAction* pAction = menu.exec(event->globalPos());
 
@@ -667,26 +680,67 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
             QString selection_text = pAction->text();
             if (selection_text.compare(kDeleteAction) == 0)
             {
-                RmtSnapshotPoint* snapshot_point =
-                    reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[0].row(), rmv::kSnapshotTimelineColumnID));
-                RemoveSnapshot(snapshot_point);
+                // Ask the user to confirm deleting the snapshots
+                const int user_response = QtCommon::QtUtils::ShowMessageBox(nullptr,
+                                                                            QMessageBox::Yes | QMessageBox::No,
+                                                                            QMessageBox::Question,
+                                                                            rmv::text::kConfirmSnapshotDeletesTitle,
+                                                                            rmv::text::kConfirmSnapshotDeletesText.arg(kDeleteSingleSnapshotPrompt));
+
+                if (user_response == QMessageBox::Yes)
+                {
+                    RmtSnapshotPoint* snapshot_point =
+                        reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_rows[0].row(), rmv::kSnapshotTimelineColumnID));
+                    RemoveSnapshot(snapshot_point);
+                }
             }
             else if (selection_text.compare(kRenameAction) == 0)
             {
                 const int32_t snapshot_id = selected_rows[0].row();
                 RenameSnapshotByIndex(snapshot_id);
             }
+            else if (selection_text.compare(kDeleteAllAction) == 0)
+            {
+                // Ask the user to confirm deleting the snapshots
+                const int user_response = QtCommon::QtUtils::ShowMessageBox(nullptr,
+                                                                            QMessageBox::Yes | QMessageBox::No,
+                                                                            QMessageBox::Question,
+                                                                            rmv::text::kConfirmSnapshotDeletesTitle,
+                                                                            rmv::text::kConfirmSnapshotDeletesText.arg(kDeleteAllSnapshotsPrompt));
+
+                if (user_response == QMessageBox::Yes)
+                {
+                    {
+                        // Delete each snapshot in the model.
+                        int row_count = model_->RowCount();
+                        for (int row = 0; row < row_count; row++)
+                        {
+                            RmtSnapshotPoint* snapshot_point = reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(0, rmv::kSnapshotTimelineColumnID));
+
+                            if (snapshot_point != nullptr)
+                            {
+                                RemoveSnapshot(snapshot_point);
+                            }
+                        }
+                    }
+                }
+            }
         }
         return;
     }
 
-    if (selected_rows.count() == 2)
+    if (selected_rows.count() > 1)
     {
-        // If 2 rows selected, allow user to compare snapshots.
-        QAction action(kCompareAction);
+        QAction delete_multiple_action(kDeleteMultipleAction);
+        QAction compare_action(kCompareAction);
+        QMenu   menu;
+        if (selected_rows.count() == 2)
+        {
+            // If 2 rows selected, allow user to compare snapshots.
+            menu.addAction(&compare_action);
+        }
 
-        QMenu menu;
-        menu.addAction(&action);
+        menu.addAction(&delete_multiple_action);
 
         // Make sure the table is up to date. In the case where 3 snapshots are chosen, then 1 is deselected,
         // there won't be a selected table entry. If there are 2 snapshots selected in the table, these will be set up
@@ -697,7 +751,45 @@ void TimelinePane::contextMenuEvent(QContextMenuEvent* event)
 
         if (pAction != nullptr)
         {
-            emit rmv::SnapshotManager::Get().CompareSnapshotsOpened();
+            QString selection_text = pAction->text();
+            if (selection_text.compare(kCompareAction) == 0)
+            {
+                emit rmv::SnapshotManager::Get().CompareSnapshotsOpened();
+            }
+            else if (selection_text.compare(kDeleteMultipleAction) == 0)
+            {
+                // Ask the user to confirm deleting the snapshots
+                const int user_response = QtCommon::QtUtils::ShowMessageBox(nullptr,
+                                                                            QMessageBox::Yes | QMessageBox::No,
+                                                                            QMessageBox::Question,
+                                                                            rmv::text::kConfirmSnapshotDeletesTitle,
+                                                                            rmv::text::kConfirmSnapshotDeletesText.arg(kDeleteSelectedSnapshotsPrompt));
+
+                if (user_response == QMessageBox::Yes)
+                {
+                    // Build a list of snapshot names for each row selected.
+                    std::set<QString> snapshot_names;
+                    for (const auto& selected_row : selected_rows)
+                    {
+                        RmtSnapshotPoint* snapshot_point =
+                            reinterpret_cast<RmtSnapshotPoint*>(model_->GetProxyData(selected_row.row(), rmv::kSnapshotTimelineColumnID));
+                        if (snapshot_point != nullptr)
+                        {
+                            snapshot_names.insert(snapshot_point->name);
+                        }
+                    }
+
+                    // Delete each snapshot named in the list.
+                    for (const auto& snapshot_name : snapshot_names)
+                    {
+                        RmtSnapshotPoint* snapshot_point = model_->FindSnapshotByName(snapshot_name);
+                        if (snapshot_point != nullptr)
+                        {
+                            RemoveSnapshot(snapshot_point);
+                        }
+                    }
+                }
+            }
         }
 
         return;

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource details pane.
@@ -84,10 +84,10 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
     rmv::widget_util::InitGraphicsView(ui_->legends_view_system_, rmv::kColoredLegendsHeight);
     rmv::widget_util::InitGraphicsView(ui_->legends_view_unmapped_, rmv::kColoredLegendsHeight);
 
-    rmv::widget_util::InitColorLegend(legends_scene_heaps_[kResidencyLocal], ui_->legends_view_local_);
-    rmv::widget_util::InitColorLegend(legends_scene_heaps_[kResidencyInvisible], ui_->legends_view_invisible_);
-    rmv::widget_util::InitColorLegend(legends_scene_heaps_[kResidencySystem], ui_->legends_view_system_);
-    rmv::widget_util::InitColorLegend(legends_scene_heaps_[kResidencyUnmapped], ui_->legends_view_unmapped_);
+    legends_scene_heaps_[kResidencyLocal]     = rmv::widget_util::InitColorLegend(ui_->legends_view_local_);
+    legends_scene_heaps_[kResidencyInvisible] = rmv::widget_util::InitColorLegend(ui_->legends_view_invisible_);
+    legends_scene_heaps_[kResidencySystem]    = rmv::widget_util::InitColorLegend(ui_->legends_view_system_);
+    legends_scene_heaps_[kResidencyUnmapped]  = rmv::widget_util::InitColorLegend(ui_->legends_view_unmapped_);
 
     ui_->resource_timeline_->Initialize(model_);
 
@@ -146,6 +146,10 @@ ResourceDetailsPane::~ResourceDetailsPane()
     delete legend_delegate_;
     delete model_;
     delete ui_;
+    for (int i = 0; i < kResidencyCount; i++)
+    {
+        delete legends_scene_heaps_[i];
+    }
 }
 
 void ResourceDetailsPane::LoadResourceTimeline()
@@ -191,7 +195,7 @@ void ResourceDetailsPane::showEvent(QShowEvent* event)
 
 void ResourceDetailsPane::hideEvent(QHideEvent* event)
 {
-    if (model_->IsResourceValid(resource_identifier_) == true && thread_controller_ != nullptr)
+    if (thread_controller_ != nullptr)
     {
         disconnect(thread_controller_, &rmv::ThreadController::ThreadFinished, this, &ResourceDetailsPane::Refresh);
         thread_controller_->deleteLater();

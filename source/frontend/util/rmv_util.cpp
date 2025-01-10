@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of rmv_util which holds useful utility functions.
@@ -26,8 +26,7 @@
 #include "settings/rmv_settings.h"
 #include "util/version.h"
 
-static const int32_t kThresholdStepOffset =
-    7;  ///< Used to adjust the unscaled step value when calculating scaled threshold value.
+static const int32_t kThresholdStepOffset = 7;  ///< Used to adjust the unscaled step value when calculating scaled threshold value.
 
 /// @brief Get the brightness of a given color.
 ///

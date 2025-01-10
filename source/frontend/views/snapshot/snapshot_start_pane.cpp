@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Snapshot start pane.
@@ -38,6 +38,7 @@ SnapshotStartPane::SnapshotStartPane(QWidget* parent)
     config.base_color = rmv::RMVSettings::Get().GetColorSnapshotViewed();
     snapshot_widget_  = new RMVCameraSnapshotWidget(config);
 
+    // The scene will take ownership of snapshot_widget_.
     scene_->addItem(snapshot_widget_);
 }
 

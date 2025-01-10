@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the main window.
@@ -249,6 +249,8 @@ private:
     }
 
     /// @brief Template function to create a new pane of a certain type.
+    /// NOTE: a new PaneType object is created and is added to a parent widget,
+    /// which is responsible for deleting the object.
     ///
     /// @param [in] widget_stack The stacked widget to add the created pane to.
     ///

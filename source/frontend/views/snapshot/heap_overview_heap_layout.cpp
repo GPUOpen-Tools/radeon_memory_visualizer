@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a single heap in the heap overview pane.
@@ -47,13 +47,17 @@ HeapOverviewHeapLayout::HeapOverviewHeapLayout(QWidget* parent)
     for (int i = 0; i < kNumResourceLegends; i++)
     {
         rmv::widget_util::InitGraphicsView(resource_legends_views_[i], rmv::kColoredLegendsHeight);
-        rmv::widget_util::InitColorLegend(resource_legends_scenes_[i], resource_legends_views_[i]);
+        resource_legends_scenes_[i] = rmv::widget_util::InitColorLegend(resource_legends_views_[i]);
     }
 }
 
 HeapOverviewHeapLayout::~HeapOverviewHeapLayout()
 {
     delete model_;
+    for (int i = 0; i < kNumResourceLegends; i++)
+    {
+        delete resource_legends_scenes_[i];
+    }
 }
 
 void HeapOverviewHeapLayout::Initialize(RmtHeapType heap)
@@ -63,7 +67,7 @@ void HeapOverviewHeapLayout::Initialize(RmtHeapType heap)
 
     model_->InitializeModel(ui_->title_label_, rmv::kHeapOverviewTitle, "text");
     model_->InitializeModel(ui_->title_description_, rmv::kHeapOverviewDescription, "text");
-    model_->InitializeModel(ui_->sam_status_label_, rmv::kHeapOverviewSamStatus, "text");
+    model_->InitializeModel(ui_->heap_status_label_, rmv::kHeapOverviewHeapStatus, "text");
 
     model_->InitializeModel(ui_->warning_message_, rmv::kHeapOverviewWarningText, "text");
 

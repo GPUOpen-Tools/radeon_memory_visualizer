@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Snapshot Manager.
@@ -347,15 +347,17 @@ namespace rmv
     {
         // Snapshot is loaded at this point.
         RmtDataSnapshot* snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
-
-        const RmtVirtualAllocationList& allocation_list  = snapshot->virtual_allocation_list;
-        const int32_t                   allocation_count = allocation_list.allocation_count;
-        alias_model_.Clear();
-        if (allocation_count > 0)
+        if (snapshot != nullptr)
         {
-            for (int32_t loop = 0; loop < allocation_count; loop++)
+            const RmtVirtualAllocationList& allocation_list  = snapshot->virtual_allocation_list;
+            const int32_t                   allocation_count = allocation_list.allocation_count;
+            alias_model_.Clear();
+            if (allocation_count > 0)
             {
-                alias_model_.Generate(&allocation_list.allocation_details[loop]);
+                for (int32_t loop = 0; loop < allocation_count; loop++)
+                {
+                    alias_model_.Generate(&allocation_list.allocation_details[loop]);
+                }
             }
         }
     }

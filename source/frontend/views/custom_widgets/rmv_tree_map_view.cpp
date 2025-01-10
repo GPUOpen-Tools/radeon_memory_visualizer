@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2017-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a tree map view.
@@ -36,6 +36,7 @@ RMVTreeMapView::RMVTreeMapView(QWidget* parent)
 
     blocks_ = new RMVTreeMapBlocks(config);
 
+    // Scene takes ownership of blocks_ and is responsible for deletion.
     scene_->addItem(blocks_);
 
     resource_tooltip_.CreateToolTip(scene_, false);
@@ -43,6 +44,7 @@ RMVTreeMapView::RMVTreeMapView(QWidget* parent)
 
 RMVTreeMapView::~RMVTreeMapView()
 {
+    delete scene_;
 }
 
 void RMVTreeMapView::mousePressEvent(QMouseEvent* event)

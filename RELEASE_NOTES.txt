@@ -1,11 +1,11 @@
-Radeon™ Memory Visualizer V1.11 10/01/2024
+Radeon™ Memory Visualizer V1.12 03/11/2025
 ------------------------------------------
 
-V1.11 Changes
+V1.12 Changes
 ------------------------------------
-1) Dark mode user interface support, allowing the user to choose between a light and dark theme (or have RMV follow the OS theme setting).
-2) UI support for driver experiments.
-3) The "Device configuration" pane has been renamed to "System information."
+1) Support for AMD Radeon RX 9000 series GPUs
+2) New options to delete all snapshots or a selection of snapshots.
+3) Improved performance when loading snapshots for traces containing aliased resources.
 4) Bug/stability fixes.
 
 Known Issues
@@ -19,12 +19,19 @@ Known Issues
 (5) Sparse texture are not fully supported.
 (6) When tracing an application that uses a launcher, or an application that creates multiple devices, it is possible that more than one trace file will be written to disk. In the case of the launcher, adding the launcher's executable name to the Blocked applications list in the Radeon Developer Panel should prevent multiple trace files. Restarting the Radeon Developer Panel may be required before attempting to trace again.
 (7) If a memory dump is created by shutting down the application being traced and there are a large number of resource names, some names may not be included in the RMV file.  The work-around is to use the Dump trace button in the Radeon Developer Panel and wait for the button to be disabled before shutting down the application.  This gives the buffered names a chance to be processed.
-(8) The Shader core clock frequency and Video memory clock frequency for memory traces captured on Linux may be incorrectly displayed as 0.
+(8) The Shader core clock frequency and Video memory clock frequency for memory traces captured on Linux may be incorrectly displayed as 0 Mhz.
 (9) The Device name may be blank for memory traces captured on Linux with some APUs.
 (10) Installations of Ubuntu 20.04 or newer may have the RADV open source Vulkan® driver installed by default on the system. As a result, after an amdgpu-pro driver install, the default Vulkan ICD may be the RADV ICD. In order to capture a memory trace, Vulkan applications must be using the amdgpu-pro Vulkan ICD. The default Vulkan ICD can be overridden by setting the following environment variable before launching a Vulkan application: VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json
 
 Release Notes History
 ------------------------------------
+
+V1.11 Changes
+------------------------------------
+1) Dark mode user interface support, allowing the user to choose between a light and dark theme (or have RMV follow the OS theme setting).
+2) UI support for driver experiments.
+3) The "Device configuration" pane has been renamed to "System information."
+4) Bug/stability fixes.
 
 V1.10 Changes
 ------------------------------------

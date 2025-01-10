@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  The system information captured in the memory trace.
@@ -26,6 +26,9 @@ extern "C" {
 /// The maximum length for the driver software version.
 #define kRmtMaxDriverSoftwareVersionNameLength (64)
 
+/// The maximum length for the operating system name.
+#define kRmtMaxOsNameLength (64)
+
 /// @brief A structure encapsulating the information about the system.
 typedef struct RmtRdfSystemInfo
 {
@@ -47,6 +50,7 @@ typedef struct RmtRdfSystemInfo
     uint32_t minimum_memory_clock;                                                    ///< The minimum memory clock (in MHz).
     uint32_t maximum_memory_clock;                                                    ///< The maximum memory clock (in MHz).
     char     video_memory_type_name[kRmtMaxMemoryTypeNameLength];                     ///< The video memory type text string.
+    char     os_name[kRmtMaxOsNameLength];                                            ///< The operating system name.
     char     driver_packaging_version_name[kRmtMaxDriverPackagingVersionNameLength];  ///< The driver packaging name.
     char     driver_software_version_name[kRmtMaxDriverSoftwareVersionNameLength];    ///< The driver software version name.
 } RmtRdfSystemInfo;

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the debug window.
@@ -105,7 +105,10 @@ DebugWindow::~DebugWindow()
 void DebugWindow::ScrollToBottom()
 {
     QScrollBar* scroll_bar = ui_->plain_text_edit_->verticalScrollBar();
-    scroll_bar->setValue(scroll_bar->maximum());
+    if (scroll_bar != nullptr)
+    {
+        scroll_bar->setValue(scroll_bar->maximum());
+    }
 }
 
 void DebugWindow::SetText(const QString& string)

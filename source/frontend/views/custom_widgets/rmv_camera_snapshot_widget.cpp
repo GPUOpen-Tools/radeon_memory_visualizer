@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a camera snapshot widget.
@@ -63,16 +63,10 @@ void RMVCameraSnapshotWidget::paint(QPainter* painter, const QStyleOptionGraphic
         10);
 
     painter->setBrush(Qt::white);
-    painter->drawRect(ScaledMargin() + circle_diameter / 2 - camera_width / 2 + 15,
-                      ScaledMargin() + circle_diameter / 2 - camera_height / 2 - 5,
-                      20,
-                      20);
+    painter->drawRect(ScaledMargin() + circle_diameter / 2 - camera_width / 2 + 15, ScaledMargin() + circle_diameter / 2 - camera_height / 2 - 5, 20, 20);
 
     painter->setBrush(render_color_);
-    painter->drawRect(ScaledMargin() + circle_diameter / 2 + 30,
-                      ScaledMargin() + circle_diameter / 2 - 30,
-                      20,
-                      10);
+    painter->drawRect(ScaledMargin() + circle_diameter / 2 + 30, ScaledMargin() + circle_diameter / 2 - 30, 20, 10);
 
     const int lens_diameter_0 = 50;
     painter->setBrush(render_color_);

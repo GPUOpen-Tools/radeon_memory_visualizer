@@ -152,30 +152,39 @@ snapshot .." will take a snapshot and add it to the graph and to the snapshot
 table below the graph. Notice that only the snapshot name is shown in the
 table; the other table entries will be created when the snapshot is viewed.
 
-Clicking on the snapshot in the table or on the timeline will select that snapshot.
-Clicking on the **SNAPSHOT** tab with a snapshot selected, or double-clicking on a
-snapshot on the table or on the graph will jump to the **Heap overview** pane on
-the **SNAPSHOT**. This process will generate the snapshot data at the required
-time and returning back to the **Snapshot generation** will now show the table
-fully populated for the selected snapshot.
+Snapshots can be selected by clicking on them in the table.  Multiple snapshots
+can be selected by holding down the Shift key (selects a range) or Ctrl key (adds
+a snapshot to the selection group).
 
-Right-clicking on a snapshot in the table will show a context menu allowing the snapshot
-to be renamed or deleted. Snapshots can be renamed using any printable ASCII character,
+Right-clicking on snapshots in the table brings up a context menu.  Different menu options
+are available depending on the number of snapshots selected.
+
+-  Single snapshot selected: **Rename snapshot**, **Delete snapshot** and **Delete all snapshots**
+-  Two snapshots selected: **Compare snapshots** and **Delete snapshots***
+-  Three or more snapshots selected: **Delete snapshots**
+
+Snapshots can be renamed using any printable ASCII character,
 including spaces. Snapshot names are limited to 32 characters. Snapshots are saved back
 to the trace file so they can be viewed at a later date.
 
 Two or more snapshots can be selected in the table by holding down the shift key to
 select a range of snapshots or pressing Ctrl to select individual snapshots.
-If 2 snapshots are selected, right-clicking on the table while holding down the Ctrl
+If two snapshots are selected, right-clicking on the table while holding down the Ctrl
 key will display a context menu to allow them to be compared. Alternatively, the
 **Compare snapshots** button in the top right will become active. Clicking on either
 will jump to the **Snapshot delta** pane in the **COMPARE** tab. Alternatively, selecting
-2 snapshots in the table and clicking on the **COMPARE** tab will do the same thing. The
+two snapshots in the table and clicking on the **COMPARE** tab will do the same thing. The
 snapshots will be compared as **base snapshot vs diff snapshot**, where the base snapshot
 is the last (or highlighted) snapshot that was selected, and the diff snapshot is the
 first snapshot selected. If no snapshot is highlighted or the last snapshot was
 deselected (in the case where three snapshots are selected and one of those is
 deselected), the snapshots will be compared in the order they appear in the table.
+
+Clicking on the **SNAPSHOT** tab with a snapshot selected, or double-clicking on a
+snapshot on the table or on the graph will jump to the **Heap overview** pane on
+the **SNAPSHOT**. This process will generate the snapshot data at the required
+time and returning back to the **Snapshot generation** will now show the table
+fully populated for the selected snapshot.
 
 **RGP Interop**
 

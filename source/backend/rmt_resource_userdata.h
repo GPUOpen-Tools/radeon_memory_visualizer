@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Function definitions for any resource sideband data.
@@ -13,6 +13,7 @@
 #define RMV_BACKEND_RMT_RESOURCE_USERDATA_H_
 
 #include "rmt_types.h"
+#include "rmt_resource_history.h"
 #include "rmt_resource_list.h"
 
 #ifdef __cplusplus
@@ -85,6 +86,7 @@ RmtErrorCode RmtResourceUserdataTrackResourceNameToken(const RmtCorrelationIdent
 ///
 /// @param [in]  resource_list                  A pointer to the list of resource objects.
 /// @param [in]  internal_resource_id           The internal resource identifier of the resource to be updated.
+/// @param [in]  timestamp                      The point on the timeline when the resource name was updated.
 ///
 /// @retval
 /// kRmtOk                                      The operation completed successfully.
@@ -92,7 +94,21 @@ RmtErrorCode RmtResourceUserdataTrackResourceNameToken(const RmtCorrelationIdent
 /// kRmtErrorInvalidPointer                     The operation failed due to <c><i>resource_list</i></c> being an invalid pointer.
 /// @retval
 /// kRmtErrorResourceNotFound                   A resource name could not be found for the <c><i>internal_resource_id</i></c> specified.
-RmtErrorCode RmtResourceUserdataUpdateResourceName(const RmtResourceList* resource_list, const RmtResourceIdentifier internal_resource_id);
+RmtErrorCode RmtResourceUserdataUpdateResourceName(const RmtResourceList*      resource_list,
+                                                   const RmtResourceIdentifier internal_resource_id,
+                                                   const RmtTimestamp          timestamp);
+
+/// @brief Insert all Resource Named events (if any) into the resource history.
+///
+/// @param [in]  out_resource_history_list      A pointer to the the resource history to be updated.  The resource history must already have been initialized with the resource ID to use.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>out_resource_history_list</i></c> being an invalid pointer.
+/// @retval
+/// kRmtErrorResourceNotFound                   The  internal resource ID specified could not be found.
+RmtErrorCode RmtResourceUserdataUpdateNamedResourceHistoryEvents(RmtResourceHistory* out_resource_history_list);
 
 /// @brief Track an implicit resource UserData token.
 ///
@@ -133,6 +149,24 @@ RmtErrorCode RmtResourceUserDataTrackBoundResource(const RmtResource* resource, 
 /// @retval
 /// kRmtErrorResourceNotFound                   A resource name could not be found for the <c><i>internal_resource_id</i></c> specified.
 RmtErrorCode RmtResourceUserdataGetResourceName(const RmtResourceIdentifier internal_resource_id, const char** out_resource_name);
+
+/// @brief Retrieve the resource name associated with a resource at a specified time.
+///
+/// @param [in]  internal_resource_id           The resource identifier for the name to be retrieved.
+/// @param [in]  creation_time                  The creation time of the resource.
+/// @param [in]  timestamp                      Specifies the point on the timeline to retrieve the resource name.
+/// @param [out] out_resource_name              A pointer to the resource name.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>out_resource_name</i> being an invalid pointer.
+/// @retval
+/// kRmtErrorResourceNotFound                   A resource name could not be found for the <c><i>internal_resource_id</i></c> specified.
+RmtErrorCode RmtResourceUserdataGetResourceNameAtTimestamp(const RmtResourceIdentifier resource_id,
+                                                           const RmtTimestamp          creation_time,
+                                                           const RmtTimestamp          timestamp,
+                                                           const char**                out_resource_name);
 
 /// @brief Retrieve whether a resource is implicit or not.
 ///

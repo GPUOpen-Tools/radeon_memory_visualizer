@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a delta display widget.
@@ -56,8 +56,7 @@ void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsI
                 painter->setBrush(rmv_util::GetDeltaChangeColor(kDeltaChangeIncrease));
 
                 QPolygonF polygon;
-                polygon << QPoint(0, 20) << QPoint(10, 0)
-                        << QPoint(20, 20);
+                polygon << QPoint(0, 20) << QPoint(10, 0) << QPoint(20, 20);
                 painter->drawPolygon(polygon);
             }
             else if (config_.value_num < 0)
@@ -65,8 +64,7 @@ void RMVDeltaDisplayWidget::paint(QPainter* painter, const QStyleOptionGraphicsI
                 painter->setBrush(rmv_util::GetDeltaChangeColor(kDeltaChangeDecrease));
 
                 QPolygonF polygon;
-                polygon << QPoint(0, 0) << QPoint(10, 20)
-                        << QPoint(20, 0);
+                polygon << QPoint(0, 0) << QPoint(10, 20) << QPoint(20, 0);
                 painter->drawPolygon(polygon);
             }
             else

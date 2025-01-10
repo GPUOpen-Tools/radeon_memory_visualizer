@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -18,7 +18,8 @@ extern "C" {
 static const char* kRMVTraceFileExtension = ".rmv";
 static const char* kRGDTraceFileExtension = ".rgd";
 
-static const uint32_t kGfx10AsicFamily = 0x8F;
+static constexpr uint32_t kFamilyNavi  = 0x8F;
+static constexpr uint32_t kFamilyNavi4 = 0x98;
 
 #ifdef __cplusplus
 }

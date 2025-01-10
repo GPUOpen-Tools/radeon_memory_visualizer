@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a snapshot.
@@ -60,7 +60,7 @@ typedef struct RmtSegmentStatus
     uint64_t    min_allocation_size;                       ///< The min allocation size (in bytes) of all allocations in this segment.
     uint64_t    resource_count;                            ///< The number of resources owned by this heap.
     uint64_t    committed_size;                            ///< The amount of committed memory in bytes.
-    
+
     uint64_t physical_bytes_per_resource_usage[kRmtResourceUsageTypeCount];  ///< The amount of physical memory (in bytes) of each resource usage type.
 } RmtSegmentStatus;
 
