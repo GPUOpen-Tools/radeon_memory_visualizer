@@ -1,12 +1,11 @@
-Radeon™ Memory Visualizer V1.12 03/11/2025
+Radeon™ Memory Visualizer V1.13 06/17/2025
 ------------------------------------------
 
-V1.12 Changes
+V1.13 Changes
 ------------------------------------
-1) Support for AMD Radeon RX 9000 series GPUs
-2) New options to delete all snapshots or a selection of snapshots.
-3) Improved performance when loading snapshots for traces containing aliased resources.
-4) Bug/stability fixes.
+1) Optimize performance for the Allocation overview pane, helpful when allocations contain thousands of resources and/or aliasing is heavily used.
+2) Allow resource properties to be copied to the clipboard in the Resource details pane.
+3) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -25,6 +24,13 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.12 Changes
+------------------------------------
+1) Support for AMD Radeon RX 9000 series GPUs.
+2) New options to delete all snapshots or a selection of snapshots.
+3) Improved performance when loading snapshots for traces containing aliased resources.
+4) Bug/stability fixes.
 
 V1.11 Changes
 ------------------------------------

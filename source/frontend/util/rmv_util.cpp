@@ -7,19 +7,20 @@
 
 #include "util/rmv_util.h"
 
-#ifdef _WIN32
-#include <Windows.h>
-#include <Shlobj.h>
-#else
-#include <unistd.h>
-#include <sys/stat.h>
-#include <pwd.h>
+#include <cmath>
 
-#include <linux/safe_crt.h>
+#ifdef _WIN32
+#include <Shlobj.h>
+#include <Windows.h>
+#else
+#include <pwd.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include "linux/safe_crt.h"
 #endif
 
 #include <QDir>
-#include <cmath>
 
 #include "rmt_assert.h"
 

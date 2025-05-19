@@ -8,8 +8,8 @@
 #ifndef RMV_SETTINGS_RMV_SETTINGS_H_
 #define RMV_SETTINGS_RMV_SETTINGS_H_
 
-#include <QVector>
 #include <QMap>
+#include <QVector>
 
 #include "qt_common/utils/color_palette.h"
 #include "qt_common/utils/common_definitions.h"

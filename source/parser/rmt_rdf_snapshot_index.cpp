@@ -7,16 +7,16 @@
 
 #include "rmt_rdf_snapshot_index.h"
 
-#include "rmt_assert.h"
+#include <string>
+#include <vector>
 
 #include "rdf/rdf/inc/amdrdf.h"
 
-#include <vector>
-#include <string>
-
 #ifndef _WIN32
-#include <linux/safe_crt.h>
+#include "linux/safe_crt.h"
 #endif
+
+#include "rmt_assert.h"
 
 // The identifier for the Snapshot Index Chunk.
 constexpr const char* kSnapshotIndexChunkId = "RmvSnapshotIndex";

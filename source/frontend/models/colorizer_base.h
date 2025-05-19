@@ -12,8 +12,8 @@
 #ifndef RMV_MODELS_COLORIZER_BASE_H_
 #define RMV_MODELS_COLORIZER_BASE_H_
 
-#include <QWidget>
 #include <QGraphicsView>
+#include <QWidget>
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/colored_legend_scene.h"

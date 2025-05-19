@@ -7,24 +7,23 @@
 
 #include "views/custom_widgets/rmv_tree_map_blocks.h"
 
+#include <math.h>
+
+#include <QDebug>
+#include <QGraphicsSceneHoverEvent>
+#include <QMap>
+#include <QPainter>
+#include <QVector>
+
 #ifndef _WIN32
 #include "linux/safe_crt.h"  // for strcpy_s
 #endif
 
-#include <QPainter>
-#include <QGraphicsSceneHoverEvent>
-#include <QDebug>
-#include <QVector>
-#include <QMap>
-#include <math.h>
-
 #include "rmt_assert.h"
-#include "rmt_data_snapshot.h"
 
 #include "managers/message_manager.h"
 #include "managers/trace_manager.h"
 #include "models/snapshot/resource_overview_model.h"
-#include "rmt_types.h"
 #include "settings/rmv_settings.h"
 
 // The mimimum area that a resource can use. Anything smaller than this is ignored.

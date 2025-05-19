@@ -9,8 +9,8 @@
 #define RMV_VIEWS_TIMELINE_KEYBOARD_ZOOM_SHORTCUTS_TIMELINE_H_
 
 #include <QApplication>
-#include <QScrollBar>
 #include <QGraphicsView>
+#include <QScrollBar>
 
 #include "views/keyboard_zoom_shortcuts.h"
 

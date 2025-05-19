@@ -13,9 +13,9 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_COLOR_SWATCH_TOOLTIP_ITEM_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_COLOR_SWATCH_TOOLTIP_ITEM_H_
 
+#include <QColor>
 #include <QGraphicsItem>
 #include <QPainter>
-#include <QColor>
 
 /// @brief Container class for the custom tooltip with color swatch.
 class RMVColorSwatchTooltipItem : public QGraphicsSimpleTextItem

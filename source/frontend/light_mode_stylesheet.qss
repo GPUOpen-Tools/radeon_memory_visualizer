@@ -107,3 +107,19 @@ QScrollBar::add-page, QScrollBar::sub-page
 {
     background: none;
 }
+
+MainWindow #snapshot_label_
+{
+    font-size: 9.75pt;
+    background-color: rgb(240, 240, 240);
+}
+
+MainWindow #snapshot_combo_box_
+{
+   background-color: rgb(240, 240, 240);
+}
+
+MainWindow #bottom_spacer_label_
+{
+   background-color: rgb(240, 240, 240);
+}

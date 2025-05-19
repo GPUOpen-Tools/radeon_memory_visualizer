@@ -8,9 +8,10 @@
 #include "views/custom_widgets/rmv_resource_timeline.h"
 
 #include <math.h>
+
+#include <QMouseEvent>
 #include <QPainter>
 #include <QQueue>
-#include <QMouseEvent>
 
 #include "qt_common/utils/qt_util.h"
 

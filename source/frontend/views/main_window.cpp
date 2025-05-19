@@ -24,30 +24,30 @@
 #include "managers/pane_manager.h"
 #include "managers/snapshot_manager.h"
 #include "managers/trace_manager.h"
-#include "views/compare/snapshot_delta_pane.h"
-#include "views/compare/memory_leak_finder_pane.h"
-#include "views/compare/compare_start_pane.h"
-#include "views/settings/settings_pane.h"
-#include "views/settings/themes_and_colors_pane.h"
-#include "views/settings/keyboard_shortcuts_pane.h"
-#include "views/snapshot/allocation_explorer_pane.h"
-#include "views/snapshot/resource_list_pane.h"
-#include "views/snapshot/resource_details_pane.h"
-#include "views/snapshot/resource_overview_pane.h"
-#include "views/snapshot/allocation_overview_pane.h"
-#include "views/snapshot/heap_overview_pane.h"
-#include "views/snapshot/snapshot_start_pane.h"
-#include "views/start/about_pane.h"
-#include "views/start/recent_traces_pane.h"
-#include "views/start/welcome_pane.h"
-#include "views/timeline/timeline_pane.h"
-#include "views/timeline/device_configuration_pane.h"
-#include "settings/rmv_settings.h"
 #include "settings/rmv_geometry_settings.h"
+#include "settings/rmv_settings.h"
 #include "util/constants.h"
 #include "util/time_util.h"
 #include "util/version.h"
 #include "util/widget_util.h"
+#include "views/compare/compare_start_pane.h"
+#include "views/compare/memory_leak_finder_pane.h"
+#include "views/compare/snapshot_delta_pane.h"
+#include "views/settings/keyboard_shortcuts_pane.h"
+#include "views/settings/settings_pane.h"
+#include "views/settings/themes_and_colors_pane.h"
+#include "views/snapshot/allocation_explorer_pane.h"
+#include "views/snapshot/allocation_overview_pane.h"
+#include "views/snapshot/heap_overview_pane.h"
+#include "views/snapshot/resource_details_pane.h"
+#include "views/snapshot/resource_list_pane.h"
+#include "views/snapshot/resource_overview_pane.h"
+#include "views/snapshot/snapshot_start_pane.h"
+#include "views/start/about_pane.h"
+#include "views/start/recent_traces_pane.h"
+#include "views/start/welcome_pane.h"
+#include "views/timeline/device_configuration_pane.h"
+#include "views/timeline/timeline_pane.h"
 
 using namespace driver_overrides;
 
@@ -219,6 +219,22 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+    delete open_trace_action_;
+    delete close_trace_action_;
+    delete exit_action_;
+    delete help_action_;
+    delete about_action_;
+
+    for (auto action : recent_trace_actions_)
+    {
+        delete action;
+    }
+
+    for (auto action : navigation_actions_)
+    {
+        delete action;
+    }
+
     delete ui_;
 }
 
@@ -256,7 +272,7 @@ void MainWindow::SetupTabBar()
         if (item != nullptr)
         {
             item->setCursor(Qt::PointingHandCursor);
-            item->setContentsMargins(10, 10, 10, 10);
+            item->setContentsMargins(10, 0, 10, 0);
         }
     }
 
@@ -264,7 +280,7 @@ void MainWindow::SetupTabBar()
     ui_->main_tab_widget_->SetSpacerIndex(rmv::kMainPaneSpacer);
 
     // Adjust spacing around the navigation bar so that it appears centered on the tab bar.
-    navigation_bar_.layout()->setContentsMargins(15, 3, 35, 2);
+    navigation_bar_.layout()->setContentsMargins(15, 0, 35, 0);
 
     // Setup navigation browser toolbar on the main tab bar.
     ui_->main_tab_widget_->SetTabTool(rmv::kMainPaneNavigation, &navigation_bar_);
@@ -319,6 +335,7 @@ void MainWindow::SetupHotkeyNavAction(int key, int pane)
 {
     QAction* action = new QAction(this);
     action->setShortcut(key | Qt::ALT);
+    navigation_actions_.push_back(action);
 
     this->addAction(action);
     connect(action, &QAction::triggered, [=]() { ViewPane(pane); });
@@ -349,18 +366,21 @@ void MainWindow::CreateActions()
     // Set up forward/backward navigation.
     QAction* shortcut = new QAction(this);
     shortcut->setShortcut(QKeySequence(Qt::ALT | rmv::kKeyNavForwardArrow));
+    navigation_actions_.push_back(shortcut);
 
     connect(shortcut, &QAction::triggered, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateForward);
     this->addAction(shortcut);
 
     shortcut = new QAction(this);
     shortcut->setShortcut(QKeySequence(Qt::ALT | rmv::kKeyNavBackwardArrow));
+    navigation_actions_.push_back(shortcut);
 
     connect(shortcut, &QAction::triggered, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateBack);
     this->addAction(shortcut);
 
     shortcut = new QAction(this);
     shortcut->setShortcut(rmv::kKeyNavBackwardBackspace);
+    navigation_actions_.push_back(shortcut);
 
     connect(shortcut, &QAction::triggered, &rmv::NavigationManager::Get(), &rmv::NavigationManager::NavigateBack);
     this->addAction(shortcut);
@@ -368,6 +388,7 @@ void MainWindow::CreateActions()
     // Set up time unit cycling.
     shortcut = new QAction(this);
     shortcut->setShortcut(Qt::CTRL | Qt::Key_T);
+    navigation_actions_.push_back(shortcut);
 
     connect(shortcut, &QAction::triggered, this, &MainWindow::CycleTimeUnits);
     this->addAction(shortcut);

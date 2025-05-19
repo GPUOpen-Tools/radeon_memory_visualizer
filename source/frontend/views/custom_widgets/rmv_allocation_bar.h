@@ -8,8 +8,8 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_ALLOCATION_BAR_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_ALLOCATION_BAR_H_
 
-#include <QGraphicsObject>
 #include <QFont>
+#include <QGraphicsObject>
 
 #include "models/allocation_bar_model.h"
 #include "models/colorizer.h"
@@ -90,10 +90,11 @@ private:
     QFont                    title_font_;        ///< Font used for painting the title.
     QFont                    description_font_;  ///< Font used for painting the description.
 
-    int item_width_;             ///< Pixel width of this item (ie: bounding rect width), see UpdateDimensions().
-    int item_height_;            ///< Pixel height of this item (ie: bounding rect height), see UpdateDimensions().
-    int max_bar_width_;          ///< Maximum bar width after accounting for the bar padding along the right side, see UpdateDimensions().
-    int allocation_bar_height_;  ///< Pixel height of the allocation bar; already includes scaling factor, see UpdateDimensions().
+    int              item_width_;             ///< Pixel width of this item (ie: bounding rect width), see UpdateDimensions().
+    int              item_height_;            ///< Pixel height of this item (ie: bounding rect height), see UpdateDimensions().
+    int              max_bar_width_;          ///< Maximum bar width after accounting for the bar padding along the right side, see UpdateDimensions().
+    int              allocation_bar_height_;  ///< Pixel height of the allocation bar; already includes scaling factor, see UpdateDimensions().
+    std::vector<int> offset_array_;           ///< An array holding the next x-offset for a row index.
 };
 
 #endif  // RMV_VIEWS_CUSTOM_WIDGETS_RMV_ALLOCATION_BAR_H_

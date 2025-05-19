@@ -8,6 +8,7 @@
 #include "views/custom_widgets/rmv_colored_checkbox.h"
 
 #include <cmath>
+
 #include <QApplication>
 #include <QPainter>
 #include <QStylePainter>

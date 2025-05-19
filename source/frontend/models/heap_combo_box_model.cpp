@@ -9,8 +9,8 @@
 
 #include <QCheckBox>
 
-#include "rmt_print.h"
 #include "rmt_assert.h"
+#include "rmt_print.h"
 
 namespace rmv
 {

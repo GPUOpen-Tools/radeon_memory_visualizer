@@ -6,8 +6,8 @@
 /// the themes and colors pane.
 //=============================================================================
 
-#include <QPen>
 #include <QPainter>
+#include <QPen>
 
 #include "util/rmv_util.h"
 #include "views/custom_widgets/themes_and_colors_item_button.h"

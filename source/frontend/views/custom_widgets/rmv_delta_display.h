@@ -8,8 +8,8 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_DELTA_DISPLAY_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_DELTA_DISPLAY_H_
 
-#include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QGraphicsView>
 
 #include "views/custom_widgets/rmv_delta_display_widget.h"
 

@@ -9,8 +9,9 @@
 ///
 //=============================================================================
 
-#include "models/timeline/snapshot_item_model.h"
 #include "views/custom_widgets/rmv_snapshot_table_view.h"
+
+#include "models/timeline/snapshot_item_model.h"
 
 RMVSnapshotTableView::RMVSnapshotTableView(QWidget* parent)
     : ScaledTableView(parent)

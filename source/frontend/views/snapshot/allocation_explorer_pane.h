@@ -8,15 +8,13 @@
 #ifndef RMV_VIEWS_SNAPSHOT_ALLOCATION_EXPLORER_PANE_H_
 #define RMV_VIEWS_SNAPSHOT_ALLOCATION_EXPLORER_PANE_H_
 
-#include "ui_allocation_explorer_pane.h"
-
-#include <QItemSelection>
 #include <QGraphicsScene>
+#include <QItemSelection>
 
 #include "ui_allocation_explorer_pane.h"
 
-#include "models/colorizer.h"
 #include "models/allocation_bar_model.h"
+#include "models/colorizer.h"
 #include "models/snapshot/allocation_explorer_model.h"
 #include "util/widget_util.h"
 #include "views/base_pane.h"

@@ -8,10 +8,10 @@
 #ifndef RMV_MEMORY_EVENT_HISTORY_IMPL_H_
 #define RMV_MEMORY_EVENT_HISTORY_IMPL_H_
 
-#include "rmt_memory_event_history.h"
-
 #include <string>
 #include <vector>
+
+#include "rmt_memory_event_history.h"
 
 /// Private Event information structure used by the internal history implementation.
 typedef struct EventInfoImpl

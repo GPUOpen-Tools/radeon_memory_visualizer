@@ -11,12 +11,12 @@
 #include "util/log_file_writer.h"
 
 #ifdef _WIN32
-#include <Windows.h>
 #include <Shlobj.h>
+#include <Windows.h>
 #else
-#include <unistd.h>
-#include <sys/stat.h>
 #include <pwd.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include <QFile>
@@ -36,7 +36,7 @@ namespace rmv
         QFile::remove(GetLogFileLocation());
     }
 
-    LogFileWriter::~LogFileWriter(){};
+    LogFileWriter::~LogFileWriter() {};
 
     LogFileWriter& LogFileWriter::Get()
     {

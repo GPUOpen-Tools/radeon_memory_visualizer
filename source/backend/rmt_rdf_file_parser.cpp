@@ -7,7 +7,12 @@
 
 #include "rmt_rdf_file_parser.h"
 
+#include <map>
+#include <vector>
+
 #include "rdf/rdf/inc/amdrdf.h"
+#include "system_info_utils/source/driver_overrides_reader.h"
+#include "system_info_utils/source/system_info_reader.h"
 
 #include "rmt_assert.h"
 #include "rmt_error.h"
@@ -21,14 +26,9 @@
 #include "rmt_rdf_snapshot_writer.h"
 #include "rmt_types.h"
 
-#include "system_info_utils/source/system_info_reader.h"
-#include "system_info_utils/source/driver_overrides_reader.h"
 #ifndef _WIN32
 #include "linux/safe_crt.h"
 #endif
-
-#include <map>
-#include <vector>
 
 // Lookup map for data stream objects.
 static std::map<int32_t, RmtRdfDataStream*> data_stream_map;
@@ -417,7 +417,7 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
         const uint32_t active_cpu = 0;
         if (active_gpu < system_info.cpus.size())
         {
-            strncpy_s(data_set->system_info.cpu_name, kRmtMaxCpuNameLength, system_info.cpus[active_cpu].name.c_str(), kRmtMaxCpuNameLength - 1);
+            strncpy_s(data_set->system_info.cpu_name, RMT_MAX_CPU_NAME_LENGTH, system_info.cpus[active_cpu].name.c_str(), RMT_MAX_CPU_NAME_LENGTH - 1);
 
             data_set->system_info.cpu_max_clock_speed = system_info.cpus[active_cpu].max_clock_speed;
             data_set->system_info.num_physical_cores  = system_info.cpus[active_cpu].num_physical_cores;
@@ -427,19 +427,21 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
         data_set->system_info.system_physical_memory_size = system_info.os.memory.physical;
 
         strncpy_s(data_set->system_info.driver_packaging_version_name,
-                  kRmtMaxDriverPackagingVersionNameLength,
+                  RMT_MAX_DRIVER_PACKAGING_VERSION_NAME_LENGTH,
                   system_info.driver.packaging_version.c_str(),
-                  kRmtMaxDriverPackagingVersionNameLength - 1);
+                  RMT_MAX_DRIVER_PACKAGING_VERSION_NAME_LENGTH - 1);
 
         strncpy_s(data_set->system_info.driver_software_version_name,
-                  kRmtMaxDriverSoftwareVersionNameLength,
+                  RMT_MAX_DRIVER_SOFTWARE_VERSION_NAME_LENGTH,
                   system_info.driver.software_version.c_str(),
-                  kRmtMaxDriverSoftwareVersionNameLength - 1);
+                  RMT_MAX_DRIVER_SOFTWARE_VERSION_NAME_LENGTH - 1);
 
-        strncpy_s(
-            data_set->system_info.system_memory_type_name, kRmtMaxMemoryTypeNameLength, system_info.os.memory.type.c_str(), kRmtMaxMemoryTypeNameLength - 1);
+        strncpy_s(data_set->system_info.system_memory_type_name,
+                  RMT_MAX_MEMORY_TYPE_NAME_LENGTH,
+                  system_info.os.memory.type.c_str(),
+                  RMT_MAX_MEMORY_TYPE_NAME_LENGTH - 1);
 
-        strncpy_s(data_set->system_info.os_name, kRmtMaxOsNameLength, system_info.os.name.c_str(), kRmtMaxOsNameLength - 1);
+        strncpy_s(data_set->system_info.os_name, RMT_MAX_OS_NAME_LENGTH, system_info.os.name.c_str(), RMT_MAX_OS_NAME_LENGTH - 1);
 
         result = kRmtOk;
     }

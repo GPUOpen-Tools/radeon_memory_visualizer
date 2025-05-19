@@ -8,11 +8,11 @@
 #ifndef RMV_MEMORY_EVENT_HISTORY_H_
 #define RMV_MEMORY_EVENT_HISTORY_H_
 
+#include <math.h>
+
 #include "rmt_data_set.h"
 #include "rmt_resource_history.h"
 #include "rmt_resource_list.h"
-
-#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {

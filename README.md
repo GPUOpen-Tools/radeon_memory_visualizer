@@ -31,7 +31,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 * AMD Radeon RX 7000 series
 * AMD Radeon RX 6000 series
 * AMD Radeon RX 5000 series
-* AMD Ryzen™ Processors with Radeon Graphics
+* AMD Ryzen™ Processors with AMD RDNA™ Architecture Graphics
 
 ## Supported Operating Systems
 * Windows® 10
@@ -42,9 +42,8 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 Note: Before running RDP and capturing an RMV memory trace on Linux, be sure to make the necessary configuration changes by running the RDP setup.sh script each time the machine is rebooted. For more information, see the RDP documentation.
 
 ## Required hardware for SAM (Smart access memory) support
-* AMD Radeon RX 7000 series
-* AMD Radeon RX 6000 series
-* AMD Ryzen 5000 and higher series processors with Radeon Graphics
+* AMD Radeon RX 6000 series or higher
+* AMD Ryzen 5000 and higher series processors with AMD RDNA Architecture Graphics
 
 ## Build instructions
 See [BUILD.md](BUILD.md) for more details.

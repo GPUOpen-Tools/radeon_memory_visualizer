@@ -8,8 +8,8 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_DELTA_DISPLAY_WIDGET_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_DELTA_DISPLAY_WIDGET_H_
 
-#include <QGraphicsObject>
 #include <QFont>
+#include <QGraphicsObject>
 
 /// @brief Enum of delta data types.
 enum DeltaValueType

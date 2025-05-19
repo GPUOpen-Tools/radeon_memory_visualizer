@@ -8,9 +8,9 @@
 #ifndef RMV_BACKEND_RMT_RESOURCE_HISTORY_H_
 #define RMV_BACKEND_RMT_RESOURCE_HISTORY_H_
 
-#include "rmt_types.h"
-#include "rmt_error.h"
 #include "rmt_configuration.h"
+#include "rmt_error.h"
+#include "rmt_types.h"
 
 #ifdef __cplusplus
 extern "C" {

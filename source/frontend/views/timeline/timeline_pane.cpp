@@ -7,10 +7,10 @@
 
 #include "views/timeline/timeline_pane.h"
 
-#include <QScrollBar>
-#include <QMenu>
 #include <QContextMenuEvent>
 #include <QDebug>
+#include <QMenu>
+#include <QScrollBar>
 
 #include "qt_common/custom_widgets/double_slider_widget.h"
 #include "qt_common/utils/qt_util.h"
@@ -26,7 +26,7 @@
 #include "util/time_util.h"
 
 #ifndef _WIN32
-#include <linux/safe_crt.h>
+#include "linux/safe_crt.h"
 #endif
 
 // Constants for snapshot table context menu.

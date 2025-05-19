@@ -14,9 +14,10 @@
 #ifndef RMV_MODELS_ALLOCATION_MULTI_BAR_MODEL_H_
 #define RMV_MODELS_ALLOCATION_MULTI_BAR_MODEL_H_
 
-#include <QString>
 #include <stdint.h>
 #include <vector>
+
+#include <QString>
 
 #include "rmt_types.h"
 #include "rmt_virtual_allocation_list.h"

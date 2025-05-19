@@ -8,11 +8,11 @@
 #ifndef RMV_BACKEND_RMT_VIRTUAL_ALLOCATION_LIST_H_
 #define RMV_BACKEND_RMT_VIRTUAL_ALLOCATION_LIST_H_
 
-#include "rmt_types.h"
-#include "rmt_error.h"
 #include "rmt_configuration.h"
-#include "rmt_pool.h"
+#include "rmt_error.h"
 #include "rmt_format.h"
+#include "rmt_pool.h"
+#include "rmt_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +47,7 @@ typedef struct RmtVirtualAllocation
     uint64_t      base_address;                                ///< The base address of the allocation.
     int32_t       size_in_4kb_page;                            ///< The size of the allocation.
     int32_t       guid;                                        ///< A GUID for the this allocation.
-    uint32_t      flags;                                       ///< A set of flags for the alllcation.
+    uint32_t      flags;                                       ///< A set of flags for the allocation.
     uint64_t      timestamp;                                   ///< The timestamp when the allocation was made.
     uint64_t      last_residency_update;                       ///< The timestamp when the last residency update was made.
     uint64_t      last_cpu_map;                                ///< The timestamp when the last CPU map operation occurred.

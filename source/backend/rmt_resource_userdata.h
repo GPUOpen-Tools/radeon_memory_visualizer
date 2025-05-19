@@ -12,9 +12,9 @@
 #ifndef RMV_BACKEND_RMT_RESOURCE_USERDATA_H_
 #define RMV_BACKEND_RMT_RESOURCE_USERDATA_H_
 
-#include "rmt_types.h"
 #include "rmt_resource_history.h"
 #include "rmt_resource_list.h"
+#include "rmt_types.h"
 
 #ifdef __cplusplus
 extern "C" {

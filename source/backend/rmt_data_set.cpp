@@ -7,9 +7,18 @@
 
 #include "rmt_data_set.h"
 
+#include <stdlib.h>  // for malloc() / free()
+#include <string.h>  // for memcpy()
+#include <time.h>
+#include <algorithm>
+#include <string>
+
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
 #include "rmt_adapter_info.h"
 #include "rmt_address_helper.h"
-#include "rmt_memory_aliasing_timeline.h"
 #include "rmt_assert.h"
 #include "rmt_constants.h"
 #include "rmt_data_snapshot.h"
@@ -17,6 +26,7 @@
 #include "rmt_file_format.h"
 #include "rmt_legacy_snapshot_writer.h"
 #include "rmt_linear_buffer.h"
+#include "rmt_memory_aliasing_timeline.h"
 #include "rmt_print.h"
 #include "rmt_rdf_file_parser.h"
 #include "rmt_resource_history.h"
@@ -24,28 +34,19 @@
 #include "rmt_token.h"
 #include "rmt_util.h"
 
-#include <algorithm>
-#include <stdlib.h>  // for malloc() / free()
-#include <string>
-#include <string.h>  // for memcpy()
-#include <time.h>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
 #ifdef _LINUX
-#include "rmt_trace_loader.h"
 #include "linux/safe_crt.h"
+#include "rmt_trace_loader.h"
 
-#include <fstream>
 #include <stddef.h>  // for offsetof macro.
 #include <unistd.h>
+#include <fstream>
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <corecrt_io.h>
 #include <fcntl.h>
-#include <fstream>
 #include <windows.h>
+#include <fstream>
 #endif  // #ifdef _LINUX
 
 // Determine if a file is read only.
@@ -706,7 +707,7 @@ static RmtErrorCode BuildDataProfile(RmtDataSet* data_set)
     {
         // grab the next token from the heap.
         RmtToken           current_token;
-        const RmtErrorCode error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        const RmtErrorCode error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
@@ -971,7 +972,17 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 // This is not a true error, it just means that we encountered a shareable resource without the matching virtual
                 // alloc token.  This is an expected case as that allocation is owned outside the target process, so we'll add
                 // the allocation to the list so future resource tokens can find it.
-                static const RmtHeapType kDummyHeapPref[4] = {kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible, kRmtHeapTypeInvisible};
+                static const RmtHeapType kDummyHeapPrefLocal[RMT_NUM_HEAP_PREFERENCES] = {
+                    kRmtHeapTypeLocal, kRmtHeapTypeLocal, kRmtHeapTypeLocal, kRmtHeapTypeLocal};
+                static const RmtHeapType kDummyHeapPrefInvisible[RMT_NUM_HEAP_PREFERENCES] = {
+                    kRmtHeapTypeLocal, kRmtHeapTypeLocal, kRmtHeapTypeLocal, kRmtHeapTypeLocal};
+
+                // If there's no invisible memory, this allocation is going to be in the local heap.
+                const RmtHeapType* kDummyHeapPref = kDummyHeapPrefInvisible;
+                if (data_set->flags.local_heap_only)
+                {
+                    kDummyHeapPref = kDummyHeapPrefLocal;
+                }
 
                 // The byte offset of the token in the data stream is used to uniquely identify this allocation.
                 // The offset is used rather than the virtual allocation address in case there are allocations/frees then another allocation with the same base address.
@@ -1513,6 +1524,7 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
         {
             CheckForCpuHostApertureSupport(data_set);
             CheckForSAMSupport(data_set);
+            data_set->flags.local_heap_only = data_set->flags.sam_enabled || data_set->flags.cpu_host_aperture_enabled;
 
             // Construct the data profile for subsequent data parsing.
             data_set->flags.contains_correlation_tokens = false;
@@ -1862,7 +1874,7 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     {
         // grab the next token from the heap.
         RmtToken current_token = {};
-        error_code             = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code             = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
         if (error_code != kRmtOk)
         {
@@ -2445,7 +2457,7 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     {
         // grab the next token from the heap.
         RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 

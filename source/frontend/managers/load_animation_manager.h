@@ -13,12 +13,12 @@
 #ifndef RMV_MANAGERS_LOAD_ANIMATION_MANAGER_H_
 #define RMV_MANAGERS_LOAD_ANIMATION_MANAGER_H_
 
-#include "views/custom_widgets/rmv_cancellable_loading_widget.h"
-
-#include <QObject>
 #include <QMenu>
+#include <QObject>
 
 #include "qt_common/custom_widgets/tab_widget.h"
+
+#include "views/custom_widgets/rmv_cancellable_loading_widget.h"
 
 namespace rmv
 {

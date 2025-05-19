@@ -8,8 +8,9 @@
 #ifndef RMV_UTIL_STRING_UTIL_H_
 #define RMV_UTIL_STRING_UTIL_H_
 
-#include <QString>
 #include <stdint.h>
+
+#include <QString>
 
 #include "rmt_resource_list.h"
 

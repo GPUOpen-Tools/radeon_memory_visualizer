@@ -8,13 +8,13 @@
 #ifndef RMV_BACKEND_RMT_MEMORY_ALIASING_TIMELINE_H_
 #define RMV_BACKEND_RMT_MEMORY_ALIASING_TIMELINE_H_
 
-#include "rmt_assert.h"
-#include "rmt_format.h"
-
 #include <algorithm>
 #include <limits>
 #include <unordered_map>
 #include <vector>
+
+#include "rmt_assert.h"
+#include "rmt_format.h"
 
 namespace RmtMemoryAliasingTimelineAlgorithm
 {

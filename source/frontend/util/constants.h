@@ -94,7 +94,8 @@ namespace rmv
             "\n\nThe trace file contains allocations requesting more than 64GB of GPU memory. Please reduce the video memory consumption.";
 
         static const QString kOpenTraceFileNotSupported =
-            "\n\nThe trace file is no longer supported. Please load it using an older version of the Radeon Memory Visualizer.";
+            "\n\nThe Radeon Memory Visualizer only supports trace files from GPUs with AMD RDNA Architecture. Please load the trace file using RMV v1.8 or "
+            "older.";
 
         static const QString kCommitEditsFailedTitle = "Error";
         static const QString kCommitEditsFailedText  = "Failed to commit edits to the trace file %1.";

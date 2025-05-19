@@ -15,8 +15,8 @@
 
 #include "models/allocation_bar_model.h"
 #include "models/allocation_item_model.h"
-#include "models/proxy_models/resource_proxy_model.h"
 #include "models/proxy_models/allocation_proxy_model.h"
+#include "models/proxy_models/resource_proxy_model.h"
 #include "models/resource_item_model.h"
 #include "util/definitions.h"
 

@@ -8,8 +8,8 @@
 #include "views/snapshot/allocation_explorer_pane.h"
 
 #include <QDebug>
-#include <QScrollBar>
 #include <QListWidget>
+#include <QScrollBar>
 
 #include "managers/message_manager.h"
 #include "managers/pane_manager.h"

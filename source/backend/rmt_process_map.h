@@ -8,8 +8,8 @@
 #ifndef RMV_BACKEND_RMT_PROCESS_MAP_H_
 #define RMV_BACKEND_RMT_PROCESS_MAP_H_
 
-#include "rmt_error.h"
 #include "rmt_configuration.h"
+#include "rmt_error.h"
 
 #ifdef __cplusplus
 extern "C" {

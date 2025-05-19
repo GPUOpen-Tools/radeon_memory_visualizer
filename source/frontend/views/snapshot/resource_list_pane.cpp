@@ -7,9 +7,9 @@
 
 #include "views/snapshot/resource_list_pane.h"
 
+#include <QCheckBox>
 #include <QFileDialog>
 #include <QScrollBar>
-#include <QCheckBox>
 
 #include "qt_common/custom_widgets/double_slider_widget.h"
 

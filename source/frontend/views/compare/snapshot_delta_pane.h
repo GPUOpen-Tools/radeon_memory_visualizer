@@ -13,11 +13,11 @@
 #include "qt_common/custom_widgets/colored_legend_scene.h"
 
 #include "models/compare/snapshot_delta_model.h"
+#include "util/definitions.h"
 #include "views/base_pane.h"
 #include "views/compare_pane.h"
 #include "views/custom_widgets/rmv_carousel.h"
 #include "views/custom_widgets/rmv_delta_display.h"
-#include "util/definitions.h"
 
 /// @brief Enum containing indices for the snapshot delta information.
 enum SnapshotDeltaDataType

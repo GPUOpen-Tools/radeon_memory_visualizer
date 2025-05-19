@@ -7,9 +7,9 @@
 
 #include "views/start/about_pane.h"
 
-#include <QFileInfo>
 #include <QDesktopServices>
 #include <QDialogButtonBox>
+#include <QFileInfo>
 #include <QUrl>
 
 #include "qt_common/utils/qt_util.h"

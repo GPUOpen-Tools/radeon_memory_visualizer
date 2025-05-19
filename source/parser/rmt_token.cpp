@@ -5,9 +5,10 @@
 /// @brief  Implementation of functions related to RMT token structures.
 //=============================================================================
 
+#include "rmt_token.h"
+
 #include "rmt_assert.h"
 #include "rmt_string_memory_pool.h"
-#include "rmt_token.h"
 
 // 1MB memory pool for resource name strings.
 static const uint64_t kMemoryPoolBlockSize = 1024 * 1024;

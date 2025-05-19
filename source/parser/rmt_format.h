@@ -8,15 +8,15 @@
 #ifndef RMV_PARSER_RMT_FORMAT_H_
 #define RMV_PARSER_RMT_FORMAT_H_
 
-#include <string.h>  // for memcpy()
-#include <stdint.h>
 #include <stdbool.h>
-
-#include "rmt_types.h"
+#include <stdint.h>
+#include <string.h>  // for memcpy()
 
 #ifndef _WIN32
 #include <stdlib.h>
 #endif
+
+#include "rmt_types.h"
 
 /// The maximum number of bytes it will take to hold the maximum number of pages
 /// that a <c><i>kRmtTokenTypePageReference</i></c> token can encode.
@@ -120,6 +120,7 @@ typedef enum RmtResourceType
     kRmtResourceTypeDescriptorPool   = 14,  ///< A specialised pool containing multiple heaps which hold descriptors only. [Vulkan only]
     kRmtResourceTypeCommandAllocator = 15,  ///< A command allocator resource.
     kRmtResourceTypeMiscInternal     = 16,  ///< A miscellaneous internal type of resource.
+    kRmtResourceTypeWorkGraph        = 17,  ///< A work graph resource.
 
     // add above this.
     kRmtResourceTypeCount
@@ -658,6 +659,19 @@ typedef enum RmtGpuEventFlagBits
     kRmtGpuEventFlagGpuOnly = (1 << 0)  ///< Event is only used from the GPU.
 } RmtGpuEventFlagBits;
 
+typedef enum RmtWorkGraphCreateFlagBits
+{
+    kRmtWorkGraphCreateFlagClientInternal = (1 << 0),  ///< The work graph is internal (app or driver).
+
+} RmtWorkGraphCreateFlagBits;
+
+/// A structure encapsulating the resource description for a <c><i>kRmtResourceTypeWorkGraph</i></c>.
+typedef struct RmtResourceDescriptionWorkGraph
+{
+    RmtWorkGraphCreateFlagBits create_flags;     ///< Flags describing how the work graph was created.
+    uint64_t                   work_graph_hash;  ///< The hash associated with the work graph.
+} RmtResourceDescriptionWorkGraph;
+
 /// An enumeration of all internal resource types.
 typedef enum RmtResourceMiscInternalType
 {
@@ -678,7 +692,7 @@ typedef struct RmtImageFormat
 typedef struct RmtResourceDescriptionImage
 {
     uint32_t                  create_flags;              ///< Flags describing how the image was created.
-    uint32_t                  usage_flags;               ///< Flags deccribing how the image is used.
+    uint32_t                  usage_flags;               ///< Flags describing how the image is used.
     RmtImageType              image_type;                ///< The type of the image.
     int32_t                   dimension_x;               ///< The width of the image [1..4096].
     int32_t                   dimension_y;               ///< The height of the image [1...4096].
@@ -709,7 +723,7 @@ typedef struct RmtResourceDescriptionImage
 typedef struct RmtResourceDescriptionBuffer
 {
     uint32_t create_flags;   ///< Flags describing how the buffer was created.
-    uint32_t usage_flags;    ///< Flags deccribing how the image is used.
+    uint32_t usage_flags;    ///< Flags describing how the image is used.
     uint64_t size_in_bytes;  ///< The size (in bytes) of the buffer.
 } RmtResourceDescriptionBuffer;
 

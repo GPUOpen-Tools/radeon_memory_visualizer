@@ -6,13 +6,15 @@
 //=============================================================================
 
 #include "rmt_data_timeline.h"
+
+#include <stdlib.h>  // for malloc(), free()
+#include <string.h>  // for memcpy()
+
+#include "rmt_assert.h"
 #include "rmt_data_set.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_file_format.h"
 #include "rmt_job_system.h"
-#include "rmt_assert.h"
-#include <string.h>  // for memcpy()
-#include <stdlib.h>  // for malloc(), free()
 
 // Helper function to call the correct free function.
 static void PerformFree(RmtDataSet* data_set, void* pointer)

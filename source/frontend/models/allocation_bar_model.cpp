@@ -14,15 +14,14 @@
 #include "models/allocation_bar_model.h"
 
 #include "rmt_assert.h"
+#include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 #include "rmt_types.h"
-#include "rmt_data_snapshot.h"
-
-#include "util/rmv_util.h"
-#include "util/string_util.h"
 
 #include "managers/trace_manager.h"
 #include "models/snapshot/allocation_overview_model.h"
+#include "util/rmv_util.h"
+#include "util/string_util.h"
 
 namespace rmv
 {

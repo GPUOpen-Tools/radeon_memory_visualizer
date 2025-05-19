@@ -6,9 +6,11 @@
 //=============================================================================
 
 #include "rmt_physical_allocation_list.h"
-#include "rmt_assert.h"
-#include <string.h>  // memcpy
+
 #include <math.h>    // for sqrt
+#include <string.h>  // memcpy
+
+#include "rmt_assert.h"
 
 // calculate the size of an allocation in bytes.
 uint64_t RmtPhysicalAllocationGetSizeInBytes(const RmtPhysicalAllocation* physical_allocation)

@@ -14,9 +14,9 @@
 #ifndef RMV_PARSER_RMT_RDF_SNAPSHOT_INDEX_H_
 #define RMV_PARSER_RMT_RDF_SNAPSHOT_INDEX_H_
 
-#include "rmt_error.h"
-
 #include "rdf/rdf/inc/amdrdf.h"
+
+#include "rmt_error.h"
 
 constexpr uint16_t kMaxSnapshotIndex = 1024;
 

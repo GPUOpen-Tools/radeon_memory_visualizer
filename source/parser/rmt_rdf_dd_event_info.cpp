@@ -7,11 +7,11 @@
 
 #include "rmt_rdf_dd_event_info.h"
 
+#include "rdf/rdf/inc/amdrdf.h"
+
 #include "rmt_assert.h"
 #include "rmt_error.h"
 #include "rmt_format.h"
-
-#include "rdf/rdf/inc/amdrdf.h"
 
 // The chunk identifier.
 static const char* kDDEventChunkIdentifier = "DDEvent";

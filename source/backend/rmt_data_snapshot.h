@@ -8,13 +8,13 @@
 #ifndef RMV_BACKEND_RMT_DATA_SNAPSHOT_H_
 #define RMV_BACKEND_RMT_DATA_SNAPSHOT_H_
 
-#include "rmt_types.h"
-#include "rmt_resource_list.h"
-#include "rmt_page_table.h"
-#include "rmt_virtual_allocation_list.h"
-#include "rmt_physical_allocation_list.h"
 #include "rmt_configuration.h"
+#include "rmt_page_table.h"
+#include "rmt_physical_allocation_list.h"
 #include "rmt_process_map.h"
+#include "rmt_resource_list.h"
+#include "rmt_types.h"
+#include "rmt_virtual_allocation_list.h"
 
 #ifdef __cplusplus
 extern "C" {

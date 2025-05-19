@@ -5,9 +5,10 @@
 /// @brief  Implementation of functions for working with the RMT file format.
 //=============================================================================
 
+#include <stdio.h>  // for fread
+
 #include "rmt_file_format.h"
 #include "rmt_util.h"
-#include <stdio.h>  // for fread
 
 RmtErrorCode RmtFileParserCreateFromHandle(RmtFileParser* file_parser, FILE* file_handle)
 {
@@ -35,7 +36,7 @@ RmtErrorCode RmtFileParserCreateFromHandle(RmtFileParser* file_parser, FILE* fil
     file_parser->next_chunk_offset = file_parser->header.chunk_offset;
 
     // validate that the file contains the magic number
-    RMT_RETURN_ON_ERROR(file_parser->header.magic_number == RMT_FILE_MAGIC_NUMBER, kRmtErrorMalformedData);
+    RMT_RETURN_ON_ERROR(file_parser->header.magic_number == kRmtFileMagicNumber, kRmtErrorMalformedData);
 
     return kRmtOk;
 }

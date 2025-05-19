@@ -8,12 +8,12 @@
 #ifndef RMV_BACKEND_RMT_RESOURCE_LIST_H_
 #define RMV_BACKEND_RMT_RESOURCE_LIST_H_
 
-#include "rmt_types.h"
-#include "rmt_error.h"
 #include "rmt_configuration.h"
-#include "rmt_pool.h"
+#include "rmt_error.h"
 #include "rmt_format.h"
+#include "rmt_pool.h"
 #include "rmt_token.h"
+#include "rmt_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,18 +63,18 @@ typedef struct RmtResource
         RmtResourceDescriptionBuffer   buffer;     ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBuffer</i></c>.
         RmtResourceDescriptionGpuEvent gpu_event;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeGpuEvent</i></c>.
         RmtResourceDescriptionBorderColorPalette
-            border_color_palette;                              ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBorderColorPalette</i></c>.
-        RmtResourceDescriptionPerfExperiment perf_experiment;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePerfExperiment</i></c>.
-        RmtResourceDescriptionQueryHeap      query_heap;       ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeQueryHeap</i></c>.
-        RmtResourceDescriptionPipeline       pipeline;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePipeline</i></c>.
-        RmtResourceDescriptionVideoDecoder   video_decoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoDecoder</i></c>.
-        RmtResourceDescriptionVideoEncoder   video_encoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoEncoder</i></c>.
-        RmtResourceDescriptionHeap           heap;             ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeHeap</i></c>.
-        RmtResourceDescriptionDescriptorHeap descriptor_heap;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorHeap</i></c>.
-        RmtResourceDescriptionDescriptorPool descriptor_pool;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorPool</i></c>.
-        RmtResourceDescriptionCommandAllocator
-                                           command_allocator;  ///< Valid when <c><i>resourceType</i></c> is <c><i>RMT_RESOURCE_TYPE_COMMAND_ALLOCATOR</i></c>.
-        RmtResourceDescriptionMiscInternal misc_internal;      ///< Valid when <c><i>resourceType</i></c> is <c><i>RMT_RESOURCE_TYPE_MISC_INTERNAL</i></c>.
+            border_color_palette;                                ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeBorderColorPalette</i></c>.
+        RmtResourceDescriptionPerfExperiment   perf_experiment;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePerfExperiment</i></c>.
+        RmtResourceDescriptionQueryHeap        query_heap;       ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeQueryHeap</i></c>.
+        RmtResourceDescriptionPipeline         pipeline;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypePipeline</i></c>.
+        RmtResourceDescriptionVideoDecoder     video_decoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoDecoder</i></c>.
+        RmtResourceDescriptionVideoEncoder     video_encoder;    ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeVideoEncoder</i></c>.
+        RmtResourceDescriptionHeap             heap;             ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeHeap</i></c>.
+        RmtResourceDescriptionDescriptorHeap   descriptor_heap;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorHeap</i></c>.
+        RmtResourceDescriptionDescriptorPool   descriptor_pool;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorPool</i></c>.
+        RmtResourceDescriptionCommandAllocator command_allocator;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeCommandAllocator</i></c>.
+        RmtResourceDescriptionMiscInternal     misc_internal;      ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeMiscInternal</i></c>.
+        RmtResourceDescriptionWorkGraph        work_graph;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeWorkGraph</i></c>.
     };
 
     RmtResourceIdNode* id_node;  ///< A pointer to the <c><i>RmtResourceIdNode</i></c> structure in the tree, used to quickly locate this resource by ID.

@@ -8,9 +8,9 @@
 #ifndef RMV_VIEWS_SNAPSHOT_RESOURCE_OVERVIEW_PANE_H_
 #define RMV_VIEWS_SNAPSHOT_RESOURCE_OVERVIEW_PANE_H_
 
-#include "ui_resource_overview_pane.h"
-
 #include <QGraphicsScene>
+
+#include "ui_resource_overview_pane.h"
 
 #include "models/colorizer.h"
 #include "models/snapshot/resource_overview_model.h"

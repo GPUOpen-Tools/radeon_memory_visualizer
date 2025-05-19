@@ -9,6 +9,7 @@
 #define RMV_MODELS_PROXY_MODELS_TABLE_PROXY_MODEL_H_
 
 #include <set>
+
 #include <QSortFilterProxyModel>
 
 namespace rmv

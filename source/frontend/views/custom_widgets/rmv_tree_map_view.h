@@ -8,13 +8,13 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_TREE_MAP_VIEW_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_TREE_MAP_VIEW_H_
 
-#include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QGraphicsView>
 
 #include "models/snapshot/resource_overview_model.h"
 #include "util/definitions.h"
-#include "views/custom_widgets/rmv_tree_map_blocks.h"
 #include "views/custom_widgets/rmv_tooltip.h"
+#include "views/custom_widgets/rmv_tree_map_blocks.h"
 
 /// @brief Holds and controls the entire queue timings visualization.
 class RMVTreeMapView : public QGraphicsView

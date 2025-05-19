@@ -13,10 +13,10 @@
 #include "qt_common/custom_widgets/colored_legend_scene.h"
 
 #include "models/snapshot/resource_details_model.h"
-#include "views/base_pane.h"
-#include "views/delegates/rmv_resource_event_delegate.h"
 #include "util/thread_controller.h"
 #include "util/widget_util.h"
+#include "views/base_pane.h"
+#include "views/delegates/rmv_resource_event_delegate.h"
 
 /// @brief Class declaration.
 class ResourceDetailsPane : public BasePane
@@ -84,6 +84,22 @@ private slots:
 
     /// @brief Update the pane based on the color theme.
     void OnColorThemeUpdated();
+
+    /// @brief Show a context menu if the user right-clicks on the Properties table.
+    ///
+    /// Present the user to copy the properties table contents to the clipboard as raw
+    /// text or as csv-formatted text.
+    ///
+    /// @param [in] pos  The position of the mouse when the user clicked.
+    void ShowPropertiesTableContextMenu(const QPoint& pos);
+
+    /// @brief Handle what happens when the user selects one of the right-click options.
+    ///
+    /// This will do the actual clipboard copy. The raw text format uses spacing to line
+    /// the table contents up.
+    ///
+    /// @param [in] as_csv  If true, copy the text in csv format, otherwise save as raw text.
+    void SavePropertiesToClipboard(bool as_csv) const;
 
 private:
     /// @brief Helper function to set the maximum height of the timeline table so it only contains rows with valid data.

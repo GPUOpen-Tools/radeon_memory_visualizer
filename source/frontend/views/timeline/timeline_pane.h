@@ -17,13 +17,13 @@
 #include "models/resource_usage_combo_box_model.h"
 #include "models/timeline/timeline_colorizer.h"
 #include "models/timeline/timeline_model.h"
+#include "util/definitions.h"
+#include "util/thread_controller.h"
+#include "util/widget_util.h"
 #include "views/base_pane.h"
 #include "views/custom_widgets/rmv_snapshot_marker.h"
 #include "views/custom_widgets/rmv_timeline_graph.h"
 #include "views/timeline/keyboard_zoom_shortcuts_timeline.h"
-#include "util/definitions.h"
-#include "util/thread_controller.h"
-#include "util/widget_util.h"
 
 /// @brief Class declaration for the timeline pane.
 class TimelinePane : public BasePane

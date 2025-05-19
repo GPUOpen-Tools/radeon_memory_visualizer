@@ -7,17 +7,17 @@
 
 #include "models/resource_usage_combo_box_model.h"
 
+#include <cmath>
+
 #include <QCheckBox>
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 
-#include "rmt_resource_list.h"
 #include "rmt_assert.h"
 #include "rmt_print.h"
+#include "rmt_resource_list.h"
 
 #include "util/string_util.h"
-
-#include <cmath>
 
 // Set of resources that shouldn't be in the resource combo box or are specially managed.
 static const std::set<int> kExcludedResources = {RmtResourceUsageType::kRmtResourceUsageTypeUnknown,

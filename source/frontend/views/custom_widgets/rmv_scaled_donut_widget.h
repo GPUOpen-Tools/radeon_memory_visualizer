@@ -8,8 +8,8 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_SCALED_DONUT_WIDGET_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_SCALED_DONUT_WIDGET_H_
 
-#include <QWidget>
 #include <QPainter>
+#include <QWidget>
 
 /// @brief Support for the donut graphics item widget.
 class RMVScaledDonutWidget : public QWidget

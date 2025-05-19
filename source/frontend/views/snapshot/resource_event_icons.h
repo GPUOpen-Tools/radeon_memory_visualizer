@@ -12,8 +12,8 @@
 #ifndef RMV_VIEWS_SNAPSHOT_RESOURCE_EVENT_ICONS_H_
 #define RMV_VIEWS_SNAPSHOT_RESOURCE_EVENT_ICONS_H_
 
-#include <QPainter>
 #include <QColor>
+#include <QPainter>
 
 #include "models/snapshot/resource_details_model.h"
 

@@ -10,10 +10,10 @@ with this distribution for information on how to create a memory trace. This
 can be obtained from within the Radeon Developer Panel or from the link on the
 Radeon Memory Visualizer "Welcome" view. The documentation is also available
 online at:
-http://radeon-developer-panel.readthedocs.io/en/latest/
+https://gpuopen.com/manuals/rdp_manual/rdp_manual-index/
 
 This documentation can also be found online at:
-http://radeon-memory-visualizer.readthedocs.io/en/latest/
+https://gpuopen.com/manuals/rmv_manual/rmv_manual-index/
 
 Starting the Radeon Memory Visualizer
 -------------------------------------
@@ -71,6 +71,14 @@ examine which memory has been allocated and where resources can be found. It is
 also possible to compare snapshots to look for memory leaks. For example, a
 snapshot could be taken before starting a game level and another snapshot taken
 after completing the level. Ideally, the 2 snapshots should be the same.
+
+**Important note**: As mentioned above, the memory trace file only tracks memory
+events, so if there are no memory events, nothing will be logged to the trace file.
+If an application allocates all of its memory upfront, the trace file may only
+appear to be a few seconds long, even though the application could have been
+running for a lot longer before the trace was dumped. This can be true for simple
+benchmarking / test applications. Even though the trace file is shorter than expected,
+all of the memory events will be present in the trace file.
 
 There are four main menus in the Radeon Memory Visualizer and each may have a
 number of sub-windows..

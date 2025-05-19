@@ -5,16 +5,17 @@
 /// @brief  Implementation of the Memory Event History API.
 //=============================================================================
 
-#include "rmt_assert.h"
-#include "rmt_address_helper.h"
 #include "rmt_memory_event_history.h"
-#include "rmt_memory_event_history_impl.h"
-#include "rmt_resource_list.h"
-#include "rmt_resource_userdata.h"
 
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
+
+#include "rmt_address_helper.h"
+#include "rmt_assert.h"
+#include "rmt_memory_event_history_impl.h"
+#include "rmt_resource_list.h"
+#include "rmt_resource_userdata.h"
 
 // A flag used to determine if implicit resources should be included in generated history instances.
 static bool hide_implicit_resources = false;
@@ -374,7 +375,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceHistoryForId(RmtDataSet*      
         {
             // Grab the next token from the heap.
             RmtToken current_token;
-            error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+            error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
             RMT_ASSERT(error_code == kRmtOk);
 
             switch (current_token.type)
@@ -446,7 +447,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceHistoryForId(RmtDataSet*      
             {
                 // Grab the next token from the heap.
                 RmtToken current_token;
-                error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+                error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
                 RMT_ASSERT(error_code == kRmtOk);
 
                 switch (current_token.type)
@@ -648,7 +649,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
     {
         // Grab the next token from the heap.
         RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
 
         switch (current_token.type)
@@ -679,7 +680,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
     {
         // Grab the next token from the heap.
         RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
 
         switch (current_token.type)
@@ -754,7 +755,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
         {
             // Grab the next token from the heap.
             RmtToken current_token;
-            error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+            error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
             RMT_ASSERT(error_code == kRmtOk);
 
             switch (current_token.type)
@@ -987,7 +988,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateBasicAllocationHistory(RmtDataSet*    
     {
         // Grab the next token from the heap.
         RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
 
         switch (current_token.type)
@@ -1058,7 +1059,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceCreateHistoryForAddress(RmtDat
     {
         // Grab the next token from the heap.
         RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
 
         switch (current_token.type)
@@ -1089,7 +1090,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceCreateHistoryForAddress(RmtDat
     {
         // Grab the next token from the heap.
         RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
 
         switch (current_token.type)
@@ -1133,7 +1134,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceCreateHistoryForAddress(RmtDat
     {
         // Grab the next token from the heap.
         RmtToken current_token;
-        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
 
         switch (current_token.type)
@@ -1212,7 +1213,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
         {
             // Grab the next token from the heap.
             RmtToken current_token;
-            error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+            error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
             RMT_ASSERT(error_code == kRmtOk);
 
             switch (current_token.type)

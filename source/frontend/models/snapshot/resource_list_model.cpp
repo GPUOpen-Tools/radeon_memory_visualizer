@@ -11,10 +11,10 @@
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 #include "rmt_util.h"
-#include "util/rmv_util.h"
 #include "rmt_virtual_allocation_list.h"
 
 #include "managers/trace_manager.h"
+#include "util/rmv_util.h"
 #include "util/string_util.h"
 
 #ifndef _WIN32

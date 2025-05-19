@@ -8,11 +8,11 @@
 #ifndef RMV_BACKEND_RMT_PAGE_TABLE_H_
 #define RMV_BACKEND_RMT_PAGE_TABLE_H_
 
-#include "rmt_error.h"
-#include "rmt_types.h"
 #include "rmt_configuration.h"
+#include "rmt_error.h"
 #include "rmt_pool.h"
 #include "rmt_segment_info.h"
+#include "rmt_types.h"
 
 /// The number of entries in the multi-level page directory for level 0. Enough for 10-bit radix.
 #define RMT_PAGE_DIRECTORY_LEVEL_0_SIZE (1024)

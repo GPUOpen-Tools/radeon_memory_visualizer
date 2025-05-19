@@ -7,8 +7,8 @@
 
 #include "views/custom_widgets/rmv_carousel.h"
 
-#include "views/custom_widgets/rmv_carousel_memory_footprint.h"
 #include "views/custom_widgets/rmv_carousel_allocation_sizes.h"
+#include "views/custom_widgets/rmv_carousel_memory_footprint.h"
 #include "views/custom_widgets/rmv_carousel_memory_types.h"
 #include "views/custom_widgets/rmv_carousel_resource_types.h"
 

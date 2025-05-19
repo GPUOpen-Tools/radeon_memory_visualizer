@@ -6,13 +6,15 @@
 //=============================================================================
 
 #include "rmt_data_snapshot.h"
-#include "rmt_resource_history.h"
-#include "rmt_data_set.h"
-#include "rmt_assert.h"
-#include "rmt_print.h"
-#include "rmt_address_helper.h"
-#include "rmt_token.h"
+
 #include <stdlib.h>  // for free()
+
+#include "rmt_address_helper.h"
+#include "rmt_assert.h"
+#include "rmt_data_set.h"
+#include "rmt_print.h"
+#include "rmt_resource_history.h"
+#include "rmt_token.h"
 
 #ifndef _WIN32
 #include "linux/safe_crt.h"
@@ -31,7 +33,7 @@ static RmtErrorCode ProcessTokensIntoResourceHistory(RmtDataSet* data_set, const
     {
         // grab the next token from the heap.
         RmtToken     current_token;
-        RmtErrorCode error_code = RmtStreamMergerAdvance(&data_set->stream_merger, &current_token);
+        RmtErrorCode error_code = RmtStreamMergerAdvance(&data_set->stream_merger, data_set->flags.local_heap_only, &current_token);
         RMT_ASSERT(error_code == kRmtOk);
 
         // interested in tokens that directly reference resources.
@@ -460,10 +462,10 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
     {
         const RmtVirtualAllocation* current_virtual_allocation = &snapshot->virtual_allocation_list.allocation_details[current_virtual_allocation_index];
 
-        const uint64_t size_in_bytes = RmtGetAllocationSizeInBytes(current_virtual_allocation->size_in_4kb_page, kRmtPageSize4Kb);
-
         if (current_virtual_allocation->heap_preferences[0] == heap_type)
         {
+            const uint64_t size_in_bytes = RmtGetAllocationSizeInBytes(current_virtual_allocation->size_in_4kb_page, kRmtPageSize4Kb);
+
             total_virtual_memory_requested += size_in_bytes;
             max_virtual_allocation_size = RMT_MAXIMUM(max_virtual_allocation_size, size_in_bytes);
             min_virtual_allocation_size = RMT_MINIMUM(min_virtual_allocation_size, size_in_bytes);

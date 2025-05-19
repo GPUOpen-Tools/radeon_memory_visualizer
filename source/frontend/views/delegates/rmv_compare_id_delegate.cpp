@@ -7,12 +7,12 @@
 
 #include "views/delegates/rmv_compare_id_delegate.h"
 
-#include <QStyleOptionViewItem>
-#include <QPainter>
-#include <QModelIndex>
 #include <QBrush>
 #include <QColor>
+#include <QModelIndex>
+#include <QPainter>
 #include <QPen>
+#include <QStyleOptionViewItem>
 
 #include "models/resource_item_model.h"
 #include "util/rmv_util.h"

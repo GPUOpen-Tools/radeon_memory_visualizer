@@ -7,16 +7,16 @@
 
 #include "rmt_resource_list.h"
 
-#include "rmt_memory_aliasing_timeline.h"
-#include "rmt_virtual_allocation_list.h"
-#include "rmt_assert.h"
-#include "rmt_page_table.h"
-#include "rmt_data_snapshot.h"
+#include <string.h>  // for memcpy()
+
 #include "rmt_address_helper.h"
+#include "rmt_assert.h"
+#include "rmt_data_snapshot.h"
+#include "rmt_memory_aliasing_timeline.h"
+#include "rmt_page_table.h"
 #include "rmt_print.h"
 #include "rmt_resource_userdata.h"
-
-#include <string.h>  // for memcpy()
+#include "rmt_virtual_allocation_list.h"
 
 #ifndef _WIN32
 #include "linux/safe_crt.h"
@@ -91,6 +91,7 @@ RmtResourceUsageType RmtResourceGetUsageType(const RmtResource* resource)
     case kRmtResourceTypeVideoEncoder:
     case kRmtResourceTypeQueryHeap:
     case kRmtResourceTypeIndirectCmdGenerator:
+    case kRmtResourceTypeWorkGraph:
         return kRmtResourceUsageTypeInternal;
 
     default:
@@ -723,6 +724,10 @@ RmtErrorCode RmtResourceListAddResourceCreate(RmtResourceList* resource_list, co
     case kRmtResourceTypeMotionEstimator:
     case kRmtResourceTypeTimestamp:
         // NOTE: no data associated with these types, if this changes in future we'll need to copy it here.
+        break;
+
+    case kRmtResourceTypeWorkGraph:
+        memcpy(&new_resource->work_graph, &resource_create->work_graph, sizeof(RmtResourceDescriptionWorkGraph));
         break;
 
     default:

@@ -8,8 +8,9 @@
 #ifndef RMV_PARSER_RMT_PARSER_H_
 #define RMV_PARSER_RMT_PARSER_H_
 
-#include "rmt_error.h"
 #include <stdio.h>
+
+#include "rmt_error.h"
 
 typedef struct RmtToken RmtToken;
 

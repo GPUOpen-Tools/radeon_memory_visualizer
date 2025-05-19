@@ -8,9 +8,9 @@
 #ifndef RMV_VIEWS_SNAPSHOT_SNAPSHOT_START_PANE_H_
 #define RMV_VIEWS_SNAPSHOT_SNAPSHOT_START_PANE_H_
 
-#include "ui_snapshot_start_pane.h"
-
 #include <QGraphicsScene>
+
+#include "ui_snapshot_start_pane.h"
 
 #include "views/base_pane.h"
 #include "views/custom_widgets/rmv_camera_snapshot_widget.h"

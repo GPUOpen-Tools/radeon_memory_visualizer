@@ -7,8 +7,8 @@
 
 #include "string_util.h"
 
-#include <QtMath>
 #include <QTextStream>
+#include <QtMath>
 
 #include "qt_common/utils/qt_util.h"
 

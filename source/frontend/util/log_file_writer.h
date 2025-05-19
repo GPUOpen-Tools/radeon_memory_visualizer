@@ -8,8 +8,8 @@
 #ifndef RMV_UTIL_LOG_FILE_WRITER_H_
 #define RMV_UTIL_LOG_FILE_WRITER_H_
 
-#include <QString>
 #include <QMutex>
+#include <QString>
 
 namespace rmv
 {

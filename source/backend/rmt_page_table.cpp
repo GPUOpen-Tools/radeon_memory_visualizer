@@ -6,11 +6,13 @@
 //=============================================================================
 
 #include "rmt_page_table.h"
+
+#include <string.h>  // for memcpy
+
 #include "rmt_address_helper.h"
 #include "rmt_assert.h"
-#include "rmt_virtual_allocation_list.h"
 #include "rmt_resource_list.h"
-#include <string.h>  // for memcpy
+#include "rmt_virtual_allocation_list.h"
 
 // helper function to decompose an address
 static void DecomposeAddress(RmtGpuAddress virtual_address,

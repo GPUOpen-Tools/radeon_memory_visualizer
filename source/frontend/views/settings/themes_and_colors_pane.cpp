@@ -16,8 +16,8 @@
 #include "managers/trace_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/rmv_util.h"
-#include "util/widget_util.h"
 #include "util/string_util.h"
+#include "util/widget_util.h"
 #include "views/debug_window.h"
 
 const static int kPickerRows    = 4;

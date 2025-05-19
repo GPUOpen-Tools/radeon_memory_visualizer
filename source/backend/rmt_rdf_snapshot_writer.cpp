@@ -7,19 +7,19 @@
 
 #include "rmt_rdf_snapshot_writer.h"
 
-#include "rmt_data_set.h"
-#include "rmt_error.h"
-#include "rmt_rdf_snapshot_index.h"
-#include "rmt_rdf_snapshot_info.h"
-#include "rmt_rdf_file_parser.h"
-#include "rmt_snapshot_writer.h"
+#include <string>
 
 #include "rdf/rdf/inc/amdrdf.h"
 
-#include <string>
+#include "rmt_data_set.h"
+#include "rmt_error.h"
+#include "rmt_rdf_file_parser.h"
+#include "rmt_rdf_snapshot_index.h"
+#include "rmt_rdf_snapshot_info.h"
+#include "rmt_snapshot_writer.h"
 
 #ifndef _WIN32
-#include <linux/safe_crt.h>
+#include "linux/safe_crt.h"
 #endif
 
 RmtRdfSnapshotWriter::RmtRdfSnapshotWriter(RmtDataSet* data_set, rdfStream** stream)

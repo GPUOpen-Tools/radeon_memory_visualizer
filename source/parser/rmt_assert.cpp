@@ -5,14 +5,15 @@
 /// @brief  Implementation of assert.
 //=============================================================================
 
-#include "rmt_assert.h"
 #include <stdlib.h>  // for malloc()
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>  // required for OutputDebugString()
 #include <stdio.h>    // required for sprintf_s
+#include <windows.h>  // required for OutputDebugString()
 #endif                // #ifndef _WIN32
+
+#include "rmt_assert.h"
 
 static RmtAssertCallback s_assert_callback;
 

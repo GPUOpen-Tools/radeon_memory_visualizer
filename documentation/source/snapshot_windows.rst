@@ -397,3 +397,16 @@ Not all events have all the parameters listed in the table. In this case, the
 entry will be marked as 'n/a' - not applicable. For example, the physical memory
 address isn't applicable for a virtual allocation event.
 
+The resource properties can be saved to the clipboard by right-clicking on the
+"**Properties**" table. This will display a context menu, as shown:
+
+.. image:: media/snapshot/resource_details_2.png
+
+The option to copy the table as text will save the table as standard text, using
+spaces to align the columns. The clipboard can then be pasted into a regular text
+file for viewing.
+
+The option to copy the table as csv text will save the table with the columns 
+separated by commas. The clipboard can be pasted into a text file, and this text
+file can then be loaded into spreadsheet applications for viewing.
+

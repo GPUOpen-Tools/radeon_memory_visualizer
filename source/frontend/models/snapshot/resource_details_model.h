@@ -196,6 +196,14 @@ namespace rmv
         /// @return A pointer to the worker thread object.
         BackgroundTask* CreateWorkerThread(RmtResourceIdentifier resource_identifier);
 
+        /// @brief Get the contents of the Properties table as a string.
+        ///
+        /// @param [in] resource_identifier  The identifier of the resource currently shown in the properties table.
+        /// @param [in] as_csv               If true, format the text in csv format, otherwise use raw text.
+        ///
+        /// @return
+        QString GetPropertiesString(RmtResourceIdentifier resource_identifier, bool as_csv) const;
+
     public slots:
         /// @brief Slot to handle what happens when a row is selected in the timeline table.
         ///
@@ -216,6 +224,18 @@ namespace rmv
 
         /// @brief Update the resource timeline table.
         void UpdateTimelineTable();
+
+        /// @brief Given a property name and value, provide a formatted string containing both.
+        ///
+        /// @param [in] name            The name of the property, as a string.
+        /// @param [in] value           The value of the property, as a string.
+        /// @param [in] max_name_length The length of the longest name, in characters
+        ///
+        /// Note: The max_name_length will be used to pad all names to the same length so the columns are
+        /// lined up. If the length is -1, a comma will be used to separate the name and value.
+        ///
+        /// @return The property name and value, as a newline-terminated string.
+        QString GetPropertyString(QString name, QString value, int32_t max_name_length) const;
 
         ResourceTimelineItemModel*    timeline_model_;        ///< Holds data for the resource timeline table.
         ResourceDetailsProxyModel*    timeline_proxy_model_;  ///< Timeline table proxy.

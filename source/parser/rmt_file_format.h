@@ -8,18 +8,20 @@
 #ifndef RMV_PARSER_RMT_FILE_FORMAT_H_
 #define RMV_PARSER_RMT_FILE_FORMAT_H_
 
-#include "rmt_error.h"
-#include "rmt_types.h"
+#include <stdint.h>
 #include <stdio.h>
 
+#include "rmt_error.h"
+#include "rmt_types.h"
+
 /// Magic number for all RMT files.
-#define RMT_FILE_MAGIC_NUMBER (0x494e494d)
+static const uint32_t kRmtFileMagicNumber = 0x494e494d;
 
 /// The maximum number of separate RMT streams in a file.
 #define RMT_MAXIMUM_STREAMS (256)
 
 /// The maximum length of an adapter name.
-#define kRmtMaxAdapterNameLength (128)
+#define RMT_MAX_ADAPTER_NAME_LENGTH (128)
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +30,7 @@ extern "C" {
 /// Structure encapsulating the file header of a RMT file.
 typedef struct RmtFileHeader
 {
-    uint32_t magic_number;         ///< Magic number, always set to <c><i>RMT_FILE_MAGIC_NUMBER</i></c>.
+    uint32_t magic_number;         ///< Magic number, always set to <c><i>kRmtFileMagicNumber</i></c>.
     uint32_t version_major;        ///< The major version number of the file.
     uint32_t version_minor;        ///< The minor version number of the file.
     uint32_t flags;                ///< Bitfield of flags set with information about the file.
@@ -136,18 +138,18 @@ typedef struct RmtFileChunkSegmentInfo
 /// A structure encapsulating adapter info.
 typedef struct RmtFileChunkAdapterInfo
 {
-    char     name[kRmtMaxAdapterNameLength];  ///< The name of the adapter as a NULL terminated string.
-    uint32_t pcie_family_id;                  ///< The PCIe family ID of the adapter.
-    uint32_t pcie_revision_id;                ///< The PCIe revision ID of the adapter.
-    uint32_t device_id;                       ///< The PCIe device ID of the adapter.
-    uint32_t minimum_engine_clock;            ///< The minimum engine clock (in MHz).
-    uint32_t maximum_engine_clock;            ///< The maximum engine clock (in MHz).
-    uint32_t memory_type;                     ///< The memory type.
-    uint32_t memory_operations_per_clock;     ///< The number of memory operations that can be performed per clock.
-    uint32_t memory_bus_width;                ///< The width of the memory bus (in bits).
-    uint32_t memory_bandwidth;                ///< Bandwidth of the memory system (in MB/s).
-    uint32_t minimum_memory_clock;            ///< The minimum memory clock (in MHz).
-    uint32_t maximum_memory_clock;            ///< The maximum memory clock (in MHz).
+    char     name[RMT_MAX_ADAPTER_NAME_LENGTH];  ///< The name of the adapter as a NULL terminated string.
+    uint32_t pcie_family_id;                     ///< The PCIe family ID of the adapter.
+    uint32_t pcie_revision_id;                   ///< The PCIe revision ID of the adapter.
+    uint32_t device_id;                          ///< The PCIe device ID of the adapter.
+    uint32_t minimum_engine_clock;               ///< The minimum engine clock (in MHz).
+    uint32_t maximum_engine_clock;               ///< The maximum engine clock (in MHz).
+    uint32_t memory_type;                        ///< The memory type.
+    uint32_t memory_operations_per_clock;        ///< The number of memory operations that can be performed per clock.
+    uint32_t memory_bus_width;                   ///< The width of the memory bus (in bits).
+    uint32_t memory_bandwidth;                   ///< Bandwidth of the memory system (in MB/s).
+    uint32_t minimum_memory_clock;               ///< The minimum memory clock (in MHz).
+    uint32_t maximum_memory_clock;               ///< The maximum memory clock (in MHz).
 } RmtFileChunkAdapterInfo;
 
 /// A structure encapsulating snapshot info.

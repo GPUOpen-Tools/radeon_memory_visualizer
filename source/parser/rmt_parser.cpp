@@ -50,6 +50,7 @@
 #define DESCRIPTOR_POOL_RESOURCE_TOKEN_SIZE (24 / 8)        ///< Descriptor Pool Resource Token Size
 #define CMD_ALLOCATOR_RESOURCE_TOKEN_SIZE (352 / 8)         ///< Cmd Allocator Resource Token Size
 #define MISC_INTERNAL_RESOURCE_TOKEN_SIZE (8 / 8)           ///< Misc Internal Resource Token Size
+#define WORK_GRAPH_RESOURCE_TOKEN_SIZE (136 / 8)            ///< Work graph Resource Token Size
 
 #define DESCRIPTOR_POOL_DESCRIPTION_SIZE (32 / 8)  ///< Descriptor Pool description size
 
@@ -362,6 +363,8 @@ static int32_t GetResourceDescriptionSize(RmtParser* rmt_parser, RmtResourceType
         return CMD_ALLOCATOR_RESOURCE_TOKEN_SIZE;
     case kRmtResourceTypeMiscInternal:
         return MISC_INTERNAL_RESOURCE_TOKEN_SIZE;
+    case kRmtResourceTypeWorkGraph:
+        return WORK_GRAPH_RESOURCE_TOKEN_SIZE;
 
         // all of the the rest have no payload
     default:
@@ -614,9 +617,6 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
         out_userdata_token->resource_identifier         = resource_identifier;
         out_userdata_token->time_delay                  = 0;
         out_userdata_token->implicit_resource_type      = RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource;
-#ifdef _IMPLICIT_RESOURCE_LOGGING
-        RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx", out_userdata_token->resource_identifier);
-#endif  // _IMPLICIT_RESOURCE_LOGGING
     }
     else if (out_userdata_token->userdata_type == kRmtUserdataTypeMarkImplicitResource_V2)
     {
@@ -651,13 +651,6 @@ static RmtErrorCode ParseUserdata(RmtParser* rmt_parser, const uint16_t token_he
                 out_userdata_token->implicit_resource_type = RmtImplicitResourceType::kRmtImplicitResourceTypeImplicitResource;
             }
         }
-
-#ifdef _IMPLICIT_RESOURCE_LOGGING
-        RmtPrint("ParseUserdata() - Store implicit resource ID: 0x%llx, time_delay = %ull, implicit_resource_type = %i",
-                 out_userdata_token->resource_identifier,
-                 out_userdata_token->time_delay,
-                 out_userdata_token->implicit_resource_type);
-#endif  // _IMPLICIT_RESOURCE_LOGGING
     }
 
     return kRmtOk;
@@ -1325,6 +1318,21 @@ static RmtErrorCode ParseResourceDescriptionPayloadMiscInternal(RmtParser* rmt_p
     return kRmtOk;
 }
 
+// parse a work graph resource.
+static RmtErrorCode ParseResourceDescriptionPayloadWorkGraph(RmtParser* rmt_parser, RmtResourceDescriptionWorkGraph* out_work_graph)
+{
+    uint8_t            data[WORK_GRAPH_RESOURCE_TOKEN_SIZE] = {};
+    const RmtErrorCode error_code                           = ReadBytes(rmt_parser, data, RMT_TOKEN_SIZE_RESOURCE_CREATE, sizeof(data));
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+
+    // CREATE_FLAGS [7:0] Describes the creation flags for the work graph.
+    out_work_graph->create_flags = (RmtWorkGraphCreateFlagBits)(ReadBitsFromBuffer(data, sizeof(data), 7, 0));
+
+    // WORK_GRAPH_HASH [135:8] contains the hash for the work graph.
+    out_work_graph->work_graph_hash = ReadBitsFromBuffer(data, sizeof(data), 135, 8);
+    return kRmtOk;
+}
+
 // parse a resource description
 static RmtErrorCode ParseResourceCreate(RmtParser* rmt_parser, const uint16_t token_header, RmtTokenResourceCreate* out_resource_description)
 {
@@ -1410,6 +1418,10 @@ static RmtErrorCode ParseResourceCreate(RmtParser* rmt_parser, const uint16_t to
         error_code = ParseResourceDescriptionPayloadMiscInternal(rmt_parser, &out_resource_description->misc_internal);
         RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
         break;
+    case kRmtResourceTypeWorkGraph:
+        error_code = ParseResourceDescriptionPayloadWorkGraph(rmt_parser, &out_resource_description->work_graph);
+        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
+        break;
 
     default:
         break;
@@ -1447,8 +1459,8 @@ static RmtErrorCode ParseResourceDestroy(RmtParser* rmt_parser, const uint16_t t
 
     PopulateCommonFields(rmt_parser, &out_resource_destroy->common);
 
-    uint8_t            data[kRmtTokenTypeResourceDestroy] = {};
-    const RmtErrorCode error_code                         = ReadBytes(rmt_parser, data, 0, sizeof(data));
+    uint8_t            data[RMT_TOKEN_SIZE_RESOURCE_DESTROY] = {};
+    const RmtErrorCode error_code                            = ReadBytes(rmt_parser, data, 0, sizeof(data));
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     out_resource_destroy->resource_identifier = ReadBitsFromBuffer(data, sizeof(data), 39, 8);

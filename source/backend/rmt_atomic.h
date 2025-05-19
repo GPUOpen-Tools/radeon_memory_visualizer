@@ -8,6 +8,8 @@
 #ifndef RMV_BACKEND_RMT_ATOMIC_H_
 #define RMV_BACKEND_RMT_ATOMIC_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus

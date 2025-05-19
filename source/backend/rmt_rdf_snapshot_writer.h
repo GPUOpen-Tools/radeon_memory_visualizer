@@ -8,14 +8,13 @@
 #ifndef RMV_BACKEND_RMT_RDF_SNAPSHOT_WRITER_H_
 #define RMV_BACKEND_RMT_RDF_SNAPSHOT_WRITER_H_
 
-#include "rmt_data_set.h"
-#include "rmt_error.h"
-
-#include "rmt_snapshot_writer.h"
+#include <stdint.h>
 
 #include "rdf/rdf/inc/amdrdf.h"
 
-#include <stdint.h>
+#include "rmt_data_set.h"
+#include "rmt_error.h"
+#include "rmt_snapshot_writer.h"
 
 constexpr const char* kSnapshotIndexChunkId = "RmvSnapshotIndex";
 

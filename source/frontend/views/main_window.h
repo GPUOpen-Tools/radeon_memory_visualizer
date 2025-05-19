@@ -8,16 +8,14 @@
 #ifndef RMV_VIEWS_MAIN_WINDOW_H_
 #define RMV_VIEWS_MAIN_WINDOW_H_
 
-#include <QMainWindow>
 #include <QAction>
+#include <QMainWindow>
 #include <QMenu>
 
 #include "ui_main_window.h"
 
 #include "qt_common/custom_widgets/navigation_bar.h"
 #include "qt_common/custom_widgets/navigation_list_widget.h"
-
-#include "rmt_resource_list.h"
 
 #include "managers/pane_manager.h"
 #include "util/definitions.h"
@@ -291,6 +289,8 @@ private:
     QAction* about_action_;        ///< Action to display About Radeon Memory Visualizer.
 
     QMenu* help_menu_;  ///< Help menu control
+
+    QVector<QAction*> navigation_actions_;  ///< List of navigation actions.
 
     QMenu*                           recent_traces_menu_;        ///< Sub menu containing recently opened files.
     QVector<QAction*>                recent_trace_actions_;      ///< List of actions for recent traces.

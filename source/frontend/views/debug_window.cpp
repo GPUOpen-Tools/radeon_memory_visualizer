@@ -8,18 +8,18 @@
 #include "views/debug_window.h"
 
 #include <QApplication>
+#include <QScrollBar>
 #include <QtDebug>
 #include <QtGlobal>
-#include <QScrollBar>
+
+#ifndef _WIN32
+#include "linux/safe_crt.h"
+#endif
 
 #include "rmt_assert.h"
 
 #include "util/log_file_writer.h"
 #include "util/rmv_util.h"
-
-#ifndef _WIN32
-#include <linux/safe_crt.h>
-#endif
 
 // The one and only instance of the debug window.
 static DebugWindow* debug_window = nullptr;

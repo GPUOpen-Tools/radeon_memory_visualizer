@@ -7,10 +7,10 @@
 
 #include "views/custom_widgets/rmv_snapshot_timeline.h"
 
+#include <QApplication>
+#include <QContextMenuEvent>
 #include <QDebug>
 #include <QMenu>
-#include <QContextMenuEvent>
-#include <QApplication>
 #include <QStyle>
 
 #include "qt_common/utils/common_definitions.h"

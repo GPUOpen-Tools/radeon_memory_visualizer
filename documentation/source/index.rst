@@ -17,6 +17,7 @@ examine a memory trace file.
    timeline.rst
    snapshot_windows.rst
    compare_windows.rst
+   resource_naming.rst
    
 
 Supported graphics APIs, RDNA hardware, and operating systems
@@ -38,7 +39,7 @@ Supported graphics APIs, RDNA hardware, and operating systems
 
 -  AMD Radeon RX 5000 series
 
--  AMD Ryzen™ Processors with Radeon Graphics
+-  AMD Ryzen™ Processors with AMD RDNA™ Architecture Graphics
 
 
 \ **Supported Operating Systems**

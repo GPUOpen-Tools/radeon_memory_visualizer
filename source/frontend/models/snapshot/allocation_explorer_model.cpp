@@ -7,10 +7,10 @@
 
 #include "models/snapshot/allocation_explorer_model.h"
 
-#include <QTableView>
-#include <QScrollBar>
 #include <QHeaderView>
+#include <QScrollBar>
 #include <QSortFilterProxyModel>
+#include <QTableView>
 
 #include "rmt_assert.h"
 #include "rmt_print.h"

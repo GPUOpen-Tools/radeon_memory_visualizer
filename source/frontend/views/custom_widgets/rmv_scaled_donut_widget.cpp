@@ -11,12 +11,13 @@
 #include "views/custom_widgets/rmv_scaled_donut_widget.h"
 
 #include <math.h>
-#include <QStylePainter>
-#include <QQueue>
 
-#include "qt_common/utils/qt_util.h"
+#include <QQueue>
+#include <QStylePainter>
 
 #include "rmt_assert.h"
+
+#include "qt_common/utils/qt_util.h"
 
 // The arc width is the ratio of the arc width in pixels to the width of the
 // donut widget. The larger this number, the thicker the arc.

@@ -7,9 +7,9 @@
 
 #include "views/delegates/rmv_resource_event_delegate.h"
 
-#include "qt_common/utils/qt_util.h"
-
 #include <QPainter>
+
+#include "qt_common/utils/qt_util.h"
 
 const static QColor kTableSelectionColor(0, 120, 215);
 

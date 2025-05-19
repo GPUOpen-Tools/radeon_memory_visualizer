@@ -7,17 +7,17 @@
 
 #include "views/snapshot/allocation_overview_pane.h"
 
-#include <QGraphicsView>
-#include <QScrollBar>
-#include <QCheckBox>
-#include <QStyle>
 #include <vector>
 
-#include "rmt_assert.h"
-#include "rmt_data_snapshot.h"
+#include <QCheckBox>
+#include <QGraphicsView>
+#include <QScrollBar>
+#include <QStyle>
 
-#include "managers/pane_manager.h"
+#include "rmt_assert.h"
+
 #include "managers/message_manager.h"
+#include "managers/pane_manager.h"
 #include "managers/snapshot_manager.h"
 #include "models/colorizer.h"
 #include "models/heap_combo_box_model.h"

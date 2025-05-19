@@ -25,7 +25,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Add UpdateCheckAPI
-add_subdirectory (${PROJECT_SOURCE_DIR}/../../external/update_check_api ${CMAKE_CURRENT_BINARY_DIR}/update_check_api)
+add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/../../external/update_check_api ${CMAKE_CURRENT_BINARY_DIR}/update_check_api)
 include_directories(${UPDATECHECKAPI_INC_DIRS})
 
 IF (WIN32)
@@ -44,6 +44,7 @@ ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 
 set( SOURCES
     "main.cpp"
@@ -305,6 +306,7 @@ set( WINDOWS_SOURCES
     "windows/rmv_icon.ico"
 )
 
+
 # Filter out the UI files and get the list of generated files
 set(UI_FILES ${SOURCES})
 list(FILTER UI_FILES INCLUDE REGEX "\.ui$")
@@ -398,46 +400,6 @@ if (WIN32)
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION . OPTIONAL COMPONENT debug)
 endif()
 
-IF (WIN32)
-    # Copy the VisualStudio redist files
-    # the list of all redist files is contained in the variable CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS. We only want to copy
-    # a subset of these so we extract the directory from the first entry and then manually copy the files we want
-    foreach (VSLIB ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
-        get_filename_component(VSREDISTDIR ${VSLIB} DIRECTORY)
-        message("Visual Studio redistributable files directory = ${VSREDISTDIR}")
-        break()
-    endforeach ()
-
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E echo "copying Visual Studio redist files from ${VSREDISTDIR} to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_2.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/concrt140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_atomic_wait.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_codecvt_ids.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-    )
-    IF (EXISTS ${VSREDISTDIR}/vcruntime140_1.dll)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        )
-    ENDIF ()
-
-ENDIF (WIN32)
-
-# Copy QT components into appropriate location in build destination
-# if (WIN32)
-#     DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
-# elseif (UNIX AND NOT APPLE)
-#     DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
-# elseif (APPLE)
-#     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-#         DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
-#     elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
-#         DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE})
-#     endif()
-# endif()
 
 # Deploy Qt binaries for build and install
 deploy_qt(${PROJECT_NAME} apps)

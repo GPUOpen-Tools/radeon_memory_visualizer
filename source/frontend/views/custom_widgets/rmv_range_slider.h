@@ -8,10 +8,11 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_RANGE_SLIDER_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_RANGE_SLIDER_H_
 
+#include <QWidget>
+
 #include "qt_common/custom_widgets/double_slider_widget.h"
 
 #include "views/custom_widgets/rmv_fixed_width_label.h"
-#include <QWidget>
 
 /// @brief Range slider that extends the double slider widget by adding a range value label.
 class RmvRangeSlider : public DoubleSliderWidget

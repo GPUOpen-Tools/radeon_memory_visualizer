@@ -11,8 +11,8 @@
 #include <stdint.h>
 
 #ifndef _WIN32
-#include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
 #endif
 
 /// Typedef for error codes returned from functions in the RMT backend.

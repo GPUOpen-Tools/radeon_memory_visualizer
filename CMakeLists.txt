@@ -7,12 +7,13 @@ cmake_minimum_required(VERSION 3.11)
 
 set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
 
+
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 12)
+set(RMV_MINOR_VERSION 13)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -23,8 +24,8 @@ string(TIMESTAMP DATE "\"%m/%d/%Y\"")
 string(TIMESTAMP YEAR "%Y")
 string(TIMESTAMP YEAR_STRING "\"%Y\"")
 
-configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR}/Buildinfo.properties")
-configure_file("${CMAKE_SOURCE_DIR}/source/frontend/util/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/util/version.h")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/util/version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/util/version.h")
 
 # Add cmake utilities
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -46,14 +47,14 @@ ENDIF()
 
 # As default for RMV, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
-set (CMAKE_RELEASE_POSTFIX)
+set (CMAKE_RELEASE_POSTFIX )
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
-include_directories("${PROJECT_SOURCE_DIR}/external/")
-include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
-include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/qt_common/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/third_party/")
 
 # Global compiler options
 IF(WIN32)
@@ -94,10 +95,19 @@ MACRO(SOURCE_GROUP_BY_FOLDER target)
     ENDIF (files)
 ENDMACRO(SOURCE_GROUP_BY_FOLDER)
 
-add_subdirectory(external/qt_common qt_common)
-add_subdirectory(external/rdf/imported/zstd)
-add_subdirectory(external/rdf/rdf)
-add_subdirectory(external/system_info_utils)
+if (NOT TARGET QtUtils)
+    add_subdirectory(external/qt_common qt_common)
+endif()
+
+if (NOT TARGET amdrdf)
+    add_subdirectory(external/rdf/imported/zstd)
+    add_subdirectory(external/rdf/rdf)
+endif()
+
+if (NOT TARGET system_info)
+    add_subdirectory(external/system_info_utils)
+endif()
+
 add_subdirectory(source/parser parser)
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
@@ -119,20 +129,22 @@ ENDIF(WIN32)
 ## Copy Documentation and Samples to output directory. Note - this target is intentionally not included in
 ## the default project build. It needs to be explicitly built as a separate project
 
-set(DOCS_OUTPUT_DIR ${CMAKE_BINARY_DIR})
+if(NOT APPLE)
+    set(DOCS_OUTPUT_DIR ${CMAKE_BINARY_DIR})
+endif()
 
 # group sphinx source files into a sphinx folder
-file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_SOURCE_DIR}/documentation/source/*.rst)
-set (SPHINX_DOC_MAIN ${CMAKE_SOURCE_DIR}/documentation/source/conf.py)
+file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/documentation/source/*.rst)
+set (SPHINX_DOC_MAIN ${CMAKE_CURRENT_SOURCE_DIR}/documentation/source/conf.py)
 set (ALL_SPHINX_FILES ${SPHINX_DOC_FILES} ${SPHINX_DOC_MAIN})
 source_group("sphinx" FILES ${ALL_SPHINX_FILES})
 
 # group release documents into a release_docs folder
 set (RELEASE_DOCS_IN_ROOT
-     ${CMAKE_SOURCE_DIR}/README.md
-     ${CMAKE_SOURCE_DIR}/RELEASE_NOTES.txt
-     ${CMAKE_SOURCE_DIR}/NOTICES.txt
-     ${CMAKE_SOURCE_DIR}/LICENSE.txt
+     ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+     ${CMAKE_CURRENT_SOURCE_DIR}/RELEASE_NOTES.txt
+     ${CMAKE_CURRENT_SOURCE_DIR}/NOTICES.txt
+     ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
 )
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
@@ -148,25 +160,25 @@ if(SPHINX_EXECUTABLE)
     # this ensures the sphinx docs are built everytime you ask to build the Documentation target
     # Sphinx has proper dependency checking, so this works as expected.
     # Once built, clean up any unneeded files.
-    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
+    add_custom_target(RMVDocumentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
     add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
         COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
-        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rmv/. -t ${SPHINX_OPTION}
+        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rmv/. -t ${SPHINX_OPTION}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rmv/.doctrees
     )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/help DESTINATION . COMPONENT apps)
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
     # If the sphinx binary isn't found, then just create the Documentation project with only the release docs in it.
-    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS})
+    add_custom_target(RMVDocumentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS})
 endif()
 
-add_custom_command(TARGET Documentation POST_BUILD
+add_custom_command(TARGET RMVDocumentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "copying Documentation to output directory"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/sample_trace.rmv  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rmv
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/samples/sample_trace.rmv  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rmv
 )
 
 install(FILES
@@ -184,6 +196,7 @@ if (WIN32)
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . COMPONENT apps)
 endif (WIN32)
 
+
 # CPack packaging
 
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
@@ -191,6 +204,7 @@ set(CPACK_COMPONENTS_GROUPING IGNORE)
 
 set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonMemoryVisualizer_${RMV_MAJOR_VERSION}.${RMV_MINOR_VERSION}.${RMV_BUGFIX_NUMBER}.${RMV_BUILD_NUMBER}")
 set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonMemoryVisualizer-PDB_${RMV_MAJOR_VERSION}.${RMV_MINOR_VERSION}.${RMV_BUGFIX_NUMBER}.${RMV_BUILD_NUMBER}")
+
 
 include(CPack)
 

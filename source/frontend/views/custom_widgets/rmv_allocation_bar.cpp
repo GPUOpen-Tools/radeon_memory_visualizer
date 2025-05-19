@@ -17,6 +17,7 @@ static const int kTitleFontSize              = 8;
 static const int kDefaultWidth               = 300;
 static const int kDefaultBarPadding          = 5;
 static const int kDefaultAllocationBarHeight = 50;
+static const int kMinResourceHeight          = 4;  ///< The minimum height on screen a resource should be, in pixels.
 
 RMVAllocationBar::RMVAllocationBar(rmv::AllocationBarModel* model, int32_t allocation_index, int32_t model_index, const rmv::Colorizer* colorizer)
     : model_(model)
@@ -27,6 +28,7 @@ RMVAllocationBar::RMVAllocationBar(rmv::AllocationBarModel* model, int32_t alloc
     , item_height_(0)
     , max_bar_width_(0)
     , allocation_bar_height_(kDefaultAllocationBarHeight)
+
 {
     setAcceptHoverEvents(true);
 
@@ -50,6 +52,16 @@ QRectF RMVAllocationBar::boundingRect() const
 
 void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
+    // In extreme cases, some optimizations are needed if allocations contain more resources than can
+    // physically fit on screen.
+    // In the case where there is no aliasing, an allocation could have thousands of small resources ie
+    // shader pipelines. In this case, if a resource overlaps a previously rendered resource in screen
+    // space, it is ignored (resources would be overlapped anyway and would only occupy a single pixel)
+    // In the case of aliasing, resources that are aliased are stacked on top of each other. In extreme
+    // cases, these stacks can be hundreds of resources high, and subsequently, each row of a stack could
+    // be less than a pixel. In this case, a minimum height for a row is chosen (currently 4 pixels),
+    // and any overlapping rows are ignored. Not all resources are shown in both these cases, but the
+    // resources can be explored in more detail in the allocation explorer pane.
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
@@ -101,10 +113,29 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     int num_rows = model_->GetNumRows(allocation);
     if (num_rows > 0)
     {
+        // Calculate the resource height, based on the minimum.
         double resource_height = allocation_bar_height_;
         resource_height /= num_rows;
 
+        int scale = 1;
+        if (resource_height < kMinResourceHeight)
+        {
+            scale = kMinResourceHeight / resource_height;
+            resource_height *= scale;
+        }
+
         const int resource_count = allocation->resource_count;
+
+        // If there's more rows that there's room for, make a larger array.
+        // This is needed when switching allocations.
+        if (num_rows > static_cast<int>(offset_array_.size()))
+        {
+            offset_array_.resize(num_rows);
+        }
+
+        // Clear out the array. Needs to be done on each redraw.
+        std::fill(offset_array_.begin(), offset_array_.end(), 0);
+
         for (int current_resource_index = 0; current_resource_index < resource_count; current_resource_index++)
         {
             const RmtResource* resource = allocation->resources[current_resource_index];
@@ -114,20 +145,32 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
                 continue;
             }
 
-            int    row      = model_->GetRowForResourceAtIndex(allocation, current_resource_index);
-            double y_offset = scaled_bar_y_offset + (resource_height * row);
-
-            QColor resource_background_brush_color = colorizer_->GetColor(resource->bound_allocation, resource);
-
-            if (current_resource_index == model_->GetHoveredResourceForAllocation(allocation_index_, model_index_))
-            {
-                resource_background_brush_color = resource_background_brush_color.darker(rmv::kHoverDarkenColor);
-            }
+            int row = model_->GetRowForResourceAtIndex(allocation, current_resource_index);
 
             // Calculate the size of the resource.
             const uint64_t offset_in_bytes    = RmtResourceGetOffsetFromBoundAllocation(resource);
             const int      x_pos              = (double)offset_in_bytes / bytes_per_pixel;
             const int      resource_bar_width = RMT_MAXIMUM(1, (double)resource->size_in_bytes / bytes_per_pixel);
+
+            // Don't render any rows that overlap with previously displayed rows.
+            if ((row % scale) != 0)
+            {
+                continue;
+            }
+
+            if (row > 1)
+            {
+                row /= scale;
+            }
+
+            // Don't render another resource if it overlaps the last one in screen space.
+            if (x_pos + resource_bar_width <= offset_array_[row])
+            {
+                continue;
+            }
+
+            offset_array_[row] = x_pos + resource_bar_width + 1;
+            double y_offset    = scaled_bar_y_offset + (resource_height * row);
 
             // Render the resource.
             QPen resource_border_pen(Qt::black);
@@ -140,6 +183,13 @@ void RMVAllocationBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
                 resource_border_pen.setWidth(1);
             }
             painter->setPen(resource_border_pen);
+
+            QColor resource_background_brush_color = colorizer_->GetColor(resource->bound_allocation, resource);
+
+            if (current_resource_index == model_->GetHoveredResourceForAllocation(allocation_index_, model_index_))
+            {
+                resource_background_brush_color = resource_background_brush_color.darker(rmv::kHoverDarkenColor);
+            }
 
             Qt::BrushStyle style = ((RmtResourceGetAliasCount(resource) > 0) ? Qt::BrushStyle::Dense1Pattern : Qt::BrushStyle::SolidPattern);
             const QBrush   curr_brush(resource_background_brush_color, style);

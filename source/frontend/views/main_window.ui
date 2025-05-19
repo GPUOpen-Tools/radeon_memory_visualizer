@@ -236,6 +236,19 @@
                </widget>
               </item>
               <item>
+               <layout class="QVBoxLayout" name="vertical_layout_1_">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+               </layout>
+              </item>
+              <item>
                <widget class="ScaledLabel" name="snapshot_label_">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -493,3 +506,4 @@
  <resources/>
  <connections/>
 </ui>
+

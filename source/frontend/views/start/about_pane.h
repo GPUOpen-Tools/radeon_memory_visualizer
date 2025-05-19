@@ -8,10 +8,10 @@
 #ifndef RMV_VIEWS_START_ABOUT_PANE_H_
 #define RMV_VIEWS_START_ABOUT_PANE_H_
 
-#include "ui_about_pane.h"
-
-#include <QLabel>
 #include <QDialog>
+#include <QLabel>
+
+#include "ui_about_pane.h"
 
 #include "qt_common/custom_widgets/scaled_push_button.h"
 #include "update_check_api/source/update_check_results_dialog.h"

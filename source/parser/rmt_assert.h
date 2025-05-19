@@ -8,9 +8,10 @@
 #ifndef RMV_PARSER_RMT_ASSERT_H_
 #define RMV_PARSER_RMT_ASSERT_H_
 
-#include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+
 #include "rmt_util.h"
 
 #ifdef __cplusplus

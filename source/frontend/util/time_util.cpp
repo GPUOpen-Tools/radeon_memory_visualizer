@@ -10,8 +10,8 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "rmt_assert.h"
-#include "rmt_error.h"
 #include "rmt_data_set.h"
+#include "rmt_error.h"
 
 #include "managers/trace_manager.h"
 #include "settings/rmv_settings.h"

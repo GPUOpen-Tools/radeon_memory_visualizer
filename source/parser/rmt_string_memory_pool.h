@@ -9,9 +9,9 @@
 #ifndef RMV_PARSER_RMT_STRING_MEMORY_POOL_H_
 #define RMV_PARSER_RMT_STRING_MEMORY_POOL_H_
 
-#include "rmt_error.h"
-
 #include <vector>
+
+#include "rmt_error.h"
 
 /// A class for allocating text string memory buffers.
 /// These are typically very small strings so internally a memory pool is used.

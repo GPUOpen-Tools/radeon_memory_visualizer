@@ -46,6 +46,25 @@ namespace rmv
         /// @return The number of properties for the resource.
         int32_t Update(RmtResourceIdentifier resource_identifier);
 
+        /// @brief Get the number of rows in the table.
+        ///
+        /// @return The number of rows.
+        int32_t GetNumRows() const;
+
+        /// @brief For a given row, get the property name.
+        ///
+        /// @param [in] row  The row index.
+        ///
+        /// @return The property name, as a string.
+        QString GetPropertyNameForRow(int32_t row) const;
+
+        /// @brief For a given row, get the property value.
+        ///
+        /// @param [in] row  The row index.
+        ///
+        /// @return The property value, as a string.
+        QString GetPropertyValueForRow(int32_t row) const;
+
     private:
         /// @brief Initialize blank data for the model.
         void ResetModelValues();

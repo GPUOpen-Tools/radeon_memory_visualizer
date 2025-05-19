@@ -7,8 +7,6 @@
 
 #include "views/compare/compare_start_pane.h"
 
-#include "rmt_data_snapshot.h"
-
 #include "managers/message_manager.h"
 #include "managers/pane_manager.h"
 #include "settings/rmv_settings.h"

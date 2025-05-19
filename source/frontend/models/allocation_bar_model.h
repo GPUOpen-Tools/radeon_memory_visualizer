@@ -14,10 +14,11 @@
 #ifndef RMV_MODELS_ALLOCATION_BAR_MODEL_H_
 #define RMV_MODELS_ALLOCATION_BAR_MODEL_H_
 
-#include <QPoint>
-#include <QString>
 #include <stdint.h>
 #include <vector>
+
+#include <QPoint>
+#include <QString>
 
 #include "rmt_virtual_allocation_list.h"
 

@@ -8,10 +8,10 @@
 #ifndef RMV_PARSER_RMT_RDF_DATA_STREAM_H_
 #define RMV_PARSER_RMT_RDF_DATA_STREAM_H_
 
-#include "rdf/rdf/inc/amdrdf.h"
-
 #include <queue>
 #include <vector>
+
+#include "rdf/rdf/inc/amdrdf.h"
 
 /// Chunk information structure.
 typedef struct RmtRdfChunkInfo

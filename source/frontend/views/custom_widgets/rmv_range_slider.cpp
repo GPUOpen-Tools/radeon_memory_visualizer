@@ -6,12 +6,12 @@
 //=============================================================================
 
 #include "views/custom_widgets/rmv_range_slider.h"
-#include "rmt_constants.h"
-#include "util/rmv_util.h"
-#include "util/string_util.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
+
+#include "util/rmv_util.h"
+#include "util/string_util.h"
 
 RmvRangeSlider::RmvRangeSlider(QWidget* parent)
     : DoubleSliderWidget(parent)

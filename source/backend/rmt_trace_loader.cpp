@@ -6,18 +6,19 @@
 //=============================================================================
 
 #include "rmt_trace_loader.h"
-#include "rmt_data_snapshot.h"
 
 #ifdef _LINUX
 #include <dirent.h>
-#include <fstream>
-#include <string>
 #include <sys/file.h>
 #include <sys/stat.h>
-#include <thread>
 #include <unistd.h>
+#include <fstream>
+#include <string>
+#include <thread>
 #include <vector>
 #endif  // #ifdef _LINUX
+
+#include "rmt_data_snapshot.h"
 
 /// The one and only instance of the data set, which is initialized when loading in
 /// a trace file.

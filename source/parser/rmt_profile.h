@@ -8,8 +8,9 @@
 #ifndef RMV_PARSER_RMT_PROFILE_H_
 #define RMV_PARSER_RMT_PROFILE_H_
 
-#include "rmt_platform.h"
 #include <inttypes.h>
+
+#include "rmt_platform.h"
 
 #define RMT_PROFILE_START(name)                                  \
     const uint64_t name##___freq_value = rmtGetClockFrequency(); \

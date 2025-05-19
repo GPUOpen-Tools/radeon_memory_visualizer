@@ -60,6 +60,21 @@ namespace rmv
         table_view->setModel(table_model_);
     }
 
+    int32_t ResourcePropertiesModel::GetNumRows() const
+    {
+        return table_model_->rowCount();
+    }
+
+    QString ResourcePropertiesModel::GetPropertyNameForRow(int32_t row) const
+    {
+        return table_model_->data(table_model_->index(row, kResourcePropertyName)).toString();
+    }
+
+    QString ResourcePropertiesModel::GetPropertyValueForRow(int32_t row) const
+    {
+        return table_model_->data(table_model_->index(row, kResourcePropertyValue)).toString();
+    }
+
     void ResourcePropertiesModel::ResetModelValues()
     {
         table_model_->removeRows(0, table_model_->rowCount());

@@ -68,6 +68,7 @@ struct RmtDataSetFlags
     bool cancel_background_task_flag : 1;  ///< If true, indicates a background task has been cancelled.
     bool implicit_heap_detection : 1;      ///< If true, indicates the trace includes data that can be used to determine if a heap is implicit.
     bool cpu_host_aperture_enabled : 1;    ///< Whether the dataset is CPU host aperture enabled (RDNA 4 on by default).
+    bool local_heap_only : 1;              ///< Whether the dataset has local memory only.
 };
 
 /// A structure encapsulating a single RMT dataset.

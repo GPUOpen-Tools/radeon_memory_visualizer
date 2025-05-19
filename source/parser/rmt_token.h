@@ -8,16 +8,13 @@
 #ifndef RMV_PARSER_RMT_TOKEN_H_
 #define RMV_PARSER_RMT_TOKEN_H_
 
-#include <string.h>  // for memcpy()
-#include <stdint.h>
 #include <stdbool.h>
-
-#include "rmt_types.h"
-#include "rmt_format.h"
 
 #ifndef _WIN32
 #include <stdlib.h>
 #endif
+
+#include "rmt_format.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -166,7 +163,8 @@ typedef struct RmtTokenResourceCreate
         RmtResourceDescriptionDescriptorHeap   descriptor_heap;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorHeap</i></c>.
         RmtResourceDescriptionDescriptorPool   descriptor_pool;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeDescriptorPool</i></c>.
         RmtResourceDescriptionCommandAllocator command_allocator;  ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourceTypeCommandAllocator</i></c>.
-        RmtResourceDescriptionMiscInternal     misc_internal;      ///< Valid when <c><i>resourceType</i></c> is <c><i>RMT_RESOURCE_TYPE_MISC_INTERNAL</i></c>.
+        RmtResourceDescriptionMiscInternal     misc_internal;      ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourcetypeMiscInternal</i></c>.
+        RmtResourceDescriptionWorkGraph        work_graph;         ///< Valid when <c><i>resourceType</i></c> is <c><i>kRmtResourcetypeWorkGraph</i></c>.
     };
 } RmtTokenResourceCreate;
 

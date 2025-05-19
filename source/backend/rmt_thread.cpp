@@ -5,19 +5,21 @@
 /// @brief  Implementation of platform-specific thread.
 //=============================================================================
 
+#include "rmt_thread.h"
+
 #ifndef _WIN32
-#include <thread>
 #include <new>
+#include <thread>
 #endif  // #ifndef _WIN32
 
 #include <stdint.h>
-#include "rmt_assert.h"
-#include "rmt_thread.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif /* #ifdef _WIN32 */
+
+#include "rmt_assert.h"
 
 /* structure for a thread. */
 typedef struct RmtThreadInternal

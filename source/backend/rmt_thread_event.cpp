@@ -5,7 +5,6 @@
 /// @brief  Implementation of platform-specific thread events.
 //=============================================================================
 
-#include "rmt_assert.h"
 #include "rmt_thread_event.h"
 
 #ifdef _WIN32
@@ -14,6 +13,8 @@
 #else
 #include "pevents/src/pevents.h"
 #endif  // #ifdef _WIN32
+
+#include "rmt_assert.h"
 
 // structure for thread event
 typedef struct RmtThreadEventInternal

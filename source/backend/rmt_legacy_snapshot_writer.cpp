@@ -7,22 +7,22 @@
 
 #include "rmt_legacy_snapshot_writer.h"
 
-#include "rmt_assert.h"
-#include "rmt_file_format.h"
-#include "rmt_snapshot_writer.h"
-#include "rmt_data_set.h"
-#include "rmt_error.h"
-
 #include <stddef.h>  // For offsetof macro.
 
 #ifndef _WIN32
-#include "linux/safe_crt.h"
-#include <fstream>
 #include <unistd.h>
+#include <fstream>
+#include "linux/safe_crt.h"
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+
+#include "rmt_assert.h"
+#include "rmt_data_set.h"
+#include "rmt_error.h"
+#include "rmt_file_format.h"
+#include "rmt_snapshot_writer.h"
 
 RmtLegacySnapshotWriter::RmtLegacySnapshotWriter(RmtDataSet* data_set)
     : RmtSnapshotWriter(data_set)

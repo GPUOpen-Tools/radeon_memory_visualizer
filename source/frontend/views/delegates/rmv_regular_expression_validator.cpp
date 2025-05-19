@@ -7,8 +7,8 @@
 
 #include "rmv_regular_expression_validator.h"
 
-#include <QValidator>
 #include <QToolTip>
+#include <QValidator>
 
 RMVRegularExpressionValidator::RMVRegularExpressionValidator(const QRegularExpression& regular_expression, QObject* parent)
     : QRegularExpressionValidator(regular_expression, parent)

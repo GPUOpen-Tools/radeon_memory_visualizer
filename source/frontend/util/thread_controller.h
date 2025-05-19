@@ -14,8 +14,8 @@
 #ifndef RMV_UTIL_THREAD_CONTROLLER_H_
 #define RMV_UTIL_THREAD_CONTROLLER_H_
 
-#include <QWidget>
 #include <QThread>
+#include <QWidget>
 
 namespace rmv
 {

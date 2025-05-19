@@ -8,9 +8,9 @@
 #ifndef RMV_VIEWS_TIMELINE_DEVICE_CONFIGURATION_PANE_H_
 #define RMV_VIEWS_TIMELINE_DEVICE_CONFIGURATION_PANE_H_
 
-#include "ui_device_configuration_pane.h"
-
 #include <QWidget>
+
+#include "ui_device_configuration_pane.h"
 
 #include "models/timeline/device_configuration_model.h"
 #include "views/base_pane.h"

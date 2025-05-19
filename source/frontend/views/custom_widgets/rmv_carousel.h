@@ -8,8 +8,8 @@
 #ifndef RMV_VIEWS_CUSTOM_WIDGETS_RMV_CAROUSEL_H_
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_CAROUSEL_H_
 
-#include <QWidget>
 #include <QGraphicsScene>
+#include <QWidget>
 
 #include "models/carousel_model.h"
 #include "views/custom_widgets/rmv_carousel_item.h"

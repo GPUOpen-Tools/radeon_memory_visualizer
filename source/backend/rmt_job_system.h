@@ -8,11 +8,11 @@
 #ifndef RMV_BACKEND_RMT_JOB_SYSTEM_H_
 #define RMV_BACKEND_RMT_JOB_SYSTEM_H_
 
-#include "rmt_error.h"
 #include "rmt_atomic.h"
+#include "rmt_error.h"
 #include "rmt_mutex.h"
-#include "rmt_thread_event.h"
 #include "rmt_thread.h"
+#include "rmt_thread_event.h"
 
 /// The maximum number of worker threads that <c><i>RmtJobQueue</i></c> supports.
 #define RMT_MAXIMUM_WORKER_THREADS (24)

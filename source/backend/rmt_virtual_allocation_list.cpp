@@ -7,20 +7,18 @@
 
 #include "rmt_virtual_allocation_list.h"
 
-#include "rmt_address_helper.h"
-#include "rmt_data_snapshot.h"
+#include <math.h>
+#include <string.h>  // memcpy
+#include <algorithm>
+#include <vector>
 
+#include "rmt_address_helper.h"
+#include "rmt_assert.h"
+#include "rmt_data_snapshot.h"
 #include "rmt_page_table.h"
 #include "rmt_resource_list.h"
 #include "rmt_resource_userdata.h"
 #include "rmt_tree.h"
-
-#include <rmt_assert.h>
-
-#include <algorithm>
-#include <math.h>
-#include <string.h>  // memcpy
-#include <vector>
 
 typedef rmt_tree::IntervalTree<uint64_t, RmtResource*> AliasedResourceIntervalTreeType;
 typedef rmt_tree::Interval<uint64_t, RmtResource*>     AliasedResourceIntervalType;
@@ -893,9 +891,8 @@ static RmtErrorCode AdjustAliasedResourceSizesForAllocation(const RmtVirtualAllo
     // Process each resource and add intervals to the interval tree for the parts that don't overlap.
     for (auto& new_resource : sorted_resources)
     {
-        const uint64_t new_resource_start = new_resource->address - allocation->base_address;
-
-        const uint64_t new_resource_end            = (new_resource_start + new_resource->size_in_bytes);
+        const uint64_t new_resource_start          = new_resource->address - allocation->base_address;
+        const uint64_t new_resource_end            = new_resource_start + new_resource->size_in_bytes;
         uint64_t       new_interval_start          = new_resource_start;
         uint64_t       new_interval_end            = new_resource_end;
         uint64_t       new_resource_remaining_size = new_resource->size_in_bytes;
@@ -935,9 +932,8 @@ static RmtErrorCode AdjustAliasedResourceSizesForAllocation(const RmtVirtualAllo
 
                 if (existing_interval_start <= new_interval_start)
                 {
-                    // Trim the start of the new interval.  Add one so that the new start interval points to the offset immediately following
-                    // the end of the previous existing interval.
-                    const uint64_t trim_amount = (std::min(new_interval_end, existing_interval_end) - new_interval_start) + 1;
+                    // Trim the start of the new interval.
+                    const uint64_t trim_amount = std::min(new_interval_end, existing_interval_end) - new_interval_start;
                     new_interval_start += trim_amount;
                     new_resource_remaining_size -= trim_amount;
                     RMT_ASSERT(static_cast<int64_t>(new_resource_remaining_size) >= 0);
@@ -950,8 +946,8 @@ static RmtErrorCode AdjustAliasedResourceSizesForAllocation(const RmtVirtualAllo
                         new_interval_end = existing_interval_end;
                     }
 
-                    // Calculate the amount to trim from the new interval end.  Add one so that the the new interval end offset is also trimmed.
-                    const uint64_t trim_amount = (new_interval_end - existing_interval_start) + 1;
+                    // Calculate the amount to trim from the new interval end.
+                    const uint64_t trim_amount = new_interval_end - existing_interval_start;
                     new_interval_end -= trim_amount;
                     new_resource_remaining_size -= trim_amount;
                     RMT_ASSERT(static_cast<int64_t>(new_resource_remaining_size) >= 0);
@@ -961,8 +957,8 @@ static RmtErrorCode AdjustAliasedResourceSizesForAllocation(const RmtVirtualAllo
                     RMT_ASSERT(new_interval.end > new_interval.start);
                     interval_tree.Insert(new_interval);
 
-                    // Increase the adjusted size of the resource.  Add one to include end offset to get the full size of the interval.
-                    const uint64_t interval_size = (new_interval_end - new_interval_start + 1);
+                    // Increase the adjusted size of the resource.
+                    const uint64_t interval_size = new_interval_end - new_interval_start;
                     new_resource->adjusted_size_in_bytes += interval_size;
 
                     new_resource_remaining_size -= interval_size;
@@ -1008,10 +1004,7 @@ RmtErrorCode RmtVirtualAllocationListUpdateAliasedResourceSizes(const RmtVirtual
     for (int index = 0; index < allocation_list->allocation_count; index++)
     {
         // Update the maximum number of resources found.
-        if (allocation_list[index].allocation_details != nullptr)
-        {
-            max_resource = RMT_MAXIMUM(max_resource, allocation_list[index].allocation_details->resource_count);
-        }
+        max_resource = RMT_MAXIMUM(max_resource, allocation_list->allocation_details[index].resource_count);
     }
 
     if (max_resource == 0)

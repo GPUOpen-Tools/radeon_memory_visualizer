@@ -9,9 +9,9 @@
 #define RMV_VIEWS_KEYBOARD_ZOOM_SHORTCUTS_H_
 
 #include <QApplication>
-#include <QScrollBar>
 #include <QGraphicsView>
 #include <QObject>
+#include <QScrollBar>
 
 namespace rmv
 {
@@ -94,7 +94,7 @@ namespace rmv
         virtual void OnResetView(bool checked) = 0;
 
     protected:
-        typedef void                        (KeyboardZoomShortcuts::*ShortcutSlot)(bool flag);
+        typedef void (KeyboardZoomShortcuts::*ShortcutSlot)(bool flag);
         typedef std::map<int, ShortcutSlot> NavigationControl;
 
         NavigationControl navigation_control_;  ///< The navigation control information for each key.

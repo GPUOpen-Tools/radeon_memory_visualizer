@@ -12,11 +12,11 @@
 
 #include "settings/rmv_geometry_settings.h"
 
-#include <QWindow>
-#include <QScreen>
 #include <QApplication>
-#include <QtCore>
+#include <QScreen>
 #include <QStyle>
+#include <QWindow>
+#include <QtCore>
 
 #include "rmt_assert.h"
 

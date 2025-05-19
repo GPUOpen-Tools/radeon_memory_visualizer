@@ -15,9 +15,9 @@
 #ifndef RMV_PARSER_RMT_RDF_SNAPSHOT_INFO_H_
 #define RMV_PARSER_RMT_RDF_SNAPSHOT_INFO_H_
 
-#include "rmt_error.h"
-
 #include "rdf/rdf/inc/amdrdf.h"
+
+#include "rmt_error.h"
 
 constexpr uint32_t kMaxSnapshotNameLen = 128;  // Snapshot name length including null terminator.
 

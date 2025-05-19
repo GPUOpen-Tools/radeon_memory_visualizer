@@ -17,8 +17,8 @@
 
 #include <QWidget>
 
-#include "qt_common/custom_widgets/colored_legend_graphics_view.h"
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
+#include "qt_common/custom_widgets/colored_legend_graphics_view.h"
 
 #include "colorizer_base.h"
 

@@ -578,4 +578,72 @@ namespace rmv
         return new ResourceWorker(this, resource_identifier);
     }
 
+    QString ResourceDetailsModel::GetPropertyString(QString name, QString value, int32_t max_name_length) const
+    {
+        QString property_string;
+        if (max_name_length < 0)
+        {
+            property_string += name;
+            property_string += ",";
+        }
+        else
+        {
+            property_string = name.leftJustified(max_name_length + 1, ' ');
+        }
+        property_string += value;
+        property_string += "\n";
+        return property_string;
+    }
+
+    QString ResourceDetailsModel::GetPropertiesString(RmtResourceIdentifier resource_identifier, bool as_csv) const
+    {
+        QString       properties_string;
+        int32_t       rows                = properties_model_->GetNumRows();
+        const QString base_address_string = "Parent allocation base address:";
+        int32_t       string_length       = -1;
+
+        if (!as_csv)
+        {
+            // Get longest string length to determine the space padding value.
+            string_length = base_address_string.length();
+            for (auto row = 0; row < rows; row++)
+            {
+                int32_t length = properties_model_->GetPropertyNameForRow(row).length();
+                if (length > string_length)
+                {
+                    string_length = length;
+                }
+            }
+        }
+
+        // Get base address and offset.
+        const RmtResource* resource = nullptr;
+        QString            str;
+        if (GetResourceFromResourceId(resource_identifier, &resource) == true)
+        {
+            const char  buffer[RMT_MAXIMUM_NAME_LENGTH] = " - ";
+            const char* buf_ptr                         = &buffer[0];
+            RmtResourceGetName(resource, RMT_MAXIMUM_NAME_LENGTH, (char**)&buf_ptr);
+
+            properties_string += GetPropertyString(base_address_string, rmv_util::GetVirtualAllocationName(resource->bound_allocation), string_length);
+            properties_string += GetPropertyString("Resource virtual address:", QString("0x") + QString::number(resource->address, 16), string_length);
+            properties_string += "\n";
+        }
+
+        properties_string += GetPropertyString("Property name", "Property value", string_length);
+
+        QString delimiter = "";
+        if (as_csv)
+        {
+            // For csv files, add quotes around values, since some numbers are displayed as '4,906', and this confuses the parser.
+            delimiter = "\"";
+        }
+        for (auto row = 0; row < rows; row++)
+        {
+            QString value_string = delimiter + properties_model_->GetPropertyValueForRow(row) + delimiter;
+            properties_string += GetPropertyString(properties_model_->GetPropertyNameForRow(row), value_string, string_length);
+        }
+        return properties_string;
+    }
+
 }  // namespace rmv

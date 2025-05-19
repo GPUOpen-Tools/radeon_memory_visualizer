@@ -13,15 +13,16 @@
 
 #include "views/custom_widgets/rmv_range_slider.h"
 
-#include <QWidget>
-#include <QString>
-#include <QGraphicsView>
-#include <QTableView>
 #include <stdint.h>
 
-#include "qt_common/custom_widgets/text_search_widget.h"
+#include <QGraphicsView>
+#include <QString>
+#include <QTableView>
+#include <QWidget>
+
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/colored_legend_scene.h"
+#include "qt_common/custom_widgets/text_search_widget.h"
 
 namespace rmv
 {

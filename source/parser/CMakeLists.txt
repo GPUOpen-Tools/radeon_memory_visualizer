@@ -56,6 +56,7 @@ set( LINUX_SOURCES
     "linux/safe_crt.h"
 )
 
+
 # specify output library name
 IF(WIN32)
     add_library(${PROJECT_NAME} ${SOURCES})

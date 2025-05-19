@@ -8,9 +8,9 @@
 #ifndef RMV_VIEWS_DEBUG_WINDOW_H_
 #define RMV_VIEWS_DEBUG_WINDOW_H_
 
-#include "ui_debug_window.h"
-
 #include <QDialog>
+
+#include "ui_debug_window.h"
 
 /// @brief Support for the debug window.
 class DebugWindow : public QDialog

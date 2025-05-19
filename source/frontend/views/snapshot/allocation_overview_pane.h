@@ -8,9 +8,9 @@
 #ifndef RMV_VIEWS_SNAPSHOT_ALLOCATION_OVERVIEW_PANE_H_
 #define RMV_VIEWS_SNAPSHOT_ALLOCATION_OVERVIEW_PANE_H_
 
-#include "ui_allocation_overview_pane.h"
-
 #include <QGraphicsScene>
+
+#include "ui_allocation_overview_pane.h"
 
 #include "models/colorizer.h"
 #include "models/heap_combo_box_model.h"

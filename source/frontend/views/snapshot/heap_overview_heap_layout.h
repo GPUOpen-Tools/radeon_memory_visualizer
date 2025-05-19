@@ -8,12 +8,12 @@
 #ifndef RMV_VIEWS_SNAPSHOT_HEAP_OVERVIEW_HEAP_LAYOUT_H_
 #define RMV_VIEWS_SNAPSHOT_HEAP_OVERVIEW_HEAP_LAYOUT_H_
 
-#include "ui_heap_overview_heap_layout.h"
-
 #include <QWidget>
 
-#include "qt_common/custom_widgets/colored_legend_scene.h"
 #include "qt_common/custom_widgets/colored_legend_graphics_view.h"
+#include "qt_common/custom_widgets/colored_legend_scene.h"
+
+#include "ui_heap_overview_heap_layout.h"
 
 #include "models/snapshot/heap_overview_heap_model.h"
 

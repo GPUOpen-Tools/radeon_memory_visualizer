@@ -5,12 +5,14 @@
 /// @brief  Implementation of atomic helper functions.
 //=============================================================================
 
-#include <stdint.h>
 #include "rmt_atomic.h"
+
+#include <stdint.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
 #include "rmt_assert.h"
 
 uint64_t RmtThreadAtomicRead(volatile uint64_t* address)

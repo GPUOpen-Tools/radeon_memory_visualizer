@@ -5,20 +5,22 @@
 /// @brief  Main entry point.
 //=============================================================================
 
-#include <QApplication>
-#include <QFileInfo>
-#include <QDir>
-#include <QStyleFactory>
 #include <stdarg.h>
 
+#include <QApplication>
+#include <QDir>
+#include <QFileInfo>
+#include <QStyleFactory>
+
+#include "qt_common/custom_widgets/driver_overrides_model.h"
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
 #include "rmt_print.h"
 
 #include "managers/trace_manager.h"
-#include "views/main_window.h"
 #include "util/rmv_util.h"
+#include "views/main_window.h"
 
 /// @brief Handle printing from the backend.
 ///
@@ -112,6 +114,8 @@ int main(int argc, char* argv[])
         }
 
         result = a.exec();
+
+        driver_overrides::DriverOverridesModel::DestroyInstance();
         delete window;
     }
 

@@ -13,6 +13,7 @@
 #define RMV_VIEWS_CUSTOM_WIDGETS_RMV_SNAPSHOT_TABLE_VIEW_H_
 
 #include "qt_common/custom_widgets/scaled_table_view.h"
+
 #include "views/delegates/rmv_snapshot_name_delegate.h"
 
 /// @brief Class declaration for the Snapshot table view.

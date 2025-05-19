@@ -11,18 +11,15 @@
 
 #include "qt_common/custom_widgets/colored_legend_scene.h"
 
-#include "rmt_data_snapshot.h"
-
-#include "managers/trace_manager.h"
 #include "managers/message_manager.h"
 #include "managers/pane_manager.h"
 #include "managers/snapshot_manager.h"
+#include "managers/trace_manager.h"
 #include "models/heap_combo_box_model.h"
 #include "models/resource_usage_combo_box_model.h"
 #include "models/snapshot/resource_overview_model.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"
-
 #include "views/custom_widgets/rmv_colored_checkbox.h"
 
 ResourceOverviewPane::ResourceOverviewPane(QWidget* parent)
@@ -363,7 +360,7 @@ void ResourceOverviewPane::SelectedUnboundResource(const RmtResource* unbound_re
     {
         if (unbound_resource != nullptr)
         {
-            emit rmv::MessageManager::Get().UnboundResourceSelected(unbound_resource->bound_allocation);
+            emit rmv::MessageManager::Get().UnboundResourceSelected(unbound_resource -> bound_allocation);
         }
     }
     SelectUnboundResource(unbound_resource);

@@ -7,9 +7,9 @@
 
 #include "views/timeline/keyboard_zoom_shortcuts_timeline.h"
 
-#include <QMap>
 #include <QAction>
 #include <QDebug>
+#include <QMap>
 
 #include "views/timeline/timeline_pane.h"
 

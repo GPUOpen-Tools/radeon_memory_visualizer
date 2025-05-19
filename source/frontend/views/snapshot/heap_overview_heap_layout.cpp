@@ -118,7 +118,7 @@ void HeapOverviewHeapLayout::Update()
     }
 
     // Hide the invisible heap if SAM is enabled.
-    if ((model_->GetHeapType() == kRmtHeapTypeInvisible) && (model_->IsSAMSupported()))
+    if ((model_->GetHeapType() == kRmtHeapTypeInvisible) && (model_->IsSAMSupported() || model_->IsCPUHostApertureSupported()))
     {
         setVisible(false);
     }

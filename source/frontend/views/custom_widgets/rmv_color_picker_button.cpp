@@ -7,9 +7,9 @@
 
 #include "views/custom_widgets/rmv_color_picker_button.h"
 
-#include <QPushButton>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPushButton>
 
 static const int kDefaultButtonDimension = 60;
 

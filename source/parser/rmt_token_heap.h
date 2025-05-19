@@ -8,10 +8,9 @@
 #ifndef RMV_PARSER_RMT_TOKEN_HEAP_H_
 #define RMV_PARSER_RMT_TOKEN_HEAP_H_
 
-#include "rmt_error.h"
 #include "rmt_file_format.h"
-#include "rmt_format.h"
 #include "rmt_token.h"
+#include "rmt_types.h"
 #include "rmt_util.h"
 
 #ifdef __cplusplus
@@ -90,13 +89,14 @@ bool RmtStreamMergerIsEmpty(const RmtStreamMerger* token_heap);
 /// Get the next token from the stream merger.
 ///
 /// @param [in]     token_heap               An RmtStreamMerger structure defining the stream merger.
+/// #param [in]     local_heap_only          A flag indicating if only local memory is present on the GPU (SAM or GPU host aperture enabled).
 /// @param [out]    out_token                An RmtToken structure receiving the token.
 ///
 /// @retval
 /// kRmtOk                                   The operation completed successfully.
 /// @retval
 /// kRmtErrorOutOfMemory                     The operation failed because <c><i>token_heap</i></c> is empty.
-RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_token);
+RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, bool local_heap_only, RmtToken* out_token);
 
 #ifdef __cplusplus
 }

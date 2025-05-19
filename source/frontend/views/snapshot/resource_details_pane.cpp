@@ -7,6 +7,8 @@
 
 #include "views/snapshot/resource_details_pane.h"
 
+#include <QClipboard>
+#include <QMenu>
 #include <QScrollBar>
 #include <QThread>
 
@@ -74,6 +76,10 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
 
     ui_->resource_properties_table_view_->horizontalHeader()->setSectionsClickable(true);
     ui_->resource_properties_table_view_->horizontalHeader()->setStretchLastSection(false);
+
+    // Add a context menu to the properties table.
+    ui_->resource_properties_table_view_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui_->resource_properties_table_view_, &QTableView::customContextMenuRequested, this, &ResourceDetailsPane::ShowPropertiesTableContextMenu);
 
     model_->InitializeTimelineTableModel(ui_->resource_timeline_table_view_, 0, rmv::kResourceHistoryColumnCount);
     ui_->resource_timeline_table_view_->setCursor(Qt::PointingHandCursor);
@@ -347,4 +353,38 @@ void ResourceDetailsPane::OnColorThemeUpdated()
     {
         ui_->warning_icon_->setPixmap(QPixmap(QString::fromUtf8(":/Resources/assets/third_party/ionicons/warning.svg")));
     }
+}
+
+void ResourceDetailsPane::ShowPropertiesTableContextMenu(const QPoint& pos)
+{
+    QModelIndex index = ui_->resource_properties_table_view_->indexAt(pos);
+    if (!index.isValid())
+    {
+        return;  // No item under the cursor.
+    }
+
+    QMenu    menu(this);
+    QAction* save_clipboard_text_action = new QAction("Copy table contents to clipboard as text", this);
+    QAction* save_clipboard_csv_action  = new QAction("Copy table contents to clipboard as csv text", this);
+
+    // Connect actions to slots.
+    connect(save_clipboard_text_action, &QAction::triggered, this, [=]() { SavePropertiesToClipboard(false); });
+    connect(save_clipboard_csv_action, &QAction::triggered, this, [=]() { SavePropertiesToClipboard(true); });
+
+    menu.addAction(save_clipboard_text_action);
+    menu.addAction(save_clipboard_csv_action);
+
+    // Map the position to global coordinates.
+    QPoint global_pos = ui_->resource_properties_table_view_->viewport()->mapToGlobal(pos);
+    menu.exec(global_pos);
+
+    // Clean up.
+    delete save_clipboard_text_action;
+    delete save_clipboard_csv_action;
+}
+
+void ResourceDetailsPane::SavePropertiesToClipboard(bool as_csv) const
+{
+    QString string = model_->GetPropertiesString(resource_identifier_, as_csv);
+    QApplication::clipboard()->setText(string);
 }

@@ -17,8 +17,8 @@
 #include "models/proxy_models/memory_leak_finder_proxy_model.h"
 #include "models/resource_item_model.h"
 #include "settings/rmv_settings.h"
-#include "views/custom_widgets/rmv_colored_checkbox.h"
 #include "util/rmv_util.h"
+#include "views/custom_widgets/rmv_colored_checkbox.h"
 
 MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     : ComparePane(parent)

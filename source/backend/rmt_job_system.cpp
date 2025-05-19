@@ -6,9 +6,11 @@
 //=============================================================================
 
 #include "rmt_job_system.h"
-#include "rmt_platform.h"
-#include "rmt_assert.h"
+
 #include <string.h>  // for memset()
+
+#include "rmt_assert.h"
+#include "rmt_platform.h"
 
 // flag to signal worker thread should terminate
 #define WORKER_THREAD_FLAGS_TERMINATE (1 << 0)

@@ -8,9 +8,10 @@
 #ifndef RMV_MODELS_CAROUSEL_MODEL_H_
 #define RMV_MODELS_CAROUSEL_MODEL_H_
 
-#include <QString>
-#include <QColor>
 #include <stdint.h>
+
+#include <QColor>
+#include <QString>
 
 #include "rmt_data_snapshot.h"
 

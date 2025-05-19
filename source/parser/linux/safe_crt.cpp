@@ -7,13 +7,14 @@
 
 #if !defined(_WIN32)
 
+#include "safe_crt.h"
+
 #include <assert.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
-#include "safe_crt.h"
 #include "../parser/rmt_util.h"
 
 static errno_t validate_string_params(char* destination, size_t size, const char* source)

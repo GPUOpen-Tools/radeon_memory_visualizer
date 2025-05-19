@@ -7,12 +7,12 @@
 
 #include "views/settings/settings_pane.h"
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
+
 #include "managers/message_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"
 #include "views/custom_widgets/rmv_colored_checkbox.h"
-
-#include "qt_common/custom_widgets/driver_overrides_model.h"
 
 using namespace driver_overrides;
 

@@ -69,7 +69,7 @@ parser.add_argument("--clean", action="store_true", help="delete any directories
 parser.add_argument("--no-qt", action="store_true", help="build a headless version (not applicable for all products)")
 parser.add_argument("--build-number", default="0", help="specify the build number, primarily to be used by build machines to produce versioned builds")
 parser.add_argument("--update", action="store_true", help="Force fetch_dependencies script to update all dependencies")
-parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of PreBuild.py script)")
+parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of pre_build.py script)")
 parser.add_argument("--build", action="store_true", help="build all supported configurations on completion of prebuild step")
 parser.add_argument("--build-jobs", default="16", help="number of simultaneous jobs to run during a build (default = 16)")
 parser.add_argument("--analyze", action="store_true", help="perform static analysis of code on build (currently VS2017 only)")
@@ -292,7 +292,6 @@ def generate_config(config):
     if sys.platform == "darwin":
         cmake_args.extend(["-DNO_APP_BUNDLE=" + str(args.no_bundle)])
 
-
     if args.vscode:
         # Generate data into VSCode Settings file
 
@@ -368,7 +367,7 @@ if (args.build):
 
             cmake_args = ["cmake", "--build", build_dir, "--parallel", args.build_jobs]
 
-            cmake_args_docs = ["cmake", "--build", build_dir, "--target", "Documentation", "--parallel", args.build_jobs]
+            cmake_args_docs = ["cmake", "--build", build_dir, "--target", "RMVDocumentation", "--parallel", args.build_jobs]
         elif sys.platform == "win32":
             build_dir = cmake_output_dir
 
@@ -378,7 +377,7 @@ if (args.build):
                 cmake_args.append("/p:CodeAnalysisRuleSet=NativeMinimumRules.ruleset")
                 cmake_args.append("/p:RunCodeAnalysis=true")
 
-            cmake_args_docs = ["cmake", "--build", build_dir, "--config", config, "--target", "Documentation", "--", "/m:" + args.build_jobs]
+            cmake_args_docs = ["cmake", "--build", build_dir, "--config", config, "--target", "RMVDocumentation", "--", "/m:" + args.build_jobs]
 
         p = subprocess.Popen(cmake_args, cwd=cmake_output_dir, stderr=subprocess.STDOUT)
         p.wait()
@@ -392,7 +391,6 @@ if (args.build):
         p = subprocess.Popen(cmake_args_docs, cwd=cmake_output_dir, stderr=subprocess.STDOUT)
         p.wait()
         sys.stdout.flush()
-
 
         if (args.package):
             if sys.platform == "win32":

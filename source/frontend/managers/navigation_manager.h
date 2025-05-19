@@ -8,9 +8,9 @@
 #ifndef RMV_MANAGERS_NAVIGATION_MANAGER_H_
 #define RMV_MANAGERS_NAVIGATION_MANAGER_H_
 
-#include <QWidget>
 #include <QList>
 #include <QModelIndex>
+#include <QWidget>
 
 #include "managers/pane_manager.h"
 #include "util/definitions.h"

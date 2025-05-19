@@ -5,13 +5,14 @@
 /// @brief  Implementation of a priority queue data structure.
 //=============================================================================
 
-#include "rmt_token_heap.h"
-#include "rmt_platform.h"
+#include <string.h>  // for memcpy()
+
 #include <rmt_print.h>
+#include "rmt_assert.h"
 #include "rmt_format.h"
 #include "rmt_parser.h"
-#include "rmt_assert.h"
-#include <string.h>  // for memcpy()
+#include "rmt_platform.h"
+#include "rmt_token_heap.h"
 
 // NOTE: if its a KMD stream, bias the timestamp backwards. The reason for this
 // is to compensate for the latency of the data output from KMD being shorter
@@ -358,7 +359,7 @@ static uint64_t HashId(uint64_t base_driver_id)
     return hash;
 }
 
-RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_token)
+RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, bool local_heap_only, RmtToken* out_token)
 {
     if (RmtStreamMergerIsEmpty(token_heap))
     {
@@ -460,6 +461,17 @@ RmtErrorCode RmtStreamMergerAdvance(RmtStreamMerger* token_heap, RmtToken* out_t
 
     if (error_code == kRmtOk)
     {
+        if (next_token_from_stream->type == kRmtTokenTypeVirtualAllocate && local_heap_only)
+        {
+            // Fix up if SAM / CPU Host Aperture enabled.
+            for (int32_t current_heap_index = 0; current_heap_index < RMT_NUM_HEAP_PREFERENCES; ++current_heap_index)
+            {
+                if (next_token_from_stream->virtual_allocate_token.preference[current_heap_index] == kRmtHeapTypeInvisible)
+                {
+                    next_token_from_stream->virtual_allocate_token.preference[current_heap_index] = kRmtHeapTypeLocal;
+                }
+            }
+        }
         error_code = Insert(token_heap, next_token_from_stream);
         RMT_ASSERT(error_code == kRmtOk);
     }
