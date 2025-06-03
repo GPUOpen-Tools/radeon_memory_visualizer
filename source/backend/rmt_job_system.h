@@ -24,7 +24,8 @@
 extern "C" {
 #endif  // #ifdef __cplusplus
 
-typedef struct RmtJobQueue RmtJobQueue;
+typedef struct RmtJobQueue      RmtJobQueue;
+typedef struct IJobQueueAdapter IJobQueueAdapter;
 
 /// The prototype for a job function.
 ///
@@ -82,6 +83,9 @@ typedef struct RmtJobQueue
     RmtMutex       queue_mutex;                         ///< A mutex controlling queue access.
 
     RmtJobHandle handle_next;  ///< The next handle to use.
+
+    // Note: Member variables above maintained for for legacy backward compatibility.
+    IJobQueueAdapter* wrapper;  ///< Pointer to the Job queue.
 } RmtJobQueue;
 
 /// Initialize the job queue for the specified number of threads.

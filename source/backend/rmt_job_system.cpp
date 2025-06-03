@@ -10,233 +10,392 @@
 #include "rmt_assert.h"
 #include <string.h>  // for memset()
 
-// flag to signal worker thread should terminate
-#define WORKER_THREAD_FLAGS_TERMINATE (1 << 0)
+#include <atomic>
+#include <cassert>
+#include <condition_variable>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <unordered_map>
+#include <vector>
 
-// job system main function
-static uint32_t RMT_THREAD_FUNC JobSystemThreadFunc(void* input_data)
+// Job handle type
+using RmtJobHandle = uint64_t;
+
+// Definition of the job function executed by worker threads.
+using JobFunction = std::function<void(int32_t thread_id, int32_t job_index, void* input)>;
+
+// Job: A structure representing a job to be processed by the worker threads.
+// It contains the function to be executed, input data and counters for tracking status.
+// -------------------------------------------------------------------------------------
+struct Job
 {
-    RMT_ASSERT_MESSAGE(input_data, "No thread id address passed to thread func.");
+    JobFunction          function;
+    void*                input      = nullptr;
+    int32_t              base_index = 0;
+    int32_t              count      = 0;
+    std::atomic<int32_t> run_count{0};
+    std::atomic<int32_t> completed_count{0};
+};
 
-    // read the thread input structure
-    RmtJobQueueWorkerThreadInput* thread_input = (RmtJobQueueWorkerThreadInput*)input_data;
+// JobQueue: A class that manages a pool of worker threads and a queue of jobs to be processed.
+// It uses a condition variable to notify worker threads when new jobs are available and to signal when all jobs are done.
+// -----------------------------------------------------------------------------------------------------------------------
+class JobQueue
+{
+public:
+    JobQueue(int32_t worker_thread_count);
 
-    if (thread_input == NULL)
+    ~JobQueue();
+
+    void SetAdapter(IJobQueueAdapter* wrapper);
+
+    // Accepts a shared_ptr<Job> so the same instance is used everywhere.
+    void AddJob(const std::shared_ptr<Job>& job);
+
+    void WaitForAllJobs();
+
+    void Shutdown();
+
+private:
+    void WorkerThreadFunc(int32_t thread_id, std::stop_token stoken);
+
+    std::vector<std::jthread>        workers_threads_;
+    std::queue<std::shared_ptr<Job>> jobs_;
+    std::mutex                       queue_mutex_;
+    std::condition_variable          queue_condition_;
+    std::condition_variable          all_jobs_done_condition_;
+    std::atomic<bool>                terminate_flag_;
+    int32_t                          active_jobs_ = 0;
+    IJobQueueAdapter*                wrapper_     = nullptr;
+};
+
+// Interface for the JobQueue Wrapper structure handle mapping from external APIs.
+// -------------------------------------------------------------------------------
+struct IJobQueueAdapter
+{
+public:
+    virtual ~IJobQueueAdapter() = default;
+
+    virtual std::mutex& GetHandleMutex() = 0;
+
+    // Add a single job.
+    virtual RmtErrorCode AddSingleJob(JobFunction func, void* input, RmtJobHandle* out_handle) = 0;
+
+    // Add multiple jobs.
+    virtual RmtErrorCode AddMultipleJobs(JobFunction func, void* input, int32_t base_index, int32_t count, RmtJobHandle* out_handle) = 0;
+
+    // Wait for all jobs to complete.
+    virtual void WaitForAllJobs() = 0;
+
+    // Wait for a specific job to complete.
+    virtual RmtErrorCode WaitForJobCompletion(RmtJobHandle handle) = 0;
+
+    // Shutdown the job queue.
+    virtual void Shutdown() = 0;
+
+    // Condition variable to notify when a job is done.
+    virtual void NotifyJobDone() = 0;
+
+    // Condition variable to notify all threads all job are done.
+    virtual void NotifyAllJobsDone() = 0;
+
+    virtual std::shared_ptr<Job> GetJobByHandle(RmtJobHandle handle) = 0;
+};
+
+// JobQueue implementation: A class that manages a pool of worker threads and a queue of jobs to be processed.
+// -----------------------------------------------------------------------------------------------------------
+
+JobQueue::JobQueue(int32_t worker_thread_count)
+    : terminate_flag_(false)
+{
+    assert(worker_thread_count > 0);
+    for (int32_t i = 0; i < worker_thread_count; ++i)
     {
-        return 0;
+        workers_threads_.emplace_back([this, i](std::stop_token stop_token) { WorkerThreadFunc(i, stop_token); });
     }
-
-    // run until the thread terminate signal is set
-    while (true)
-    {
-        // sleep the thread until work is available
-        RmtThreadEventWait(&thread_input->job_queue->signal);
-
-        // check if we should quit
-        const uint64_t flags = RmtThreadAtomicRead((volatile uint64_t*)&thread_input->flags);
-
-        if ((flags & WORKER_THREAD_FLAGS_TERMINATE) == WORKER_THREAD_FLAGS_TERMINATE)
-        {
-            break;
-        }
-
-        // acquire the mutex.
-        const RmtErrorCode error_code = RmtMutexLock(&thread_input->job_queue->queue_mutex);
-        RMT_ASSERT(error_code == kRmtOk);
-
-        // if there is no work then reset the signal and release the mutex
-        if (thread_input->job_queue->queue_size == 0)
-        {
-            RmtThreadEventReset(&thread_input->job_queue->signal);
-            RmtMutexUnlock(&thread_input->job_queue->queue_mutex);
-        }
-        else
-        {
-            // there is some work in the queue grab the job from the head
-            const int32_t job_index = thread_input->job_queue->queue_head_index;
-
-            RmtJobQueueJob*   current_job    = &thread_input->job_queue->queue_items[job_index];
-            const int32_t     index          = current_job->run_count++;
-            const int32_t     adjusted_index = current_job->base_index + index;
-            void*             job_input      = current_job->input;
-            RmtJobFunction    func           = current_job->function;
-            volatile int64_t* addr           = &current_job->completed_count;
-
-            // if we ran the last instance, then remove it from the queue
-            if (current_job->run_count == current_job->count)
-            {
-                thread_input->job_queue->queue_head_index = (thread_input->job_queue->queue_head_index + 1) % RMT_MAXIMUM_JOB_COUNT;
-                thread_input->job_queue->queue_size--;
-            }
-
-            // release queue access
-            RmtMutexUnlock(&thread_input->job_queue->queue_mutex);
-
-            // run the job
-            (*func)(thread_input->thread_id, adjusted_index, job_input);
-
-            // signal that it is done.
-            RmtThreadAtomicAdd64(addr, 1);
-        }
-    }
-
-    return 0;
 }
 
-// initialize the job queue
+JobQueue::~JobQueue()
+{
+    Shutdown();
+}
+
+void JobQueue::AddJob(const std::shared_ptr<Job>& job)
+{
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex_);
+        jobs_.push(job);
+    }
+    queue_condition_.notify_one();
+}
+
+void JobQueue::WaitForAllJobs()
+{
+    std::unique_lock<std::mutex> lock(queue_mutex_);
+    all_jobs_done_condition_.wait(lock, [this] { return jobs_.empty() && active_jobs_ == 0; });
+}
+
+void JobQueue::Shutdown()
+{
+    terminate_flag_ = true;
+    queue_condition_.notify_all();
+    for (auto& worker : workers_threads_)
+    {
+        if (worker.joinable())
+        {
+            worker.request_stop();
+            worker.join();
+        }
+    }
+    workers_threads_.clear();
+}
+
+void JobQueue::SetAdapter(IJobQueueAdapter* wrapper)
+{
+    wrapper_ = wrapper;
+}
+
+void JobQueue::WorkerThreadFunc(int32_t thread_id, std::stop_token stoken)
+{
+    while (!stoken.stop_requested() && !terminate_flag_)
+    {
+        std::shared_ptr<Job> job;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex_);
+            queue_condition_.wait(lock, [this, &stoken] { return !jobs_.empty() || terminate_flag_ || stoken.stop_requested(); });
+            if (terminate_flag_ || stoken.stop_requested())
+                break;
+            job = jobs_.front();
+            jobs_.pop();
+            ++active_jobs_;
+        }
+
+        for (int i = 0; i < job->count; ++i)
+        {
+            if (stoken.stop_requested() || terminate_flag_)
+            {
+                break;
+            }
+            job->function(thread_id, job->base_index + i, job->input);
+
+            if (wrapper_)
+            {
+                ++job->completed_count;
+                wrapper_->NotifyAllJobsDone();
+            }
+            else
+            {
+                ++job->completed_count;
+            }
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(queue_mutex_);
+            --active_jobs_;
+            if (jobs_.empty() && active_jobs_ == 0)
+            {
+                all_jobs_done_condition_.notify_all();
+            }
+        }
+    }
+}
+
+// RmtJobQueueAdapter: A wrapper around JobQueue that implements the IJobQueueAdapter interface.
+// This class allows the RMT job queue API to interact with the internal JobQueue implementation.
+// ----------------------------------------------------------------------------------------------
+
+class RmtJobQueueAdapter : public IJobQueueAdapter
+{
+public:
+    RmtJobQueueAdapter(std::unique_ptr<JobQueue> job_queue, IJobQueueAdapter* /*previous_wrapper*/)
+        : job_queue(std::move(job_queue))
+    {
+        if (this->job_queue)
+        {
+            this->job_queue->SetAdapter(this);
+        }
+        next_handle = 1;  // Start handles from 1 to avoid confusion with invalid handle (0).
+    }
+
+    // Destructor to clean up the job queue and reset handles.
+    ~RmtJobQueueAdapter() override
+    {
+        Shutdown();
+    }
+
+    // Factory method to create a new RMT job queue adapter.
+    static IJobQueueAdapter* CreateJobQueueAdapter(std::unique_ptr<JobQueue> job_queue, IJobQueueAdapter* previous_wrapper)
+    {
+        return new RmtJobQueueAdapter(std::move(job_queue), previous_wrapper);
+    }
+
+    RmtErrorCode AddSingleJob(JobFunction func, void* input, RmtJobHandle* out_handle) override
+    {
+        return AddMultipleJobs(func, input, 0, 1, out_handle);
+    }
+
+    RmtErrorCode AddMultipleJobs(JobFunction func, void* input, int32_t base_index, int32_t count, RmtJobHandle* out_handle) override
+    {
+        if (!func || count <= 0)
+            return kRmtErrorInvalidPointer;
+
+        auto job        = std::make_shared<Job>();
+        job->function   = func;
+        job->input      = input;
+        job->base_index = base_index;
+        job->count      = count;
+
+        // Generate a new handle
+        RmtJobHandle handle;
+        {
+            std::lock_guard<std::mutex> lock(handle_mutex);
+            handle                = next_handle++;
+            handle_to_job[handle] = job;
+        }
+
+        // Add the job to the queue
+        job_queue->AddJob(job);
+        if (out_handle)
+            *out_handle = handle;
+        return kRmtOk;
+    }
+
+    std::mutex& GetHandleMutex() override
+    {
+        return handle_mutex;
+    }
+
+    virtual void NotifyJobDone() override
+    {
+        job_done_condition.notify_all();
+    }
+
+    // Condition variable to notify all job are done.
+    virtual void NotifyAllJobsDone() override
+    {
+        job_done_condition.notify_all();
+    }
+
+    RmtErrorCode WaitForJobCompletion(RmtJobHandle handle) override
+    {
+        auto job = GetJobByHandle(handle);
+        if (!job)
+            return kRmtErrorInvalidPointer;
+
+        std::unique_lock<std::mutex> lock(handle_mutex);
+
+        job_done_condition.wait(lock, [&job] { return job->completed_count.load() >= job->count; });
+        return kRmtOk;
+    }
+
+    void WaitForAllJobs() override
+    {
+        job_queue->WaitForAllJobs();
+        std::unique_lock<std::mutex> lock(handle_mutex);
+        job_done_condition.wait(lock, [this] { return handle_to_job.empty(); });
+    }
+
+    void Shutdown() override
+    {
+        job_queue->Shutdown();
+        std::lock_guard<std::mutex> lock(handle_mutex);
+        handle_to_job.clear();
+        next_handle = 1;  // Reset the handle counter
+    }
+
+    // Get the job by handle
+    std::shared_ptr<Job> GetJobByHandle(RmtJobHandle handle)
+    {
+        std::lock_guard<std::mutex> lock(handle_mutex);
+        auto                        it = handle_to_job.find(handle);
+        if (it != handle_to_job.end())
+        {
+            return it->second;
+        }
+        return nullptr;  // Handle not found
+    }
+
+private:
+    std::unique_ptr<class JobQueue>                        job_queue;
+    std::mutex                                             handle_mutex;
+    RmtJobHandle                                           next_handle = 1;
+    std::condition_variable                                job_done_condition;
+    std::unordered_map<RmtJobHandle, std::shared_ptr<Job>> handle_to_job;
+};
+
+// Helper function to get the wrapper from the external RMT job queue structure.
+inline IJobQueueAdapter* GetWrapper(RmtJobQueue* job_queue)
+{
+    return job_queue->wrapper;
+}
+
+// External API Functions
+// ----------------------
+
+// Initialize the job queue
 RmtErrorCode RmtJobQueueInitialize(RmtJobQueue* job_queue, int32_t worker_thread_count)
 {
-    RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
-    RMT_RETURN_ON_ERROR(worker_thread_count > 0 && worker_thread_count <= RMT_MAXIMUM_WORKER_THREADS, kRmtErrorIndexOutOfRange);
+    if (!job_queue || worker_thread_count <= 0)
+        return kRmtErrorInvalidPointer;
 
-    // stash anything we need in the structure
-    job_queue->worker_thread_count = worker_thread_count;
-    job_queue->handle_next         = 0;
-
-    // clear the queue contents
-    memset(job_queue->queue_items, 0, sizeof(job_queue->queue_items));
-
-    // create the event to signal when queue has work
-    RmtErrorCode error_code = kRmtOk;
-    error_code              = RmtThreadEventCreate(&job_queue->signal, false, true, "");
-    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
-
-    // create the mutex for altering the job queue
-    error_code = RmtMutexCreate(&job_queue->queue_mutex, "RMT Job Queue Mutex");
-    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
-
-    // set up the queue
-    job_queue->queue_tail_index = 0;
-    job_queue->queue_head_index = 0;
-    job_queue->queue_size       = 0;
-
-    // create our worker threads.
-    for (int32_t current_worker_thread_index = 0; current_worker_thread_index < worker_thread_count; ++current_worker_thread_index)
-    {
-        // set up the inputs
-        RmtJobQueueWorkerThreadInput* input = &job_queue->worker_thread_inputs[current_worker_thread_index];
-        input->thread_id                    = current_worker_thread_index;
-        input->job_queue                    = job_queue;
-        input->flags                        = 0;
-
-        // create the thread
-        error_code = RmtThreadCreate(&job_queue->worker_threads[current_worker_thread_index], JobSystemThreadFunc, input);
-
-        RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
-    }
-
+    job_queue->wrapper = RmtJobQueueAdapter::CreateJobQueueAdapter(std::make_unique<JobQueue>(worker_thread_count), job_queue->wrapper);
     return kRmtOk;
 }
 
-// shutdown the job queue
+// Shutdown the job queue
 RmtErrorCode RmtJobQueueShutdown(RmtJobQueue* job_queue)
 {
-    RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
+    if (!job_queue)
+        return kRmtErrorInvalidPointer;
 
-    // singal to terminate all the threads
-    for (int32_t current_worker_thread_index = 0; current_worker_thread_index < job_queue->worker_thread_count; ++current_worker_thread_index)
-    {
-        RmtJobQueueWorkerThreadInput* input = &job_queue->worker_thread_inputs[current_worker_thread_index];
-        RmtThreadAtomicOr((volatile uint64_t*)&input->flags, WORKER_THREAD_FLAGS_TERMINATE);
-    }
+    // Get the adapter used to wrap the RmtJobQueue.
+    auto* wrapper = GetWrapper(job_queue);
 
-    // signal all threads that there is work
-    RmtThreadEventSignal(&job_queue->signal);
-
-    // wait for all the threads to finish
-    for (int32_t current_worker_thread_index = 0; current_worker_thread_index < job_queue->worker_thread_count; ++current_worker_thread_index)
-    {
-        const RmtErrorCode error_code = RmtThreadWaitForExit(&job_queue->worker_threads[current_worker_thread_index]);
-        RMT_ASSERT(error_code == kRmtOk);
-    }
-
-    RmtThreadEventDestroy(&job_queue->signal);
-    RmtMutexDestroy(&job_queue->queue_mutex);
+    wrapper->Shutdown();
+    delete wrapper;
 
     return kRmtOk;
 }
 
-// add a single job the queue
+// Add a single job
 RmtErrorCode RmtJobQueueAddSingle(RmtJobQueue* job_queue, RmtJobFunction func, void* input, RmtJobHandle* out_handle)
 {
     return RmtJobQueueAddMultiple(job_queue, func, input, 0, 1, out_handle);
 }
 
-// add a job to the queue
+// Add multiple jobs
 RmtErrorCode RmtJobQueueAddMultiple(RmtJobQueue* job_queue, RmtJobFunction func, void* input, int32_t base_index, int32_t count, RmtJobHandle* out_handle)
 {
-    RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
-    RMT_ASSERT_MESSAGE(func, "Parameter func is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
-    RMT_RETURN_ON_ERROR(func, kRmtErrorInvalidPointer);
-    RMT_RETURN_ON_ERROR(count, kRmtErrorInvalidSize);
+    if (!job_queue || !func || count <= 0)
+        return kRmtErrorInvalidPointer;
 
-    // add work to the queue.
-    const RmtErrorCode error_code = RmtMutexLock(&job_queue->queue_mutex);
-    RMT_ASSERT(error_code == kRmtOk);
+    // Wrap the job queue function pointer in a std::function
+    JobFunction job_func = [func](int32_t thread_id, int32_t job_index, void* input) { func(thread_id, job_index, input); };
 
-    // check the size of the queue
-    if (job_queue->queue_size == RMT_MAXIMUM_JOB_COUNT)
-    {
-        RmtMutexUnlock(&job_queue->queue_mutex);
-        return kRmtErrorOutOfMemory;
-    }
+    // Get the adapter used to wrap the RmtJobQueue.
+    auto* wrapper = GetWrapper(job_queue);
 
-    // work out the handle
-    const RmtJobHandle job_handle = job_queue->handle_next++;
-
-    // block until this item in the queue is available
-    RmtJobQueueWaitForCompletion(job_queue, job_handle);
-
-    // work out the location in the queue and write the data
-    const int32_t job_index                           = job_queue->queue_tail_index;
-    job_queue->queue_items[job_index].function        = func;
-    job_queue->queue_items[job_index].input           = input;
-    job_queue->queue_items[job_index].base_index      = base_index;
-    job_queue->queue_items[job_index].count           = count;
-    job_queue->queue_items[job_index].run_count       = 0;
-    job_queue->queue_items[job_index].handle          = job_handle;
-    job_queue->queue_items[job_index].completed_count = 0;
-
-    // advance the tail and size
-    job_queue->queue_tail_index = (job_queue->queue_tail_index + 1) % RMT_MAXIMUM_JOB_COUNT;
-    job_queue->queue_size++;
-
-    RmtMutexUnlock(&job_queue->queue_mutex);
-
-    // signal all threads that there is work to do
-    RmtThreadEventSignal(&job_queue->signal);
-
-    // write the handle back if the pointer is not NULL
-    if (out_handle != nullptr)
-    {
-        *out_handle = job_handle;
-    }
-
-    return kRmtOk;
+    // Have the adapter create the job object
+    return wrapper->AddMultipleJobs(job_func, input, base_index, count, out_handle);
 }
 
-// check if a job has completed
+// Wait for a job to complete
 RmtErrorCode RmtJobQueueWaitForCompletion(RmtJobQueue* job_queue, RmtJobHandle handle)
 {
-    RMT_ASSERT_MESSAGE(job_queue, "Parameter jobQueue is NULL.");
-    RMT_RETURN_ON_ERROR(job_queue, kRmtErrorInvalidPointer);
+    if (!job_queue)
+        return kRmtErrorInvalidPointer;
 
-    do
-    {
-        const uint64_t completed_jobs = RmtThreadAtomicRead((volatile uint64_t*)&job_queue->queue_items[handle % RMT_MAXIMUM_JOB_COUNT].completed_count);
+    // Get the adapter used to wrap the RmtJobQueue.
+    auto* wrapper = GetWrapper(job_queue);
 
-        if ((int32_t)completed_jobs == job_queue->queue_items[handle % RMT_MAXIMUM_JOB_COUNT].count)
-        {
-            break;
-        }
+    // Wait for the job to complete.
+    RmtErrorCode result = wrapper->WaitForJobCompletion(handle);
 
-        // sleep for 1ms to reduce spin-lock.
-        RmtSleep(1);
-
-    } while (true);
-
+    if (result != kRmtOk)
+        return result;
     return kRmtOk;
 }
