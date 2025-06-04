@@ -56,7 +56,7 @@ if sys.platform == "win32":
     parser.add_argument("--vs", default="2022", choices=["2017", "2019", "2022"], help="specify the version of Visual Studio to be used with this script (default: 2022)")
     parser.add_argument("--toolchain", default="2022", choices=["2017", "2019", "2022"], help="specify the compiler toolchain to be used with this script (default: 2022)")
     parser.add_argument("--qt-root", default="C:\\Qt", help="specify the root directory for locating QT on this system (default: C:\\Qt\\)")
-    parser.add_argument("--qt-libver", default="2019", choices=["2017", "2019"], help="specify the Qt lib version to be used with this script (default: 2019)")
+    parser.add_argument("--qt-libver", default="2019", choices=["2017", "2019", "2022"], help="specify the Qt lib version to be used with this script (default: 2019)")
 elif sys.platform == "darwin":
     parser.add_argument("--xcode", action="store_true", help="specify Xcode should be used as generator for CMake")
     parser.add_argument("--no-bundle", action="store_true", help="specify macOS application should be built as standard executable instead of app bundle")
