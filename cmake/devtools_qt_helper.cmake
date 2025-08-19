@@ -73,11 +73,18 @@ if (Qt6_DIR)
                     )")
         else()
             # Generate deployment script of Qt binaries and plugins
-            qt_generate_deploy_app_script(TARGET ${PROJECT_NAME}
-                OUTPUT_SCRIPT deploy_script
-                NO_UNSUPPORTED_PLATFORM_ERROR
-                NO_TRANSLATIONS
+            if (QT_VERSION_MAJOR EQUAL 6 AND QT_VERSION_MINOR GREATER_EQUAL 5)
+                qt_generate_deploy_app_script(TARGET ${PROJECT_NAME}
+                        OUTPUT_SCRIPT deploy_script
+                        NO_UNSUPPORTED_PLATFORM_ERROR
+                        NO_TRANSLATIONS
+                )
+            else()
+                qt_generate_deploy_app_script(TARGET ${PROJECT_NAME}
+                        FILENAME_VARIABLE deploy_script
+                        NO_UNSUPPORTED_PLATFORM_ERROR
             )
+            endif()
         endif()
 
         install(SCRIPT ${deploy_script} COMPONENT ${component})
