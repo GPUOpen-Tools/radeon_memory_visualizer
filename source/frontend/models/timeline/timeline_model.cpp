@@ -340,13 +340,16 @@ namespace rmv
             return;
         }
 
-        RmtDataTimeline* timeline = trace_manager.GetTimeline();
-        uint64_t         duration = max_visible - min_visible;
-
-        Q_ASSERT(duration > 0);
+        const RmtDataSet* data_set = trace_manager.GetDataSet();
+        uint64_t          duration = max_visible - min_visible;
+        if (duration < kNumBuckets || data_set->maximum_timestamp < kNumBuckets)
+        {
+            return;
+        }
 
         double bucket_step = duration / (double)kNumBuckets;
 
+        RmtDataTimeline*   timeline = trace_manager.GetTimeline();
         const RmtErrorCode error_code =
             RmtDataTimelineCreateHistogram(timeline, &job_queue_, kNumBuckets, bucket_step, min_visible_, max_visible_, &histogram_);
 

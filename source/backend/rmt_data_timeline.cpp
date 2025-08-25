@@ -204,6 +204,10 @@ int32_t RmtDataTimelineHistogramGetIndex(RmtDataTimelineHistogram* timeline_hist
 int64_t RmtDataTimelineHistogramGetValue(RmtDataTimelineHistogram* timeline_histogram, int32_t bucket_index, int32_t bucket_group_index)
 {
     RMT_ASSERT_MESSAGE(timeline_histogram, "Parameter timelineHistogram is NULL.");
+    if (timeline_histogram->bucket_data == NULL || timeline_histogram->bucket_count == 0)
+    {
+        return 0;
+    }
     const int32_t index = RmtDataTimelineHistogramGetIndex(timeline_histogram, bucket_index, bucket_group_index);
     return timeline_histogram->bucket_data[index];
 }

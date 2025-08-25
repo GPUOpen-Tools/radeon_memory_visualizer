@@ -235,6 +235,7 @@ namespace rmv
         default_settings_[kSettingThemesAndColorsResourceGpuEvent]         = {"ResourceGPUEventColor", "19"};
         default_settings_[kSettingThemesAndColorsResourceFreeSpace]        = {"ResourceFreeSpaceColor", "24"};
         default_settings_[kSettingThemesAndColorsResourceInternal]         = {"ResourceInternalColor", "31"};
+        default_settings_[kSettingThemesAndColorsResourceWorkGraph]        = {"ResourceWorkGraphColor", "27"};
 
         default_settings_[kSettingThemesAndColorsColorThemeMode] = {"ColorThemeMode", "2"};
 
@@ -538,6 +539,7 @@ namespace rmv
         SetToDefaultValue(kSettingThemesAndColorsResourceGpuEvent);
         SetToDefaultValue(kSettingThemesAndColorsResourceFreeSpace);
         SetToDefaultValue(kSettingThemesAndColorsResourceInternal);
+        SetToDefaultValue(kSettingThemesAndColorsResourceWorkGraph);
         SetToDefaultValue(kSettingThemesAndColorsDeltaIncrease);
         SetToDefaultValue(kSettingThemesAndColorsDeltaDecrease);
         SetToDefaultValue(kSettingThemesAndColorsDeltaNoChange);
@@ -677,6 +679,11 @@ namespace rmv
     QColor RMVSettings::GetColorResourceInternal() const
     {
         return GetColorValue(kSettingThemesAndColorsResourceInternal);
+    }
+
+    QColor RMVSettings::GetColorResourceWorkGraph() const
+    {
+        return GetColorValue(kSettingThemesAndColorsResourceWorkGraph);
     }
 
     QColor RMVSettings::GetColorDeltaIncrease() const

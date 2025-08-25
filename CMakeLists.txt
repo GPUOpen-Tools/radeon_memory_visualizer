@@ -13,7 +13,7 @@ project(RMV)
 
 # Define version information
 set(RMV_MAJOR_VERSION 1)
-set(RMV_MINOR_VERSION 13)
+set(RMV_MINOR_VERSION 14)
 if (NOT RMV_BUGFIX_NUMBER)
     set(RMV_BUGFIX_NUMBER 0)
 endif ()
@@ -111,6 +111,7 @@ endif()
 add_subdirectory(source/parser parser)
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
+add_subdirectory(test/source/backend_test backend_test)
 
 # Group external dependency targets into folder
 IF(WIN32)

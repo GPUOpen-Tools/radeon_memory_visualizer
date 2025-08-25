@@ -187,6 +187,14 @@ namespace rmv
         /// @return The new row index.
         int AddCommandAllocatorTableData(const RmtResource* resource, int row_index);
 
+        /// @brief Add the work graph properties to the table.
+        ///
+        /// @param [in] resource  The resource containing the data to add to the table.
+        /// @param [in] row_index The index of the row in the table where data is to be written.
+        ///
+        /// @return The new row index.
+        int AddWorkGraphTableData(const RmtResource* resource, int row_index);
+
         QStandardItemModel* table_model_;  ///< Holds table data.
     };
 }  // namespace rmv

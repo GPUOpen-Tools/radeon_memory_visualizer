@@ -50,6 +50,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     button_group_.addButton(ui_->button_resource_gpu_event_, kSettingThemesAndColorsResourceGpuEvent);
     button_group_.addButton(ui_->button_resource_free_space_, kSettingThemesAndColorsResourceFreeSpace);
     button_group_.addButton(ui_->button_resource_internal_, kSettingThemesAndColorsResourceInternal);
+    button_group_.addButton(ui_->button_resource_work_graph_, kSettingThemesAndColorsResourceWorkGraph);
 
     button_group_.addButton(ui_->button_delta_increase_, kSettingThemesAndColorsDeltaIncrease);
     button_group_.addButton(ui_->button_delta_decrease_, kSettingThemesAndColorsDeltaDecrease);
@@ -456,6 +457,7 @@ void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
     case kSettingThemesAndColorsResourceGpuEvent:
     case kSettingThemesAndColorsResourceFreeSpace:
     case kSettingThemesAndColorsResourceInternal:
+    case kSettingThemesAndColorsResourceWorkGraph:
     case kSettingThemesAndColorsDeltaIncrease:
     case kSettingThemesAndColorsDeltaDecrease:
     case kSettingThemesAndColorsDeltaNoChange:
@@ -512,6 +514,7 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
     case kSettingThemesAndColorsResourceGpuEvent:
     case kSettingThemesAndColorsResourceFreeSpace:
     case kSettingThemesAndColorsResourceInternal:
+    case kSettingThemesAndColorsResourceWorkGraph:
 
     case kSettingThemesAndColorsDeltaIncrease:
     case kSettingThemesAndColorsDeltaDecrease:

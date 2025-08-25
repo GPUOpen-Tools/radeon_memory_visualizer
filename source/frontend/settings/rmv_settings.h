@@ -65,6 +65,7 @@ enum RMVSettingID
     kSettingThemesAndColorsResourceGpuEvent,
     kSettingThemesAndColorsResourceFreeSpace,
     kSettingThemesAndColorsResourceInternal,
+    kSettingThemesAndColorsResourceWorkGraph,
 
     kSettingThemesAndColorsColorThemeMode,
 
@@ -424,6 +425,11 @@ namespace rmv
         ///
         /// @return The color value of this resource.
         QColor GetColorResourceInternal() const;
+
+        /// @brief Get kSettingThemesAndColorsResourceWorkGraph from the settings.
+        ///
+        /// @return The color value of this resource.
+        QColor GetColorResourceWorkGraph() const;
 
         /// @brief Get kSettingThemesAndColorsDeltaIncrease from the settings.
         ///

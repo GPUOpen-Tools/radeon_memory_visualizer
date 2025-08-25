@@ -147,6 +147,7 @@ typedef enum RmtResourceUsageType
     kRmtResourceUsageTypeDescriptors,     ///< The resource is a descriptor heap/pool.
     kRmtResourceUsageTypeShaderPipeline,  ///< The resource is a shader pipeline.
     kRmtResourceUsageTypeGpuEvent,        ///< The resource is a GPU event.
+    kRmtResourceUsageTypeWorkGraph,       ///< The resource is associated with a Work Graph.
 
     // Add above this.
     kRmtResourceUsageTypeCount,

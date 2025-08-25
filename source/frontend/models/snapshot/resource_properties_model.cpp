@@ -155,6 +155,10 @@ namespace rmv
                         row_index = AddCommandAllocatorTableData(resource, row_index);
                         break;
 
+                    case kRmtResourceTypeWorkGraph:
+                        row_index = AddWorkGraphTableData(resource, row_index);
+                        break;
+
                     case kRmtResourceTypeIndirectCmdGenerator:
                     case kRmtResourceTypeMotionEstimator:
                     case kRmtResourceTypeTimestamp:
@@ -358,6 +362,13 @@ namespace rmv
         SetupResourceRow("GPU scratch suballoc size",
                          rmv::string_util::LocalizedValueMemory(resource->command_allocator.embed_data_suballoc_size, false, false),
                          row_index++);
+        return row_index;
+    }
+
+    int ResourcePropertiesModel::AddWorkGraphTableData(const RmtResource* resource, int row_index)
+    {
+        SetupResourceRow("Create flags", rmv::string_util::LocalizedValue(resource->work_graph.create_flags), row_index++);
+        SetupResourceRow("Work graph hash", rmv::string_util::LocalizedValueAddress(resource->work_graph.work_graph_hash), row_index++);
         return row_index;
     }
 

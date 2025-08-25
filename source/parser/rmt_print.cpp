@@ -126,6 +126,9 @@ const char* RmtGetResourceUsageTypeNameFromResourceUsageType(const RmtResourceUs
     case kRmtResourceUsageTypeInternal:
         return "Internal";
 
+    case kRmtResourceUsageTypeWorkGraph:
+        return "Work Graph";
+
     default:
         return "Unknown";
     }

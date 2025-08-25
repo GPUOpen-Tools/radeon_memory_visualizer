@@ -1,11 +1,10 @@
-Radeon™ Memory Visualizer V1.13 06/17/2025
-------------------------------------------
+Radeon™ Memory Visualizer V1.14
+-------------------------------
 
-V1.13 Changes
+V1.14 Changes
 ------------------------------------
-1) Optimize performance for the Allocation overview pane, helpful when allocations contain thousands of resources and/or aliasing is heavily used.
-2) Allow resource properties to be copied to the clipboard in the Resource details pane.
-3) Bug/stability fixes.
+1) UI support for work graph backing memory.
+2) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -20,10 +19,17 @@ Known Issues
 (7) If a memory dump is created by shutting down the application being traced and there are a large number of resource names, some names may not be included in the RMV file.  The work-around is to use the Dump trace button in the Radeon Developer Panel and wait for the button to be disabled before shutting down the application.  This gives the buffered names a chance to be processed.
 (8) The Shader core clock frequency and Video memory clock frequency for memory traces captured on Linux may be incorrectly displayed as 0 Mhz.
 (9) The Device name may be blank for memory traces captured on Linux with some APUs.
-(10) Installations of Ubuntu 20.04 or newer may have the RADV open source Vulkan® driver installed by default on the system. As a result, after an amdgpu-pro driver install, the default Vulkan ICD may be the RADV ICD. In order to capture a memory trace, Vulkan applications must be using the amdgpu-pro Vulkan ICD. The default Vulkan ICD can be overridden by setting the following environment variable before launching a Vulkan application: VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json
+(10) With the introduction of 25.20-based Linux drivers, the AMDVLK driver is no longer included in the amdgpu-pro driver package. This is a result of the AMDVLK open-source project being discontinued as mentioned here (https://github.com/GPUOpen-Drivers/AMDVLK/discussions/416). Instead, the RADV open-source Vulkan® driver is installed by default. Consequently, the Radeon Developer Panel does not support capturing data from Vulkan applications when using these newer driver releases. To analyze Linux Vulkan workloads with Radeon GPU Profiler (RGP), Radeon Raytracing Analyzer (RRA), or Radeon Memory Visualizer (RMV), users can opt for a 25.10-based driver. Alternatively, analysis can be performed using the data capture mechanism integrated within the RADV driver, although this method is not supported by the Radeon Developer Panel. For more information on configuring RADV, refer to the environment variable documentation, specifically the MESA_VK_TRACE_* environment variables (https://docs.mesa3d.org/envvars.html#envvar-MESA_VK_TRACE) which can be utilized for enabling and configuring tracing.
+(11) When using a 25.10-based driver or older: Installations of Ubuntu 20.04 or newer may have the RADV open source Vulkan driver installed by default on the system. As a result, after an amdgpu-pro driver install, the default Vulkan ICD may be the RADV ICD. In order to capture a profile, Vulkan applications must be using the amdgpu-pro Vulkan ICD. The default Vulkan ICD can be overridden by setting the following environment variable before launching a Vulkan application: VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json.
 
 Release Notes History
 ------------------------------------
+
+V1.13 Changes
+------------------------------------
+1) Optimize performance for the Allocation overview pane, helpful when allocations contain thousands of resources and/or aliasing is heavily used.
+2) Allow resource properties to be copied to the clipboard in the Resource details pane.
+3) Bug/stability fixes.
 
 V1.12 Changes
 ------------------------------------

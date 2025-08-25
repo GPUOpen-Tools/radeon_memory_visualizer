@@ -145,6 +145,9 @@ namespace rmv
         case kRmtResourceUsageTypeInternal:
             out = rmv::RMVSettings::Get().GetColorResourceInternal();
             break;
+        case kRmtResourceUsageTypeWorkGraph:
+            out = rmv::RMVSettings::Get().GetColorResourceWorkGraph();
+            break;
 
         default:
             out = QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color;

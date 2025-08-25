@@ -662,4 +662,3 @@ namespace neosmart {
 } // namespace neosmart
 
 #endif //_WIN32
-

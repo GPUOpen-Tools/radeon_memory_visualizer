@@ -91,8 +91,10 @@ RmtResourceUsageType RmtResourceGetUsageType(const RmtResource* resource)
     case kRmtResourceTypeVideoEncoder:
     case kRmtResourceTypeQueryHeap:
     case kRmtResourceTypeIndirectCmdGenerator:
-    case kRmtResourceTypeWorkGraph:
         return kRmtResourceUsageTypeInternal;
+
+    case kRmtResourceTypeWorkGraph:
+        return kRmtResourceUsageTypeWorkGraph;
 
     default:
         break;

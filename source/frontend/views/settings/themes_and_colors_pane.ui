@@ -1213,6 +1213,32 @@
               </property>
              </widget>
             </item>
+            <item row="3" column="4">
+             <widget class="ThemesAndColorsItemButton" name="button_resource_work_graph_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Work graph</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="3">
              <widget class="ThemesAndColorsItemButton" name="button_snapshots_compared_">
               <property name="sizePolicy">

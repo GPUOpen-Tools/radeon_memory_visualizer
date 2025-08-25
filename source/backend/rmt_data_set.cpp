@@ -904,10 +904,14 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
                 // Get resource name from token. It'll be the first part of the payload, and null-terminated.
                 const char* resource_name = reinterpret_cast<const char*>(current_token->userdata_token.payload_cache);
 
-                error_code = RmtResourceUserdataTrackResourceNameToken(current_token->userdata_token.correlation_identifier,
-                                                                       resource_name,
-                                                                       current_token->common.timestamp,
-                                                                       current_token->userdata_token.time_delay);
+                // Ignore token if name is empty string or no resource identifier specified.
+                if (strlen(resource_name) > 0 && (current_token->userdata_token.correlation_identifier != 0))
+                {
+                    error_code = RmtResourceUserdataTrackResourceNameToken(current_token->userdata_token.correlation_identifier,
+                                                                           resource_name,
+                                                                           current_token->common.timestamp,
+                                                                           current_token->userdata_token.time_delay);
+                }
                 RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
             }
 

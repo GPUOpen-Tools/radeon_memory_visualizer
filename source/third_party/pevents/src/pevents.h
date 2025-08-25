@@ -41,4 +41,3 @@ namespace neosmart {
     int PulseEvent(neosmart_event_t event);
 #endif
 } // namespace neosmart
-

@@ -188,6 +188,12 @@ Note that the sum of the aliased resource sizes (2 KiB, 3 Kib 1 KiB and 2 KiB)
 total 8 KiB plus the non-aliased resource size of 2 KiB adds up to match the
 reported Total allocated and bound size.
 
+Starting with release 1.14, work graph resources have been added as a new resource
+type, since they are distinct from other resources. To learn more about work graphs
+and work graph backing memory, please see
+`this article <https://gpuopen.com/learn/gpu-work-graphs/gpu-work-graphs-intro/>`_
+, which includes links to the official DirectX 12 documentation.
+
 
 
 Allocation overview

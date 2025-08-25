@@ -248,8 +248,6 @@ namespace rmv
 
     void TraceManager::FinalizeTraceLoading(TraceLoadReturnCode error_code)
     {
-        bool remove_from_list = false;
-
         if (error_code != kTraceLoadReturnSuccess)
         {
             // If there's an error loading the trace and it is already in the recent traces list,
@@ -290,7 +288,7 @@ namespace rmv
         }
 
         bool read_only = false;
-        if (DataSetValid())
+        if (DataSetValid() && error_code == kTraceLoadReturnSuccess)
         {
             const RmtDataSet* data_set = GetDataSet();
             if (data_set->flags.read_only == true)
@@ -298,13 +296,10 @@ namespace rmv
                 read_only = true;
             }
 
-            RMVSettings::Get().TraceLoaded(active_trace_path_, data_set, remove_from_list);
+            RMVSettings::Get().TraceLoaded(active_trace_path_, data_set, false);
             RMVSettings::Get().SaveSettings();
 
-            if (error_code == kTraceLoadReturnSuccess)
-            {
-                emit TraceOpened();
-            }
+            emit TraceOpened();
         }
         rmv::LoadAnimationManager::Get().StopAnimation();
         disconnect(this, &TraceManager::TraceLoadThreadFinished, this, &TraceManager::FinalizeTraceLoading);
