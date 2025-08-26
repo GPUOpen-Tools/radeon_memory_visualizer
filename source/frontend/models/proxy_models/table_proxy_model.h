@@ -52,6 +52,14 @@ namespace rmv
         /// @return The contents at row, column.
         qulonglong GetData(int row, int column);
 
+        /// @brief Get content from proxy model.
+        ///
+        /// @param [in] row    The row where the data is located.
+        /// @param [in] column The column where the data is located.
+        ///
+        /// @return The string contents at row, column.
+        QString GetDataAsStr(int row, int column);
+
         /// @brief Find a model index corresponding to the passed in data.
         ///
         /// @param [in] lookup The value to find.

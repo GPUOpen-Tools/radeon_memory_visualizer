@@ -101,6 +101,9 @@ private slots:
     /// Make sure the selected item (if there is one) is visible.
     void ScrollToSelectedResource();
 
+    /// @brief Handle what happens when user click the dump resources button.
+    void DumpResources();
+
 private:
     /// @brief Refresh what's visible on the UI.
     void Refresh();

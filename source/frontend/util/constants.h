@@ -137,6 +137,11 @@ namespace rmv
         static const QString kSettingsUnitsMinutes      = "Minutes";
         static const QString kSettingsUnitsHours        = "Hours";
 
+        // Byte units.
+        static const QString kSettingsByteUnitsDefault = "Default";
+        static const QString kSettingsByteUnitsBinary  = "Binary";
+        static const QString kSettingsByteUnitsDecimal = "Decimal";
+
         // Help file locations for trace and RMV.
         static const QString kTraceHelpFile       = "/help/rdp/index.html";
         static const QString kRmvHelpFile         = "/help/rmv/index.html";

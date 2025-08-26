@@ -16,6 +16,12 @@
 
 using namespace driver_overrides;
 
+static const QVector<QString> ByteUnits {
+    rmv::text::kSettingsByteUnitsDefault,
+    rmv::text::kSettingsByteUnitsBinary,
+    rmv::text::kSettingsByteUnitsDecimal
+};
+
 SettingsPane::SettingsPane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::SettingsPane)
@@ -53,6 +59,16 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->units_combo_push_button_->SetSelectedRow(0);
     connect(ui_->units_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::TimeUnitsChanged);
 
+    // Populate the bytes combo box.
+    rmv::widget_util::InitSingleSelectComboBox(parent, ui_->byte_units_combo_push_button_, rmv::text::kSettingsByteUnitsDefault, false);
+    ui_->byte_units_combo_push_button_->ClearItems();
+    for (const QString& unit : ByteUnits)
+    {
+        ui_->byte_units_combo_push_button_->AddItem(unit);
+    }
+    ui_->byte_units_combo_push_button_->SetSelectedRow(0);
+    connect(ui_->byte_units_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::ByteUnitsChanged);
+
     connect(ui_->check_for_updates_on_startup_checkbox_, &CheckBoxWidget::stateChanged, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
 }
 
@@ -68,6 +84,10 @@ void SettingsPane::showEvent(QShowEvent* event)
     int units = rmv::RMVSettings::Get().GetUnits();
     UpdateTimeComboBox(units);
 
+    // Update the byte unit combo box push button text.
+    QString byte_units = rmv::RMVSettings::Get().GetByteUnits();
+    UpdateByteComboBox(byte_units);
+
     QWidget::showEvent(event);
 }
 
@@ -81,6 +101,20 @@ void SettingsPane::UpdateTimeComboBox(int units)
     ui_->units_combo_push_button_->SetSelectedRow(units);
 }
 
+void SettingsPane::UpdateByteComboBox(const QString& units)
+{
+    int index = 0;
+    for (; index < ByteUnits.size(); ++index)
+    {
+        if (ByteUnits[index] == units)
+        {
+            break;
+        }
+    }
+
+    ui_->byte_units_combo_push_button_->SetSelectedRow(index);
+}
+
 void SettingsPane::TimeUnitsChanged()
 {
     int index = ui_->units_combo_push_button_->CurrentRow();
@@ -92,6 +126,13 @@ void SettingsPane::TimeUnitsChanged()
     }
     rmv::RMVSettings::Get().SetUnits(static_cast<TimeUnitType>(index));
     rmv::RMVSettings::Get().SaveSettings();
+}
+
+void SettingsPane::ByteUnitsChanged()
+{
+    int index = ui_->byte_units_combo_push_button_->CurrentRow();
+
+    rmv::RMVSettings::Get().SetByteUnits(ByteUnits[index]);
 }
 
 void SettingsPane::SwitchTimeUnits()

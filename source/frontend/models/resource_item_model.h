@@ -26,13 +26,16 @@ namespace rmv
         kResourceColumnCompareId,
         kResourceColumnName,
         kResourceColumnVirtualAddress,
+        kResourceColumnUsage,
+        kResourceColumnDimension,
+        kResourceColumnMipLevel,
+        kResourceColumnFormat,
         kResourceColumnSize,
         kResourceColumnPreferredHeap,
         kResourceColumnMappedInvisible,
         kResourceColumnMappedLocal,
         kResourceColumnMappedHost,
         kResourceColumnMappedNone,
-        kResourceColumnUsage,
 
         // Hidden, these columns are used as proxies for sorting by other columns.
         kResourceColumnAllocationIdInternal,

@@ -206,6 +206,7 @@ namespace rmv
         default_settings_[kSettingLastFileOpenLocation]                     = {"LastFileOpenLocation", ""};
         default_settings_[kSettingGeneralCheckForUpdatesOnStartup]          = {"CheckForUpdatesOnStartup", "False"};
         default_settings_[kSettingGeneralTimeUnits]                         = {"TimeUnits", rmv::text::kSettingsUnitsSeconds};
+        default_settings_[kSettingGeneralByteUnits]                         = {"ByteUnits", rmv::text::kSettingsByteUnitsDefault};
         default_settings_[kSettingGeneralDriverOverridesAllowNotifications] = {"DriverOverridesAllowNotifications", "True"};
 
         default_settings_[kSettingThemesAndColorsPalette] = {"ColorPalette",
@@ -362,6 +363,11 @@ namespace rmv
         }
     }
 
+    QString RMVSettings::GetByteUnits() const
+    {
+        return active_settings_[kSettingGeneralByteUnits].value;
+    }
+
     int RMVSettings::GetWindowWidth() const
     {
         return GetIntValue(kSettingMainWindowWidth);
@@ -416,6 +422,19 @@ namespace rmv
         default:
             AddPotentialSetting(default_settings_[kSettingGeneralTimeUnits].name, rmv::text::kSettingsUnitsHours);
             break;
+        }
+        SaveSettings();
+    }
+
+    void RMVSettings::SetByteUnits(const QString& units)
+    {
+        if (units == rmv::text::kSettingsByteUnitsBinary || units == rmv::text::kSettingsByteUnitsDecimal)
+        {
+            AddPotentialSetting(default_settings_[kSettingGeneralByteUnits].name, units);
+        }
+        else
+        {
+            AddPotentialSetting(default_settings_[kSettingGeneralByteUnits].name, rmv::text::kSettingsByteUnitsDefault);
         }
         SaveSettings();
     }

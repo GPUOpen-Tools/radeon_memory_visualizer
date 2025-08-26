@@ -34,13 +34,16 @@ namespace rmv
         setSourceModel(model);
         SetFilterKeyColumns({kResourceColumnName,
                              kResourceColumnVirtualAddress,
+                             kResourceColumnUsage,
+                             kResourceColumnDimension,
+                             kResourceColumnMipLevel,
+                             kResourceColumnFormat,
                              kResourceColumnSize,
                              kResourceColumnMappedInvisible,
                              kResourceColumnMappedLocal,
                              kResourceColumnMappedHost,
                              kResourceColumnMappedNone,
-                             kResourceColumnPreferredHeap,
-                             kResourceColumnUsage});
+                             kResourceColumnPreferredHeap});
 
         view->setModel(this);
         return model;
@@ -155,6 +158,48 @@ namespace rmv
         {
             const qulonglong left_data  = left.data(Qt::UserRole).toULongLong();
             const qulonglong right_data = right.data(Qt::UserRole).toULongLong();
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
+            return left_data < right_data;
+        }
+        else if ((left.column() == kResourceColumnDimension && right.column() == kResourceColumnDimension))
+        {
+            const QList<QVariant> left_data  = left.data(Qt::UserRole).toList();
+            const QList<QVariant> right_data = right.data(Qt::UserRole).toList();
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
+
+            qlonglong left_pixels = 1;
+            qlonglong right_pixels = 1;
+            for (const QVariant& data : left_data)
+            {
+                left_pixels *= data.toInt();
+            }
+            for (const QVariant& data : right_data)
+            {
+                right_pixels *= data.toInt();
+            }
+
+            return left_pixels < right_pixels;
+        }
+        else if ((left.column() == kResourceColumnMipLevel && right.column() == kResourceColumnMipLevel))
+        {
+            const int left_data  = left.data(Qt::UserRole).toInt();
+            const int right_data = right.data(Qt::UserRole).toInt();
+            if (left_data == right_data)
+            {
+                return SortIdentical(left, right);
+            }
+            return left_data < right_data;
+        }
+        else if ((left.column() == kResourceColumnFormat && right.column() == kResourceColumnFormat))
+        {
+            const QString left_data  = left.data(Qt::UserRole).toString();
+            const QString right_data = right.data(Qt::UserRole).toString();
             if (left_data == right_data)
             {
                 return SortIdentical(left, right);

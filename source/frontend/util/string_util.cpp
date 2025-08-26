@@ -12,6 +12,8 @@
 
 #include "qt_common/utils/qt_util.h"
 
+#include "settings/rmv_settings.h"
+
 QString rmv::string_util::ToUpperCase(const QString& string)
 {
     QString out;
@@ -69,8 +71,19 @@ QString rmv::string_util::LocalizedValuePrecise(double value)
     return str;
 }
 
-QString rmv::string_util::LocalizedValueMemory(const double value, const bool base_10, const bool use_round, const bool include_decimal)
+QString rmv::string_util::LocalizedValueMemory(const double value, const bool in_base_10, const bool use_round, const bool include_decimal)
 {
+    QString ByteUnits = RMVSettings::Get().GetByteUnits();
+    bool base_10 = in_base_10;
+    if (ByteUnits == rmv::text::kSettingsByteUnitsBinary)
+    {
+        base_10 = false;
+    }
+    else if (ByteUnits == rmv::text::kSettingsByteUnitsDecimal)
+    {
+        base_10 = true;
+    }
+
     double multiple;
     if (base_10)
     {

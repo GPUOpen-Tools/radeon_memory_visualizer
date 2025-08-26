@@ -62,6 +62,19 @@ namespace rmv
         return out;
     }
 
+    QString TableProxyModel::GetDataAsStr(int row, int column)
+    {
+        QString out("null");
+
+        const QModelIndex model_index = index(row, column, QModelIndex());
+
+        if (model_index.isValid() == true)
+        {
+            out = data(model_index, Qt::DisplayRole).toString();
+        }
+        return out;
+    }
+
     QModelIndex TableProxyModel::FindModelIndex(qulonglong lookup, int column) const
     {
         QModelIndex out_model_index;

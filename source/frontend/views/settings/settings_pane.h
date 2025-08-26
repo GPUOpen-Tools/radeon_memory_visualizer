@@ -48,6 +48,9 @@ public slots:
     /// @brief Slot to handle what happens when the time units combo box has changed.
     void TimeUnitsChanged();
 
+    /// @brief Slot to handle what happens when the byte units combo box has changed.
+    void ByteUnitsChanged();
+
 private:
     /// @brief Update the time unit combo box.
     ///
@@ -56,6 +59,11 @@ private:
     ///
     /// @param [in] units The time units.
     void UpdateTimeComboBox(int units);
+
+    /// @brief Update the byte unit combo box.
+    ///
+    /// @param [in] units The byte units.
+    void UpdateByteComboBox(const QString& units);
 
     Ui::SettingsPane* ui_;  ///< Pointer to the Qt UI design.
 };
