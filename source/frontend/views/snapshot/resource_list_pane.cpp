@@ -283,7 +283,7 @@ void ResourceListPane::DumpResources()
     QTextStream Stream(&File);
     auto proxy_model_ = model_->GetResourceProxyModel();
 
-    for (int32_t j = rmv::kResourceColumnName; j < rmv::kResourceColumnMappedNone; j++)
+    for (int32_t j = rmv::kResourceColumnName; j <= rmv::kResourceColumnMappedNone; j++)
     {
         Stream << proxy_model_->headerData(j, Qt::Horizontal).toString() << ",";
     }
@@ -291,7 +291,7 @@ void ResourceListPane::DumpResources()
 
     for (int32_t i = 0; i < proxy_model_->rowCount(); i++)
     {
-        for (int32_t j = rmv::kResourceColumnName; j < rmv::kResourceColumnMappedNone; j++)
+        for (int32_t j = rmv::kResourceColumnName; j <= rmv::kResourceColumnMappedNone; j++)
         {
             Stream << proxy_model_->GetDataAsStr(i, j) << ",";
         }
