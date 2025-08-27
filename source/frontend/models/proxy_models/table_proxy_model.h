@@ -44,6 +44,12 @@ namespace rmv
         /// @param [in] max The maximum size.
         void SetSizeFilter(uint64_t min, uint64_t max);
 
+        /// @brief Specify range to use as mip level filter.
+        ///
+        /// @param [in] min The minimum mip level.
+        /// @param [in] max The maximum mip level.
+        void SetMipLevelFilter(uint64_t min, uint64_t max);
+
         /// @brief Get content from proxy model.
         ///
         /// @param [in] row    The row where the data is located.
@@ -98,6 +104,15 @@ namespace rmv
         /// @return true if the table item at row,column is to be shown, false if not.
         bool FilterSizeSlider(int row, int column, const QModelIndex& source_parent) const;
 
+        /// @brief Filter the mip level slider.
+        ///
+        /// @param [in] row           The row to apply the mip level filter to.
+        /// @param [in] column        The column to apply the mip level filter to.
+        /// @param [in] source_parent The parent model index in the source model.
+        ///
+        /// @return true if the table item at row,column is to be shown, false if not.
+        bool FilterMipLevelSlider(int row, int column, const QModelIndex& source_parent) const;
+
         /// @brief Filter the search string.
         ///
         /// @param [in] row           The row to apply the size filter to.
@@ -117,6 +132,8 @@ namespace rmv
         QString          search_filter_;   ///< The current search string.
         uint64_t         min_size_;        ///< The minimum size of the size filter.
         uint64_t         max_size_;        ///< The maximum size of the size filter.
+        uint64_t         min_mip_level_;   ///< The minimum size of the mip level filter.
+        uint64_t         max_mip_level_;   ///< The maximum size of the mip level filter.
     };
 }  // namespace rmv
 

@@ -66,6 +66,11 @@ namespace rmv
             return false;
         }
 
+        if (FilterMipLevelSlider(source_row, kResourceColumnMipLevel, source_parent) == false)
+        {
+            return false;
+        }
+
         // Apply the range-based searching to the virtual address and resource size.
         // Only fail if the search string is outside the address range.
         bool found_range = false;

@@ -188,3 +188,36 @@ QString rmv::string_util::GetMemoryRangeString(const uint64_t min_memory_size, c
 
     return range_string;
 }
+
+QString rmv::string_util::GetValueRangeString(const uint64_t min, const uint64_t max)
+{
+    const static char kHyphen[]   = " - ";
+    const static char kInfinity[] = "\xE2\x88\x9E";
+    QString           range_string;
+
+    // Append string for range start.
+    if (min == UINT64_MAX)
+    {
+        range_string += kInfinity;
+    }
+    else
+    {
+        QString value = string_util::LocalizedValue(min);
+        range_string += value;
+    }
+
+    range_string += kHyphen;
+
+    // Append string for range end.
+    if (max == UINT64_MAX)
+    {
+        range_string += kInfinity;
+    }
+    else
+    {
+        QString value = string_util::LocalizedValue(max);
+        range_string += value;
+    }
+
+    return range_string;
+}

@@ -55,6 +55,7 @@ namespace rmv
     static const int kHeapComboBoxWidth     = 140;
     static const int kResourceComboBoxWidth = 140;
     static const int kSizeSliderRange       = 25;
+    static const int kMipSliderRange       = 16;
 
     // Control window sizes.
     static const int   kDesktopMargin                      = 25;

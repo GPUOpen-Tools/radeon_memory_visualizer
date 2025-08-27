@@ -16,6 +16,7 @@
 RmvRangeSlider::RmvRangeSlider(QWidget* parent)
     : DoubleSliderWidget(parent)
     , range_value_label_(nullptr)
+    , slider_type_(ESliderType::Size)
 {
 }
 
@@ -37,10 +38,23 @@ void RmvRangeSlider::Init()
     range_value_label_ = new RmvFixedWidthLabel(container);
     range_value_label_->setObjectName("range_value_label_");
 
-    // Build a formatted string with the maximum expected width.
-    // The label will reserve this much horizontal space in the layout so that the slider to the left isn't affected when the value string changes length.
-    QString widest_range_string =
-        rmv::string_util::LocalizedValueMemory(999, false, false, false) + " - " + rmv::string_util::LocalizedValueMemory(999, false, false, false);
+    QString widest_range_string;
+
+    switch (slider_type_)
+    {
+    case ESliderType::Size:
+        // Build a formatted string with the maximum expected width.
+        // The label will reserve this much horizontal space in the layout so that the slider to the left isn't affected when the value string changes length.
+        widest_range_string =
+            rmv::string_util::LocalizedValueMemory(999, false, false, false) + " - " + rmv::string_util::LocalizedValueMemory(999, false, false, false);
+        break;
+    case ESliderType::MipLevel:
+    default:
+        widest_range_string = rmv::string_util::GetValueRangeString(999, 999);
+        SetHandleMovementMode(kNoCrossing);
+        break;
+    }
+
     range_value_label_->SetWidestTextString(widest_range_string);
     layout->addWidget(range_value_label_);
     parentWidget()->layout()->replaceWidget(this, container);
@@ -52,12 +66,38 @@ void RmvRangeSlider::Init()
     connect(this, &DoubleSliderWidget::SpanChanged, this, &RmvRangeSlider::UpdateValues);
 }
 
+ESliderType RmvRangeSlider::SliderType() const
+{
+    return slider_type_;
+}
+
+void RmvRangeSlider::setSliderType(ESliderType slider_type)
+{
+    slider_type_ = slider_type;
+}
+
+
 void RmvRangeSlider::UpdateValues(const int min_value, const int max_value)
 {
     if (range_value_label_ != nullptr)
     {
-        const uint64_t lower_range = rmv_util::CalculateSizeThresholdFromStepValue(min_value, rmv::kSizeSliderRange - 1);
-        const uint64_t upper_range = rmv_util::CalculateSizeThresholdFromStepValue(max_value, rmv::kSizeSliderRange - 1);
-        range_value_label_->setText(rmv::string_util::GetMemoryRangeString(lower_range, upper_range));
+        switch (slider_type_)
+        {
+        case ESliderType::Size:
+        {
+            const uint64_t lower_range = rmv_util::CalculateSizeThresholdFromStepValue(min_value, rmv::kSizeSliderRange - 1);
+            const uint64_t upper_range = rmv_util::CalculateSizeThresholdFromStepValue(max_value, rmv::kSizeSliderRange - 1);
+            range_value_label_->setText(rmv::string_util::GetMemoryRangeString(lower_range, upper_range));
+            break;
+        }
+        case ESliderType::MipLevel:
+        default:
+        {
+            const uint64_t lower_range = rmv_util::CalculateThresholdFromStepValue(min_value, rmv::kMipSliderRange - 1);
+            const uint64_t upper_range = rmv_util::CalculateThresholdFromStepValue(max_value, rmv::kMipSliderRange - 1);
+            range_value_label_->setText(rmv::string_util::GetValueRangeString(lower_range, upper_range));
+            break;
+        }
+        }
     }
 }

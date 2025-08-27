@@ -13,6 +13,8 @@ namespace rmv
         : QSortFilterProxyModel(parent)
         , min_size_(0)
         , max_size_(UINT64_MAX)
+        , min_mip_level_(1)
+        , max_mip_level_(UINT64_MAX)
     {
     }
 
@@ -40,6 +42,12 @@ namespace rmv
     {
         min_size_ = min;
         max_size_ = max;
+    }
+
+    void TableProxyModel::SetMipLevelFilter(uint64_t min, uint64_t max)
+    {
+        min_mip_level_ = min;
+        max_mip_level_ = max;
     }
 
     uint64_t TableProxyModel::GetIndexValue(const QModelIndex& index) const
@@ -106,6 +114,14 @@ namespace rmv
         const uint64_t     size              = size_filter_index.data(Qt::UserRole).toULongLong(&ok);
 
         return !(size < min_size_ || size > max_size_);
+    }
+
+    bool TableProxyModel::FilterMipLevelSlider(int row, int column, const QModelIndex& source_parent) const
+    {
+        const QModelIndex&  mip_filter_index    = sourceModel()->index(row, column, source_parent);
+        const uint32_t      mip_level           = mip_filter_index.data(Qt::UserRole).toUInt();
+
+        return mip_level == 0 || !(mip_level < min_mip_level_ || mip_level > max_mip_level_);
     }
 
     bool TableProxyModel::FilterSearchString(int row, const QModelIndex& source_parent) const

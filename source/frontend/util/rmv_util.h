@@ -84,6 +84,14 @@ namespace rmv_util
     /// @return The calculated value.
     uint64_t CalculateSizeThresholdFromStepValue(const uint32_t step_value, const uint32_t max_steps);
 
+    /// @brief Calculate the mapped value given a step value.
+    ///
+    /// @param [in]  step_value                     An unmapped whole number used to calculate a mapped threshold value.
+    /// @param [in]  max_steps                      The maximum number of steps in the range.
+    ///
+    /// @return The calculated value.
+    uint64_t CalculateThresholdFromStepValue(const uint32_t step_value, const uint32_t max_steps);
+
     /// @brief Retrieves the name of a virtual allocation or a string containing the base address in hexadecimal form.
     ///
     /// @param [in] virtual_allocation              A pointer to the virtual allocation object.
