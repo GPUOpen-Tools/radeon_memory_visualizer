@@ -250,16 +250,31 @@ namespace rmv
         UpdateLabels();
     }
 
+    void MemoryLeakFinderModel::FilterByMipLevelChanged(int min_value, int max_value)
+    {
+        const uint64_t scaled_min = rmv_util::CalculateThresholdFromStepValue(min_value, rmv::kMipSliderRange - 1);
+        const uint64_t scaled_max = rmv_util::CalculateThresholdFromStepValue(max_value, rmv::kMipSliderRange - 1);
+
+        proxy_model_->SetMipLevelFilter(scaled_min, scaled_max);
+        proxy_model_->invalidate();
+
+        UpdateLabels();
+    }
+
     void MemoryLeakFinderModel::UpdatePreferredHeapList(const QString& preferred_heap_filter)
     {
         proxy_model_->SetPreferredHeapFilter(preferred_heap_filter);
         proxy_model_->invalidate();
+
+        UpdateLabels();
     }
 
     void MemoryLeakFinderModel::UpdateResourceUsageList(const QString& resource_usage_filter)
     {
         proxy_model_->SetResourceUsageFilter(resource_usage_filter);
         proxy_model_->invalidate();
+
+        UpdateLabels();
     }
 
     MemoryLeakFinderProxyModel* MemoryLeakFinderModel::GetResourceProxyModel() const

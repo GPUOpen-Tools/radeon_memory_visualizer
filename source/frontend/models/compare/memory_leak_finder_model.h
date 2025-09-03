@@ -84,6 +84,12 @@ namespace rmv
         /// @param [in] max_value Maximum value of slider span.
         void FilterBySizeChanged(int min_value, int max_value);
 
+        /// @brief Handle what happens when user changes the 'filter by mip level' slider.
+        ///
+        /// @param [in] min_value Minimum value of slider span.
+        /// @param [in] max_value Maximum value of slider span.
+        void FilterByMipLevelChanged(int min_value, int max_value);
+
         /// @brief Update the list of heaps selected. This is set up from the preferred heap combo box.
         ///
         /// @param [in] preferred_heap_filter The regular expression string of selected heaps.

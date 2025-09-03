@@ -24,7 +24,7 @@ enum class ESliderType : int8_t
 /// @brief Range slider that extends the double slider widget by adding a range value label.
 class RmvRangeSlider : public DoubleSliderWidget
 {
-    Q_PROPERTY(int SliderType READ SliderType WRITE setSliderType)
+    Q_PROPERTY(ESliderType SliderType READ SliderType WRITE setSliderType)
 public:
     /// @brief Constructor
     ///
