@@ -352,6 +352,29 @@
            </widget>
           </item>
           <item>
+           <widget class="ScaledLabel" name="label_6_">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Filter by mip level:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="RmvRangeSlider" name="mip_slider_">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="SliderType">
+             <enum>ESliderType::MipLevel</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontal_spacer_2_">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>

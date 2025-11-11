@@ -98,6 +98,8 @@ enum RMVSettingID
     kSettingThemesAndColorsCommitTypePlaced,
     kSettingThemesAndColorsCommitTypeVirtual,
 
+    kSettingGeneralByteUnits,
+
     kSettingCount,
 };
 
@@ -221,6 +223,11 @@ namespace rmv
         /// @return A TimeUnitType value.
         TimeUnitType GetUnits() const;
 
+        /// @brief Get byte units from the settings.
+        ///
+        /// @return The string value for Byte Unit.
+        QString GetByteUnits() const;
+
         /// @brief Get last file open location from the settings.
         ///
         /// @return Path to last opened file dir.
@@ -264,6 +271,11 @@ namespace rmv
         ///
         /// @param [in] units The new value of the timing units.
         void SetUnits(const TimeUnitType units);
+
+        /// @brief Set the byte units in the settings.
+        ///
+        /// @param [in] units The new value of the byte units.
+        void SetByteUnits(const QString& units);
 
         /// @brief Get the value of kSettingGeneralCheckForUpdatesOnStartup in the settings.
         ///

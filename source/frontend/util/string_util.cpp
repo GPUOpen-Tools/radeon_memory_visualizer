@@ -12,6 +12,8 @@
 
 #include "qt_common/utils/qt_util.h"
 
+#include "settings/rmv_settings.h"
+
 QString rmv::string_util::ToUpperCase(const QString& string)
 {
     QString out;
@@ -69,8 +71,19 @@ QString rmv::string_util::LocalizedValuePrecise(double value)
     return str;
 }
 
-QString rmv::string_util::LocalizedValueMemory(const double value, const bool base_10, const bool use_round, const bool include_decimal)
+QString rmv::string_util::LocalizedValueMemory(const double value, const bool in_base_10, const bool use_round, const bool include_decimal)
 {
+    QString ByteUnits = RMVSettings::Get().GetByteUnits();
+    bool base_10 = in_base_10;
+    if (ByteUnits == rmv::text::kSettingsByteUnitsBinary)
+    {
+        base_10 = false;
+    }
+    else if (ByteUnits == rmv::text::kSettingsByteUnitsDecimal)
+    {
+        base_10 = true;
+    }
+
     double multiple;
     if (base_10)
     {
@@ -170,6 +183,39 @@ QString rmv::string_util::GetMemoryRangeString(const uint64_t min_memory_size, c
     {
         QString value = string_util::LocalizedValueMemory(max_memory_size, false, false, false);
         width += value.length();
+        range_string += value;
+    }
+
+    return range_string;
+}
+
+QString rmv::string_util::GetValueRangeString(const uint64_t min, const uint64_t max)
+{
+    const static char kHyphen[]   = " - ";
+    const static char kInfinity[] = "\xE2\x88\x9E";
+    QString           range_string;
+
+    // Append string for range start.
+    if (min == UINT64_MAX)
+    {
+        range_string += kInfinity;
+    }
+    else
+    {
+        QString value = string_util::LocalizedValue(min);
+        range_string += value;
+    }
+
+    range_string += kHyphen;
+
+    // Append string for range end.
+    if (max == UINT64_MAX)
+    {
+        range_string += kInfinity;
+    }
+    else
+    {
+        QString value = string_util::LocalizedValue(max);
         range_string += value;
     }
 

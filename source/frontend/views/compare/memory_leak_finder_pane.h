@@ -59,6 +59,12 @@ private slots:
     /// @param [in] max_value Maximum value of slider span.
     void FilterBySizeSliderChanged(int min_value, int max_value);
 
+    /// @brief Slot to handle what happens when the 'filter by mip level' slider changes.
+    ///
+    /// @param [in] min_value Minimum value of slider span.
+    /// @param [in] max_value Maximum value of slider span.
+    void FilterByMipLevelSliderChanged(int min_value, int max_value);
+
     /// @brief Checkboxes on the top were clicked.
     void CompareFilterChanged();
 

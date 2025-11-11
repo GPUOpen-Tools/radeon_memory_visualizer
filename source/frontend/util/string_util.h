@@ -88,6 +88,13 @@ namespace rmv
         /// @return The localized string.
         QString GetMemoryRangeString(const uint64_t min_memory_size, const uint64_t max_memory_size);
 
+        /// @brief Builds a range string for two int values.
+        ///
+        /// @param [in] min           The lower value of the range.
+        /// @param [in] max           The upper value of the range.
+        ///
+        /// @return The localized string.
+        QString GetValueRangeString(const uint64_t min, const uint64_t max);
     }  // namespace string_util
 }  // namespace rmv
 

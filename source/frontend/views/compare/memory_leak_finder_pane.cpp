@@ -63,6 +63,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->search_box_, ui_->size_slider_);
     rmv::widget_util::InitRangeSlider(ui_->size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->mip_slider_);
 
     ui_->base_allocations_checkbox_->Initialize(false, rmv::RMVSettings::Get().GetColorSnapshotViewed(), Qt::black);
     ui_->both_allocations_checkbox_->Initialize(
@@ -72,6 +73,7 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     CompareFilterChanged();
 
     connect(ui_->size_slider_, &DoubleSliderWidget::SpanChanged, this, &MemoryLeakFinderPane::FilterBySizeSliderChanged);
+    connect(ui_->mip_slider_, &DoubleSliderWidget::SpanChanged, this, &MemoryLeakFinderPane::FilterByMipLevelSliderChanged);
     connect(ui_->search_box_, &QLineEdit::textChanged, this, &MemoryLeakFinderPane::SearchBoxChanged);
     connect(ui_->resource_table_view_, &QTableView::doubleClicked, this, &MemoryLeakFinderPane::TableDoubleClicked);
     connect(ui_->both_allocations_checkbox_, &RMVColoredCheckbox::Clicked, this, &MemoryLeakFinderPane::CompareFilterChanged);
@@ -170,6 +172,8 @@ void MemoryLeakFinderPane::Reset()
 
     ui_->size_slider_->SetLowerValue(0);
     ui_->size_slider_->SetUpperValue(ui_->size_slider_->maximum());
+    ui_->mip_slider_->SetLowerValue(ui_->mip_slider_->minimum());
+    ui_->mip_slider_->SetUpperValue(ui_->mip_slider_->maximum());
     ui_->search_box_->setText("");
 }
 
@@ -188,6 +192,12 @@ void MemoryLeakFinderPane::SearchBoxChanged()
 void MemoryLeakFinderPane::FilterBySizeSliderChanged(int min_value, int max_value)
 {
     model_->FilterBySizeChanged(min_value, max_value);
+    SetMaximumResourceTableHeight();
+}
+
+void MemoryLeakFinderPane::FilterByMipLevelSliderChanged(int min_value, int max_value)
+{
+    model_->FilterByMipLevelChanged(min_value, max_value);
     SetMaximumResourceTableHeight();
 }
 

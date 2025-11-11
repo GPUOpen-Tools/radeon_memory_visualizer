@@ -134,6 +134,17 @@ namespace rmv
         UpdateBottomLabels();
     }
 
+    void ResourceListModel::FilterByMipLevelChanged(int min_value, int max_value)
+    {
+        const uint64_t scaled_min = rmv_util::CalculateThresholdFromStepValue(min_value, rmv::kMipSliderRange - 1);
+        const uint64_t scaled_max = rmv_util::CalculateThresholdFromStepValue(max_value, rmv::kMipSliderRange - 1);
+
+        proxy_model_->SetMipLevelFilter(scaled_min, scaled_max);
+        proxy_model_->invalidate();
+        
+        UpdateBottomLabels();
+    }
+
     ResourceProxyModel* ResourceListModel::GetResourceProxyModel() const
     {
         return proxy_model_;

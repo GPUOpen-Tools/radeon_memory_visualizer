@@ -57,6 +57,12 @@ namespace rmv
         /// @param [in] max_value Maximum value of slider span.
         void FilterBySizeChanged(int min_value, int max_value);
 
+        /// @brief Handle what happens when the mip level filter changes.
+        ///
+        /// @param [in] min_value Minimum value of slider span.
+        /// @param [in] max_value Maximum value of slider span.
+        void FilterByMipLevelChanged(int min_value, int max_value);
+
         /// @brief Read the dataset and update model.
         void Update();
 

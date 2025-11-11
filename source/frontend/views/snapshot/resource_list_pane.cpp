@@ -10,6 +10,8 @@
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QScrollBar>
+#include <QFileDialog>
+#include <QDir>
 
 #include "qt_common/custom_widgets/double_slider_widget.h"
 
@@ -64,12 +66,16 @@ ResourceListPane::ResourceListPane(QWidget* parent)
 
     rmv::widget_util::InitCommonFilteringComponents(ui_->search_box_, ui_->size_slider_);
     rmv::widget_util::InitRangeSlider(ui_->size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->mip_slider_);
 
     connect(ui_->size_slider_, &DoubleSliderWidget::SpanChanged, this, &ResourceListPane::FilterBySizeSliderChanged);
+    connect(ui_->mip_slider_, &DoubleSliderWidget::SpanChanged, this, &ResourceListPane::FilterByMipLevelSliderChanged);
     connect(ui_->search_box_, &QLineEdit::textChanged, this, &ResourceListPane::SearchBoxChanged);
     connect(ui_->resource_table_view_, &QTableView::clicked, this, &ResourceListPane::TableClicked);
     connect(ui_->resource_table_view_, &QTableView::doubleClicked, this, &ResourceListPane::TableDoubleClicked);
-    ui_->dump_resources_button_->hide();
+    connect(ui_->dump_resources_button_, &QPushButton::clicked, this, &ResourceListPane::DumpResources);
+
+    // ui_->dump_resources_button_->hide();
 
     // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetResourceProxyModel(), &rmv::ResourceProxyModel::layoutChanged, this, &ResourceListPane::ScrollToSelectedResource);
@@ -111,6 +117,7 @@ void ResourceListPane::Refresh()
     QString resource_filter_string = resource_usage_combo_box_model_->GetFilterString(ui_->resource_usage_combo_box_);
     model_->UpdateResourceUsageList(resource_filter_string);
     FilterBySizeSliderChanged(ui_->size_slider_->LowerValue(), ui_->size_slider_->UpperValue());
+    FilterByMipLevelSliderChanged(ui_->mip_slider_->LowerValue(), ui_->mip_slider_->UpperValue());
 }
 
 void ResourceListPane::OnTraceClose()
@@ -127,6 +134,8 @@ void ResourceListPane::Reset()
 
     ui_->size_slider_->SetLowerValue(0);
     ui_->size_slider_->SetUpperValue(ui_->size_slider_->maximum());
+    ui_->mip_slider_->SetLowerValue(ui_->mip_slider_->minimum());
+    ui_->mip_slider_->SetUpperValue(ui_->mip_slider_->maximum());
     ui_->search_box_->setText("");
 
     carousel_->ClearData();
@@ -206,6 +215,12 @@ void ResourceListPane::FilterBySizeSliderChanged(int min_value, int max_value)
     SetMaximumResourceTableHeight();
 }
 
+void ResourceListPane::FilterByMipLevelSliderChanged(int min_value, int max_value)
+{
+    model_->FilterByMipLevelChanged(min_value, max_value);
+    SetMaximumResourceTableHeight();
+}
+
 void ResourceListPane::HeapChanged(bool checked)
 {
     // Rebuild the table depending on what the state of the combo box items is.
@@ -266,6 +281,37 @@ void ResourceListPane::ScrollToSelectedResource()
             ui_->resource_table_view_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
         }
     }
+}
+
+void ResourceListPane::DumpResources()
+{
+    QString FilePath = QFileDialog::getSaveFileName(this, "Dump Resources", QDir::cleanPath(QDir::homePath() + "/rmv_resources.csv"), "CSV files | *.csv");
+    QFile File(FilePath);
+    if (!File.open(QIODevice::WriteOnly | QIODevice::Text))
+        return;
+
+    ui_->dump_resources_button_->setEnabled(false);
+    QTextStream Stream(&File);
+    auto proxy_model_ = model_->GetResourceProxyModel();
+
+    for (int32_t j = rmv::kResourceColumnName; j <= rmv::kResourceColumnMappedNone; j++)
+    {
+        Stream << proxy_model_->headerData(j, Qt::Horizontal).toString() << ",";
+    }
+    Stream << "\n";
+
+    for (int32_t i = 0; i < proxy_model_->rowCount(); i++)
+    {
+        for (int32_t j = rmv::kResourceColumnName; j <= rmv::kResourceColumnMappedNone; j++)
+        {
+            Stream << proxy_model_->GetDataAsStr(i, j) << ",";
+        }
+        Stream << "\n";
+    }
+
+    File.close();
+
+    ui_->dump_resources_button_->setEnabled(true);
 }
 
 void ResourceListPane::SelectResourceInTable()

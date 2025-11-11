@@ -55,6 +55,7 @@ namespace rmv
     static const int kHeapComboBoxWidth     = 140;
     static const int kResourceComboBoxWidth = 140;
     static const int kSizeSliderRange       = 25;
+    static const int kMipSliderRange       = 16;
 
     // Control window sizes.
     static const int   kDesktopMargin                      = 25;
@@ -136,6 +137,11 @@ namespace rmv
         static const QString kSettingsUnitsSeconds      = "Seconds";
         static const QString kSettingsUnitsMinutes      = "Minutes";
         static const QString kSettingsUnitsHours        = "Hours";
+
+        // Byte units.
+        static const QString kSettingsByteUnitsDefault = "Default";
+        static const QString kSettingsByteUnitsBinary  = "Binary";
+        static const QString kSettingsByteUnitsDecimal = "Decimal";
 
         // Help file locations for trace and RMV.
         static const QString kTraceHelpFile       = "/help/rdp/index.html";

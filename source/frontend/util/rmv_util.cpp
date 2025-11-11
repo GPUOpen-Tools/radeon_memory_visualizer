@@ -185,6 +185,16 @@ uint64_t rmv_util::CalculateSizeThresholdFromStepValue(const uint32_t step_value
     return pow(2, step_value + kThresholdStepOffset);
 }
 
+uint64_t rmv_util::CalculateThresholdFromStepValue(const uint32_t step_value, const uint32_t max_steps)
+{
+    if (step_value >= max_steps)
+    {
+        return UINT64_MAX;
+    }
+
+    return step_value;
+}
+
 QString rmv_util::GetVirtualAllocationName(const RmtVirtualAllocation* virtual_allocation)
 {
     QString allocation_name;

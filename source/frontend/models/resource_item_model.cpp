@@ -53,6 +53,9 @@ namespace rmv
         resource_table->SetColumnWidthEms(kResourceColumnCompareId, 8);
         resource_table->SetColumnWidthEms(kResourceColumnName, 20);
         resource_table->SetColumnWidthEms(kResourceColumnVirtualAddress, 11);
+        resource_table->SetColumnWidthEms(kResourceColumnDimension, 11);
+        resource_table->SetColumnWidthEms(kResourceColumnMipLevel, 6);
+        resource_table->SetColumnWidthEms(kResourceColumnFormat, 8);
         resource_table->SetColumnWidthEms(kResourceColumnSize, 8);
         resource_table->SetColumnWidthEms(kResourceColumnPreferredHeap, 11);
         resource_table->SetColumnWidthEms(kResourceColumnMappedInvisible, 13);
@@ -134,6 +137,18 @@ namespace rmv
                 return cache_[row].resource_name;
             case kResourceColumnVirtualAddress:
                 return rmv::string_util::LocalizedValueAddress(RmtResourceGetVirtualAddress(resource));
+            case kResourceColumnDimension:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QString::asprintf("%dx%dx%d", resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z)
+                        : QString("-");
+            case kResourceColumnMipLevel:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QString::asprintf("%d", resource->image.mip_levels)
+                        : QString("-");
+            case kResourceColumnFormat:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QString(RmtGetFormatNameFromFormat(resource->image.format.format))
+                        : QString("-");
             case kResourceColumnSize:
                 return rmv::string_util::LocalizedValueMemory(resource->size_in_bytes, false, false);
             case kResourceColumnMappedInvisible:
@@ -179,6 +194,18 @@ namespace rmv
                 return QVariant::fromValue<qulonglong>(resource->identifier);
             case kResourceColumnVirtualAddress:
                 return QVariant::fromValue<qulonglong>(RmtResourceGetVirtualAddress(resource));
+            case kResourceColumnDimension:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QList<QVariant>({resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z})
+                        : QList<QVariant>({0, 0, 0});
+            case kResourceColumnMipLevel:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? resource->image.mip_levels
+                        : 0;
+            case kResourceColumnFormat:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QString(RmtGetFormatNameFromFormat(resource->image.format.format))
+                        : QString("-");
             case kResourceColumnSize:
                 return QVariant::fromValue<qulonglong>(resource->size_in_bytes);
             case kResourceColumnMappedInvisible:
@@ -207,6 +234,18 @@ namespace rmv
             {
             case kResourceColumnName:
                 return cache_[row].resource_name;
+            case kResourceColumnDimension:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QString::asprintf("%dx%dx%d", resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z)
+                        : QString("-");
+            case kResourceColumnMipLevel:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QString::asprintf("%d", resource->image.mip_levels)
+                        : QString("-");
+            case kResourceColumnFormat:
+                return resource->resource_type == kRmtResourceTypeImage
+                        ? QString(RmtGetFormatNameFromFormat(resource->image.format.format))
+                        : QString("-");
             case kResourceColumnSize:
                 return rmv::string_util::LocalizedValueBytes(resource->size_in_bytes);
             case kResourceColumnMappedInvisible:
@@ -243,6 +282,12 @@ namespace rmv
                 return "Name";
             case kResourceColumnVirtualAddress:
                 return "Virtual address";
+            case kResourceColumnDimension:
+                return "Dimension";
+            case kResourceColumnMipLevel:
+                return "Mip Level";
+            case kResourceColumnFormat:
+                return "Format";
             case kResourceColumnSize:
                 return "Size";
             case kResourceColumnPreferredHeap:

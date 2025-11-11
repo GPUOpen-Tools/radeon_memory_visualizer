@@ -21,8 +21,18 @@ namespace rmv
         slider_widget->setFixedWidth(rmv::kDoubleSliderWidth);
         slider_widget->setFixedHeight(rmv::kDoubleSliderHeight);
         slider_widget->setCursor(Qt::PointingHandCursor);
-        slider_widget->setMinimum(0);
-        slider_widget->setMaximum(kSizeSliderRange - 1);
+        switch (slider_widget->SliderType())
+        {
+        case ESliderType::Size:
+            slider_widget->setMinimum(0);
+            slider_widget->setMaximum(kSizeSliderRange - 1);
+            break;
+        case ESliderType::MipLevel:
+        default:
+            slider_widget->setMinimum(1);
+            slider_widget->setMaximum(kMipSliderRange - 1);
+            break;
+        }
         slider_widget->Init();
     }
 
