@@ -44,6 +44,7 @@ jobs:
           version: '6.7.0'
           arch: linux_gcc_64
           dir: '${{ github.workspace }}'
+          modules: 'qtwayland'
           cache: true
 
       - name: Install Linux dependencies
@@ -61,7 +62,8 @@ jobs:
             libglu1-mesa-dev \
             libgl1-mesa-dev \
             libx11-xcb-dev \
-            libxkbcommon-x11-dev
+            libxkbcommon-x11-dev \
+            libwayland-dev
 
       - name: Pre-build (Windows)
         if: runner.os == 'Windows'
