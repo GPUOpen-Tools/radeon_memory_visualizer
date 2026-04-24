@@ -34,7 +34,7 @@ jobs:
         with:
           version: '6.7.0'
           arch: ${{ matrix.qt-arch }}
-          dir: 'C:\Qt'
+          dir: 'C:\'
           cache: true
 
       - name: Install Qt (Ubuntu)
@@ -43,7 +43,7 @@ jobs:
         with:
           version: '6.7.0'
           arch: linux_gcc_64
-          dir: '${{ github.workspace }}/Qt'
+          dir: '${{ github.workspace }}'
           cache: true
 
       - name: Install Linux dependencies
