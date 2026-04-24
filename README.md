@@ -1,5 +1,7 @@
 # Radeon™ Memory Visualizer
 
+[![Build](https://github.com/GPUOpen-Tools/radeon_memory_visualizer/actions/workflows/build.yml/badge.svg)](https://github.com/GPUOpen-Tools/radeon_memory_visualizer/actions/workflows/build.yml)
+
 The Radeon Memory Visualizer (RMV) is a software tool that will allow users to analyze video memory usage on AMD Radeon GPUs. RMV will reveal detailed information regarding an application’s video memory consumption and access patterns. This will allow users to understand how memory is being leveraged and open the door to new optimization opportunities.
 
 ## Getting Started
