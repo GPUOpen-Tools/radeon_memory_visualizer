@@ -44,7 +44,7 @@ jobs:
           version: '6.7.0'
           arch: linux_gcc_64
           dir: '${{ github.workspace }}'
-          modules: 'qtwayland'
+          modules: 'qtwaylandcompositor'
           cache: true
 
       - name: Install Linux dependencies
