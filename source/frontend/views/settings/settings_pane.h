@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Settings pane.
@@ -44,6 +44,9 @@ public slots:
     ///
     /// @param checked The new state of the check box.
     void DriverOverridesAllowNotificationsChanged(bool checked);
+
+    /// @brief Slot to handle what happens when the Log level combo box changes.
+    void LogLevelChanged();
 
     /// @brief Slot to handle what happens when the time units combo box has changed.
     void TimeUnitsChanged();

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of structures and functions for a multi-level page table.
@@ -30,9 +30,6 @@
 /// NOTE: This could be optimized down to 36-bit later.
 #define RMT_MAXIMUM_PAGE_TABLE_LEAF_SIZE (RMT_PAGE_DIRECTORY_LEVEL_3_SIZE * 6)
 
-/// The maximum size the page table can encode in physical address space.
-#define RMT_PAGE_TABLE_MAX_SIZE_OF_PHYSICAL_SPACE_IN_BYTES (16 * 1024 * 1024 * 1024)
-
 /// The number of level 0 nodes to keep space for.
 #define RMT_PAGE_DIRECTORY_LEVEL_0_COUNT 1024
 
@@ -43,7 +40,7 @@
 #define RMT_PAGE_DIRECTORY_LEVEL_2_COUNT 4096
 
 /// The number of level 3 nodes to keep space for. This value maps exactly to number of MB of VA space than can be mapped at once.
-#define RMT_PAGE_DIRECTORY_LEVEL_3_COUNT (64 * 1024)
+#define RMT_PAGE_DIRECTORY_LEVEL_3_COUNT (192 * 1024)
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,7 +72,7 @@ typedef struct RmtPageDirectoryLevel1
 
 /// A structure encapsulating a multi-level page table.
 ///
-/// This is implemented a trie data structure. The virtual address is decompossed into
+/// This is implemented a trie data structure. The virtual address is decomposed into
 /// a different size radix at each level of the tree.
 ///
 ///   |XXXXXXXXXX|XXXXXXXXXX|XXXXXXXX|XXXXXXXX|XXXXXXXXXXXX|

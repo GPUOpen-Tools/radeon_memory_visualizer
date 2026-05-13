@@ -1,12 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
 cmake_minimum_required(VERSION 3.10)
 project(RmvParser)
-
-add_definitions(-DRDF_CXX_BINDINGS)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../parser)
@@ -63,6 +61,8 @@ IF(WIN32)
 ELSEIF(UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
 ENDIF(WIN32)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC rdf)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

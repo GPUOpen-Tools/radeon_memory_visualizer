@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Allocation Explorer pane.
@@ -58,6 +58,7 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     rmv::widget_util::InitCommonFilteringComponents(ui_->resource_search_box_, ui_->resource_size_slider_);
     rmv::widget_util::InitCommonFilteringComponents(ui_->allocation_search_box_, ui_->allocation_size_slider_);
     rmv::widget_util::InitRangeSlider(ui_->resource_size_slider_);
+    rmv::widget_util::InitRangeSlider(ui_->mip_slider_);
     rmv::widget_util::InitRangeSlider(ui_->allocation_size_slider_);
     ui_->aliased_resource_checkbox_->setChecked(false);
     ui_->aliased_resource_checkbox_->SetOnText(rmv::text::kShowAliasing);
@@ -90,6 +91,7 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     colorizer_->Initialize(parent, ui_->color_combo_box_, ui_->legends_view_, mode_list);
 
     connect(ui_->resource_size_slider_, &DoubleSliderWidget::SpanChanged, this, &AllocationExplorerPane::ResourceSizeFilterChanged);
+    connect(ui_->mip_slider_, &DoubleSliderWidget::SpanChanged, this, &AllocationExplorerPane::FilterByMipLevelSliderChanged);
     connect(ui_->resource_search_box_, &QLineEdit::textChanged, this, &AllocationExplorerPane::ResourceSearchBoxChanged);
     connect(ui_->allocation_size_slider_, &DoubleSliderWidget::SpanChanged, this, &AllocationExplorerPane::AllocationSizeFilterChanged);
     connect(ui_->allocation_search_box_, &QLineEdit::textChanged, this, &AllocationExplorerPane::AllocationSearchBoxChanged);
@@ -100,8 +102,12 @@ AllocationExplorerPane::AllocationExplorerPane(QWidget* parent)
     connect(ui_->allocation_table_view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &AllocationExplorerPane::AllocationTableChanged);
     connect(ui_->resource_table_view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &AllocationExplorerPane::ResourceTableSelectionChanged);
 
+    // Add a context menu to the resource table.
+    ui_->resource_table_view_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui_->resource_table_view_, &QTableView::customContextMenuRequested, this, &AllocationExplorerPane::DumpResourceTable);
+
     // Resize the memory block if the splitter is moved.
-    connect(ui_->splitter_, &QSplitter::splitterMoved, this, [=]() { ResizeItems(); });
+    connect(ui_->splitter_, &QSplitter::splitterMoved, this, [=, this]() { ResizeItems(); });
 
     // Intercept the AllocationSelected signal so the chosen resource can be set up. This signal is sent
     // before the pane navigation.
@@ -177,6 +183,8 @@ void AllocationExplorerPane::Reset()
 
     ui_->resource_size_slider_->SetLowerValue(0);
     ui_->resource_size_slider_->SetUpperValue(ui_->resource_size_slider_->maximum());
+    ui_->mip_slider_->SetLowerValue(ui_->mip_slider_->minimum());
+    ui_->mip_slider_->SetUpperValue(ui_->mip_slider_->maximum());
     ui_->resource_search_box_->setText("");
 
     SelectResource(0);
@@ -267,6 +275,12 @@ void AllocationExplorerPane::ResourceSearchBoxChanged()
 void AllocationExplorerPane::ResourceSizeFilterChanged(int min_value, int max_value)
 {
     model_->ResourceSizeFilterChanged(min_value, max_value);
+    SetMaximumResourceTableHeight();
+}
+
+void AllocationExplorerPane::FilterByMipLevelSliderChanged(int min_value, int max_value)
+{
+    model_->FilterByMipLevelChanged(min_value, max_value);
     SetMaximumResourceTableHeight();
 }
 
@@ -415,4 +429,9 @@ void AllocationExplorerPane::ScrollToSelectedResource()
             ui_->resource_table_view_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
         }
     }
+}
+
+void AllocationExplorerPane::DumpResourceTable(const QPoint& pos)
+{
+    rmv::widget_util::CreateResourceTableContextMenu(this, ui_->resource_table_view_, pos, model_);
 }

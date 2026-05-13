@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of a number of string utilities.
@@ -57,12 +57,12 @@ namespace rmv
         /// display XB for base 10 or XiB for base 2.
         ///
         /// @param [in] value                       The value to display.
-        /// @param [in] base_10                     If true, use base 10 values, otherwise base 2.
+        /// @param [in] in_base_10                  If true, use base 10 values, otherwise base 2.
         /// @param [in] use_round                   If true and units aren't in bytes, round up the value.
         /// @param [in] include_decimal             If true, include the fractional part of the value.
         ///
         /// @return The localized string.
-        QString LocalizedValueMemory(const double value, const bool base_10, const bool use_round, const bool include_decimal = true);
+        QString LocalizedValueMemory(const double value, const bool in_base_10, const bool use_round, const bool include_decimal = true);
 
         /// @brief Format an address for printing.
         ///
@@ -82,16 +82,16 @@ namespace rmv
 
         /// @brief Builds a range string for the memory size thresholds.
         ///
-        /// @param [in] min_memory_size           The lower value of the range.
-        /// @param [in] max_memory_size           The upper value of the range.
+        /// @param [in] min_memory_size  The lower value of the range.
+        /// @param [in] max_memory_size  The upper value of the range.
         ///
         /// @return The localized string.
         QString GetMemoryRangeString(const uint64_t min_memory_size, const uint64_t max_memory_size);
 
         /// @brief Builds a range string for two int values.
         ///
-        /// @param [in] min           The lower value of the range.
-        /// @param [in] max           The upper value of the range.
+        /// @param [in] min  The lower value of the range.
+        /// @param [in] max  The upper value of the range.
         ///
         /// @return The localized string.
         QString GetValueRangeString(const uint64_t min, const uint64_t max);

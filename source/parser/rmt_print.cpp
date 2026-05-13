@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of printing helper functions for RMT.
@@ -268,6 +268,10 @@ const char* RmtGetTokenNameFromTokenType(RmtTokenType token_type)
         return "VIRTUAL_ALLOCATE";
     case kRmtTokenTypeVirtualFree:
         return "VIRTUAL_FREE";
+    case kRmtTokenTypeResourceUpdate:
+        return "RESOURCE_UPDATE";
+    case kRmtTokenTypeReserved1:
+        return "RESERVED1";
     default:
         return "Unknown";
     }
@@ -1054,7 +1058,7 @@ void RmtSetPrintingCallback(RmtPrintingCallback callback_func, bool enable_print
     is_printing_enabled = enable_printing;
 }
 
-void RmtPrint(const char* format, ...)
+void RmtPrint(LogLevel log_level, const char* format, ...)
 {
     if (!is_printing_enabled)
     {
@@ -1081,7 +1085,7 @@ void RmtPrint(const char* format, ...)
     {
         char buffer[2048];
         vsnprintf(buffer, 2048, format, args);
-        printing_func(buffer);
+        printing_func(log_level, buffer);
     }
 
     va_end(args);

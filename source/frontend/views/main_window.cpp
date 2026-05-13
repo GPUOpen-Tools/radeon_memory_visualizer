@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -219,6 +219,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+    delete recent_traces_menu_;
+
     delete open_trace_action_;
     delete close_trace_action_;
     delete exit_action_;
@@ -338,7 +340,7 @@ void MainWindow::SetupHotkeyNavAction(int key, int pane)
     navigation_actions_.push_back(action);
 
     this->addAction(action);
-    connect(action, &QAction::triggered, [=]() { ViewPane(pane); });
+    connect(action, &QAction::triggered, [=, this]() { ViewPane(pane); });
 }
 
 void MainWindow::CreateActions()
@@ -468,7 +470,7 @@ void MainWindow::SetupRecentTracesMenu()
 
             recent_traces_menu_->addAction(recent_trace_actions_[i]);
 
-            recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
+            recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=, this]() { LoadTrace(files[i].path); });
         }
     }
 

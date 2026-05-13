@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for Resource List model.
@@ -141,13 +141,18 @@ namespace rmv
 
         proxy_model_->SetMipLevelFilter(scaled_min, scaled_max);
         proxy_model_->invalidate();
-        
+
         UpdateBottomLabels();
     }
 
     ResourceProxyModel* ResourceListModel::GetResourceProxyModel() const
     {
         return proxy_model_;
+    }
+
+    void ResourceListModel::DumpResourceTable(QWidget* parent) const
+    {
+        table_model_->DumpResourceTable(parent, proxy_model_, nullptr, nullptr);
     }
 
 }  // namespace rmv

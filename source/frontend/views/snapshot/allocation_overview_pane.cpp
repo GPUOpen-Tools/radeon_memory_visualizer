@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the allocation overview pane.
@@ -159,8 +159,8 @@ AllocationOverviewPane::AllocationOverviewPane(QWidget* parent)
     connect(ui_->color_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &AllocationOverviewPane::ColorModeChanged);
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::ResourceSelected, this, &AllocationOverviewPane::SelectResource);
 
-    connect(ui_->allocation_height_slider_, &QSlider::valueChanged, this, [=]() { AllocationHeightChanged(); });
-    connect(ui_->allocation_list_view_->verticalScrollBar(), &QScrollBar::valueChanged, this, [=]() { ResizeItems(); });
+    connect(ui_->allocation_height_slider_, &QSlider::valueChanged, this, [=, this]() { AllocationHeightChanged(); });
+    connect(ui_->allocation_list_view_->verticalScrollBar(), &QScrollBar::valueChanged, this, [=, this]() { ResizeItems(); });
 
     ui_->allocation_height_slider_->setCursor(Qt::PointingHandCursor);
 

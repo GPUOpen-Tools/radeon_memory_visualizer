@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a resource item model.
@@ -12,11 +12,14 @@
 #define RMV_MODELS_RESOURCE_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
+#include <QTextStream>
 
 #include "qt_common/custom_widgets/scaled_table_view.h"
 
 #include "rmt_data_snapshot.h"
 #include "rmt_resource_list.h"
+
+#include "models/proxy_models/table_proxy_model.h"
 
 namespace rmv
 {
@@ -89,6 +92,16 @@ namespace rmv
         /// @param [in] compare_id The ID when used to compare 2 resources.
         void AddResource(const RmtDataSnapshot* snapshot, const RmtResource* resource, SnapshotCompareId compare_id);
 
+        /// @brief Dump the resource table to disk.
+        ///
+        /// Determines the resource usage and dumps out the relevent information.
+        ///
+        /// @param [in] file_name    The name of the file to dump the output to.
+        /// @param [in] proxy_model  The proxy model.
+        /// @param [in] base_name    For the memory leak pane, the name of the base snapshot. Set to nullptr for other panes.
+        /// @param [in] diff_name    For the memory leak pane, the name of the diff snapshot. Set to nullptr for other panes.
+        void DumpResourceTable(QWidget* parent, TableProxyModel* proxy_model, const char* base_name, const char* diff_name) const;
+
         // QAbstractItemModel overrides. See Qt documentation for parameter and return values
         virtual QVariant      data(const QModelIndex& index, int role) const Q_DECL_OVERRIDE;
         virtual Qt::ItemFlags flags(const QModelIndex& index) const Q_DECL_OVERRIDE;
@@ -120,6 +133,47 @@ namespace rmv
             SnapshotCompareId  compare_id;       ///< The comparison id (if any).
             QString            resource_name;    ///< The resource name.
         };
+
+        /// @brief The sort comparator for sorting the resource list.
+        ///
+        /// Currently sort by resource usage.
+        ///
+        /// @param [in] resource_a The first resource to compare.
+        /// @param [in] resource_b The second resource to compare.
+        ///
+        /// return true if resource_a > resource_b, false otherwise.
+        static bool SortComparator(const DataCache* resource_a, const DataCache* resource_b);
+
+        /// @brief Dump out the info common to all resources.
+        ///
+        /// @param [in] stream         The stream to write the resource info to.
+        /// @param [in] resource_info  The resource to dump out. If resource is nullptr, write the header info.
+        /// @param [in] base_name      For the memory leak pane, the name of the base snapshot. Set to nullptr for other panes.
+        /// @param [in] diff_name      For the memory leak pane, the name of the diff snapshot. Set to nullptr for other panes.
+        void DumpCommonInfo(QTextStream& stream, const DataCache* resource_info, const char* base_name, const char* diff_name) const;
+
+        /// @brief Dump out the buffer info for buffer resources.
+        ///
+        /// @param [in] stream         The stream to write the resource info to.
+        /// @param [in] resource_info  The resource to dump out. If resource is nullptr, write the header info.
+        void DumpBufferInfo(QTextStream& stream, const DataCache* resource_info) const;
+
+        /// @brief Dump out the image info for image resources.
+        ///
+        /// @param [in] stream         The stream to write the resource info to.
+        /// @param [in] resource_info  The resource to dump out. If resource is nullptr, write the header info.
+        void DumpImageInfo(QTextStream& stream, const DataCache* resource_info) const;
+
+        /// @brief Top level dump function.
+        ///
+        /// Determines the resource usage and dumps out the relevant information.
+        ///
+        /// @param [in] stream         The stream to write the resource info to.
+        /// @param [in] resource_info  The resource to dump out. If resource is nullptr, write the header info.
+        /// @param [in] usage_type     The resource usage type.
+        /// @param [in] base_name      For the memory leak pane, the name of the base snapshot. Set to nullptr for other panes.
+        /// @param [in] diff_name      For the memory leak pane, the name of the diff snapshot. Set to nullptr for other panes.
+        void DumpInfo(QTextStream& stream, const DataCache* resource_info, RmtResourceUsageType usage_type, const char* base_name, const char* diff_name) const;
 
         int                    num_rows_;     ///< The number of rows in the table.
         int                    num_columns_;  ///< The number of columns in the table.

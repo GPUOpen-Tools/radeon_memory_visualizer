@@ -305,6 +305,8 @@ Resource list
 This view will show a list of all the resources in table form for all
 allocations.
 
+.. image:: media/snapshot/resource_list_1.png
+
 The top of the view shows the carousel, described earlier.
 
 The preferred heap and resource usage filter combo box can be used to show or
@@ -332,7 +334,21 @@ decimal or hexadecimal numbers.
 Mousing over a memory size cell in the table will display a tooltip showing the
 exact number of bytes.
 
-.. image:: media/snapshot/resource_list_1.png
+The resource table can be exported to disk as a .csv file, so it can be loaded
+into a spreadsheet application. To do this, simply mouse over the resource list
+table and right-click the mouse. This will show a context menu, as seen here:
+
+.. image:: media/snapshot/resource_list_2.png
+
+Selecting **Save resources to disk** will show a file dialog, allowing the
+resources to be saved.
+
+Note: Only the resources that are present in the table will be exported, so any
+resource filtering in the UI, described above, will be applied before saving.
+
+Saving resources to disk in this fashion is also supported for the resource
+tables in the **Allocation Explorer** and **Memory leak finder** panes,
+described later.
 
 
 Allocation explorer

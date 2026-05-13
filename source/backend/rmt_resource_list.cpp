@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the resource list functions.
@@ -800,7 +800,7 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
     RMT_RETURN_ON_ERROR(resource, kRmtErrorNoResourceFound);
 
     // NOTE: We have multiple binds per resource for command buffer allocators,
-    // This is because they grow in size to accomodate the allocators needs. GPU events
+    // This is because they grow in size to accommodate the allocators needs. GPU events
     // are often inlined into command buffers, so these are also affected by extension.
     // Heap and Buffer resources which have already been bound to a virtual memory allocation are
     // also flagged with the kRmtErrorResourceAlreadyBound return value.  The caller can then destroy

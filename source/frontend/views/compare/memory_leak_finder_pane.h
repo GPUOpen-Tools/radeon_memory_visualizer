@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Memory leak finder pane.
@@ -96,6 +96,11 @@ private slots:
 
     /// @brief Switch snapshots.
     void SwitchSnapshots();
+
+    /// @brief Show a context menu if the user right-clicks on the resource list table.
+    ///
+    /// @param [in] pos  The position of the mouse when the user clicked.
+    void DumpResourceTable(const QPoint& pos);
 
 private:
     /// @brief Refresh what's visible on the UI.

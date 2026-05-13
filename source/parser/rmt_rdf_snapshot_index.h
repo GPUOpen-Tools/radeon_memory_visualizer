@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Definition of the RFD Snapshot Index chunk.
@@ -14,7 +14,7 @@
 #ifndef RMV_PARSER_RMT_RDF_SNAPSHOT_INDEX_H_
 #define RMV_PARSER_RMT_RDF_SNAPSHOT_INDEX_H_
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 #include "rmt_error.h"
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the page table helper functions.
@@ -57,9 +57,9 @@ static RmtHeapType GetHeapTypeFromAddress(RmtPageTable* page_table, RmtGpuAddres
     {
         for (int32_t current_segment_index = 0; current_segment_index <= kRmtHeapTypeInvisible; ++current_segment_index)
         {
-            const RmtGpuAddress end_address =
-                page_table->segment_info[current_segment_index].base_address + page_table->segment_info[current_segment_index].size;
-            if (page_table->segment_info[current_segment_index].base_address <= physical_address && physical_address < end_address)
+            const RmtGpuAddress start_address = page_table->segment_info[current_segment_index].base_address;
+            const RmtGpuAddress end_address   = start_address + page_table->segment_info[current_segment_index].size;
+            if (start_address <= physical_address && physical_address < end_address)
             {
                 current_segment = (RmtHeapType)current_segment_index;
                 break;
@@ -142,22 +142,24 @@ static RmtErrorCode UpdateMappingForSingle4KPage(RmtPageTable* page_table,
                                                         ((RmtGpuAddress)level3->physical_addresses[(level3_radix * 6) + 5] << 0);
 
         const RmtHeapType previous_physical_heap_type = GetHeapTypeFromAddress(page_table, previous_physical_address);
-        RMT_ASSERT(previous_physical_heap_type != kRmtHeapTypeUnknown);
 
-        if (page_table->mapped_per_heap[previous_physical_heap_type] > RmtGetPageSize(kRmtPageSize4Kb))
+        // Check for valid heap. Unknown is not valid and will result in a bad array index.
+        if (previous_physical_heap_type != kRmtHeapTypeUnknown)
         {
-            page_table->mapped_per_heap[previous_physical_heap_type] -= RmtGetPageSize(kRmtPageSize4Kb);
-        }
-        else
-        {
-            page_table->mapped_per_heap[previous_physical_heap_type] = 0;
+            if (page_table->mapped_per_heap[previous_physical_heap_type] > RmtGetPageSize(kRmtPageSize4Kb))
+            {
+                page_table->mapped_per_heap[previous_physical_heap_type] -= RmtGetPageSize(kRmtPageSize4Kb);
+            }
+            else
+            {
+                page_table->mapped_per_heap[previous_physical_heap_type] = 0;
+            }
         }
     }
 
     // Store the physical address.
     if (!is_unmapping)
     {
-        // TOOD: Check if it was previously mapped, and if so, find out which segment it was in.
         level3->physical_addresses[(level3_radix * 6) + 0] = ((physical_address >> 40) & 0xff);
         level3->physical_addresses[(level3_radix * 6) + 1] = ((physical_address >> 32) & 0xff);
         level3->physical_addresses[(level3_radix * 6) + 2] = ((physical_address >> 24) & 0xff);
@@ -167,7 +169,10 @@ static RmtErrorCode UpdateMappingForSingle4KPage(RmtPageTable* page_table,
         level3->is_mapped[byte_offset] |= mask;
 
         const RmtHeapType current_physical_heap_type = GetHeapTypeFromAddress(page_table, physical_address);
-        page_table->mapped_per_heap[current_physical_heap_type] += RmtGetPageSize(kRmtPageSize4Kb);
+        if (current_physical_heap_type != kRmtHeapTypeUnknown)
+        {
+            page_table->mapped_per_heap[current_physical_heap_type] += RmtGetPageSize(kRmtPageSize4Kb);
+        }
     }
     else
     {

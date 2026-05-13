@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model corresponding to a heap combo box.
@@ -40,7 +40,7 @@ namespace rmv
         RMT_ASSERT(checkbox != nullptr);
         if (checkbox != nullptr)
         {
-            connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true); });
+            connect(checkbox, &QCheckBox::clicked, this, [=, this]() { emit FilterChanged(true); });
         }
 
         for (uint32_t i = 0; i < (uint32_t)kRmtHeapTypeCount; i++)
@@ -57,7 +57,7 @@ namespace rmv
             RMT_ASSERT(checkbox != nullptr);
             if (checkbox != nullptr)
             {
-                connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true); });
+                connect(checkbox, &QCheckBox::clicked, this, [=, this]() { emit FilterChanged(true); });
             }
         }
         ResetHeapComboBox(combo_box);

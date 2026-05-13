@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a resource item model.
@@ -10,13 +10,18 @@
 
 #include "models/resource_item_model.h"
 
+#include <QDir>
+#include <QFile>
+#include <QFileDialog>
+#include <QTextStream>
+
 #include "rmt_assert.h"
-#include "rmt_data_snapshot.h"
 #include "rmt_print.h"
-#include "rmt_resource_list.h"
 #include "rmt_util.h"
 
-#include "managers/trace_manager.h"
+#include "managers/snapshot_manager.h"
+#include "models/proxy_models/table_proxy_model.h"
+#include "settings/rmv_settings.h"
 #include "util/rmv_util.h"
 #include "util/string_util.h"
 
@@ -139,16 +144,12 @@ namespace rmv
                 return rmv::string_util::LocalizedValueAddress(RmtResourceGetVirtualAddress(resource));
             case kResourceColumnDimension:
                 return resource->resource_type == kRmtResourceTypeImage
-                        ? QString::asprintf("%dx%dx%d", resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z)
-                        : QString("-");
+                           ? QString::asprintf("%dx%dx%d", resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z)
+                           : QString("-");
             case kResourceColumnMipLevel:
-                return resource->resource_type == kRmtResourceTypeImage
-                        ? QString::asprintf("%d", resource->image.mip_levels)
-                        : QString("-");
+                return resource->resource_type == kRmtResourceTypeImage ? QString::asprintf("%d", resource->image.mip_levels) : QString("-");
             case kResourceColumnFormat:
-                return resource->resource_type == kRmtResourceTypeImage
-                        ? QString(RmtGetFormatNameFromFormat(resource->image.format.format))
-                        : QString("-");
+                return resource->resource_type == kRmtResourceTypeImage ? QString(RmtGetFormatNameFromFormat(resource->image.format.format)) : QString("-");
             case kResourceColumnSize:
                 return rmv::string_util::LocalizedValueMemory(resource->size_in_bytes, false, false);
             case kResourceColumnMappedInvisible:
@@ -196,16 +197,12 @@ namespace rmv
                 return QVariant::fromValue<qulonglong>(RmtResourceGetVirtualAddress(resource));
             case kResourceColumnDimension:
                 return resource->resource_type == kRmtResourceTypeImage
-                        ? QList<QVariant>({resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z})
-                        : QList<QVariant>({0, 0, 0});
+                           ? QList<QVariant>({resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z})
+                           : QList<QVariant>({0, 0, 0});
             case kResourceColumnMipLevel:
-                return resource->resource_type == kRmtResourceTypeImage
-                        ? resource->image.mip_levels
-                        : 0;
+                return resource->resource_type == kRmtResourceTypeImage ? resource->image.mip_levels : 0;
             case kResourceColumnFormat:
-                return resource->resource_type == kRmtResourceTypeImage
-                        ? QString(RmtGetFormatNameFromFormat(resource->image.format.format))
-                        : QString("-");
+                return resource->resource_type == kRmtResourceTypeImage ? QString(RmtGetFormatNameFromFormat(resource->image.format.format)) : QString("-");
             case kResourceColumnSize:
                 return QVariant::fromValue<qulonglong>(resource->size_in_bytes);
             case kResourceColumnMappedInvisible:
@@ -236,16 +233,12 @@ namespace rmv
                 return cache_[row].resource_name;
             case kResourceColumnDimension:
                 return resource->resource_type == kRmtResourceTypeImage
-                        ? QString::asprintf("%dx%dx%d", resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z)
-                        : QString("-");
+                           ? QString::asprintf("%dx%dx%d", resource->image.dimension_x, resource->image.dimension_y, resource->image.dimension_z)
+                           : QString("-");
             case kResourceColumnMipLevel:
-                return resource->resource_type == kRmtResourceTypeImage
-                        ? QString::asprintf("%d", resource->image.mip_levels)
-                        : QString("-");
+                return resource->resource_type == kRmtResourceTypeImage ? QString::asprintf("%d", resource->image.mip_levels) : QString("-");
             case kResourceColumnFormat:
-                return resource->resource_type == kRmtResourceTypeImage
-                        ? QString(RmtGetFormatNameFromFormat(resource->image.format.format))
-                        : QString("-");
+                return resource->resource_type == kRmtResourceTypeImage ? QString(RmtGetFormatNameFromFormat(resource->image.format.format)) : QString("-");
             case kResourceColumnSize:
                 return rmv::string_util::LocalizedValueBytes(resource->size_in_bytes);
             case kResourceColumnMappedInvisible:
@@ -338,4 +331,195 @@ namespace rmv
         Q_UNUSED(parent);
         return num_columns_;
     }
+
+    bool ResourceItemModel::SortComparator(const DataCache* resource_a, const DataCache* resource_b)
+    {
+        auto usage_a = RmtResourceGetUsageType(resource_a->resource);
+        auto usage_b = RmtResourceGetUsageType(resource_b->resource);
+        return usage_a > usage_b;
+    }
+
+    void ResourceItemModel::DumpCommonInfo(QTextStream& stream, const DataCache* resource_info, const char* base_name, const char* diff_name) const
+    {
+        if (resource_info == nullptr)
+        {
+            if (base_name != nullptr && diff_name != nullptr)
+            {
+                stream << base_name << ", " << diff_name << ", ";
+            }
+
+            stream << "Name, Virtual address, Usage, Size, Preferred heap, Committed invisible, Committed local, Committed host, Unmapped";
+        }
+        else if (resource_info->resource != nullptr)
+        {
+            if (base_name != nullptr && diff_name != nullptr)
+            {
+                if (resource_info->compare_id == kSnapshotCompareIdCommon)
+                {
+                    stream << "*, *, ";
+                }
+                else if (resource_info->compare_id == kSnapshotCompareIdOpen)
+                {
+                    stream << "*, , ";
+                }
+                else if (resource_info->compare_id == kSnapshotCompareIdCompared)
+                {
+                    stream << " , *, ";
+                }
+                else
+                {
+                    stream << " , , ";
+                }
+            }
+
+            char        name_buffer[1024] = {};
+            const char* buf_ptr           = &name_buffer[0];
+            RmtResourceGetName(resource_info->resource, 1024, (char**)&buf_ptr);
+            const QString& usage_name = RmtGetResourceUsageTypeNameFromResourceUsageType(RmtResourceGetUsageType(resource_info->resource));
+
+            stream << name_buffer;
+            stream << QString(", 0x%1").arg(static_cast<unsigned long long>(resource_info->resource->address), 10, 16, QChar('0'));
+            stream << ", " << usage_name.toLatin1().data();
+            stream << ", \"" << rmv::string_util::LocalizedValueMemory(resource_info->resource->size_in_bytes, false, false).toLatin1().data() << "\"";
+
+            stream << ", " << RmtResourceGetHeapTypeName(resource_info->resource);
+            stream << ", \"" << rmv::string_util::LocalizedValueMemory(resource_info->invisible_bytes, false, false).toLatin1().data() << "\"";
+            stream << ", \"" << rmv::string_util::LocalizedValueMemory(resource_info->local_bytes, false, false).toLatin1().data() << "\"";
+            stream << ", \"" << rmv::string_util::LocalizedValueMemory(resource_info->host_bytes, false, false).toLatin1().data() << "\"";
+            stream << ", \"" << rmv::string_util::LocalizedValueMemory(resource_info->unmapped_bytes, false, false).toLatin1().data() << "\"";
+        }
+    }
+
+    void ResourceItemModel::DumpBufferInfo(QTextStream& stream, const DataCache* resource_info) const
+    {
+        if (resource_info == nullptr)
+        {
+            stream << ", Create flags, Usage flags";
+        }
+        else if (resource_info->resource != nullptr)
+        {
+            char flags_text[1024];
+
+            RmtGetBufferCreationNameFromBufferCreationFlags(resource_info->resource->buffer.create_flags, flags_text, 1024);
+            stream << ", " << flags_text;
+
+            RmtGetBufferUsageNameFromBufferUsageFlags(resource_info->resource->buffer.usage_flags, flags_text, 1024);
+            stream << ", " << flags_text;
+        }
+    }
+
+    void ResourceItemModel::DumpImageInfo(QTextStream& stream, const DataCache* resource_info) const
+    {
+        if (resource_info == nullptr)
+        {
+            stream << ", Image Type, X, Y, Z, Format, Swizzle, Mip levels, Create flags, Usage flags";
+        }
+        else if (resource_info->resource != nullptr)
+        {
+            stream << ", " << RmtGetImageTypeNameFromImageType(resource_info->resource->image.image_type);
+            stream << ", " << resource_info->resource->image.dimension_x;
+            stream << ", " << resource_info->resource->image.dimension_y;
+            stream << ", " << resource_info->resource->image.dimension_z;
+            stream << ", " << RmtGetFormatNameFromFormat(resource_info->resource->image.format.format);
+
+            char swizzle_pattern[8] = {};
+            RmtGetSwizzlePatternFromImageFormat(&resource_info->resource->image.format, swizzle_pattern, sizeof(swizzle_pattern));
+            stream << ", " << swizzle_pattern;
+            stream << ", " << rmv::string_util::LocalizedValue(resource_info->resource->image.mip_levels).toLatin1().data();
+
+            char flags_text[1024] = {};
+
+            RmtGetImageCreationNameFromImageCreationFlags(resource_info->resource->image.create_flags, flags_text, 1024);
+            stream << ", " << flags_text;
+
+            RmtGetImageUsageNameFromImageUsageFlags(resource_info->resource->image.usage_flags, flags_text, 1024);
+            stream << ", " << flags_text;
+        }
+    }
+
+    void ResourceItemModel::DumpInfo(QTextStream&         stream,
+                                     const DataCache*     resource_info,
+                                     RmtResourceUsageType usage_type,
+                                     const char*          base_name,
+                                     const char*          diff_name) const
+    {
+        DumpCommonInfo(stream, resource_info, base_name, diff_name);
+
+        switch (usage_type)
+        {
+        case kRmtResourceUsageTypeRenderTarget:
+        case kRmtResourceUsageTypeTexture:
+        case kRmtResourceUsageTypeDepthStencil:
+            DumpImageInfo(stream, resource_info);
+            break;
+        case kRmtResourceUsageTypeBuffer:
+            DumpBufferInfo(stream, resource_info);
+            break;
+        default:
+            break;
+        }
+        stream << "\n";
+    }
+
+    void ResourceItemModel::DumpResourceTable(QWidget* parent, TableProxyModel* proxy_model, const char* base_name, const char* diff_name) const
+    {
+        QString   file_name = rmv::RMVSettings::Get().GetLastFileOpenLocation();
+        QFileInfo file_info(file_name);
+        QString   file_path = QFileDialog::getSaveFileName(parent, "Save resources", file_info.completeBaseName(), "CSV (*.csv);;All files (*)");
+
+        if (file_path.isNull())
+        {
+            return;
+        }
+
+        QFile qt_file(file_path);
+        if (qt_file.isOpen())
+        {
+            return;
+        }
+
+        if (!qt_file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            return;
+        }
+
+        QTextStream stream(&qt_file);
+
+        std::vector<const DataCache*> resource_vector;
+
+        // The proxy model contains the data that's visible in the table.
+        // Use this data to map back to the real data and only save what is visible in the table in the UI.
+        // This will allow the user to filter out resources they don't care about before saving to disk.
+        for (int row = 0; row < proxy_model->rowCount(); ++row)
+        {
+            QModelIndex proxy_index  = proxy_model->index(row, 0);
+            QModelIndex source_index = proxy_model->mapToSource(proxy_index);
+            int         source_row   = source_index.row();
+            resource_vector.push_back(&cache_[source_row]);
+        }
+
+        // Run through the list and sort resources into separate arrays for the ones we're interested in.
+        // Everything has flags and usage.
+        auto last_usage_type = -1;
+        std::stable_sort(resource_vector.begin(), resource_vector.end(), &ResourceItemModel::SortComparator);
+
+        for (auto it : resource_vector)
+        {
+            // See if header needs updating.
+            auto this_usage_type = RmtResourceGetUsageType(it->resource);
+            if (this_usage_type != last_usage_type)
+            {
+                last_usage_type = this_usage_type;
+                stream << "\n";
+                DumpInfo(stream, nullptr, this_usage_type, base_name, diff_name);
+            }
+
+            DumpInfo(stream, it, this_usage_type, base_name, diff_name);
+        }
+        stream << "\n";
+
+        qt_file.flush();
+        qt_file.close();
+    }
+
 }  // namespace rmv

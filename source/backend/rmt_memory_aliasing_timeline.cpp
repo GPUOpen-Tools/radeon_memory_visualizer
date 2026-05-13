@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the aliasing resource memory algorithm.
@@ -190,7 +190,7 @@ namespace RmtMemoryAliasingTimelineAlgorithm
 
     void RmtMemoryAliasingCalculator::CalculateSizes(SizePerResourceUsageType& out_sizes, SizeType& out_unbound_size) const
     {
-        out_sizes        = SizePerResourceUsageType{};  // Zero-initalize.
+        out_sizes        = SizePerResourceUsageType{};  // Zero-initialize.
         out_unbound_size = 0;
 
         for (const auto& alloc_it : allocations_)

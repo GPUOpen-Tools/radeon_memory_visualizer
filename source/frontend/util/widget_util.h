@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of a number of widget utilities.
@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include <QGraphicsView>
+#include <QMenu>
 #include <QString>
 #include <QTableView>
 #include <QWidget>
@@ -90,6 +91,36 @@ namespace rmv
         /// @param table_view The table view.
         /// @param row_count  The number of rows.
         int GetTableHeight(const QTableView* table_view, int row_count);
+
+        /// @brief Template function to create a context menu for a resource list table and execute it.
+        ///
+        /// The model type is templated to allow different classes to be used for the model that share
+        /// the same member function.
+        ///
+        template <typename ModelType>
+        void CreateResourceTableContextMenu(QWidget* parent, const QTableView* table_view, const QPoint& pos, ModelType* model)
+        {
+            QModelIndex index = table_view->indexAt(pos);
+            if (!index.isValid())
+            {
+                return;  // No item under the cursor.
+            }
+
+            QMenu    menu(parent);
+            QAction* save_action = new QAction("Save resources to disk", parent);
+
+            // Connect actions to slots.
+            parent->connect(save_action, &QAction::triggered, parent, [=]() { model->DumpResourceTable(parent); });
+
+            menu.addAction(save_action);
+
+            // Map the position to global coordinates.
+            QPoint global_pos = table_view->viewport()->mapToGlobal(pos);
+            menu.exec(global_pos);
+
+            // Clean up.
+            delete save_action;
+        }
 
     }  // namespace widget_util
 }  // namespace rmv

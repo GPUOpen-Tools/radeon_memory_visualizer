@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a number of string utilities.
@@ -74,7 +74,7 @@ QString rmv::string_util::LocalizedValuePrecise(double value)
 QString rmv::string_util::LocalizedValueMemory(const double value, const bool in_base_10, const bool use_round, const bool include_decimal)
 {
     QString ByteUnits = RMVSettings::Get().GetByteUnits();
-    bool base_10 = in_base_10;
+    bool    base_10   = in_base_10;
     if (ByteUnits == rmv::text::kSettingsByteUnitsBinary)
     {
         base_10 = false;

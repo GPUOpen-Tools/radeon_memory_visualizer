@@ -370,7 +370,7 @@
              <enum>Qt::Horizontal</enum>
             </property>
             <property name="SliderType">
-             <enum>ESliderType::MipLevel</enum>
+             <enum>RmvSliderType::MipLevel</enum>
             </property>
            </widget>
           </item>

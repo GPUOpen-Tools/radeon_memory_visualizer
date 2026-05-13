@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Memory Leak Finder model.
@@ -115,6 +115,13 @@ namespace rmv
         ///
         /// @return The snapshot point of the snapshot containing the resource.
         RmtSnapshotPoint* FindSnapshot(const QModelIndex& index) const;
+
+        /// @brief Dump the resource table to disk.
+        ///
+        /// Determines the resource usage and dumps out the relevent information.
+        ///
+        /// @param [in] file_name The name of the file to dump the output to.
+        void DumpResourceTable(QWidget* parent) const;
 
     private:
         /// @brief Update labels at the bottom.

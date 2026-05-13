@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Memory leak finder pane.
@@ -80,6 +80,10 @@ MemoryLeakFinderPane::MemoryLeakFinderPane(QWidget* parent)
     connect(ui_->base_allocations_checkbox_, &RMVColoredCheckbox::Clicked, this, &MemoryLeakFinderPane::CompareFilterChanged);
     connect(ui_->diff_allocations_checkbox_, &RMVColoredCheckbox::Clicked, this, &MemoryLeakFinderPane::CompareFilterChanged);
     connect(&rmv::MessageManager::Get(), &rmv::MessageManager::HashesChanged, this, &MemoryLeakFinderPane::UpdateHashes);
+
+    // Add a context menu to the resource table.
+    ui_->resource_table_view_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui_->resource_table_view_, &QTableView::customContextMenuRequested, this, &MemoryLeakFinderPane::DumpResourceTable);
 
     // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetResourceProxyModel(), &rmv::MemoryLeakFinderProxyModel::layoutChanged, this, &MemoryLeakFinderPane::ScrollToSelectedResource);
@@ -262,4 +266,9 @@ void MemoryLeakFinderPane::ScrollToSelectedResource()
             ui_->resource_table_view_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
         }
     }
+}
+
+void MemoryLeakFinderPane::DumpResourceTable(const QPoint& pos)
+{
+    rmv::widget_util::CreateResourceTableContextMenu(this, ui_->resource_table_view_, pos, model_);
 }

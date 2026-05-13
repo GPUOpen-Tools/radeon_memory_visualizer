@@ -1,11 +1,14 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Main entry point.
 //=============================================================================
 
 #include <stdarg.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include <QApplication>
 #include <QDir>
@@ -25,9 +28,9 @@
 /// @brief Handle printing from the backend.
 ///
 /// @param [in] message Incoming message.
-void PrintCallback(const char* message)
+void PrintCallback(LogLevel log_level, const char* message)
 {
-    DebugWindow::DbgMsg(message);
+    DebugWindow::DbgMsg(log_level, message);
 }
 
 /// @brief Detect RMV trace if any was specified as command line param.
@@ -62,9 +65,7 @@ static RmtDataSnapshot command_line_snapshot;
 /// @param [in] argv An array containing arguments.
 int main(int argc, char* argv[])
 {
-#ifdef _DEBUG
     RmtSetPrintingCallback(PrintCallback, true);
-#endif
 #if 0
     // Test feature to dump RMV file to JSON. Need a bunch of error handling.
     if (argc == 4)
@@ -100,6 +101,9 @@ int main(int argc, char* argv[])
     int         result = -1;
     if (window != nullptr)
     {
+#ifdef _WIN32
+        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
+#endif
         window->show();
 
         // Initialize scaling manager and call ScaleFactorChanged at least once, so that

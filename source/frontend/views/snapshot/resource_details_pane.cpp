@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource details pane.
@@ -135,7 +135,7 @@ ResourceDetailsPane::ResourceDetailsPane(QWidget* parent)
 
     // Click on the table to update the selected icon on the timeline, then call update via a lambda which will cause a repaint.
     connect(ui_->resource_timeline_table_view_, &QTableView::clicked, model_, &rmv::ResourceDetailsModel::TimelineEventSelected);
-    connect(ui_->resource_timeline_table_view_, &QTableView::clicked, [=]() { ui_->resource_timeline_->update(); });
+    connect(ui_->resource_timeline_table_view_, &QTableView::clicked, [=, this]() { ui_->resource_timeline_->update(); });
 
     // Resource base address should navigate to allocation explorer.
     ui_->content_base_address_->setCursor(Qt::PointingHandCursor);
@@ -368,8 +368,8 @@ void ResourceDetailsPane::ShowPropertiesTableContextMenu(const QPoint& pos)
     QAction* save_clipboard_csv_action  = new QAction("Copy table contents to clipboard as csv text", this);
 
     // Connect actions to slots.
-    connect(save_clipboard_text_action, &QAction::triggered, this, [=]() { SavePropertiesToClipboard(false); });
-    connect(save_clipboard_csv_action, &QAction::triggered, this, [=]() { SavePropertiesToClipboard(true); });
+    connect(save_clipboard_text_action, &QAction::triggered, this, [=, this]() { SavePropertiesToClipboard(false); });
+    connect(save_clipboard_csv_action, &QAction::triggered, this, [=, this]() { SavePropertiesToClipboard(true); });
 
     menu.addAction(save_clipboard_text_action);
     menu.addAction(save_clipboard_csv_action);

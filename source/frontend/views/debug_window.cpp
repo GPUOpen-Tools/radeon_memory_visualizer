@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the debug window.
@@ -124,7 +124,7 @@ void DebugWindow::RegisterDbgWindow()
     qInstallMessageHandler(MyMessageHandler);
 }
 
-void DebugWindow::DbgMsg(const char* pFormat, ...)
+void DebugWindow::DbgMsg(LogLevel log_level, const char* pFormat, ...)
 {
     if (debug_window != nullptr)
     {
@@ -133,7 +133,7 @@ void DebugWindow::DbgMsg(const char* pFormat, ...)
         va_start(args, pFormat);
         vsnprintf(buffer, 2048, pFormat, args);
         debug_window->EmitSetText(QString(buffer));
-        rmv::LogFileWriter::Get().WriteLog(rmv::LogFileWriter::kDebug, buffer);
+        rmv::LogFileWriter::Get().WriteLog(log_level, buffer);
         va_end(args);
     }
 }

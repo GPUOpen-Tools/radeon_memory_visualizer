@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a model corresponding to a resource combo box.
@@ -73,7 +73,7 @@ namespace rmv
             RMT_ASSERT(checkbox != nullptr);
             if (checkbox != nullptr)
             {
-                connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true, heap_checkbox_item_index_); });
+                connect(checkbox, &QCheckBox::clicked, this, [=, this]() { emit FilterChanged(true, heap_checkbox_item_index_); });
             }
         }
 
@@ -83,7 +83,7 @@ namespace rmv
         RMT_ASSERT(checkbox != nullptr);
         if (checkbox != nullptr)
         {
-            connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true, all_checkbox_item_index_); });
+            connect(checkbox, &QCheckBox::clicked, this, [=, this]() { emit FilterChanged(true, all_checkbox_item_index_); });
         }
 
         // Add resources if they are not excluded.
@@ -98,7 +98,7 @@ namespace rmv
                 if (checkbox != nullptr)
                 {
                     const int item_index = combo_box->RowCount() - 1;
-                    connect(checkbox, &QCheckBox::clicked, this, [=]() { emit FilterChanged(true, item_index); });
+                    connect(checkbox, &QCheckBox::clicked, this, [=, this]() { emit FilterChanged(true, item_index); });
                 }
             }
         }

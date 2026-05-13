@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with the RDF file format.
@@ -10,9 +10,9 @@
 #include <map>
 #include <vector>
 
-#include "rdf/rdf/inc/amdrdf.h"
-#include "system_info_utils/source/driver_overrides_reader.h"
-#include "system_info_utils/source/system_info_reader.h"
+#include "amdrdf.h"
+#include "driver_overrides_reader.h"
+#include "system_info_reader.h"
 
 #include "rmt_assert.h"
 #include "rmt_error.h"
@@ -449,13 +449,8 @@ static RmtErrorCode LoadSystemInfoChunk(rdfChunkFile* chunk_file, RmtDataSet* da
     return result;
 }
 
-RmtErrorCode RmtRdfFileParserLoadRdf(const char* path, RmtDataSet* data_set)
+RmtErrorCode RmtRdfParserLoadStream(RmtErrorCode error_code, RmtDataSet* data_set, const char* path)
 {
-    RMT_RETURN_ON_ERROR(path, kRmtErrorInvalidPointer);
-    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
-
-    RmtErrorCode error_code = RmtRdfStreamOpen(path, data_set->flags.read_only);
-
     if (error_code == kRmtOk)
     {
         rdfChunkFile* chunk_file = nullptr;
@@ -519,7 +514,46 @@ RmtErrorCode RmtRdfFileParserLoadRdf(const char* path, RmtDataSet* data_set)
         // Other applications can open the file in read only mode.  When the user closes the trace, the RDF stream is closed by the destroy data set process.
         RmtRdfStreamClose();
     }
+    return error_code;
+}
 
+RmtErrorCode RmtRdfFileParserLoadRdfFromMemory(uint8_t* bytes, size_t num_bytes, RmtDataSet* data_set)
+{
+    RMT_RETURN_ON_ERROR(bytes, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RmtErrorCode error_code = RmtRdfStreamOpenFromMemory(bytes, num_bytes);
+
+    error_code = RmtRdfParserLoadStream(error_code, data_set, data_set->temporary_file_path);
+
+    return error_code;
+}
+
+RmtErrorCode RmtRdfFileParserLoadRdf(const char* path, RmtDataSet* data_set)
+{
+    RMT_RETURN_ON_ERROR(path, kRmtErrorInvalidPointer);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+
+    RmtErrorCode error_code = RmtRdfStreamOpen(path, data_set->flags.read_only);
+
+    error_code = RmtRdfParserLoadStream(error_code, data_set, path);
+
+    return error_code;
+}
+
+RmtErrorCode RmtRdfStreamOpenFromMemory(uint8_t* bytes, size_t num_bytes)
+{
+    RMT_RETURN_ON_ERROR(bytes, kRmtErrorInvalidPointer);
+    RMT_ASSERT(global_data_stream == nullptr);
+    RmtErrorCode error_code = kRmtErrorMalformedData;
+    if (global_data_stream != nullptr)
+    {
+        RmtRdfStreamClose();
+    }
+    rdfResult rdf_result = static_cast<rdfResult>(rdfStreamFromReadOnlyMemory(num_bytes, bytes, &global_data_stream));
+    if ((rdf_result == rdfResult::rdfResultOk) && (global_data_stream != nullptr))
+    {
+        error_code = kRmtOk;
+    }
     return error_code;
 }
 

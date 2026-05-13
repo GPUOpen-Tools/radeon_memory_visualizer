@@ -151,7 +151,7 @@
                  <enum>Qt::Horizontal</enum>
                 </property>
                 <property name="SliderType">
-                 <enum>ESliderType::MipLevel</enum>
+                 <enum>RmvSliderType::MipLevel</enum>
                 </property>
                </widget>
               </item>
@@ -292,19 +292,6 @@
                  </size>
                 </property>
                </spacer>
-              </item>
-              <item>
-               <widget class="ScaledPushButton" name="dump_resources_button_">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Dump resource table</string>
-                </property>
-               </widget>
               </item>
              </layout>
             </widget>

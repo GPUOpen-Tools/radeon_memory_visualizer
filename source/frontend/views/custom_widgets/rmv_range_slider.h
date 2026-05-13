@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the custom range slider widget.
@@ -14,21 +14,22 @@
 
 #include "views/custom_widgets/rmv_fixed_width_label.h"
 
-enum class ESliderType : int8_t
+enum class RmvSliderType : int8_t
 {
-    Size = 0,
-    MipLevel,
-    Num
+    Size = 0,  ///< Slider type for resource size.
+    MipLevel,  ///< Slider type for resource mip level.
+
+    NumSliderTypes
 };
 
 /// @brief Range slider that extends the double slider widget by adding a range value label.
 class RmvRangeSlider : public DoubleSliderWidget
 {
-    Q_PROPERTY(ESliderType SliderType READ SliderType WRITE setSliderType)
+    Q_PROPERTY(RmvSliderType SliderType READ SliderType WRITE setSliderType)
 public:
     /// @brief Constructor
     ///
-    /// @param [in] parent                               The parent of slider widget.
+    /// @param [in] parent  The parent of slider widget.
     explicit RmvRangeSlider(QWidget* parent = nullptr);
 
     /// @brief Destructor.
@@ -38,22 +39,22 @@ public:
     void Init();
 
     /// @brief Get rmv range slider type.
-    ESliderType SliderType() const;
+    RmvSliderType SliderType() const;
 
     /// @brief Set rmv range slider type.
     ///
-    /// @param [in] slider_type                     The type of this slider widget.
-    void setSliderType(ESliderType slider_type);
+    /// @param [in] slider_type  The type of this slider widget.
+    void setSliderType(RmvSliderType slider_type);
 
 private slots:
     /// @brief Slot to update the range value label when the slide is adjusted.
     ///
-    /// @param [in] min_value                       The minimum index value for the slider.
-    /// @param [in] max_value                       The maximum index value for the slider.
+    /// @param [in] min_value   The minimum index value for the slider.
+    /// @param [in] max_value   The maximum index value for the slider.
     void UpdateValues(const int min_value, const int max_value);
 
 private:
     RmvFixedWidthLabel* range_value_label_;  ///< A pointer to the label widget that displays the range values.
-    ESliderType slider_type_;
+    RmvSliderType       slider_type_;        ///< The type of slider (size or mipmap).
 };
 #endif  // RMV_VIEWS_CUSTOM_WIDGETS_RMV_RANGE_SLIDER_H_

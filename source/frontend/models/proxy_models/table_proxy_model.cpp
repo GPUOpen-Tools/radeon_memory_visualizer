@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes multiple columns.
@@ -118,8 +118,8 @@ namespace rmv
 
     bool TableProxyModel::FilterMipLevelSlider(int row, int column, const QModelIndex& source_parent) const
     {
-        const QModelIndex&  mip_filter_index    = sourceModel()->index(row, column, source_parent);
-        const uint32_t      mip_level           = mip_filter_index.data(Qt::UserRole).toUInt();
+        const QModelIndex& mip_filter_index = sourceModel()->index(row, column, source_parent);
+        const uint32_t     mip_level        = mip_filter_index.data(Qt::UserRole).toUInt();
 
         return mip_level == 0 || !(mip_level < min_mip_level_ || mip_level > max_mip_level_);
     }

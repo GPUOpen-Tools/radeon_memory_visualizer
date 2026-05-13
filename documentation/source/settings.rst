@@ -3,13 +3,32 @@ Settings
 
 General
 -------
-**Check for updates** If checked, the Radeon Memory Visualizer will alert you
+
+.. image:: media/settings/general_1.png
+
+**Automatic updates** If checked, the Radeon Memory Visualizer will alert you
 that a new version is available for download.
 
-**Show Driver experiment notifications** If checked, the Radeon Memory Visualizer
+**Driver experiment notifications** If checked, the Radeon Memory Visualizer
 will display a notification banner under the main drop down menu of the user
 interface indicating when a loaded memory trace file contains modified Driver
 experiments.
+
+**Log level** Will allow selection of how verbose the logging should be. Options are
+**Error**, **Warning**, **Info** and **Debug**. Selecting **Error** will show only
+error messages. Selecting info will show Information messages, errors and warnings.
+The log file is saved to disk in the same location as the settings file. On Windows,
+this is in the user AppData\Roaming\RadeonMemoryVisualizer folder; on Linux,
+it can be found in the folder '~/.RadeonMemoryVisualizer'
+
+**Time units** This tells the Radeon Memory Visualizer whether to work in clocks,
+milliseconds, seconds, minutes or hours. Refer to the keyboard binding in the section
+below to quickly toggle between these time units.
+
+**Byte units** Allows memory sizes to be displayed in binary or decimal format.
+Historically, physical memory sizes are in binary (1024 bytes per kilobyte). Displaying
+in decimal will show 1000 bytes per kilobyte. Selecting default will disable the binary
+or decimal override.
 
 Themes and colors
 -----------------

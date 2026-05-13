@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Allocation explorer model.
@@ -197,6 +197,15 @@ namespace rmv
         }
     }
 
+    void VirtualAllocationExplorerModel::FilterByMipLevelChanged(int min_value, int max_value)
+    {
+        const uint64_t scaled_min = rmv_util::CalculateThresholdFromStepValue(min_value, rmv::kMipSliderRange - 1);
+        const uint64_t scaled_max = rmv_util::CalculateThresholdFromStepValue(max_value, rmv::kMipSliderRange - 1);
+
+        resource_proxy_model_->SetMipLevelFilter(scaled_min, scaled_max);
+        resource_proxy_model_->invalidate();
+    }
+
     AllocationProxyModel* VirtualAllocationExplorerModel::GetAllocationProxyModel() const
     {
         return allocation_proxy_model_;
@@ -210,5 +219,10 @@ namespace rmv
     AllocationBarModel* VirtualAllocationExplorerModel::GetAllocationBarModel() const
     {
         return allocation_bar_model_;
+    }
+
+    void VirtualAllocationExplorerModel::DumpResourceTable(QWidget* parent) const
+    {
+        resource_table_model_->DumpResourceTable(parent, resource_proxy_model_, nullptr, nullptr);
     }
 }  // namespace rmv

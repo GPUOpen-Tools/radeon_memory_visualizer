@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -130,7 +130,7 @@ typedef struct RmtDataSet
 /// means if a crash of the application (or wider system) where to happen during a
 /// change to the file, then the RMV file may be rendered corrupted and unusable. If
 /// we instead copy the file on load, and work in the temporary copy, and then, using
-/// only metadata edits (i.e.: rename and delete), place that back where the orignial
+/// only metadata edits (i.e.: rename and delete), place that back where the original
 /// file was. Then even if the system were to crash, the integrity of the original
 /// RMV file is always preserved.
 ///
@@ -142,6 +142,18 @@ typedef struct RmtDataSet
 /// @retval
 /// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
 RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set);
+
+/// Initialize the RMT data set from a stream of data already in memory.
+///
+/// @param [in]  bytes                                      A stream of pre-loaded RDF file data.
+/// @param [in]  num_bytes                                  Size of input data in bytes.
+/// @param [in]  data_set                                   A pointer to a <c><i>RmtDataSet</i></c> structure that will contain the data set.
+///
+/// @retval
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>data_set</i></c> being set to <c><i>NULL</i></c>.
+RmtErrorCode RmtDataSetInitializeFromMemory(uint8_t* bytes, size_t num_bytes, RmtDataSet* data_set);
 
 /// Destroy the data set.
 ///

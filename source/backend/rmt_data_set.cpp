@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -1132,7 +1132,7 @@ static RmtErrorCode ProcessTokenForSnapshot(RmtDataSet* data_set, RmtToken* curr
     {
         if (!RmtResourceUserDataIsResourceImplicit(current_token->resource_update_token.resource_identifier))
         {
-            // Attempt to match the Reource Update token to a previously created resource.
+            // Attempt to match the Resource Update token to a previously created resource.
             // If a resource is found, update the usage flags.
             RmtResourceIdentifier id = current_token->resource_update_token.resource_identifier;
             if (unique_resource_id_lookup_map.find(id) != unique_resource_id_lookup_map.end())
@@ -1360,6 +1360,55 @@ static RmtErrorCode CommitTemporaryFileEdits(RmtDataSet* data_set, bool remove_t
     }
 
     return result;
+}
+
+RmtErrorCode RmtDataSetInitializeFromMemory(uint8_t* bytes, size_t num_bytes, RmtDataSet* data_set)
+{
+    RMT_ASSERT(data_set);
+    RMT_RETURN_ON_ERROR(data_set, kRmtErrorInvalidPointer);
+    RmtErrorCode error_code = kRmtOk;
+
+    // Initialize the Driver Overrides string.
+    data_set->driver_overrides_json_text    = nullptr;
+    data_set->file_path[0]                  = '\0';
+    data_set->temporary_file_path[0]        = '\0';
+    data_set->file_handle                   = NULL;
+    data_set->flags.read_only               = true;
+    data_set->flags.is_rdf_trace            = false;
+    data_set->flags.implicit_heap_detection = false;
+    data_set->active_gpu                    = 0;
+    data_set->error_report_func             = nullptr;
+
+    // Attempt to open the byte stream in RDF format.
+    error_code = RmtRdfFileParserLoadRdfFromMemory(bytes, num_bytes, data_set);
+
+    // Vega and older GPUs are no longer supported.
+    if (error_code == kRmtOk && data_set->system_info.pcie_family_id < kFamilyNavi)
+    {
+        error_code = kRmtErrorTraceFileNotSupported;
+    }
+
+    if (error_code == kRmtOk)
+    {
+        CheckForCpuHostApertureSupport(data_set);
+        CheckForSAMSupport(data_set);
+        data_set->flags.local_heap_only = data_set->flags.sam_enabled || data_set->flags.cpu_host_aperture_enabled;
+
+        // Construct the data profile for subsequent data parsing.
+        data_set->flags.contains_correlation_tokens = false;
+        error_code                                  = BuildDataProfile(data_set);
+        RMT_ASSERT(error_code == kRmtOk);
+    }
+
+    if (error_code != kRmtOk)
+    {
+        DestroySnapshotWriter(data_set);
+        data_set->flags.is_rdf_trace = false;
+
+        data_set->flags.read_only = false;
+    }
+
+    return error_code;
 }
 
 // initialize the data set by reading the header chunks, and setting up the streams.
@@ -1663,7 +1712,7 @@ static int32_t UpdateSeriesValuesFromCurrentSnapshot(const RmtDataSnapshot* curr
     // calculate the index within the level-0 series for the value
     const int32_t value_index = RmtDataSetGetSeriesIndexForTimestamp(current_snapshot->data_set, current_snapshot->timestamp);
 
-    // Smeer from lastValueIndex until valueIndex if its >1 step away.
+    // Smear from lastValueIndex until valueIndex if its >1 step away.
     if (last_value_index > 0)
     {
         for (int32_t current_value_index = last_value_index + 1; current_value_index < value_index; ++current_value_index)
@@ -1683,8 +1732,8 @@ static int32_t UpdateSeriesValuesFromCurrentSnapshot(const RmtDataSnapshot* curr
     {
         for (int32_t current_process_index = 0; current_process_index < current_snapshot->process_map.process_count; ++current_process_index)
         {
-            const uint64_t comitted_memory_for_process = current_snapshot->process_map.process_committed_memory[current_process_index];
-            out_timeline->series[current_process_index].levels[0].values[value_index] = comitted_memory_for_process;
+            const uint64_t committed_memory_for_process = current_snapshot->process_map.process_committed_memory[current_process_index];
+            out_timeline->series[current_process_index].levels[0].values[value_index] = committed_memory_for_process;
         }
     }
     break;

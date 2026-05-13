@@ -31,7 +31,7 @@ There are a few ways to load a trace into RMV.
    
   Note that RMV is also capable of loading Radeon GPU Detective (.rgd) files.
   In order to view .rgd file names in the File open dialog box, be sure to select
-  "RGD crash dump files (*.rgd)" in the file filter dropdown listbox.  RGD files
+  "RGD crash dump files (\*.rgd)" in the file filter dropdown listbox.  RGD files
   load all the same types of data as RMV files, however, they are opened in
   read-only mode (i.e., created snapshots are not saved).
 

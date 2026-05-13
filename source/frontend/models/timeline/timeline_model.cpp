@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Timeline model.
@@ -332,7 +332,7 @@ namespace rmv
         min_visible_ = min_visible;
         max_visible_ = max_visible;
 
-        LogFileWriter::Get().WriteLog(LogFileWriter::kDebug, "UpdateMemoryUsage: minVisible %lld, maxVisible %lld", min_visible, max_visible);
+        LogFileWriter::Get().WriteLog(kLogLevelDebug, "UpdateMemoryGraph: minVisible %lld, maxVisible %lld", min_visible, max_visible);
 
         TraceManager& trace_manager = TraceManager::Get();
         if (!trace_manager.DataSetValid())

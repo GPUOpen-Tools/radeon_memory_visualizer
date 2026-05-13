@@ -46,6 +46,12 @@ The viewing mode can be changed by selecting from the combo box above the top-le
 of the timeline. Note that with previous releases of RMV, the default Timeline view was
 "Resource usage size." The default mode is now "Virtual memory heap."
 
+A memory heap is the type of memory where a resource resides. The **Host** heap (or system memory)
+is host memory. The **Invisible** heap is local memory that is not mappable on the CPU. The
+**Local** heap is local memory that is mappable on the CPU; as such, it may be slower than using
+the **Invisible** heap. The **Unspecified** heap is for resources that are created with no backing
+physical memory.
+
 A color legend below the timeline will indicate what resources are represented by the
 colors in the timeline.
 

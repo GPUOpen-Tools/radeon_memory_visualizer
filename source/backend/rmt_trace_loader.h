@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Trace loader structures and functions.
@@ -36,6 +36,15 @@ bool RmtTraceLoaderDataSetValid();
 ///
 /// @return an RmtErrorCode indicating whether the trace loaded correctly.
 RmtErrorCode RmtTraceLoaderTraceLoad(const char* trace_file_name, RmtDataSetErrorReportFunc reporter_function = nullptr);
+
+/// @brief Load a trace already in memory.
+///
+/// @param[in] bytes              Trace file data in memory.
+/// @param[in] num_bytes          Size of input data in bytes.
+/// @param[in] reporter_function  The callback function used to report errors.
+///
+/// @return an RmtErrorCode indicating whether the trace loaded correctly.
+RmtErrorCode RmtTraceLoaderTraceLoadFromMemory(uint8_t* bytes, size_t num_bytes, RmtDataSetErrorReportFunc reporter_function = nullptr);
 
 /// @brief Clear out the trace data.
 void RmtTraceLoaderClearTrace();

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Private Structures and functions for collecting memory event history.
@@ -24,7 +24,7 @@ typedef struct EventInfoImpl
     }
 
     RmtResourceHistoryEventType event_type;  ///< The event type that this structure holds.
-    uint64_t                    timestamp;   ///< The time that the event occured.
+    uint64_t                    timestamp;   ///< The time that the event occurred.
     union EventData
     {
         RmtMemoryEventHistoryPhysicalMapToLocalEventInfo physical_map_to_local_info;  ///< Parameters associated with the Physical Memory Map to Local event.

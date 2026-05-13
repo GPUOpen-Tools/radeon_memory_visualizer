@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the debug window.
@@ -11,6 +11,8 @@
 #include <QDialog>
 
 #include "ui_debug_window.h"
+
+#include "rmt_print.h"
 
 /// @brief Support for the debug window.
 class DebugWindow : public QDialog
@@ -26,8 +28,9 @@ public:
 
     /// @brief Send a message to the debug window. Supports multiple arguments.
     ///
-    /// @param [in] format The string containing format for each argument.
-    static void DbgMsg(const char* format, ...);
+    /// @param [in] log_level  The log message type (info, error, warning etc).
+    /// @param [in] format     The string containing format for each argument.
+    static void DbgMsg(LogLevel log_level, const char* format, ...);
 
 signals:
     /// @brief Signal that gets emitted when the debug window has new text to add.

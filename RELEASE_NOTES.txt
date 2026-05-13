@@ -1,10 +1,13 @@
-Radeon™ Memory Visualizer V1.14
+Radeon™ Memory Visualizer V1.15
 -------------------------------
 
-V1.14 Changes
+V1.15 Changes
 ------------------------------------
-1) UI support for work graph backing memory.
-2) Bug/stability fixes.
+1) Option to view memory as binary or decimal.
+2) Dimension, mip level and format parameters added to the resource tables for texture resources.
+3) Mip level slider added to resource tables.
+4) Allow resource tables to be saved to disk.
+5) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -24,6 +27,11 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.14 Changes
+------------------------------------
+1) UI support for work graph backing memory.
+2) Bug/stability fixes.
 
 V1.13 Changes
 ------------------------------------

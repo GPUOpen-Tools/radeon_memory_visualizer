@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Allocation explorer model.
@@ -105,6 +105,12 @@ namespace rmv
         /// @param [in] max_value Maximum value of slider span.
         void ResourceSizeFilterChanged(int min_value, int max_value);
 
+        /// @brief Handle what happens when user changes the 'filter by mip level' slider.
+        ///
+        /// @param [in] min_value Minimum value of slider span.
+        /// @param [in] max_value Maximum value of slider span.
+        void FilterByMipLevelChanged(int min_value, int max_value);
+
         /// @brief Update the allocation table.
         ///
         /// Only needs to be done when loading in a new snapshot.
@@ -133,6 +139,13 @@ namespace rmv
         ///
         /// @return The allocation bar model.
         AllocationBarModel* GetAllocationBarModel() const;
+
+        /// @brief Dump the resource table to disk.
+        ///
+        /// Determines the resource usage and dumps out the relevent information.
+        ///
+        /// @param [in] file_name The name of the file to dump the output to.
+        void DumpResourceTable(QWidget* parent) const;
 
     private:
         AllocationBarModel*   allocation_bar_model_;     ///< The model for the allocation bar graph.

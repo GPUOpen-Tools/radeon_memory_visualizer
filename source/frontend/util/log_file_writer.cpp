@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the LogFileWriter.
@@ -21,16 +21,12 @@
 
 #include <QFile>
 
+#include "settings/rmv_settings.h"
 #include "util/rmv_util.h"
 
 namespace rmv
 {
     LogFileWriter::LogFileWriter()
-#ifdef _DEBUG
-        : log_level_(kDebug)
-#else
-        : log_level_(kError)
-#endif
     {
         // Delete the log file from the previous instance.
         QFile::remove(GetLogFileLocation());
@@ -69,7 +65,7 @@ namespace rmv
 
     void LogFileWriter::WriteLog(LogLevel log_level, const char* log_message, ...)
     {
-        if (log_level <= log_level_)
+        if (log_level <= RMVSettings::Get().GetLogLevel())
         {
             static const int kBufferSize = 2048;
             char             buffer[kBufferSize];
@@ -90,7 +86,7 @@ namespace rmv
         log_file = rmv_util::GetFileLocation();
 
         // Add the file name.
-        log_file.append("/RMVLogFile.txt");
+        log_file.append("/rmv_log_file.txt");
 
         return log_file;
     }

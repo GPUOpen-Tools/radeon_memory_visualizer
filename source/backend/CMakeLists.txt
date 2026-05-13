@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -7,11 +7,7 @@ cmake_minimum_required(VERSION 3.10)
 project(RmvBackend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories(AFTER ../backend ../parser ../../external/rdf/rdf/inc ../third_party)
-
-add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
-add_definitions(-DDRIVER_OVERRIDES_ENABLE_RDF)
-add_definitions(-DRDF_CXX_BINDINGS)
+include_directories(AFTER ../parser ../third_party)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
@@ -90,6 +86,8 @@ IF(WIN32)
 ELSEIF(UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
 ENDIF(WIN32)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE rdf system_info)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

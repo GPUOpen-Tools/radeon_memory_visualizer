@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes multiple columns.
@@ -178,7 +178,7 @@ namespace rmv
                 return SortIdentical(left, right);
             }
 
-            qlonglong left_pixels = 1;
+            qlonglong left_pixels  = 1;
             qlonglong right_pixels = 1;
             for (const QVariant& data : left_data)
             {

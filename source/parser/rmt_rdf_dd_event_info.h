@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the RDF DD Event Information chunk parser.
@@ -8,7 +8,7 @@
 #ifndef RMV_PARSER_RMT_RDF_DD_EVENT_INFO_H_
 #define RMV_PARSER_RMT_RDF_DD_EVENT_INFO_H_
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 /// Load timestamp info from the DD Event chunk header.
 /// @param [in]  chunk_file                      The <c><i>rdfChunkFile</i></c> object pointer to load from.

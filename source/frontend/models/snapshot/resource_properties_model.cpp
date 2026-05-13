@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource properties model.
@@ -203,7 +203,6 @@ namespace rmv
         SetupResourceRow("Mip levels", rmv::string_util::LocalizedValue(resource->image.mip_levels), row_index++);
         SetupResourceRow("Slices", rmv::string_util::LocalizedValue(resource->image.slices), row_index++);
         SetupResourceRow("Sample count", rmv::string_util::LocalizedValue(resource->image.sample_count), row_index++);
-        SetupResourceRow("Fragment count", rmv::string_util::LocalizedValue(resource->image.fragment_count), row_index++);
         SetupResourceRow("Tiling type", RmtGetTilingNameFromTilingType(resource->image.tiling_type), row_index++);
         SetupResourceRow(
             "Tiling optimization mode", RmtGetTilingOptimizationModeNameFromTilingOptimizationMode(resource->image.tiling_optimization_mode), row_index++);

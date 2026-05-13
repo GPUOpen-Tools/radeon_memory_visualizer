@@ -1,13 +1,11 @@
 #######################################################################################################################
-### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
 cmake_minimum_required(VERSION 3.11)
 
 project(RadeonMemoryVisualizer)
-
-add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
 
 IF(WIN32)
     # this warning is caused by the QT header files - use pragma to disable at source
@@ -23,10 +21,6 @@ ENDIF(WIN32)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
-
-# Add UpdateCheckAPI
-add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/../../external/update_check_api ${CMAKE_CURRENT_BINARY_DIR}/update_check_api)
-include_directories(${UPDATECHECKAPI_INC_DIRS})
 
 IF (WIN32)
     # get the location of the Visual Studio redist libraries - but don't create an install rule to install them
@@ -293,11 +287,6 @@ set( SOURCES
     "dark_mode_stylesheet.qss"
     "light_mode_stylesheet.qss"
     "stylesheet.qss"
-    ${UPDATECHECKAPI_SRC}
-    ${UPDATECHECKAPI_INC}
-    ${UPDATECHECKAPI_QT_SRC}
-    ${UPDATECHECKAPI_QT_INC}
-    ${UPDATECHECKAPI_QT_UI}
 )
 
 set( WINDOWS_SOURCES
@@ -319,16 +308,6 @@ set(SOURCES ${SOURCES} ${GENERATED_UI})
 # and not a console application
 IF (WIN32)
     qt_add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${WINDOWS_SOURCES})
-ELSEIF (APPLE)
-    IF (NO_APP_BUNDLE)
-        qt_add_executable(${PROJECT_NAME} ${SOURCES})
-    ELSE ()
-        set(MACOSX_BUNDLE_ICON_FILE rmv.icns)
-        set(MACOSX_ICON mac_osx/rmv.icns)
-        set_source_files_properties(${MACOSX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-        qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${MACOSX_ICON} ${SOURCES})
-        set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_RPATH TRUE MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/mac_osx/MacOSXBundleInfo.plist.in)
-    ENDIF ()
 ELSEIF (UNIX)
     qt_add_executable(${PROJECT_NAME} ${SOURCES})
     # Setting RPATH here results in local build directory also being appended to RPATH
@@ -346,7 +325,7 @@ ENDIF (WIN32)
 # Apply common developer tools target options and definitions
 devtools_target_options(${PROJECT_NAME})
 
-IF (WIN32 OR APPLE)
+IF (WIN32)
     SOURCE_GROUP_BY_FOLDER(${PROJECT_NAME})
 ENDIF ()
 
@@ -359,10 +338,11 @@ IF (CMAKE_RELEASE_POSTFIX)
 ENDIF (CMAKE_RELEASE_POSTFIX)
 
 # executable file library dependency list
+target_link_libraries(${PROJECT_NAME} PRIVATE RmvBackend RmvParser Qt::Widgets QtCustomWidgets QtUtils AMD::update_check_api_qt)
 IF (WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE RmvBackend RmvParser system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE wsock32 winmm)
 ELSEIF (UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE RmvBackend RmvParser system_info rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 ENDIF ()
 
 if (LINUX)

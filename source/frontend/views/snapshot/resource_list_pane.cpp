@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Resource List pane.
@@ -8,10 +8,7 @@
 #include "views/snapshot/resource_list_pane.h"
 
 #include <QCheckBox>
-#include <QFileDialog>
 #include <QScrollBar>
-#include <QFileDialog>
-#include <QDir>
 
 #include "qt_common/custom_widgets/double_slider_widget.h"
 
@@ -73,9 +70,10 @@ ResourceListPane::ResourceListPane(QWidget* parent)
     connect(ui_->search_box_, &QLineEdit::textChanged, this, &ResourceListPane::SearchBoxChanged);
     connect(ui_->resource_table_view_, &QTableView::clicked, this, &ResourceListPane::TableClicked);
     connect(ui_->resource_table_view_, &QTableView::doubleClicked, this, &ResourceListPane::TableDoubleClicked);
-    connect(ui_->dump_resources_button_, &QPushButton::clicked, this, &ResourceListPane::DumpResources);
 
-    // ui_->dump_resources_button_->hide();
+    // Add a context menu to the resource table.
+    ui_->resource_table_view_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui_->resource_table_view_, &QTableView::customContextMenuRequested, this, &ResourceListPane::DumpResourceTable);
 
     // Set up a connection between the timeline being sorted and making sure the selected event is visible.
     connect(model_->GetResourceProxyModel(), &rmv::ResourceProxyModel::layoutChanged, this, &ResourceListPane::ScrollToSelectedResource);
@@ -283,37 +281,6 @@ void ResourceListPane::ScrollToSelectedResource()
     }
 }
 
-void ResourceListPane::DumpResources()
-{
-    QString FilePath = QFileDialog::getSaveFileName(this, "Dump Resources", QDir::cleanPath(QDir::homePath() + "/rmv_resources.csv"), "CSV files | *.csv");
-    QFile File(FilePath);
-    if (!File.open(QIODevice::WriteOnly | QIODevice::Text))
-        return;
-
-    ui_->dump_resources_button_->setEnabled(false);
-    QTextStream Stream(&File);
-    auto proxy_model_ = model_->GetResourceProxyModel();
-
-    for (int32_t j = rmv::kResourceColumnName; j <= rmv::kResourceColumnMappedNone; j++)
-    {
-        Stream << proxy_model_->headerData(j, Qt::Horizontal).toString() << ",";
-    }
-    Stream << "\n";
-
-    for (int32_t i = 0; i < proxy_model_->rowCount(); i++)
-    {
-        for (int32_t j = rmv::kResourceColumnName; j <= rmv::kResourceColumnMappedNone; j++)
-        {
-            Stream << proxy_model_->GetDataAsStr(i, j) << ",";
-        }
-        Stream << "\n";
-    }
-
-    File.close();
-
-    ui_->dump_resources_button_->setEnabled(true);
-}
-
 void ResourceListPane::SelectResourceInTable()
 {
     if (selected_resource_identifier_ != 0)
@@ -325,4 +292,9 @@ void ResourceListPane::SelectResourceInTable()
             ui_->resource_table_view_->selectRow(resource_index.row());
         }
     }
+}
+
+void ResourceListPane::DumpResourceTable(const QPoint& pos)
+{
+    rmv::widget_util::CreateResourceTableContextMenu(this, ui_->resource_table_view_, pos, model_);
 }

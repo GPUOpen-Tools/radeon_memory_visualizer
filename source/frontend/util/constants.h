@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -55,7 +55,7 @@ namespace rmv
     static const int kHeapComboBoxWidth     = 140;
     static const int kResourceComboBoxWidth = 140;
     static const int kSizeSliderRange       = 25;
-    static const int kMipSliderRange       = 16;
+    static const int kMipSliderRange        = 16;
 
     // Control window sizes.
     static const int   kDesktopMargin                      = 25;
@@ -139,7 +139,6 @@ namespace rmv
         static const QString kSettingsUnitsHours        = "Hours";
 
         // Byte units.
-        static const QString kSettingsByteUnitsDefault = "Default";
         static const QString kSettingsByteUnitsBinary  = "Binary";
         static const QString kSettingsByteUnitsDecimal = "Decimal";
 
@@ -164,6 +163,12 @@ namespace rmv
         static const QUrl kRgdGpuOpenUrl             = QUrl("https://gpuopen.com/radeon-gpu-detective/");
         static const QUrl kRraGpuOpenUrl             = QUrl("https://gpuopen.com/rra/");
         static const QUrl kRdnaPerformanceGpuOpenUrl = QUrl("https://gpuopen.com/performance/");
+
+        /// @brief Log level types in the settings.
+        static const QString kSettingsLogLevelError   = "Error";
+        static const QString kSettingsLogLevelWarning = "Warning";
+        static const QString kSettingsLogLevelInfo    = "Info";
+        static const QString kSettingsLogLevelDebug   = "Debug";
     }  // namespace text
 
     namespace resource

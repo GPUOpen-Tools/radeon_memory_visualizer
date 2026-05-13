@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -15,7 +15,7 @@ endif ()
 function(devtools_target_options name)
 
     set_target_properties(${name} PROPERTIES
-            CXX_STANDARD 17
+            CXX_STANDARD 20
             CXX_STANDARD_REQUIRED ON)
 
     get_target_property(target_type ${name} TYPE)
@@ -48,7 +48,11 @@ function(devtools_target_options name)
                 # Disable warnings about deprecated features
                 # This happens when using later versions of Qt than RDP defaults to.
                 /wd4996
+
+                # Enable control flow guard
+                /guard:cf
                 )
+        target_link_options(${name} PRIVATE /GUARD:CF)
     else ()
 
         message(FATAL_ERROR "Compiler ${CMAKE_CXX_COMPILER_ID} is not supported!")

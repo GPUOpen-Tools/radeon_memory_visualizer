@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a model for a heap layout for the Heap Overview pane.
@@ -41,8 +41,6 @@ namespace rmv
 
         kHeapOverviewNumWidgets,
     };
-
-    class QTableView;
 
     /// @brief Container class that holds model data for a heap in the heap overview pane.
     class HeapOverviewHeapModel : public ModelViewMapper

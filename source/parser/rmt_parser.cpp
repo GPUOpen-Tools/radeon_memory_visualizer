@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for parsing RMT data.
@@ -1657,6 +1657,7 @@ RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtPar
         break;
     default:
         RMT_ASSERT(0);
+        RmtPrint(kLogLevelError, "RmtParserAdvance: Invalid token type found (%s)", RmtGetTokenNameFromTokenType(token_type));
         error_code = kRmtErrorMalformedData;  // corrupted file.
         break;
     }
@@ -1673,6 +1674,7 @@ RmtErrorCode RmtParserAdvance(RmtParser* rmt_parser, RmtToken* out_token, RmtPar
     const int32_t token_size = GetTokenSize(rmt_parser, token_header);
     if (token_size == 0)
     {
+        RmtPrint(kLogLevelError, "RmtParserAdvance: token size is 0");
         // If the token size is zero, this indicates either an alignment issue while parsing or
         // an unknown token type.  In either case, any token parsed after this point is questionable.
         // The parsed data is unreliable because the bytes may be getting misinterpreted.

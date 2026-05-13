@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// $brief  Printing helper functions for RMT.
@@ -11,12 +11,21 @@
 #include "rmt_error.h"
 #include "rmt_format.h"
 
-/// Callback function for printing.
-typedef void (*RmtPrintingCallback)(const char* msg);
-
 #ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
+
+/// @brief Log levels used by the logger from most severe to least severe.
+typedef enum
+{
+    kLogLevelError,
+    kLogLevelWarning,
+    kLogLevelInfo,
+    kLogLevelDebug,
+} LogLevel;
+
+/// Callback function for printing.
+typedef void (*RmtPrintingCallback)(LogLevel log_level, const char* msg);
 
 /// Get the page size as a string from the page size ID.
 ///
@@ -191,9 +200,10 @@ void RmtSetPrintingCallback(RmtPrintingCallback callback_func, bool enable_print
 /// <c><i>RgpSetPrintingCallback</i></c>. If nothing is set, then
 /// printf will be used.
 ///
-/// @param [in] format The formatting string.
-/// @param [in] ...    Variable parameters determined by <c><i>format</i></c>.
-void RmtPrint(const char* format, ...);
+/// @param [in] log_level  The log message type (info, error, warning etc).
+/// @param [in] format     The formatting string.
+/// @param [in] ...        Variable parameters determined by <c><i>format</i></c>.
+void RmtPrint(LogLevel log_level, const char* format, ...);
 
 #ifdef __cplusplus
 }

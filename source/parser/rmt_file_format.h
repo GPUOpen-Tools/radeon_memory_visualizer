@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of structures and functions for the RMT file format.
@@ -115,7 +115,7 @@ typedef struct RmtFileChunkRmtData
 /// A structure encapsulating system information.
 typedef struct RmtFileChunkSystemInfo
 {
-    char     vendor_id[16];        ///< For x86 CPUs this is based off the 12 character ASCII string retreived via CPUID instruction.
+    char     vendor_id[16];        ///< For x86 CPUs this is based off the 12 character ASCII string retrieved via CPUID instruction.
     char     processor_brand[48];  ///< For x86 CPUs this is based off the 48 byte null-terminated ASCII processor brand using CPU instruction.
     uint64_t padding;              ///< Padding after 48 byte string.
     uint64_t

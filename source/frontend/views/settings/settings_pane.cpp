@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Settings pane.
@@ -9,6 +9,8 @@
 
 #include "qt_common/custom_widgets/driver_overrides_model.h"
 
+#include "rmt_print.h"
+
 #include "managers/message_manager.h"
 #include "settings/rmv_settings.h"
 #include "util/widget_util.h"
@@ -16,11 +18,7 @@
 
 using namespace driver_overrides;
 
-static const QVector<QString> ByteUnits {
-    rmv::text::kSettingsByteUnitsDefault,
-    rmv::text::kSettingsByteUnitsBinary,
-    rmv::text::kSettingsByteUnitsDecimal
-};
+static const QVector<QString> ByteUnits{rmv::text::kSettingsByteUnitsBinary, rmv::text::kSettingsByteUnitsDecimal};
 
 SettingsPane::SettingsPane(QWidget* parent)
     : BasePane(parent)
@@ -48,6 +46,16 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->allocation_uniqueness_checkbox_->hide();
     ui_->offset_uniqueness_checkbox_->hide();
 
+    // Populate the log level combo box.
+    rmv::widget_util::InitSingleSelectComboBox(parent, ui_->log_combo_push_button_, rmv::text::kSettingsLogLevelInfo, false);
+    ui_->log_combo_push_button_->ClearItems();
+    ui_->log_combo_push_button_->AddItem(rmv::text::kSettingsLogLevelError);
+    ui_->log_combo_push_button_->AddItem(rmv::text::kSettingsLogLevelWarning);
+    ui_->log_combo_push_button_->AddItem(rmv::text::kSettingsLogLevelInfo);
+    ui_->log_combo_push_button_->AddItem(rmv::text::kSettingsLogLevelDebug);
+    ui_->log_combo_push_button_->SetSelectedRow(kLogLevelInfo);
+    connect(ui_->log_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::LogLevelChanged);
+
     // Populate the time combo box.
     rmv::widget_util::InitSingleSelectComboBox(parent, ui_->units_combo_push_button_, rmv::text::kSettingsUnitsClocks, false);
     ui_->units_combo_push_button_->ClearItems();
@@ -60,7 +68,7 @@ SettingsPane::SettingsPane(QWidget* parent)
     connect(ui_->units_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::TimeUnitsChanged);
 
     // Populate the bytes combo box.
-    rmv::widget_util::InitSingleSelectComboBox(parent, ui_->byte_units_combo_push_button_, rmv::text::kSettingsByteUnitsDefault, false);
+    rmv::widget_util::InitSingleSelectComboBox(parent, ui_->byte_units_combo_push_button_, rmv::text::kSettingsByteUnitsBinary, false);
     ui_->byte_units_combo_push_button_->ClearItems();
     for (const QString& unit : ByteUnits)
     {
@@ -81,6 +89,9 @@ void SettingsPane::showEvent(QShowEvent* event)
     Q_UNUSED(event);
 
     // Update the combo box push button text.
+    int log_level = rmv::RMVSettings::Get().GetLogLevel();
+    ui_->log_combo_push_button_->SetSelectedRow(log_level);
+
     int units = rmv::RMVSettings::Get().GetUnits();
     UpdateTimeComboBox(units);
 
@@ -150,5 +161,12 @@ void SettingsPane::CheckForUpdatesOnStartupStateChanged()
 void SettingsPane::DriverOverridesAllowNotificationsChanged(bool checked)
 {
     rmv::RMVSettings::Get().SetDriverOverridesAllowNotifications(checked);
+    rmv::RMVSettings::Get().SaveSettings();
+}
+
+void SettingsPane::LogLevelChanged()
+{
+    int index = ui_->log_combo_push_button_->CurrentRow();
+    rmv::RMVSettings::Get().SetLogLevel(static_cast<LogLevel>(index));
     rmv::RMVSettings::Get().SaveSettings();
 }

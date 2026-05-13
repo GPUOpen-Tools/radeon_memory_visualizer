@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the settings.
@@ -206,8 +206,9 @@ namespace rmv
         default_settings_[kSettingLastFileOpenLocation]                     = {"LastFileOpenLocation", ""};
         default_settings_[kSettingGeneralCheckForUpdatesOnStartup]          = {"CheckForUpdatesOnStartup", "False"};
         default_settings_[kSettingGeneralTimeUnits]                         = {"TimeUnits", rmv::text::kSettingsUnitsSeconds};
-        default_settings_[kSettingGeneralByteUnits]                         = {"ByteUnits", rmv::text::kSettingsByteUnitsDefault};
+        default_settings_[kSettingGeneralByteUnits]                         = {"ByteUnits", rmv::text::kSettingsByteUnitsBinary};
         default_settings_[kSettingGeneralDriverOverridesAllowNotifications] = {"DriverOverridesAllowNotifications", "True"};
+        default_settings_[kSettingGeneralLogLevel]                          = {"LogLevel", "2"};
 
         default_settings_[kSettingThemesAndColorsPalette] = {"ColorPalette",
                                                              "#FFFFBA02,#FFFF8B00,#FFF76210,#FFE17F35,#FFDA3B01,#FFEF6950,#FFD03438,#FFFF4343,"
@@ -435,7 +436,7 @@ namespace rmv
         }
         else
         {
-            AddPotentialSetting(default_settings_[kSettingGeneralByteUnits].name, rmv::text::kSettingsByteUnitsDefault);
+            AddPotentialSetting(default_settings_[kSettingGeneralByteUnits].name, rmv::text::kSettingsByteUnitsBinary);
         }
         SaveSettings();
     }
@@ -491,6 +492,17 @@ namespace rmv
     bool RMVSettings::GetDriverOverridesAllowNotifications()
     {
         return GetBoolValue(kSettingGeneralDriverOverridesAllowNotifications);
+    }
+
+    LogLevel RMVSettings::GetLogLevel() const
+    {
+        return static_cast<LogLevel>(GetIntValue(kSettingGeneralLogLevel));
+    }
+
+    void RMVSettings::SetLogLevel(LogLevel node_id_type)
+    {
+        SetIntValue(kSettingGeneralLogLevel, node_id_type);
+        SaveSettings();
     }
 
     int RMVSettings::GetColorTheme()

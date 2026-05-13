@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the RDF GPU Memory Segment (heap) Information chunk parser.
@@ -10,7 +10,7 @@
 
 #include "rmt_types.h"
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 /// The Parser for the RFD GPU Memory Segment Info Chunk.
 class RmtRdfGpuMemSegmentInfo

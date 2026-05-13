@@ -1,12 +1,12 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test system info header.
 //=============================================================================
 
-#ifndef RMV_TEST_SYSTEM_INFO_H_
-#define RMV_TEST_SYSTEM_INFO_H_
+#ifndef RMV_BACKEND_TEST_RMV_TEST_SYSTEM_INFO_H_
+#define RMV_BACKEND_TEST_RMV_TEST_SYSTEM_INFO_H_
 
 #include "rmt_data_set.h"
 #include "rmt_rdf_system_info.h"
@@ -62,4 +62,4 @@ namespace backend_test
     };
 }  // namespace backend_test
 
-#endif  //  RMV_TEST_SYSTEM_INFO_H_
+#endif  //  RMV_BACKEND_TEST_RMV_TEST_SYSTEM_INFO_H_

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a number of widget utilities.
@@ -23,11 +23,11 @@ namespace rmv
         slider_widget->setCursor(Qt::PointingHandCursor);
         switch (slider_widget->SliderType())
         {
-        case ESliderType::Size:
+        case RmvSliderType::Size:
             slider_widget->setMinimum(0);
             slider_widget->setMaximum(kSizeSliderRange - 1);
             break;
-        case ESliderType::MipLevel:
+        case RmvSliderType::MipLevel:
         default:
             slider_widget->setMinimum(1);
             slider_widget->setMaximum(kMipSliderRange - 1);

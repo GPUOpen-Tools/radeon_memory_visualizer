@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.10)
 project(RmvBackendTest)
 
 find_package (Threads)
-
-add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER
@@ -48,7 +46,6 @@ target_sources(${PROJECT_NAME} PRIVATE
     "tests.cpp"
 )
 
-
 if (WIN32)
     target_sources (${PROJECT_NAME} PRIVATE
         "windows/backend_test.rc"
@@ -72,12 +69,11 @@ IF(CMAKE_RELEASE_POSTFIX)
 ENDIF(CMAKE_RELEASE_POSTFIX)
 
 IF (UNIX)
-    target_link_libraries(${PROJECT_NAME} RmvBackend RmvParser rdf system_info Threads::Threads dl)
+    target_link_libraries(${PROJECT_NAME} RmvBackend RmvParser Threads::Threads dl)
 ELSE()
-    target_link_libraries(${PROJECT_NAME} RmvParser RmvBackend rdf system_info Threads::Threads)
+    target_link_libraries(${PROJECT_NAME} RmvParser RmvBackend Threads::Threads)
 ENDIF()
 
-IF (WIN32 OR APPLE)
+IF (WIN32)
 SOURCE_GROUP_BY_FOLDER(${PROJECT_NAME})
 ENDIF()
-

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions of the RMT format.
@@ -194,7 +194,7 @@ typedef enum RmtImplicitResourceType
     kRmtImplicitResourceTypeImplicitResource = 2,  ///< The resource is marked as an implicit image or buffer.
 } RmtImplicitResourceType;
 
-/// An enumeraetion of the various commit types for a resource.
+/// An enumeration of the various commit types for a resource.
 typedef enum RmtCommitType
 {
     kRmtCommitTypeCommitted = 0,  ///< The resource was requested to be committed. This means the resource was created with an implicit

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the RFD File parser.
@@ -30,6 +30,21 @@ extern "C" {
 ///
 RmtErrorCode RmtRdfFileParserLoadRdf(const char* path, RmtDataSet* out_data_set);
 
+/// Populates the data set from in-memory RDF memory trace.
+///
+/// @param [in]     bytes                       Memory trace file data.
+/// @param [in]     num_bytes                   Size of input data in bytes.
+/// @param [in,out] out_data_set                A pointer to the data set populated with the trace file information.
+///
+/// @retval
+/// kRmtOk                                      The trace file loaded successfully.
+/// @retval
+/// kRmtErrorMalformedData                      The file contains unexpected data.
+/// @retVal
+/// kRmtErrorInvalidSize                        The trace file is missing data.
+///
+RmtErrorCode RmtRdfFileParserLoadRdfFromMemory(uint8_t* bytes, size_t num_bytes, RmtDataSet* out_data_set);
+
 /// Delete all RDF data stream objects created while parsing the RDF file.
 ///
 /// @retval
@@ -48,6 +63,18 @@ RmtErrorCode RmtRdfFileParserDestroyAllDataStreams();
 /// kRmtErrorMalformedData                      The file contains unexpected data.
 ///
 RmtErrorCode RmtRdfStreamOpen(const char* path, const bool read_only);
+
+/// Open the global RDF stream from memory.
+///
+/// @param [in] bytes                           In-memory trace file data.
+/// @param [in] num_bytes                       Size of input data in bytes.
+///
+/// @retval
+/// kRmtOk                                      The RDF stream was successfully opened.
+/// @retval
+/// kRmtErrorMalformedData                      The file contains unexpected data.
+///
+RmtErrorCode RmtRdfStreamOpenFromMemory(uint8_t* bytes, size_t num_bytes);
 
 /// Close the global RDF stream.
 ///

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the RDF DD Event Information chunk parser.
@@ -7,7 +7,7 @@
 
 #include "rmt_rdf_dd_event_info.h"
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 #include "rmt_assert.h"
 #include "rmt_error.h"

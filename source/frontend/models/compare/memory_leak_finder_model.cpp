@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Memory Leak Finder model.
@@ -306,5 +306,14 @@ namespace rmv
             return snapshot_point;
         }
         return nullptr;
+    }
+
+    void MemoryLeakFinderModel::DumpResourceTable(QWidget* parent) const
+    {
+        const SnapshotManager& snapshot_manager = SnapshotManager::Get();
+        const char*            base_name        = snapshot_manager.GetCompareSnapshotName(base_index_);
+        const char*            diff_name        = snapshot_manager.GetCompareSnapshotName(diff_index_);
+
+        table_model_->DumpResourceTable(parent, proxy_model_, base_name, diff_name);
     }
 }  // namespace rmv

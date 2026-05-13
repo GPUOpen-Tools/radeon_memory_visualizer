@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Define the settings and information about recently opened traces.
@@ -15,6 +15,7 @@
 #include "qt_common/utils/common_definitions.h"
 
 #include "rmt_data_set.h"
+#include "rmt_print.h"
 
 #include "util/definitions.h"
 
@@ -41,6 +42,7 @@ enum RMVSettingID
     kSettingGeneralAllocUniquenessAllocation,
     kSettingGeneralAllocUniquenessOffset,
     kSettingGeneralDriverOverridesAllowNotifications,
+    kSettingGeneralLogLevel,
 
     kSettingThemesAndColorsPalette,
 
@@ -286,6 +288,18 @@ namespace rmv
         ///
         /// @return The value of kSettingDriverOverridesAllowNotifications.
         bool GetDriverOverridesAllowNotifications();
+
+        /// @brief Get the value of the kSettingGeneralLogLevel in the settings.
+        ///
+        /// This corresponds to the Log level ie how much logging is output.
+        ///
+        /// @return The log level.
+        LogLevel GetLogLevel() const;
+
+        /// @brief Set the value of the kSettingGeneralLogLevel in the settings.
+        ///
+        /// @param [in] log_level The log level.
+        void SetLogLevel(LogLevel log_level);
 
         /// @brief Gets the current color theme mode.
         ///

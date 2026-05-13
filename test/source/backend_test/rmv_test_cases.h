@@ -1,12 +1,12 @@
 //=============================================================================
-// Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test cases header.
 //=============================================================================
 
-#ifndef RMV_TEST_CASES_H_
-#define RMV_TEST_CASES_H_
+#ifndef RMV_BACKEND_TEST_RMV_TEST_CASES_H_
+#define RMV_BACKEND_TEST_RMV_TEST_CASES_H_
 
 #include <string>
 #include <vector>
@@ -93,4 +93,4 @@ private:
     backend_test::Log log_;  ///< The log file.
 };
 
-#endif  //  RMV_TEST_CASES_H_
+#endif  //  RMV_BACKEND_TEST_RMV_TEST_CASES_H_
