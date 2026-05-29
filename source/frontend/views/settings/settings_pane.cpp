@@ -69,7 +69,14 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->byte_units_combo_push_button_->SetSelectedRow(0);
     connect(ui_->byte_units_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::ByteUnitsChanged);
 
-    connect(ui_->check_for_updates_on_startup_checkbox_, &CheckBoxWidget::stateChanged, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
+    const auto state_change_function =
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        &CheckBoxWidget::checkStateChanged;
+#else
+        &CheckBoxWidget::stateChanged;
+#endif
+
+    connect(ui_->check_for_updates_on_startup_checkbox_, state_change_function, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
 }
 
 SettingsPane::~SettingsPane()
