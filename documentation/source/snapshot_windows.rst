@@ -75,7 +75,7 @@ memory when ideally it should be in local memory).
 Resource overview
 -----------------
 
-This pane will show an overview of the resource used by the application.
+This pane will show an overview of the resources used by the application.
 Most of the display is occupied by a resource view showing a graphical
 representation of the resources in memory. Resources can be filtered out to only
 show resources of a particular type or contained in a particular preferred heap.
@@ -113,8 +113,8 @@ based on the total actual size. Overlapped resources are not taken into account
 when calculating the heap block size. DX12 heaps created implicitly for committed
 resources are not shown in this mode.
 
-These combo boxes appear on several of the UI's and they are all independent
-ie changing heap types on one pane won't affect the heap types on the other
+These combo boxes appear in several locations and they are all independent
+i.e., changing heap types on one pane won't affect the heap types on the other
 panes that use the heap combo box. Also, the heap selections don't reset when
 switching snapshots so that comparisons can quickly be done with the same
 configuration. However, loading a new memory trace will reset the heap combo
@@ -143,7 +143,7 @@ Virtual
     The resource was requested to be a virtual resource. This means that there
     is no physical memory backing the resource. The resource will have its own
     virtual address range allocated at the time the resource is created, but
-    that virtual address space will not be mapped to an underlaying physical
+    that virtual address space will not be mapped to an underlying physical
     address range.
 
 There are also 3 slicing combo boxes. These allow you to group resources by some
@@ -184,7 +184,7 @@ on the Resource overview pane.
 
 .. image:: media/snapshot/resource_overview_4.png
 
-Note that the sum of the aliased resource sizes (2 KiB, 3 Kib 1 KiB and 2 KiB)
+Note that the sum of the aliased resource sizes (2 KiB, 3 KiB, 1 KiB and 2 KiB)
 total 8 KiB plus the non-aliased resource size of 2 KiB adds up to match the
 reported Total allocated and bound size.
 
@@ -388,7 +388,7 @@ Double-clicking on a resource will navigate to the **Resource details** pane.
 Resource details
 ----------------
 
-This pane show the information for a selected resource. The pane is in 2 parts.
+This pane shows the information for a selected resource. The pane is in 2 parts.
 The top section shows information about the selected resource and is split into
 a further 3 sections. To the left is a resource summary showing information about
 the resource (its size, which allocation it is in, when it was created etc).

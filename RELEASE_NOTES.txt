@@ -1,5 +1,29 @@
-Radeon™ Memory Visualizer V1.15
--------------------------------
+Radeon™ Memory Visualizer V1.15.1
+---------------------------------
+
+V1.15.1 Changes
+------------------------------------
+1) Resource Overview pane now uses all available space to display resources.
+2) Bug/stability/security fixes.
+
+Known Issues
+------------------------------------
+
+(1a) More than a single active device at a time within a single application is not supported. In this case, only the first device will be traced.
+(1b) More than a single Vulkan/DX12 process at a time is not supported. Only the first started application will be traced.
+(2) In the Snapshots|Resource details pane, Physical memory mapped events may be shown before virtual allocate events.
+(3) Some UI elements do not rescale properly when the OS's DPI scale settings are dynamically changed, or when dragging RMV between two monitors with different DPI scales. Close and re-open RMV to view at proper sizes.
+(4) Running multiple instances of the Radeon Developer Panel is not supported.
+(5) Sparse textures are not fully supported.
+(6) When tracing an application that uses a launcher, or an application that creates multiple devices, it is possible that more than one trace file will be written to disk. In the case of the launcher, adding the launcher's executable name to the Blocked applications list in the Radeon Developer Panel should prevent multiple trace files. Restarting the Radeon Developer Panel may be required before attempting to trace again.
+(7) If a memory dump is created by shutting down the application being traced and there are a large number of resource names, some names may not be included in the RMV file. The work-around is to use the Dump trace button in the Radeon Developer Panel and wait for the button to be disabled before shutting down the application. This gives the buffered names a chance to be processed.
+(8) The Shader core clock frequency and Video memory clock frequency for memory traces captured on Linux may be incorrectly displayed as 0 MHz.
+(9) The Device name may be blank for memory traces captured on Linux with some APUs.
+(10) With the introduction of 25.20-based Linux drivers, the AMDVLK driver is no longer included in the amdgpu-pro driver package. This is a result of the AMDVLK open-source project being discontinued as mentioned here (https://github.com/GPUOpen-Drivers/AMDVLK/discussions/416). Instead, the RADV open-source Vulkan® driver is installed by default. Consequently, the Radeon Developer Panel does not support capturing data from Vulkan applications when using these newer driver releases. To analyze Linux Vulkan workloads with Radeon GPU Profiler (RGP), Radeon Raytracing Analyzer (RRA), or Radeon Memory Visualizer (RMV), users can opt for a 25.10-based driver. Alternatively, analysis can be performed using the data capture mechanism integrated within the RADV driver, although this method is not supported by the Radeon Developer Panel. For more information on configuring RADV, refer to the environment variable documentation, specifically the MESA_VK_TRACE_* environment variables (https://docs.mesa3d.org/envvars.html#envvar-MESA_VK_TRACE) which can be utilized for enabling and configuring tracing.
+(11) When using a 25.10-based driver or older: Installations of Ubuntu 20.04 or newer may have the RADV open-source Vulkan driver installed by default on the system. As a result, after an amdgpu-pro driver install, the default Vulkan ICD may be the RADV ICD. In order to capture a profile, Vulkan applications must be using the amdgpu-pro Vulkan ICD. The default Vulkan ICD can be overridden by setting the following environment variable before launching a Vulkan application: VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json.
+
+Release Notes History
+------------------------------------
 
 V1.15 Changes
 ------------------------------------
@@ -8,25 +32,6 @@ V1.15 Changes
 3) Mip level slider added to resource tables.
 4) Allow resource tables to be saved to disk.
 5) Bug/stability fixes.
-
-Known Issues
-------------------------------------
-
-(1a) More than a single active device at a time within a single application is not supported. In this case, only the first device will be traced.
-(1b) More than a single Vulkan/DX12 process at a time is not supported.  Only the first started application will be traced.
-(2) In the Snapshots|Resource details pane, Physical memory mapped events may be shown before virtual allocate events.
-(3) Some UI elements do not rescale properly when the OS's DPI scale settings are dynamically changed, or when dragging RMV between two monitors with different DPI scales. Close and re-open RMV to view at proper sizes.
-(4) Running multiple instances of the Radeon Developer Panel is not supported.
-(5) Sparse texture are not fully supported.
-(6) When tracing an application that uses a launcher, or an application that creates multiple devices, it is possible that more than one trace file will be written to disk. In the case of the launcher, adding the launcher's executable name to the Blocked applications list in the Radeon Developer Panel should prevent multiple trace files. Restarting the Radeon Developer Panel may be required before attempting to trace again.
-(7) If a memory dump is created by shutting down the application being traced and there are a large number of resource names, some names may not be included in the RMV file.  The work-around is to use the Dump trace button in the Radeon Developer Panel and wait for the button to be disabled before shutting down the application.  This gives the buffered names a chance to be processed.
-(8) The Shader core clock frequency and Video memory clock frequency for memory traces captured on Linux may be incorrectly displayed as 0 Mhz.
-(9) The Device name may be blank for memory traces captured on Linux with some APUs.
-(10) With the introduction of 25.20-based Linux drivers, the AMDVLK driver is no longer included in the amdgpu-pro driver package. This is a result of the AMDVLK open-source project being discontinued as mentioned here (https://github.com/GPUOpen-Drivers/AMDVLK/discussions/416). Instead, the RADV open-source Vulkan® driver is installed by default. Consequently, the Radeon Developer Panel does not support capturing data from Vulkan applications when using these newer driver releases. To analyze Linux Vulkan workloads with Radeon GPU Profiler (RGP), Radeon Raytracing Analyzer (RRA), or Radeon Memory Visualizer (RMV), users can opt for a 25.10-based driver. Alternatively, analysis can be performed using the data capture mechanism integrated within the RADV driver, although this method is not supported by the Radeon Developer Panel. For more information on configuring RADV, refer to the environment variable documentation, specifically the MESA_VK_TRACE_* environment variables (https://docs.mesa3d.org/envvars.html#envvar-MESA_VK_TRACE) which can be utilized for enabling and configuring tracing.
-(11) When using a 25.10-based driver or older: Installations of Ubuntu 20.04 or newer may have the RADV open source Vulkan driver installed by default on the system. As a result, after an amdgpu-pro driver install, the default Vulkan ICD may be the RADV ICD. In order to capture a profile, Vulkan applications must be using the amdgpu-pro Vulkan ICD. The default Vulkan ICD can be overridden by setting the following environment variable before launching a Vulkan application: VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json.
-
-Release Notes History
-------------------------------------
 
 V1.14 Changes
 ------------------------------------
@@ -81,7 +86,7 @@ V1.7 Changes
 2) Support for loading Radeon GPU Detective crash dump files.
 3) Resource naming and implicit buffer filtering made more reliable in DX12.
 4) Support for hours added (formatted as "H:MM:SS.clk_cycles" and included with the CTRL+T time-cycling shortcut keys).
-5) System memory type added to device configuration pane (e.g. DDR4).
+5) System memory type added to device configuration pane (e.g., DDR4).
 6) Bug/stability fixes.
 
 V1.6.1 Changes
@@ -97,7 +102,7 @@ V1.6 Changes
 
 V1.5 Changes
 ------------------------------------
-1) Keyboard shortcuts added for all panes on the Welcome and Settings lists. Some keys have also been remapped to avoid conflict with the Adrenaline software. See the documentation or keyboard shortcuts pane for details.
+1) Keyboard shortcuts added for all panes on the Welcome and Settings lists. Some keys have also been remapped to avoid conflict with the Adrenalin software. See the documentation or keyboard shortcuts pane for details.
 2) Bug fixes.
 
 V1.4.1 Changes
@@ -110,20 +115,20 @@ V1.4 Changes
 
 1) Support added for traces taken from systems with LPDDR4/5 & DDR5 memory.
 2) Support for traces taken with Smart Access Memory (SAM) enabled.
-3) Bugs/stability fixes.
+3) Bug/stability fixes.
 
 V1.3 Changes
 ------------------------------------
 
 1) DX12 Resource naming.
-2) Bugs/stability fixes.
+2) Bug/stability fixes.
 
 V1.2 Changes
 ------------------------------------
 
 1) Add tooltips showing resource details on the Resource overview pane.
 2) Add range-based address searching for resource tables.
-3) Bugs/stability fixes.
+3) Bug/stability fixes.
 
 V1.1 Changes
 ------------------------------------

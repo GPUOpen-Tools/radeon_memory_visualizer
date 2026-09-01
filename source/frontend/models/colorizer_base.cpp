@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the colorizer base class.
@@ -15,6 +16,7 @@
 
 #include "qt_common/utils/qt_util.h"
 
+#include "rmt_assert.h"
 #include "rmt_data_snapshot.h"
 #include "rmt_print.h"
 
@@ -275,11 +277,13 @@ namespace rmv
             const RmtDataSnapshot* open_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
             if (open_snapshot != nullptr)
             {
-                uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
-                RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
-
                 if (!resource || !resource->bound_allocation || resource->resource_type == kRmtResourceTypeCount)
                     return rmv::RMVSettings::Get().GetColorResourceFreeSpace();
+
+                uint64_t           memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
+                const RmtErrorCode histogram_error_code = RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+                RMT_ASSERT(histogram_error_code == kRmtOk);
+                RMT_UNUSED(histogram_error_code);
 
                 // Check that the preferred heap contains all the bytes.
                 const RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
@@ -296,9 +300,6 @@ namespace rmv
             const RmtDataSnapshot* open_snapshot = rmv::SnapshotManager::Get().GetOpenSnapshot();
             if (open_snapshot != nullptr)
             {
-                uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
-                RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
-
                 if (!resource || !resource->bound_allocation || resource->resource_type == kRmtResourceTypeCount)
                     return rmv::RMVSettings::Get().GetColorResourceFreeSpace();
 

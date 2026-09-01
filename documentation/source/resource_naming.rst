@@ -28,7 +28,7 @@ Due to the asynchronous nature of the event tracing, memory events that happen a
 may show up incorrectly in RMV in terms of naming, as well as
 marking and filtering out implicit heaps (created for committed resources)
 and implicit buffers (that D3D12 runtime creates automatically for every explicitly created heap).
-To overcome this problem, it is recommended to introduce a delay of few seconds
+To overcome this problem, it is recommended to introduce a delay of a few seconds
 between memory events of interest and the process exit.
 
 Viewing resource names

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with the RDF file format.
@@ -247,7 +248,9 @@ static RmtErrorCode QueueDataStreamChunks(rdfChunkFile* chunk_file, RmtDataSet* 
     const auto   identifier = RmtRdfDataStream::ChunkIdentifier();
 
     // Delete any existing data streams before parsing the file.
-    RmtRdfFileParserDestroyAllDataStreams();
+    const RmtErrorCode destroy_streams_error_code = RmtRdfFileParserDestroyAllDataStreams();
+    RMT_ASSERT(destroy_streams_error_code == kRmtOk);
+    RMT_UNUSED(destroy_streams_error_code);
     data_set->stream_count = 0;
 
     // Make sure the file contains at least one data stream chunk.
@@ -347,7 +350,9 @@ static RmtErrorCode QueueDataStreamChunks(rdfChunkFile* chunk_file, RmtDataSet* 
                 else
                 {
                     // Set the parser callback functions for RDF data stream processing.
-                    RmtParserSetCallbacks(&parser, RdfDataStreamGetNextChunk, RdfDataStreamReset);
+                    const RmtErrorCode set_callbacks_error_code = RmtParserSetCallbacks(&parser, RdfDataStreamGetNextChunk, RdfDataStreamReset);
+                    RMT_ASSERT(set_callbacks_error_code == kRmtOk);
+                    RMT_UNUSED(set_callbacks_error_code);
 
                     // Set the target process.
                     if (data_stream->GetProcessId() != 0 && data_set->target_process_id == 0)
@@ -365,7 +370,9 @@ static RmtErrorCode QueueDataStreamChunks(rdfChunkFile* chunk_file, RmtDataSet* 
     if (result != kRmtOk)
     {
         // If any of the steps fail, delete the data streams.
-        RmtRdfFileParserDestroyAllDataStreams();
+        const RmtErrorCode destroy_streams_error_code_2 = RmtRdfFileParserDestroyAllDataStreams();
+        RMT_ASSERT(destroy_streams_error_code_2 == kRmtOk);
+        RMT_UNUSED(destroy_streams_error_code_2);
     }
 
     return result;
@@ -512,7 +519,9 @@ RmtErrorCode RmtRdfParserLoadStream(RmtErrorCode error_code, RmtDataSet* data_se
     {
         // Only close the RDF stream on error.  It is intentionally left open otherwise to prevent other applications from opening the same file with write privileges.
         // Other applications can open the file in read only mode.  When the user closes the trace, the RDF stream is closed by the destroy data set process.
-        RmtRdfStreamClose();
+        const RmtErrorCode stream_close_error_code = RmtRdfStreamClose();
+        RMT_ASSERT(stream_close_error_code == kRmtOk);
+        RMT_UNUSED(stream_close_error_code);
     }
     return error_code;
 }
@@ -547,7 +556,9 @@ RmtErrorCode RmtRdfStreamOpenFromMemory(uint8_t* bytes, size_t num_bytes)
     RmtErrorCode error_code = kRmtErrorMalformedData;
     if (global_data_stream != nullptr)
     {
-        RmtRdfStreamClose();
+        const RmtErrorCode stream_close_error_code = RmtRdfStreamClose();
+        RMT_ASSERT(stream_close_error_code == kRmtOk);
+        RMT_UNUSED(stream_close_error_code);
     }
     rdfResult rdf_result = static_cast<rdfResult>(rdfStreamFromReadOnlyMemory(num_bytes, bytes, &global_data_stream));
     if ((rdf_result == rdfResult::rdfResultOk) && (global_data_stream != nullptr))
@@ -567,7 +578,9 @@ RmtErrorCode RmtRdfStreamOpen(const char* path, const bool read_only)
 
     if (global_data_stream != nullptr)
     {
-        RmtRdfStreamClose();
+        const RmtErrorCode stream_close_error_code = RmtRdfStreamClose();
+        RMT_ASSERT(stream_close_error_code == kRmtOk);
+        RMT_UNUSED(stream_close_error_code);
     }
 
     rdfStreamAccess access_mode = rdfStreamAccess::rdfStreamAccessRead;

@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.25)
 project(RmvBackendTest)
 
 find_package (Threads)
@@ -46,12 +47,19 @@ target_sources(${PROJECT_NAME} PRIVATE
     "tests.cpp"
 )
 
+
 if (WIN32)
     target_sources (${PROJECT_NAME} PRIVATE
         "windows/backend_test.rc"
         "windows/resource.h"
     )
 endif()
+
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION ${RMV_TESTKIT_INSTALL_DIR} COMPONENT testkit
+        BUNDLE DESTINATION ${RMV_TESTKIT_INSTALL_DIR} COMPONENT testkit
+        ARCHIVE DESTINATION ${RMV_TESTKIT_INSTALL_DIR}/lib/ COMPONENT testkit
+        LIBRARY DESTINATION ${RMV_TESTKIT_INSTALL_DIR}/lib/ COMPONENT testkit)
 
 if (WIN32)
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION . OPTIONAL COMPONENT debug)
@@ -74,6 +82,11 @@ ELSE()
     target_link_libraries(${PROJECT_NAME} RmvParser RmvBackend Threads::Threads)
 ENDIF()
 
+if (LINUX)
+    target_link_libraries(${PROJECT_NAME} AMD::sdl_utils::safe_crt)
+endif()
+
 IF (WIN32)
 SOURCE_GROUP_BY_FOLDER(${PROJECT_NAME})
 ENDIF()
+

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Main entry point.
@@ -7,7 +8,13 @@
 
 #include <stdarg.h>
 #ifdef _WIN32
+// Suppress windows.h's min/max macros so std::numeric_limits<>::max() in
+// binary_security_check.h parses correctly.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
+#include "binary_security_check.h"
 #endif
 
 #include <QApplication>
@@ -30,7 +37,7 @@
 /// @param [in] message Incoming message.
 void PrintCallback(LogLevel log_level, const char* message)
 {
-    DebugWindow::DbgMsg(log_level, message);
+    DebugWindow::DbgMsg(log_level, "%s", message);
 }
 
 /// @brief Detect RMV trace if any was specified as command line param.
@@ -65,6 +72,25 @@ static RmtDataSnapshot command_line_snapshot;
 /// @param [in] argv An array containing arguments.
 int main(int argc, char* argv[])
 {
+#ifdef _WIN32
+    // Restrict DLL search order to the application directory and System32, removing the current
+    // working directory and PATH to prevent DLL planting attacks. This must be called before any
+    // Qt initialization to ensure Qt plugin dependencies in the application directory still resolve.
+    if (!SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32))
+    {
+        // Failed to update DLL search order; abort to avoid running with unsafe search paths.
+        MessageBox(NULL,
+                   _T("Failed to configure a secure DLL search path.\nThe application will now exit."),
+                   _T("Security Warning"),
+                   MB_OK | MB_ICONERROR | MB_TOPMOST);
+        return -1;
+    }
+
+    if (!BinarySecurity::IsInstallationValid())
+    {
+        return -1;
+    }
+#endif
     RmtSetPrintingCallback(PrintCallback, true);
 #if 0
     // Test feature to dump RMV file to JSON. Need a bunch of error handling.
@@ -101,9 +127,6 @@ int main(int argc, char* argv[])
     int         result = -1;
     if (window != nullptr)
     {
-#ifdef _WIN32
-        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
-#endif
         window->show();
 
         // Initialize scaling manager and call ScaleFactorChanged at least once, so that

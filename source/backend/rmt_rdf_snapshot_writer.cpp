@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the class that handles writing snapshot data to RDF trace files.
@@ -73,8 +74,8 @@ RmtErrorCode RmtRdfSnapshotWriter::Add(const char* name, const uint64_t timestam
 
         // Populate the snapshot data structure for the snapshot info chunk.
         RmtRdfSnapshotInfo::TraceSnapShot snapshot_data;
-        snapshot_data.name_length = static_cast<int32_t>(strlen(name));
-        strncpy_s(snapshot_data.name, kMaxSnapshotNameLen - 1, name, snapshot_data.name_length);
+        strncpy_s(snapshot_data.name, sizeof(snapshot_data.name), name, _TRUNCATE);
+        snapshot_data.name_length    = static_cast<int32_t>(strlen(snapshot_data.name));
         snapshot_data.snapshot_point = timestamp;
         snapshot_data.version        = RmtRdfSnapshotInfo::ChunkVersion();
 

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a job system to run work on multiple threads.
@@ -190,7 +191,9 @@ RmtErrorCode RmtJobQueueAddMultiple(RmtJobQueue* job_queue, RmtJobFunction func,
     const RmtJobHandle job_handle = job_queue->handle_next++;
 
     // block until this item in the queue is available
-    RmtJobQueueWaitForCompletion(job_queue, job_handle);
+    const RmtErrorCode wait_error_code = RmtJobQueueWaitForCompletion(job_queue, job_handle);
+    RMT_ASSERT(wait_error_code == kRmtOk);
+    RMT_UNUSED(wait_error_code);
 
     // work out the location in the queue and write the data
     const int32_t job_index                           = job_queue->queue_tail_index;

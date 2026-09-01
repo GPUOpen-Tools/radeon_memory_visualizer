@@ -15,7 +15,7 @@ application started by the user. Currently only the user's process is available.
 RMV uses the concept of snapshots. A snapshot is the memory state at a
 particular moment in time. Using multiple snapshots, it is possible to visualize
 how memory is being used by an application over time. It is also possible to
-compare snapshots to check to see if memory is being release or whether there
+compare snapshots to check to see if memory is being released or whether there
 are memory leaks.
 
 Snapshots will be displayed in a table below the timeline graph. If there are
@@ -66,7 +66,7 @@ RMV detects multiple resources that are bound to sections of virtual memory that
 overlap, the usage size is attributed to the resource with the highest importance.
 This is reflected in the height of bars on the "Resource usage size" timeline and
 also, the values displayed on the tooltip when the mouse hovers over a point on
-the timeline graph. The priority of resource importance's matches the order of 
+the timeline graph. The priority of resource importances matches the order of
 resource types displayed on the legend below the "Resource usage size" timeline
 graph. Resource types towards the left side of the legend have higher priority
 and those towards the right have lower priority. In past releases of RMV, the
@@ -139,7 +139,7 @@ Decreases the zoom level incrementally to display a longer time span on the
 graph. The zoom level is decreased each time this icon is clicked until the
 minimum zoom level is reached (i.e. the full available time region).
 Alternatively, holding down the **CTRL** key and scrolling the mouse wheel down
-while the mouse pointer is over the graph will also zoom in for more detailed
+while the mouse pointer is over the graph will also zoom out for a less detailed
 view. Zooming out can be activated with the **Z** shortcut key. To zoom out
 quickly at a 10x rate, press the **X** shortcut key.
 

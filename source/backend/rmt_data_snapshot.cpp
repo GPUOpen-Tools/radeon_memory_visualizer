@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Functions working on a snapshot.
@@ -493,8 +494,10 @@ RmtErrorCode RmtDataSnapshotGetSegmentStatus(const RmtDataSnapshot* snapshot, Rm
             const RmtResourceUsageType current_resource_usage = RmtResourceGetUsageType(current_resource);
 
             // Calculate the histogram of where each resource has its memory committed.
-            uint64_t resource_histogram[kRmtResourceBackingStorageCount] = {0};
-            RmtResourceGetBackingStorageHistogram(snapshot, current_resource, resource_histogram);
+            uint64_t           resource_histogram[kRmtResourceBackingStorageCount] = {0};
+            const RmtErrorCode histogram_error_code = RmtResourceGetBackingStorageHistogram(snapshot, current_resource, resource_histogram);
+            RMT_ASSERT(histogram_error_code == kRmtOk);
+            RMT_UNUSED(histogram_error_code);
             out_segment_status->physical_bytes_per_resource_usage[current_resource_usage] += resource_histogram[heap_type];
         }
     }

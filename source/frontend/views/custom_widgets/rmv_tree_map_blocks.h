@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a tree map block collection.
@@ -211,7 +212,7 @@ private:
     /// @param [in] offset_x           The x offset.
     /// @param [in] offset_y           The y offset.
     /// @param [in] alloc_geometry_map The geometry map.
-    void DumpCut(const CutData& existing_cut, uint32_t offset_x, uint32_t offset_y, AllocGeometryMap& alloc_geometry_map) const;
+    void DumpCut(const CutData& existing_cut, qreal offset_x, qreal offset_y, AllocGeometryMap& alloc_geometry_map) const;
 
     /// @brief Fill in a cluster with resources that fall within it.
     ///
@@ -228,7 +229,7 @@ private:
     /// @param [in] parent_height   The parent height.
     /// @param [in] parent_offset_x The Starting X-offset.
     /// @param [in] parent_offset_y The starting Y-offset.
-    void FillClusterGeometry(ResourceCluster& parent_cluster, uint32_t parent_width, uint32_t parent_height, int32_t parent_offset_x, int32_t parent_offset_y);
+    void FillClusterGeometry(ResourceCluster& parent_cluster, qreal parent_width, qreal parent_height, qreal parent_offset_x, qreal parent_offset_y);
 
     /// @brief Get block data given a set of coordinates.
     ///
@@ -251,10 +252,10 @@ private:
     /// @param [out] alloc_geometry_map The output data containing alloc offsets and sizes.
     void GenerateTreeMapRects(QVector<const RmtResource*>& resources,
                               uint64_t                     total_size,
-                              uint32_t                     view_width,
-                              uint32_t                     view_height,
-                              uint32_t                     offset_x,
-                              uint32_t                     offset_y,
+                              qreal                        view_width,
+                              qreal                        view_height,
+                              qreal                        offset_x,
+                              qreal                        offset_y,
                               AllocGeometryMap&            alloc_geometry_map);
 
     /// @brief Recursive paint function to draw borders around slicing modes.

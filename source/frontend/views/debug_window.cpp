@@ -1,11 +1,16 @@
 //=============================================================================
-// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the debug window.
 //=============================================================================
 
 #include "views/debug_window.h"
+
+#include <cstdarg>
+#include <cstdio>
+#include <iostream>
 
 #include <QApplication>
 #include <QScrollBar>
@@ -124,16 +129,20 @@ void DebugWindow::RegisterDbgWindow()
     qInstallMessageHandler(MyMessageHandler);
 }
 
-void DebugWindow::DbgMsg(LogLevel log_level, const char* pFormat, ...)
+void DebugWindow::DbgMsg(LogLevel log_level, const char* format, ...)
 {
+    char    buffer[2048];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    // Use '\n' rather than std::endl to avoid flushing on every message, which would hurt performance for frequent debug output.
+    std::cout << buffer << '\n';
+
     if (debug_window != nullptr)
     {
-        char    buffer[2048];
-        va_list args;
-        va_start(args, pFormat);
-        vsnprintf(buffer, 2048, pFormat, args);
         debug_window->EmitSetText(QString(buffer));
         rmv::LogFileWriter::Get().WriteLog(log_level, buffer);
-        va_end(args);
     }
 }

@@ -6,7 +6,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 
 ## Getting Started
 
-1. Install the latest AMD Video/display driver. Completely remove previously installed drivers.  On Windows, the driver installation factory reset option should be used.
+1. Install the latest AMD video/display driver. Completely remove previously installed drivers. On Windows, the driver installation factory reset option should be used.
 2. Unzip/Untar the download file. The directory includes the following:
    * Radeon Developer Service (RDS)
    * Radeon Developer Service CLI (RDS headless)
@@ -17,7 +17,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
    * Start your application. The Radeon Developer Panel will switch to the "APPLICATIONS" tab. The overlay window in the top left of the application being traced will show if RMV tracing is enabled. If not, make sure the app is running in Vulkan® or DirectX®12 mode.
    * When tracing is complete, click on the 'Memory Trace' tab and click "Dump Trace" or close your application (in this case, the trace will be dumped automatically).
 4. For further detailed instructions, please see the documentation provided in the Help. Help can be found in the following locations:
-   * Help web pages exist in the "help" sub directory
+   * Help web pages exist in the "help" subdirectory
    * Help web pages can be accessed from the **Help** button (?) in the Developer Panel
    * Help web pages can be accessed from the Welcome screen in the Radeon Memory Visualizer, or from the **Help** menu
    * The documentation is hosted publicly at:
@@ -42,7 +42,7 @@ The Radeon Memory Visualizer (RMV) is a software tool that will allow users to a
 
 Note: Before running RDP and capturing an RMV memory trace on Linux, be sure to make the necessary configuration changes by running the RDP setup.sh script each time the machine is rebooted. For more information, see the RDP documentation.
 
-## Required hardware for SAM (Smart access memory) support
+## Required hardware for SAM (Smart Access Memory) support
 * AMD Radeon RX 6000 series or higher
 * AMD Ryzen 5000 and higher series processors with AMD RDNA Architecture Graphics
 

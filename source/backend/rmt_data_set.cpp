@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -1370,6 +1371,7 @@ RmtErrorCode RmtDataSetInitializeFromMemory(uint8_t* bytes, size_t num_bytes, Rm
 
     // Initialize the Driver Overrides string.
     data_set->driver_overrides_json_text    = nullptr;
+    data_set->resource_id_map_allocator     = nullptr;
     data_set->file_path[0]                  = '\0';
     data_set->temporary_file_path[0]        = '\0';
     data_set->file_handle                   = NULL;
@@ -1422,11 +1424,15 @@ RmtErrorCode RmtDataSetInitialize(const char* path, RmtDataSet* data_set)
 
     // Initialize the Driver Overrides string.
     data_set->driver_overrides_json_text = nullptr;
+    data_set->resource_id_map_allocator  = nullptr;
 
     // copy the path
-    const size_t path_length = strlen(path);
-    memcpy(data_set->file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
-    memcpy(data_set->temporary_file_path, path, RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH, path_length));
+    const size_t path_length      = strlen(path);
+    const size_t path_copy_length = RMT_MINIMUM(RMT_MAXIMUM_FILE_PATH - 1, path_length);
+    memcpy(data_set->file_path, path, path_copy_length);
+    data_set->file_path[path_copy_length] = '\0';
+    memcpy(data_set->temporary_file_path, path, path_copy_length);
+    data_set->temporary_file_path[path_copy_length] = '\0';
 
     data_set->file_handle                   = NULL;
     data_set->flags.read_only               = false;
@@ -1638,8 +1644,12 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
 
     if (data_set->flags.is_rdf_trace)
     {
-        RmtRdfFileParserDestroyAllDataStreams();
-        RmtRdfStreamClose();
+        const RmtErrorCode destroy_streams_error_code = RmtRdfFileParserDestroyAllDataStreams();
+        RMT_ASSERT(destroy_streams_error_code == kRmtOk);
+        RMT_UNUSED(destroy_streams_error_code);
+        const RmtErrorCode stream_close_error_code = RmtRdfStreamClose();
+        RMT_ASSERT(stream_close_error_code == kRmtOk);
+        RMT_UNUSED(stream_close_error_code);
         DestroySnapshotWriter(data_set);
         data_set->flags.is_rdf_trace = false;
     }
@@ -1656,7 +1666,7 @@ RmtErrorCode RmtDataSetDestroy(RmtDataSet* data_set)
     data_set->virtual_allocation_list.allocation_count = 0;
 
     // Delete the Driver Overrides data if it exists.
-    delete data_set->driver_overrides_json_text;
+    delete[] data_set->driver_overrides_json_text;
     data_set->driver_overrides_json_text = nullptr;
 
     free(data_set->resource_id_map_allocator);
@@ -1903,8 +1913,11 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
     {
         for (int32_t current_process_start_index = 0; current_process_start_index < data_set->process_start_info_count; ++current_process_start_index)
         {
-            int32_t series_index = -1;
-            RmtProcessMapGetIndexFromProcessId(&data_set->process_map, data_set->process_start_info[current_process_start_index].process_id, &series_index);
+            int32_t            series_index = -1;
+            const RmtErrorCode get_index_error_code =
+                RmtProcessMapGetIndexFromProcessId(&data_set->process_map, data_set->process_start_info[current_process_start_index].process_id, &series_index);
+            RMT_ASSERT(get_index_error_code == kRmtOk);
+            RMT_UNUSED(get_index_error_code);
             RMT_ASSERT(series_index >= 0);
 
             const uint64_t value = data_set->process_start_info[current_process_start_index].physical_memory_allocated;
@@ -1914,7 +1927,15 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
         }
     }
 
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    error_code = RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    RMT_ASSERT(error_code == kRmtOk);
+    // A failed reset leaves the stream merger empty, which would otherwise skip the token loop below and silently
+    // produce an incomplete timeline while still returning kRmtOk.  Free the temporary snapshot and propagate the error.
+    if (error_code != kRmtOk)
+    {
+        PerformFree(data_set, temp_snapshot);
+        return error_code;
+    }
 
     // For each timeline generated, clear the driver resource ID to internal resource ID
     // lookup map.  As ResourceCreate tokens are processed, the mapping to driver resource IDs
@@ -1953,7 +1974,9 @@ static RmtErrorCode TimelineGeneratorParseData(RmtDataSet* data_set, RmtDataTime
 
     if (!data_set->flags.userdata_processed)
     {
-        RmtResourceUserdataProcessEvents(data_set->flags.contains_correlation_tokens);
+        const RmtErrorCode userdata_error_code = RmtResourceUserdataProcessEvents(data_set->flags.contains_correlation_tokens);
+        RMT_ASSERT(userdata_error_code == kRmtOk);
+        RMT_UNUSED(userdata_error_code);
         data_set->flags.userdata_processed = true;
     }
 
@@ -2296,9 +2319,9 @@ static RmtErrorCode SnapshotGeneratorCompactVirtualAllocations(RmtDataSnapshot* 
 {
     RMT_ASSERT(snapshot);
 
-    RmtVirtualAllocationListCompact(&snapshot->virtual_allocation_list, true);
-
-    return kRmtOk;
+    const RmtErrorCode error_code = RmtVirtualAllocationListCompact(&snapshot->virtual_allocation_list, true);
+    RMT_ASSERT(error_code == kRmtOk);
+    return error_code;
 }
 
 // calculate summary data for snapshot
@@ -2491,9 +2514,11 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     out_snapshot->snapshot_point = snapshot_point;
 
     // set up the snapshot.
-    memcpy(out_snapshot->name, snapshot_point->name, RMT_MINIMUM(strlen(snapshot_point->name), sizeof(out_snapshot->name)));
-    out_snapshot->timestamp = snapshot_point->timestamp;
-    RmtErrorCode error_code = AllocateMemoryForSnapshot(data_set, out_snapshot, false);
+    const size_t snapshot_name_copy_length = RMT_MINIMUM(strlen(snapshot_point->name), sizeof(out_snapshot->name) - 1);
+    memcpy(out_snapshot->name, snapshot_point->name, snapshot_name_copy_length);
+    out_snapshot->name[snapshot_name_copy_length] = '\0';
+    out_snapshot->timestamp                       = snapshot_point->timestamp;
+    RmtErrorCode error_code                       = AllocateMemoryForSnapshot(data_set, out_snapshot, false);
 
     out_snapshot->maximum_physical_memory_in_bytes = RmtDataSetGetTotalVideoMemoryInBytes(data_set);
 
@@ -2503,7 +2528,11 @@ RmtErrorCode RmtDataSetGenerateSnapshot(RmtDataSet* data_set, RmtSnapshotPoint* 
     RMT_ASSERT(error_code == kRmtOk);
 
     // Reset the RMT stream parsers ready to load the data.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    error_code = RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    RMT_ASSERT(error_code == kRmtOk);
+    // A failed reset leaves the stream merger empty, which would otherwise skip the token loop below and silently
+    // produce an empty/incorrect snapshot while still returning kRmtOk.  Propagate the error to the caller instead.
+    RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // process all the tokens
     while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
@@ -2767,7 +2796,7 @@ RmtErrorCode RmtDataSetCopyDriverOverridesString(RmtDataSet* data_set, const cha
     RMT_RETURN_ON_ERROR(driver_overrides_string, kRmtErrorInvalidPointer);
     RmtErrorCode result = kRmtOk;
 
-    delete data_set->driver_overrides_json_text;
+    delete[] data_set->driver_overrides_json_text;
 
     if ((driver_overrides_string == nullptr) || (length == 0))
     {

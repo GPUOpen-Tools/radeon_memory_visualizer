@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a resource item model.
@@ -88,7 +89,9 @@ namespace rmv
     {
         uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
 
-        RmtResourceGetBackingStorageHistogram(snapshot, resource, memory_segment_histogram);
+        const RmtErrorCode histogram_error_code = RmtResourceGetBackingStorageHistogram(snapshot, resource, memory_segment_histogram);
+        RMT_ASSERT(histogram_error_code == kRmtOk);
+        RMT_UNUSED(histogram_error_code);
 
         uint64_t total_memory_mapped = 0;
         for (int32_t currentMemoryHistogramIndex = 0; currentMemoryHistogramIndex < kRmtResourceBackingStorageCount; ++currentMemoryHistogramIndex)

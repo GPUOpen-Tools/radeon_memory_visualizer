@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Resource details model.
@@ -193,8 +194,10 @@ namespace rmv
                     SetModelData(kResourceDetailsFullyMapped, QString(RmtResourceIsCompletelyInPreferredHeap(open_snapshot, resource) ? "Yes" : "No"));
 
                     // Calculate histogram.
-                    uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
-                    RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+                    uint64_t           memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
+                    const RmtErrorCode histogram_error_code = RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+                    RMT_ASSERT(histogram_error_code == kRmtOk);
+                    RMT_UNUSED(histogram_error_code);
                     double unmapped_percentage = ((double)memory_segment_histogram[kRmtResourceBackingStorageUnmapped] / (double)resource->size_in_bytes) * 100;
                     SetModelData(kResourceDetailsUnmappedPercentage, QString::number(unmapped_percentage) + "%");
                 }
@@ -471,7 +474,9 @@ namespace rmv
         const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
         if (open_snapshot != nullptr)
         {
-            RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+            const RmtErrorCode histogram_error_code = RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+            RMT_ASSERT(histogram_error_code == kRmtOk);
+            RMT_UNUSED(histogram_error_code);
         }
 
         value = 0.0f;
@@ -521,7 +526,9 @@ namespace rmv
         const RmtDataSnapshot* open_snapshot = SnapshotManager::Get().GetOpenSnapshot();
         if (open_snapshot != nullptr)
         {
-            RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+            const RmtErrorCode histogram_error_code = RmtResourceGetBackingStorageHistogram(open_snapshot, resource, memory_segment_histogram);
+            RMT_ASSERT(histogram_error_code == kRmtOk);
+            RMT_UNUSED(histogram_error_code);
         }
 
         value = 0;

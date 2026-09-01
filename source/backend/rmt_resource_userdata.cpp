@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Function implementation for any resource userdata.
@@ -504,7 +505,7 @@ RmtErrorCode RmtResourceUserdataTrackImplicitResourceToken(const RmtResourceIden
                                                            const uint64_t                delay_time,
                                                            const RmtImplicitResourceType implicit_resource_type)
 {
-    if (timestamp - delay_time <= timestamp)
+    if (timestamp >= delay_time)
     {
         TokenData token_data              = {};
         token_data.token_type             = kResourceImplicit;

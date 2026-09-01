@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.25)
 
 project(RadeonMemoryVisualizer)
 
@@ -341,6 +342,7 @@ ENDIF (CMAKE_RELEASE_POSTFIX)
 target_link_libraries(${PROJECT_NAME} PRIVATE RmvBackend RmvParser Qt::Widgets QtCustomWidgets QtUtils AMD::update_check_api_qt)
 IF (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE wsock32 winmm)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AMD::sdl_utils::binary_security)
 ELSEIF (UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 ENDIF ()
@@ -350,6 +352,7 @@ if (LINUX)
     qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QWaylandIntegrationPlugin)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt::WaylandClient)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AMD::sdl_utils::safe_crt)
 endif ()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

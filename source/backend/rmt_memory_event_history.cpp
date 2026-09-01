@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Memory Event History API.
@@ -19,6 +20,16 @@
 
 // A flag used to determine if implicit resources should be included in generated history instances.
 static bool hide_implicit_resources = false;
+
+// Resets the RMT stream merger and asserts on failure.  The reset result is returned so callers can propagate the
+// error rather than silently producing an empty or partial history (a failed reset leaves the stream merger heap
+// empty, which would otherwise cause subsequent token passes to be skipped while still returning kRmtOk).
+static RmtErrorCode ResetStreamMerger(RmtDataSet* data_set)
+{
+    const RmtErrorCode error_code = RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    RMT_ASSERT(error_code == kRmtOk);
+    return error_code;
+}
 
 // Memory Event History API Functions
 
@@ -368,10 +379,10 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceHistoryForId(RmtDataSet*      
         std::unordered_map<size_t, AllocationInfo> allocation_info_lookup;
 
         // Reset the RMT stream parsers.
-        RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+        error_code = ResetStreamMerger(data_set);
 
         // First pass: build virtual allocation list and list of resource binds.
-        while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+        while ((error_code == kRmtOk) && !RmtStreamMergerIsEmpty(&data_set->stream_merger))
         {
             // Grab the next token from the heap.
             RmtToken current_token;
@@ -420,7 +431,12 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceHistoryForId(RmtDataSet*      
 
             case kRmtTokenTypeVirtualFree:
             {
-                RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                // A free may reference an allocation that isn't tracked in this list (e.g. an allocation outside the
+                // filtered set or a free with no matching allocate), so kRmtErrorNoAllocationFound is expected.
+                const RmtErrorCode remove_allocation_error_code =
+                    RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                RMT_ASSERT((remove_allocation_error_code == kRmtOk) || (remove_allocation_error_code == kRmtErrorNoAllocationFound));
+                RMT_UNUSED(remove_allocation_error_code);
                 break;
             }
 
@@ -430,16 +446,22 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceHistoryForId(RmtDataSet*      
         }
 
         // Reset the RMT stream parsers ready to load the data.
-        RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+        if (error_code == kRmtOk)
+        {
+            error_code = ResetStreamMerger(data_set);
+        }
 
         // Reset the list of virtual allocations.  In this second pass, only add allocations that are relevant (i.e. those included in the bound_allocation_token_id_list).
-        error_code = RmtVirtualAllocationListInitialize(&virtual_allocation_list,
-                                                        virtual_allocation_buffer,
-                                                        virtual_allocation_buffer_size,
-                                                        data_set->data_profile.max_virtual_allocation_count,
-                                                        data_set->data_profile.max_concurrent_resources,
-                                                        data_set->data_profile.total_virtual_allocation_count);
-        RMT_ASSERT(error_code == kRmtOk);
+        if (error_code == kRmtOk)
+        {
+            error_code = RmtVirtualAllocationListInitialize(&virtual_allocation_list,
+                                                            virtual_allocation_buffer,
+                                                            virtual_allocation_buffer_size,
+                                                            data_set->data_profile.max_virtual_allocation_count,
+                                                            data_set->data_profile.max_concurrent_resources,
+                                                            data_set->data_profile.total_virtual_allocation_count);
+            RMT_ASSERT(error_code == kRmtOk);
+        }
         if (error_code == kRmtOk)
         {
             // Second pass: build the history for the resource.
@@ -519,7 +541,10 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceHistoryForId(RmtDataSet*      
                     if (get_allocation_result == kRmtOk)
                     {
                         history->AddEvent(current_token.virtual_free_token);
-                        RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                        const RmtErrorCode remove_allocation_error_code =
+                            RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                        RMT_ASSERT(remove_allocation_error_code == kRmtOk);
+                        RMT_UNUSED(remove_allocation_error_code);
                     }
                     break;
                 }
@@ -599,7 +624,9 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceHistoryForId(RmtDataSet*      
 
     if (error_code != kRmtOk)
     {
-        RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        const RmtErrorCode free_history_error_code = RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        RMT_ASSERT(free_history_error_code == kRmtOk);
+        RMT_UNUSED(free_history_error_code);
     }
     return error_code;
 }
@@ -642,10 +669,10 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
     history->SetUsageParameters(parameters);
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    error_code = ResetStreamMerger(data_set);
 
     // First pass: build virtual allocation list
-    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+    while ((error_code == kRmtOk) && !RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
         // Grab the next token from the heap.
         RmtToken current_token;
@@ -673,10 +700,13 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
     }
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    if (error_code == kRmtOk)
+    {
+        error_code = ResetStreamMerger(data_set);
+    }
 
     // Second pass: build list of resource IDs with matching virtual address or are contained in any of the virtual allocations gathered in the first pass (depending on include_all_resources).
-    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+    while ((error_code == kRmtOk) && !RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
         // Grab the next token from the heap.
         RmtToken current_token;
@@ -717,7 +747,10 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
     }
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    if (error_code == kRmtOk)
+    {
+        error_code = ResetStreamMerger(data_set);
+    }
 
     // Third pass: build history.
 
@@ -728,12 +761,15 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
 
     // Allocate storage for the virtual allocation list.  This list is freed at the end of this function once processing has completed.
     void* virtual_allocation_buffer = malloc(virtual_allocation_buffer_size);
-    error_code                      = RmtVirtualAllocationListInitialize(&virtual_allocation_list,
-                                                    virtual_allocation_buffer,
-                                                    virtual_allocation_buffer_size,
-                                                    data_set->data_profile.max_virtual_allocation_count,
-                                                    data_set->data_profile.max_concurrent_resources,
-                                                    data_set->data_profile.total_virtual_allocation_count);
+    if (error_code == kRmtOk)
+    {
+        error_code = RmtVirtualAllocationListInitialize(&virtual_allocation_list,
+                                                        virtual_allocation_buffer,
+                                                        virtual_allocation_buffer_size,
+                                                        data_set->data_profile.max_virtual_allocation_count,
+                                                        data_set->data_profile.max_concurrent_resources,
+                                                        data_set->data_profile.total_virtual_allocation_count);
+    }
 
     // Create a list of virtual allocations that could be potentially bound a heap resource.
     RmtVirtualAllocationList virtual_allocation_list_for_heaps;
@@ -741,12 +777,15 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
     // Allocate storage for the virtual allocation list used to track heap resources.
     // This list is freed at the end of this function once processing has completed.
     void* virtual_allocation_buffer_for_heaps = malloc(virtual_allocation_buffer_size);
-    error_code                                = RmtVirtualAllocationListInitialize(&virtual_allocation_list_for_heaps,
-                                                    virtual_allocation_buffer_for_heaps,
-                                                    virtual_allocation_buffer_size,
-                                                    data_set->data_profile.max_virtual_allocation_count,
-                                                    data_set->data_profile.max_concurrent_resources,
-                                                    data_set->data_profile.total_virtual_allocation_count);
+    if (error_code == kRmtOk)
+    {
+        error_code = RmtVirtualAllocationListInitialize(&virtual_allocation_list_for_heaps,
+                                                        virtual_allocation_buffer_for_heaps,
+                                                        virtual_allocation_buffer_size,
+                                                        data_set->data_profile.max_virtual_allocation_count,
+                                                        data_set->data_profile.max_concurrent_resources,
+                                                        data_set->data_profile.total_virtual_allocation_count);
+    }
 
     RMT_ASSERT(error_code == kRmtOk);
     if (error_code == kRmtOk)
@@ -876,7 +915,10 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
             {
                 // All allocations need to be tracked in case they are needed for a heap resource (re)bind.
                 // Remove the freed allocation that is potentially bound to a heap resource.
-                RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list_for_heaps, current_token.virtual_free_token.virtual_address);
+                const RmtErrorCode remove_heap_allocation_error_code =
+                    RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list_for_heaps, current_token.virtual_free_token.virtual_address);
+                RMT_ASSERT((remove_heap_allocation_error_code == kRmtOk) || (remove_heap_allocation_error_code == kRmtErrorNoAllocationFound));
+                RMT_UNUSED(remove_heap_allocation_error_code);
 
                 if (CheckVirtualMemoryAllocationMatch(virtual_allocations, current_token.virtual_free_token.virtual_address))
                 {
@@ -890,7 +932,11 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
                         // Remove allocation identifier from bound_resources map
                         bound_resources.erase(virtual_allocation->allocation_identifier);
                     }
-                    RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                    // The allocation may not be present in this list (get_allocation_result above can fail), so kRmtErrorNoAllocationFound is expected.
+                    const RmtErrorCode remove_allocation_error_code =
+                        RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                    RMT_ASSERT((remove_allocation_error_code == kRmtOk) || (remove_allocation_error_code == kRmtErrorNoAllocationFound));
+                    RMT_UNUSED(remove_allocation_error_code);
                 }
                 break;
             }
@@ -950,7 +996,9 @@ RmtErrorCode RmtMemoryEventHistoryGenerateFullAllocationHistory(RmtDataSet*     
 
     if (error_code != kRmtOk)
     {
-        RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        const RmtErrorCode free_history_error_code = RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        RMT_ASSERT(free_history_error_code == kRmtOk);
+        RMT_UNUSED(free_history_error_code);
     }
 
     return error_code;
@@ -982,9 +1030,9 @@ RmtErrorCode RmtMemoryEventHistoryGenerateBasicAllocationHistory(RmtDataSet*    
     history->SetUsageParameters(parameters);
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    error_code = ResetStreamMerger(data_set);
 
-    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+    while ((error_code == kRmtOk) && !RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
         // Grab the next token from the heap.
         RmtToken current_token;
@@ -1020,7 +1068,9 @@ RmtErrorCode RmtMemoryEventHistoryGenerateBasicAllocationHistory(RmtDataSet*    
 
     if (error_code != kRmtOk)
     {
-        RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        const RmtErrorCode free_history_error_code = RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        RMT_ASSERT(free_history_error_code == kRmtOk);
+        RMT_UNUSED(free_history_error_code);
     }
     return error_code;
 }
@@ -1052,10 +1102,10 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceCreateHistoryForAddress(RmtDat
     history->SetUsageParameters(parameters);
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    error_code = ResetStreamMerger(data_set);
 
     // First pass: build virtual allocation list
-    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+    while ((error_code == kRmtOk) && !RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
         // Grab the next token from the heap.
         RmtToken current_token;
@@ -1083,10 +1133,13 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceCreateHistoryForAddress(RmtDat
     }
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    if (error_code == kRmtOk)
+    {
+        error_code = ResetStreamMerger(data_set);
+    }
 
     // Second pass: build list of resource IDs with matching virtual address or are contained in any of the virtual allocations gathered in the first pass (depending on include_all_resources).
-    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+    while ((error_code == kRmtOk) && !RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
         // Grab the next token from the heap.
         RmtToken current_token;
@@ -1127,10 +1180,13 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceCreateHistoryForAddress(RmtDat
     }
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    if (error_code == kRmtOk)
+    {
+        error_code = ResetStreamMerger(data_set);
+    }
 
     // Third pass: build history.
-    while (!RmtStreamMergerIsEmpty(&data_set->stream_merger))
+    while ((error_code == kRmtOk) && !RmtStreamMergerIsEmpty(&data_set->stream_merger))
     {
         // Grab the next token from the heap.
         RmtToken current_token;
@@ -1155,7 +1211,9 @@ RmtErrorCode RmtMemoryEventHistoryGenerateResourceCreateHistoryForAddress(RmtDat
 
     if (error_code != kRmtOk)
     {
-        RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        const RmtErrorCode free_history_error_code = RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        RMT_ASSERT(free_history_error_code == kRmtOk);
+        RMT_UNUSED(free_history_error_code);
     }
 
     return error_code;
@@ -1189,7 +1247,7 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
     history->SetUsageParameters(parameters);
 
     // Reset the RMT stream parsers.
-    RmtStreamMergerReset(&data_set->stream_merger, data_set->file_handle);
+    error_code = ResetStreamMerger(data_set);
 
     // Create a list of virtual allocations.
     RmtVirtualAllocationList virtual_allocation_list;
@@ -1198,13 +1256,16 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
 
     // Allocate memory for the VA list (freed when processing completes in this function).
     void* virtual_allocation_buffer = malloc(virtual_allocation_buffer_size);
-    error_code                      = RmtVirtualAllocationListInitialize(&virtual_allocation_list,
-                                                    virtual_allocation_buffer,
-                                                    virtual_allocation_buffer_size,
-                                                    data_set->data_profile.max_virtual_allocation_count,
-                                                    data_set->data_profile.max_concurrent_resources,
-                                                    data_set->data_profile.total_virtual_allocation_count);
-    RMT_ASSERT(error_code == kRmtOk);
+    if (error_code == kRmtOk)
+    {
+        error_code = RmtVirtualAllocationListInitialize(&virtual_allocation_list,
+                                                        virtual_allocation_buffer,
+                                                        virtual_allocation_buffer_size,
+                                                        data_set->data_profile.max_virtual_allocation_count,
+                                                        data_set->data_profile.max_concurrent_resources,
+                                                        data_set->data_profile.total_virtual_allocation_count);
+        RMT_ASSERT(error_code == kRmtOk);
+    }
 
     if (error_code == kRmtOk)
     {
@@ -1321,7 +1382,11 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
                     // Remove allocation identifier from bound_resources map
                     bound_resources.erase(virtual_allocation->allocation_identifier);
                 }
-                RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                // The allocation may not be present in this list (get_allocation_result above can fail), so kRmtErrorNoAllocationFound is expected.
+                const RmtErrorCode remove_allocation_error_code =
+                    RmtVirtualAllocationListRemoveAllocation(&virtual_allocation_list, current_token.virtual_free_token.virtual_address);
+                RMT_ASSERT((remove_allocation_error_code == kRmtOk) || (remove_allocation_error_code == kRmtErrorNoAllocationFound));
+                RMT_UNUSED(remove_allocation_error_code);
 
                 break;
             }
@@ -1367,7 +1432,9 @@ RmtErrorCode RmtMemoryEventHistoryGenerateHistoryForAllResources(RmtDataSet* dat
 
     if (error_code != kRmtOk)
     {
-        RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        const RmtErrorCode free_history_error_code = RmtMemoryEventHistoryFreeHistory(out_history_handle);
+        RMT_ASSERT(free_history_error_code == kRmtOk);
+        RMT_UNUSED(free_history_error_code);
     }
 
     return error_code;

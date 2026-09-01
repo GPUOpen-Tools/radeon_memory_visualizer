@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the resource list functions.
@@ -882,7 +883,9 @@ RmtErrorCode RmtResourceListAddResourceBind(RmtResourceList* resource_list, cons
         if ((track_user_data) && (resource->address == allocation->base_address))
         {
             // Keep track of resources bound to a virtual allocation.
-            RmtResourceUserDataTrackBoundResource(resource, allocation->allocation_identifier);
+            const RmtErrorCode track_error_code = RmtResourceUserDataTrackBoundResource(resource, allocation->allocation_identifier);
+            RMT_ASSERT(track_error_code == kRmtOk);
+            RMT_UNUSED(track_error_code);
         }
     }
 

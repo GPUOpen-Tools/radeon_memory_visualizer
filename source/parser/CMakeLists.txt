@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.25)
 project(RmvParser)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -49,20 +50,15 @@ set( SOURCES
     "rmt_util.h"
 )
 
-set( LINUX_SOURCES
-    "linux/safe_crt.cpp"
-    "linux/safe_crt.h"
-)
-
 
 # specify output library name
-IF(WIN32)
-    add_library(${PROJECT_NAME} ${SOURCES})
-ELSEIF(UNIX)
-    add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
-ENDIF(WIN32)
+add_library(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC rdf)
+
+if (LINUX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AMD::sdl_utils::safe_crt)
+endif()
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

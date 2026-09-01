@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the data timeline functions.
@@ -165,15 +166,15 @@ RmtErrorCode RmtDataTimelineCreateHistogram(const RmtDataTimeline*    timeline,
 
     // Kick the jobs off to the worker threads.
     // NOTE: This can be done as one per bucket (or range of buckets).
-    RmtJobHandle       job_handle = 0;
-    const RmtErrorCode error_code = RmtJobQueueAddMultiple(job_queue, CreateHistogramJob, input_parameters, 0, bucket_count, &job_handle);
+    RmtJobHandle job_handle = 0;
+    RmtErrorCode error_code = RmtJobQueueAddMultiple(job_queue, CreateHistogramJob, input_parameters, 0, bucket_count, &job_handle);
     RMT_ASSERT(error_code == kRmtOk);
     RMT_RETURN_ON_ERROR(error_code == kRmtOk, error_code);
 
     // Wait for job to complete.
-    RmtJobQueueWaitForCompletion(job_queue, job_handle);
-
-    return kRmtOk;
+    error_code = RmtJobQueueWaitForCompletion(job_queue, job_handle);
+    RMT_ASSERT(error_code == kRmtOk);
+    return error_code;
 }
 
 // destroy the histogram.

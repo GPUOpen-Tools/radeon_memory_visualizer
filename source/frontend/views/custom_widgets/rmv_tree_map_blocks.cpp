@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a tree map block collection.
@@ -46,6 +47,56 @@ const static char* kUnboundResourceName = "unbound";
 static bool SortResourcesBySizeFunc(const RmtResource* a1, const RmtResource* a2)
 {
     return a1->adjusted_size_in_bytes > a2->adjusted_size_in_bytes;
+}
+
+/// Convert a floating-point layout rectangle into the integer pixel rectangle that is actually
+/// painted for a block. This applies the separator gutter, snaps edges to the pixel grid, and
+/// clamps to a minimum of 1px so sub-pixel blocks still occupy real screen area. Painting and
+/// hit-testing must use the same conversion so that every block that is drawn can also be
+/// hovered and selected.
+///
+/// @param [in] bounding_rect The floating-point layout rectangle from the geometry map.
+///
+/// @return The integer pixel rectangle that is painted for the block.
+static QRect LayoutRectToPaintedRect(const QRectF& bounding_rect)
+{
+    // Snap all four edges to the integer pixel grid. Adjacent blocks share a fractional edge
+    // (one block's right is the next block's left), and rounding that shared coordinate yields
+    // the same integer for both neighbours, so they line up exactly with no accidental seams or
+    // gaps. Snapping first (before insetting) keeps that alignment intact.
+    const int snapped_left   = qRound(bounding_rect.left());
+    const int snapped_top    = qRound(bounding_rect.top());
+    const int snapped_right  = qRound(bounding_rect.right());
+    const int snapped_bottom = qRound(bounding_rect.bottom());
+
+    int left   = snapped_left;
+    int top    = snapped_top;
+    int width  = snapped_right - snapped_left;
+    int height = snapped_bottom - snapped_top;
+
+    // Carve a 1px separator boundary by insetting the left/top edge inward. Because neighbours
+    // share a snapped edge, insetting one block's left/top leaves exactly a 1px gap against the
+    // adjacent block, giving every block a consistent 1px boundary. Only inset along an axis
+    // where the block is large enough that the boundary doesn't consume it; small blocks are
+    // drawn edge-to-edge and clamped below so they don't vanish into empty space.
+    const int kGutter           = 1;
+    const int kMinSizeForGutter = 4;
+
+    if (width >= kMinSizeForGutter)
+    {
+        left += kGutter;
+        width -= kGutter;
+    }
+
+    if (height >= kMinSizeForGutter)
+    {
+        top += kGutter;
+        height -= kGutter;
+    }
+
+    // Clamp to a minimum of 1px in each dimension. Sub-pixel blocks (those whose snapped extent
+    // is zero) must still draw, otherwise the space they occupy in the layout appears as a gap.
+    return QRect(left, top, qMax(1, width), qMax(1, height));
 }
 
 RMVTreeMapBlocks::RMVTreeMapBlocks(const RMVTreeMapBlocksConfig& config)
@@ -118,9 +169,10 @@ void RMVTreeMapBlocks::PaintClusterChildren(QPainter*              painter,
             const RmtResource* resource      = render_it.key();
             const QRectF&      bounding_rect = render_it.value();
 
-            const QRectF block_rect(bounding_rect.left() + 1, bounding_rect.top() + 1, bounding_rect.width() - 1, bounding_rect.height() - 1);
+            // Use the same conversion as hit-testing so every painted block is hoverable/selectable.
+            const QRect block_rect = LayoutRectToPaintedRect(bounding_rect);
 
-            if (block_rect.width() > 0 && block_rect.height() > 0)
+            if (bounding_rect.width() > 0 && bounding_rect.height() > 0)
             {
                 const QColor& curr_color = colorizer_->GetColor(resource->bound_allocation, resource);
 
@@ -261,16 +313,18 @@ bool RMVTreeMapBlocks::FindBlockData(ResourceCluster&       cluster,
             const RmtResource* res           = search_it.key();
             const QRectF&      bounding_rect = search_it.value();
 
-            if (user_location.x() > bounding_rect.left() && user_location.x() < bounding_rect.right())
-            {
-                if (user_location.y() > bounding_rect.top() && user_location.y() < bounding_rect.bottom())
-                {
-                    resource_identifier = res->identifier;
-                    resource            = res;
+            // Hit-test against the painted pixel rectangle (not the raw float layout rect) so that
+            // sub-pixel blocks, which are snapped/clamped to at least 1px when drawn, can still be
+            // hovered and selected.
+            const QRect block_rect = LayoutRectToPaintedRect(bounding_rect);
 
-                    result = true;
-                    break;
-                }
+            if (block_rect.contains(user_location.toPoint()))
+            {
+                resource_identifier = res->identifier;
+                resource            = res;
+
+                result = true;
+                break;
             }
         }
     }
@@ -377,34 +431,31 @@ bool RMVTreeMapBlocks::ShouldDrawVertically(double width, double height) const
     return (width > height);
 }
 
-void RMVTreeMapBlocks::DumpCut(const CutData& existing_cut, uint32_t offset_x, uint32_t offset_y, AllocGeometryMap& alloc_geometry_map) const
+void RMVTreeMapBlocks::DumpCut(const CutData& existing_cut, qreal offset_x, qreal offset_y, AllocGeometryMap& alloc_geometry_map) const
 {
     // Dump all the rectangles from the cut into the allocation rectangles.
     if (!existing_cut.is_null)
     {
-        for (int32_t current_allocation_index = 0; current_allocation_index < existing_cut.resources.size(); ++current_allocation_index)
+        // Each rectangle corresponds to the resource at the same index, so the two vectors are
+        // expected to stay the same size. Assert the invariant and iterate over the smaller of
+        // the two as a safety net so a mismatch can never cause an out-of-bounds access.
+        RMT_ASSERT(existing_cut.rectangles.size() == existing_cut.resources.size());
+        const int count = qMin(existing_cut.rectangles.size(), existing_cut.resources.size());
+        for (int i = 0; i < count; i++)
         {
-            bool visible_rects = true;
-
-            for (int i = 0; i < existing_cut.rectangles.size(); i++)
+            // Only skip truly degenerate (zero or negative) rectangles. Sub-pixel positive
+            // rectangles are kept: the space each one occupies has already been consumed from
+            // the layout's draw_space, so dropping it here leaves that space uncovered. The
+            // paint path clamps to a minimum 1px so these tiny rects still draw.
+            if (existing_cut.rectangles[i].width() <= 0 || existing_cut.rectangles[i].height() <= 0)
             {
-                if (existing_cut.rectangles[i].width() < 1 || existing_cut.rectangles[i].height() < 1)
-                {
-                    visible_rects = false;
-                    break;
-                }
+                continue;
             }
 
-            if (visible_rects == true)
-            {
-                for (int i = 0; i < existing_cut.rectangles.size(); i++)
-                {
-                    QRectF newBound = existing_cut.rectangles[i];
-                    newBound.translate(offset_x, offset_y);
+            QRectF newBound = existing_cut.rectangles[i];
+            newBound.translate(offset_x, offset_y);
 
-                    alloc_geometry_map[existing_cut.resources[i]] = newBound;
-                }
-            }
+            alloc_geometry_map[existing_cut.resources[i]] = newBound;
         }
     }
 }
@@ -424,10 +475,10 @@ const RmtResource* RMVTreeMapBlocks::GetHoveredResource() const
 
 void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resources,
                                             uint64_t                     total_size,
-                                            uint32_t                     view_width,
-                                            uint32_t                     view_height,
-                                            uint32_t                     offset_x,
-                                            uint32_t                     offset_y,
+                                            qreal                        view_width,
+                                            qreal                        view_height,
+                                            qreal                        offset_x,
+                                            qreal                        offset_y,
                                             AllocGeometryMap&            alloc_geometry_map)
 {
     if (resources.isEmpty() == true)
@@ -467,8 +518,8 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
                 // significant rectangle is now closer to the perfect aspect ratio of 1.
                 if (new_error < existing_error)
                 {
-                    float currentX = existing_cut.bounding_rect.x();
-                    float currentY = existing_cut.bounding_rect.y();
+                    qreal currentX = existing_cut.bounding_rect.x();
+                    qreal currentY = existing_cut.bounding_rect.y();
 
                     // To accept the cut we have to re-evaluate all rectangles in the existing cut to account for new widths.
                     for (int32_t currentAllocationIndex = 0; currentAllocationIndex < existing_cut.resources.size(); ++currentAllocationIndex)
@@ -477,7 +528,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
                         double newAllocationWidth  = total_cut_width;
                         double newAllocationHeight = allocateArea / total_cut_width;
 
-                        QRectF newAllocationRectangle(currentX, currentY, (float)newAllocationWidth, (float)newAllocationHeight);
+                        QRectF newAllocationRectangle(currentX, currentY, newAllocationWidth, newAllocationHeight);
 
                         // Update the rectangle.
                         existing_cut.rectangles[currentAllocationIndex] = newAllocationRectangle;
@@ -494,7 +545,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
 
                     // Update the exist cut's bounding area.
                     existing_cut.bounding_rect =
-                        QRectF(existing_cut.bounding_rect.x(), existing_cut.bounding_rect.y(), (float)total_cut_width, existing_cut.bounding_rect.height());
+                        QRectF(existing_cut.bounding_rect.x(), existing_cut.bounding_rect.y(), total_cut_width, existing_cut.bounding_rect.height());
 
                     existing_cut.size_in_bytes = attempted_cut_size;
 
@@ -519,8 +570,8 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
                 // significant rectangle is now closer to the perfect aspect ratio of 1.
                 if (new_error < existing_error)
                 {
-                    float currentX = existing_cut.bounding_rect.x();
-                    float currentY = existing_cut.bounding_rect.y();
+                    qreal currentX = existing_cut.bounding_rect.x();
+                    qreal currentY = existing_cut.bounding_rect.y();
 
                     // To accept the cut we have to re-evaluate all rectangles in the existing cut to account for new widths.
                     for (int32_t currentAllocationIndex = 0; currentAllocationIndex < existing_cut.resources.size(); ++currentAllocationIndex)
@@ -528,7 +579,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
                         double allocateArea        = existing_cut.resources[currentAllocationIndex]->adjusted_size_in_bytes / bytes_per_pixel;
                         double newAllocationWidth  = allocateArea / total_cut_height;
                         double newAllocationHeight = total_cut_height;
-                        QRectF newAllocationRectangle(currentX, currentY, (int32_t)newAllocationWidth, (int32_t)newAllocationHeight);
+                        QRectF newAllocationRectangle(currentX, currentY, newAllocationWidth, newAllocationHeight);
 
                         // Update the rectangle.
                         existing_cut.rectangles[currentAllocationIndex] = newAllocationRectangle;
@@ -545,7 +596,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
 
                     // Update the exist cut's bounding area.
                     existing_cut.bounding_rect =
-                        QRectF(existing_cut.bounding_rect.x(), existing_cut.bounding_rect.y(), existing_cut.bounding_rect.width(), (float)total_cut_height);
+                        QRectF(existing_cut.bounding_rect.x(), existing_cut.bounding_rect.y(), existing_cut.bounding_rect.width(), total_cut_height);
                     existing_cut.size_in_bytes = attempted_cut_size;
 
                     // Update draw space.
@@ -565,7 +616,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
         {
             double area  = (double)resource->adjusted_size_in_bytes / bytes_per_pixel;
             double width = area / draw_space.height();
-            QRectF allocation_rectangle(draw_space.x(), draw_space.y(), (int32_t)width, draw_space.height());
+            QRectF allocation_rectangle(draw_space.x(), draw_space.y(), (qreal)width, draw_space.height());
 
             // Create a new cut.
             existing_cut               = {};
@@ -583,7 +634,7 @@ void RMVTreeMapBlocks::GenerateTreeMapRects(QVector<const RmtResource*>& resourc
         {
             double area   = (double)resource->adjusted_size_in_bytes / bytes_per_pixel;
             double height = area / draw_space.width();
-            QRectF allocation_rectangle(draw_space.x(), draw_space.y(), draw_space.width(), (int32_t)height);
+            QRectF allocation_rectangle(draw_space.x(), draw_space.y(), draw_space.width(), (qreal)height);
 
             // Create a new cut.
             existing_cut               = {};
@@ -777,10 +828,10 @@ bool RMVTreeMapBlocks::ResourceFiltered(const rmv::ResourceOverviewModel* overvi
 }
 
 void RMVTreeMapBlocks::FillClusterGeometry(ResourceCluster& parent_cluster,
-                                           uint32_t         parent_width,
-                                           uint32_t         parent_height,
-                                           int32_t          parent_offset_x,
-                                           int32_t          parent_offset_y)
+                                           qreal            parent_width,
+                                           qreal            parent_height,
+                                           qreal            parent_offset_x,
+                                           qreal            parent_offset_y)
 {
     parent_cluster.geometry = QRectF(parent_offset_x, parent_offset_y, parent_width, parent_height);
 
@@ -1021,8 +1072,10 @@ void RMVTreeMapBlocks::FilterInPreferredHeap(ResourceCluster&       parent_clust
     if (!resource || !resource->bound_allocation || resource->resource_type == kRmtResourceTypeCount)
         return;
 
-    uint64_t memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
-    RmtResourceGetBackingStorageHistogram(snapshot, resource, memory_segment_histogram);
+    uint64_t           memory_segment_histogram[kRmtResourceBackingStorageCount] = {0};
+    const RmtErrorCode histogram_error_code = RmtResourceGetBackingStorageHistogram(snapshot, resource, memory_segment_histogram);
+    RMT_ASSERT(histogram_error_code == kRmtOk);
+    RMT_UNUSED(histogram_error_code);
 
     const RmtHeapType preferred_heap = resource->bound_allocation->heap_preferences[0];
     if (memory_segment_histogram[preferred_heap] != resource->adjusted_size_in_bytes && slice_index == 0)

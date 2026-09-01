@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.25)
 project(RmvBackend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -88,6 +89,10 @@ ELSEIF(UNIX)
 ENDIF(WIN32)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE rdf system_info)
+
+if (LINUX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AMD::sdl_utils::safe_crt)
+endif()
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

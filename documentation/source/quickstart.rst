@@ -81,7 +81,7 @@ benchmarking / test applications. Even though the trace file is shorter than exp
 all of the memory events will be present in the trace file.
 
 There are four main menus in the Radeon Memory Visualizer and each may have a
-number of sub-windows..
+number of sub-windows.
 
 1. **Start**
 
@@ -108,12 +108,12 @@ number of sub-windows..
 
    c. **Allocation overview** - Shows the resources within each allocation
 
-   d. **Resource list** - Shows the properties for all the resource in all
+   d. **Resource list** - Shows the properties for all the resources in all
       allocations
 
    e. **Allocation explorer** - Shows the resources within a chosen allocation
 
-   f. **Resource details** - Display more information about a selected resource
+   f. **Resource details** - Displays more information about a selected resource
 
 4. **Compare**
 

@@ -1,6 +1,7 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright Advanced Micro Devices, Inc.
+## SPDX-License-Identifier: MIT
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief List of all external dependencies.
@@ -24,6 +25,7 @@ git_mapping = {
     github_tools + "qt_common"                 : ["../external/qt_common",          "v4.5.0",  True],
     github_tools + "system_info_utils"         : ["../external/system_info_utils",  "v2.3",    True],
     github_tools + "update_check_api"          : ["../external/update_check_api",   "v2.1.2",  True],
+    github_tools + "sdl_utils"                 : ["../external/sdl_utils",          "v1.0",    True],
     github_root  + "GPUOpen-Drivers/libamdrdf" : ["../external/rdf",                "v1.4.2",  True],
     github_root  + "nlohmann/json"             : ["../external/third_party/json",   "v3.11.2", True],
     github_root  + "catchorg/Catch2"           : ["../external/third_party/catch2", "v2.13.6", True],

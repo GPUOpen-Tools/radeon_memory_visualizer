@@ -16,7 +16,7 @@ Packages for Windows and Linux are provided.
 
 ### Building on Windows
 As a preliminary step, make sure that you have the following installed on your system:
-* CMake 3.11 or above.
+* CMake 3.25 or above (required for all platforms).
 * Python 3.7 or above.
 * Qt® 6 or above (6.7.0 is the default and recommended).
 * Visual Studio® 2019 or above (2022 is the default).

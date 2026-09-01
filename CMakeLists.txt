@@ -1,13 +1,15 @@
 #######################################################################################################################
-### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.25)
 
 set(RDF_ENABLE_CXX_BINDINGS ON)
 set(RDF_STATIC ON)
 set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
+
 
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RMV)
@@ -16,7 +18,7 @@ project(RMV)
 set(RMV_MAJOR_VERSION 1)
 set(RMV_MINOR_VERSION 15)
 if (NOT RMV_BUGFIX_NUMBER)
-    set(RMV_BUGFIX_NUMBER 0)
+    set(RMV_BUGFIX_NUMBER 1)
 endif ()
 if (NOT RMV_BUILD_NUMBER)
     set(RMV_BUILD_NUMBER 0)
@@ -32,7 +34,8 @@ else()
     set(PACKAGE_SUFFIX "")
 endif()
 
-set(RMV_PACKAGE_VERSION "${ADT_INTERNAL_POSTFIX}_${RMV_VERSION}${PACKAGE_SUFFIX}")
+set(RMV_PACKAGE_VERSION "_${RMV_VERSION}${PACKAGE_SUFFIX}")
+set(RMV_TESTKIT_INSTALL_DIR "RMVTest")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/util/version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/util/version.h")
@@ -55,6 +58,7 @@ ENDIF()
 # As default for RMV, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX )
+
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
@@ -117,6 +121,8 @@ if (NOT TARGET system_info)
     add_subdirectory(external/system_info_utils)
 endif()
 
+add_subdirectory(external/sdl_utils sdl_utils)
+
 add_subdirectory(source/parser parser)
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
@@ -131,6 +137,10 @@ set_target_properties(QtCustomWidgets
     FOLDER Dependencies
 )
 ENDIF()
+
+if (LINUX)
+    set_target_properties(sdl_utils_safe_crt PROPERTIES FOLDER "Dependencies")
+endif()
 
 IF(WIN32)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT RadeonMemoryVisualizer)
@@ -202,10 +212,10 @@ if (WIN32)
     include(InstallRequiredSystemLibraries)
 
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . COMPONENT apps)
+    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${RMV_TESTKIT_INSTALL_DIR} COMPONENT testkit)
 endif (WIN32)
 
 # CPack packaging
-
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_GROUPING IGNORE)
 
@@ -214,6 +224,7 @@ set(CPACK_PACKAGE_FILE_NAME "RadeonMemoryVisualizer${RMV_PACKAGE_VERSION}")
 
 set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonMemoryVisualizer${RMV_PACKAGE_VERSION}")
 set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonMemoryVisualizer-PDB${RMV_PACKAGE_VERSION}")
+set(CPACK_ARCHIVE_TESTKIT_FILE_NAME "RMVTest${RMV_PACKAGE_VERSION}")
 
 # Run a post-build CPack script to reshape apps package with top-level directory
 set(CPACK_POST_BUILD_SCRIPTS "${CMAKE_SOURCE_DIR}/cmake/cpack_post_script.cmake")
@@ -226,4 +237,7 @@ cpack_add_component(apps
 cpack_add_component(debug
         DISPLAY_NAME "Debug Symbols"
         DESCRIPTION "Debug Symbols")
+cpack_add_component(testkit
+        DISPLAY_NAME "TestKit"
+        DESCRIPTION "RMV Test Kit")
 
