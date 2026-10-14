@@ -27,6 +27,20 @@ if (Qt6_DIR)
     get_target_property(_qmake_executable Qt::qmake IMPORTED_LOCATION)
     get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
 
+    if (LINUX)
+        get_target_property(_qt_core_lib Qt6::Core IMPORTED_LOCATION)
+        if(_qt_core_lib)
+            execute_process(
+                COMMAND readelf -d ${_qt_core_lib}
+                OUTPUT_VARIABLE _qt_core_needed
+                ERROR_QUIET
+            )
+            if(NOT _qt_core_needed MATCHES "libicui18n")
+		set(ICU_DATA_NEEDS_PATCHING TRUE)
+            endif()
+        endif()
+    endif()
+
     function(deploy_qt_build target)
         if (WIN32)
             find_program(DEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
@@ -41,8 +55,8 @@ if (Qt6_DIR)
             )
         endif ()
 
-        # Ensure that libicudata.so.70 is added as an explicit dependency of Qt based targets so that it gets deployed
-        if (LINUX)
+        if (ICU_DATA_NEEDS_PATCHING)
+            message(WARNING "Qt6Core does not link libicudata. Manually adding libicudata.so.70.")
             add_custom_command(TARGET ${target} POST_BUILD COMMAND patchelf --add-needed libicudata.so.70 $<TARGET_FILE:${target}>)
         endif ()
 
